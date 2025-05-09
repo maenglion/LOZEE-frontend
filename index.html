@@ -3,346 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOZEE와 대화하기</title>
+  <title>LOZEE 초기 설정</title>
+  <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* LOZEE 스타일 가이드 적용 */
-    body {
-      margin: 0;
-      font-family: 'KoPubWorld Dotum', sans-serif; /* 스타일 가이드 폰트 */
-      background-color: #ffffff; /* 스타일 가이드 배경색 */
-      color: #333; /* 스타일 가이드 기본 글자색 */
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    header {
-      background-color: #0095FF; /* 스타일 가이드 메인 색상 (배너) */
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      font-size: 20px; /* 기존 1.3rem에서 조정, 필요시 24px 등 talk-heading 참고 */
-      font-weight: bold; /* 제목이므로 bold 추가 */
-    }
-
-    #setup-section, #chat-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        align-items: center;
-        padding: 20px; /* 섹션 공통 패딩 */
-        box-sizing: border-box;
-    }
-
-    #setup-section {
-      gap: 15px;
-      justify-content: center;
-    }
-
-    /* 설정 섹션 입력 필드 및 선택 박스 */
-    #setup-section input[type="text"],
-    #setup-section input[type="number"],
-    #setup-section select {
-      font-family: 'KoPubWorld Dotum', sans-serif; /* 폰트 적용 */
-      padding: 12px;
-      font-size: 16px; /* 일반 텍스트 크기 */
-      width: 80%;
-      max-width: 350px;
-      border-radius: 10px; /* 버튼과 유사한 테두리 둥글기 */
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-
-    /* 설정 섹션 버튼 (테스트, 저장) */
-    #setup-section button {
-      font-family: 'KoPubWorld Dotum', sans-serif; /* 폰트 적용 */
-      width: 80%;
-      max-width: 350px; /* 입력 필드와 너비 일치 */
-      height: 50px; /* 일반 버튼보다 약간 작게 설정 또는 60px으로 통일 */
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      background-color: #0095FF; /* 스타일 가이드 메인 버튼 색상 */
-      color: white;
-      transition: background-color 0.2s;
-    }
-    #setup-section button:hover {
-      background-color: #007acc; /* 호버 시 약간 어둡게 */
-    }
-    /* 테스트 버튼은 보조 버튼 스타일 적용 가능 */
-    #setup-section #testVoiceBtn {
-        background-color: #D2E9FF; /* 스타일 가이드 보조 버튼 색상 */
-        color: #333; /* 스타일 가이드 보조 버튼 글자색 */
-    }
-    #setup-section #testVoiceBtn:hover {
-        background-color: #b8d8f5;
-    }
-
-
-    /* 채팅창 스타일 */
-    #chat-window {
-      flex: 1;
-      width: 100%;
-      max-width: 600px;
-      /* padding: 20px; 이미 #chat-section에 적용됨 */
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      background-color: #f9f9f9; /* 채팅창 배경은 약간 다르게 설정 가능 (기존 유지) */
-      border-radius: 10px; /* 채팅창 테두리 둥글게 */
-      margin-bottom: 20px; /* 말하기 버튼과의 간격 */
-    }
-
-    .bubble {
-      max-width: 75%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      font-size: 16px; /* 스타일 가이드 일반 텍스트 크기 */
-      line-height: 1.6;
-      white-space: pre-wrap;
-    }
-
-    .user {
-      align-self: flex-end;
-      background-color: #D2E9FF; /* 사용자 말풍선 보조 버튼 배경색 활용 */
-      color: #333; /* 사용자 말풍선 글자색 */
-      border-bottom-right-radius: 0;
-    }
-
-    .ai {
-      align-self: flex-start;
-      background-color: #e0e0e0; /* AI 말풍선은 기존 스타일과 유사하게 또는 다른 회색톤 */
-      color: #333;
-      border-bottom-left-radius: 0;
-    }
-
-    /* 말하기 버튼 (mic-button 스타일 일부 차용 및 조정) */
-    #talk-btn {
-      font-family: 'KoPubWorld Dotum', sans-serif; /* 폰트 적용 */
-      width: 120px; /* mic-button 과 유사한 크기 */
-      height: 120px;
-      border-radius: 50%; /* 원형 버튼 */
-      background-color: #b6b6b6; /* mic-button 기본 색상 */
-      border: 3px solid #b6b6b6;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      color: white; /* 아이콘 색상 */
-      font-size: 24px; /* 아이콘 크기 */
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: transform 0.2s ease, background-color 0.3s, border-color 0.3s;
-      margin: 10px auto;
-    }
-
-    #talk-btn.active {
-      background-color: #0095FF; /* mic-button active 색상 */
-      border-color: #0095FF;
-      transform: scale(1.1);
-    }
-
-    /* 다크모드 방지 (스타일 가이드에서 가져옴) */
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: #ffffff !important;
-        color: #333 !important;
-      }
-    }
+    /* style.css 외 추가 스타일 또는 style.css 내용을 여기에 포함 */
+    body { display: flex; flex-direction: column; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+    .setup-container { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; background-color: #f9f9f9; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .setup-container h2 { text-align: center; margin-top: 0; margin-bottom: 20px; color: #333; font-size: 24px; }
+    .setup-container input,
+    .setup-container select { padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-family: 'KoPubWorld Dotum', sans-serif; }
+    .setup-container button { height: 50px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; width: 100%; margin-top: 5px; font-family: 'KoPubWorld Dotum', sans-serif; transition: background-color 0.2s; }
+    #testVoiceBtn { background-color: #D2E9FF; color: #333; } /* 보조 버튼 스타일 */
+    #testVoiceBtn:hover { background-color: #b8d8f5; }
+    #saveSettingsBtn { background-color: #0095FF; color: white; } /* 메인 버튼 스타일 */
+    #saveSettingsBtn:hover { background-color: #007acc; }
+    .loading-indicator { display: none; /* 초기 숨김 */ text-align: center; margin-top: 10px; font-style: italic; color: #555; }
   </style>
 </head>
 <body>
 
-  <header>LOZEE</header>
-
-  <div id="setup-section" style="display:none;">
-    <input type="text" id="userNameInput" placeholder="이름을 입력하세요">
-    <input type="number" id="userAgeInput" placeholder="나이를 입력하세요">
-    <input type="text" id="userDiseaseInput" placeholder="병명 또는 증상을 입력하세요 (선택)">
+  <div class="setup-container">
+    <h2>LOZEE 설정</h2>
+    <input type="text" id="userNameInput" placeholder="이름을 입력하세요 (필수)">
+    <input type="number" id="userAgeInput" placeholder="나이를 입력하세요 (필수)">
+    <input type="text" id="userDiseaseInput" placeholder="병명 또는 증상 (선택)">
     <select id="voiceSelect">
-      <option value="ko-KR-Chirp3-HD-Zephyr">밝은 목소리의 젊은 여성 (LOZEE 기본)</option>
+      <option value="">목소리 선택 (필수)</option>
+      <option value="ko-KR-Chirp3-HD-Zephyr">밝은 목소리의 젊은 여성 (기본)</option>
       <option value="ko-KR-Chirp3-HD-Puck">밝은 목소리의 젊은 남성</option>
       <option value="ko-KR-Chirp3-HD-Leda">차분한 목소리의 젊은 여성</option>
       <option value="ko-KR-Neural2-B">차분한 목소리의 중년 여성</option>
     </select>
     <button id="testVoiceBtn">선택 목소리로 "안녕 나는 로지야" 듣기</button>
+    <div class="loading-indicator" id="tts-loading">음성 재생 준비 중...</div>
     <button id="saveSettingsBtn">설정 완료하고 대화 시작</button>
   </div>
 
-  <div id="chat-section" style="display:none;">
-    <div id="chat-window"></div>
-    <button id="talk-btn">🎤</button> </div>
-
   <script type="module">
-    // --- JavaScript 로직은 이전과 동일 ---
-    // './js/' 경로에 파일들이 있다고 가정합니다. 실제 경로에 맞게 수정하세요.
-    import { getInitialGreeting, getGptResponse } from './js/gpt-dialog.js';
-    import { playTTSFromText } from './js/tts.js'; // 백엔드 TTS 사용하는 버전으로 가정
-    import { getSTTFromAudio } from './js/stt.js';
+    // tts.js에서 playTTSFromText 함수 가져오기 (경로 확인!)
+    import { playTTSFromText } from './js/tts.js';
 
-    const header = document.querySelector('header');
-    const setupSection = document.getElementById('setup-section');
-    const chatSection = document.getElementById('chat-section');
-    const chatWindow = document.getElementById('chat-window');
-    const talkBtn = document.getElementById('talk-btn');
-
-    // 설정 UI 요소
     const userNameInput = document.getElementById('userNameInput');
     const userAgeInput = document.getElementById('userAgeInput');
     const userDiseaseInput = document.getElementById('userDiseaseInput');
     const voiceSelect = document.getElementById('voiceSelect');
     const testVoiceBtn = document.getElementById('testVoiceBtn');
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const ttsLoadingIndicator = document.getElementById('tts-loading');
 
-    let hasGreetedThisSession = false;
-    let isRecording = false;
-    let mediaRecorder;
-    let mediaStream;
-    let audioChunks = [];
-
-    let currentUserName;
-    let currentVoiceId;
-
-    function displaySetup() {
-      header.textContent = 'LOZEE 초기 설정';
-      setupSection.style.display = 'flex';
-      chatSection.style.display = 'none';
-
-      testVoiceBtn.onclick = () => {
-        const selectedVoice = voiceSelect.value;
-        if (selectedVoice) {
-          playTTSFromText("안녕 나는 로지야.", selectedVoice);
-        } else {
-          alert("목소리를 선택해주세요.");
-        }
-      };
-
-      saveSettingsBtn.onclick = () => {
-        const name = userNameInput.value.trim();
-        const age = userAgeInput.value;
-        const disease = userDiseaseInput.value.trim();
-        const voice = voiceSelect.value;
-
-        if (!name || !age || !voice) {
-          alert("이름, 나이, 목소리는 필수 항목입니다.");
-          return;
-        }
-
-        localStorage.setItem('lozee_username', name);
-        localStorage.setItem('lozee_userage', age);
-        localStorage.setItem('lozee_disease', disease);
-        localStorage.setItem('lozee_voice', voice);
-        localStorage.setItem('lozee_hasVisited', 'false');
-
-        currentUserName = name;
-        currentVoiceId = voice;
-
-        displayChatAndGreet();
-      };
-    }
-
-    function displayChatAndGreet() {
-      header.textContent = 'LOZEE와 대화하기';
-      setupSection.style.display = 'none';
-      chatSection.style.display = 'flex';
-
-      currentUserName = localStorage.getItem('lozee_username') || '친구';
-      currentVoiceId = localStorage.getItem('lozee_voice') || 'ko-KR-Chirp3-HD-Zephyr';
-      const hasVisitedStorage = localStorage.getItem('lozee_hasVisited') === 'true';
-      const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
-
-      if (!hasGreetedThisSession) {
-        initGreeting(currentUserName, hasVisitedStorage, lastSummary);
-        hasGreetedThisSession = true;
+    testVoiceBtn.addEventListener('click', async () => {
+      const selectedVoice = voiceSelect.value;
+      if (!selectedVoice) {
+        alert("목소리를 먼저 선택해주세요.");
+        return;
       }
-
-      talkBtn.onclick = null;
-      talkBtn.onclick = async () => {
-        if (!isRecording) {
-          talkBtn.innerHTML = '⏹️'; // 녹음 중 아이콘 변경 예시
-          await startRecording();
-          talkBtn.classList.add('active');
-        } else {
-          talkBtn.innerHTML = '🎤'; // 기본 아이콘
-          stopRecording();
-          talkBtn.classList.remove('active');
-        }
-        isRecording = !isRecording;
-      };
-    }
-
-    function appendMessage(text, role = 'ai') {
-      const bubble = document.createElement('div');
-      bubble.className = `bubble ${role}`;
-      bubble.textContent = text;
-      chatWindow.appendChild(bubble);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    async function initGreeting(userName, visited, summary) {
-      const greeting = getInitialGreeting(userName, visited, summary);
-      appendMessage(greeting, 'ai');
-      await playTTSFromText(greeting, currentVoiceId);
-      localStorage.setItem('lozee_hasVisited', 'true');
-    }
-
-    async function startRecording() {
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(mediaStream);
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
-          const blob = new Blob(audioChunks, { type: 'audio/webm' });
-          const userText = await getSTTFromAudio(blob);
-          if (userText && userText.trim() !== "") {
-             appendMessage(userText, 'user');
-             const gptRes = await getGptResponse(userText);
-             const reply = gptRes.rephrasing || '음... 다시 말해줄래?';
-             appendMessage(reply, 'ai');
-             await playTTSFromText(reply, currentVoiceId);
-          }
-        };
-        mediaRecorder.start();
-      } catch (err) {
-        console.error("Error starting recording:", err);
-        let message = "마이크를 시작할 수 없어요. ";
-        if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
-            message += "마이크 사용 권한을 허용해주세요.";
-        } else {
-            message += "마이크 설정을 확인해주세요. 오류: " + err.message;
-        }
-        appendMessage(message, "ai");
-        if (currentVoiceId) await playTTSFromText(message, currentVoiceId);
-        talkBtn.innerHTML = '🎤'; // 오류 시 아이콘 복원
-        talkBtn.classList.remove('active');
-        isRecording = false;
+        ttsLoadingIndicator.style.display = 'block'; // 로딩 표시
+        testVoiceBtn.disabled = true; // 버튼 비활성화
+        await playTTSFromText("안녕 나는 로지야.", selectedVoice);
+      } catch (error) {
+        console.error("TTS 테스트 재생 실패:", error);
+        alert("음성 재생 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      } finally {
+        ttsLoadingIndicator.style.display = 'none'; // 로딩 숨김
+        testVoiceBtn.disabled = false; // 버튼 다시 활성화
       }
-    }
+    });
 
-    function stopRecording() {
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
+    saveSettingsBtn.addEventListener('click', () => {
+      const name = userNameInput.value.trim();
+      const age = userAgeInput.value;
+      const disease = userDiseaseInput.value.trim();
+      const voice = voiceSelect.value;
+
+      if (!name || !age || !voice) {
+        alert("이름, 나이, 목소리는 필수 항목입니다.");
+        return;
       }
-      if (mediaStream) {
-          mediaStream.getTracks().forEach(track => track.stop());
-      }
-    }
 
-    const isConfigured = localStorage.getItem('lozee_username') &&
-                         localStorage.getItem('lozee_voice') &&
-                         localStorage.getItem('lozee_userage');
+      // localStorage에 정보 저장
+      localStorage.setItem('lozee_username', name);
+      localStorage.setItem('lozee_userage', age);
+      localStorage.setItem('lozee_disease', disease); // 병명도 저장
+      localStorage.setItem('lozee_voice', voice);
+      localStorage.setItem('lozee_hasVisited', 'false'); // 처음 설정 완료 시 방문 기록은 false로
+      localStorage.removeItem('lozee_lastSummary'); // 이전 요약 정보 제거
 
-    if (isConfigured) {
-      displayChatAndGreet();
-    } else {
-      displaySetup();
-    }
+      // 모든 정보가 저장되었으면 talk.html로 이동
+      window.location.href = 'talk.html';
+    });
   </script>
+
 </body>
 </html>

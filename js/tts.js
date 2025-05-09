@@ -1,90 +1,73 @@
-// js/tts.js
+// ./js/tts.js (백엔드 API 호출 방식)
 
-// 사용자의 Railway 백엔드 TTS 서비스 URL
-// 중요: '/api/tts' 부분은 실제 백엔드 API 엔드포인트 경로로 수정해야 할 수 있습니다.
-const TTS_BACKEND_URL = 'https://ggg-production.up.railway.app/api/tts';
+const TTS_BACKEND_URL = 'https://ggg-production.up.railway.app/api/tts'; // 실제 백엔드 엔드포인트
 
-/**
- * 백엔드 TTS 서비스에 텍스트와 목소리 ID를 전달하여 음성 합성을 요청하고,
- * 반환된 오디오 데이터를 재생합니다.
- * @param {string} text - 음성으로 변환할 텍스트.
- * @param {string} voiceId - Google Cloud TTS 목소리 ID (예: "ko-KR-Chirp3-HD-Zephyr").
- * @returns {Promise<void>} 오디오 재생이 완료되면 resolve하고, 오류 발생 시 reject하는 Promise.
- */
-export async function playTTSFromText(text, voiceId) {
-  // 텍스트가 비어있으면 아무 작업도 하지 않고 즉시 resolve
-  if (!text || String(text).trim() === "") {
-    // console.log("TTS: 말할 내용이 없습니다.");
-    return Promise.resolve();
-  }
-
-  // 아래 console.log 라인은 ${text} 변수 내용에 따라 오류를 유발할 수 있으므로, 필요시 안전한 형태로 사용하거나 주석 처리합니다.
-  // console.log(`TTS: 백엔드 요청 - 텍스트: ${text}, 목소리: ${voiceId}`);
-
-  try {
-    // 백엔드에 POST 요청 전송
-    const response = await fetch(TTS_BACKEND_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // 필요에 따라 다른 헤더 (예: 인증 토큰)를 추가할 수 있습니다.
-      },
-      body: JSON.stringify({
-        text: text,     // 백엔드에서 받을 텍스트 필드 이름 (예: 'text')
-        voice: voiceId, // 백엔드에서 받을 목소리 ID 필드 이름 (예: 'voice')
-      }),
-    });
-
-    // HTTP 응답 상태 확인
-    if (!response.ok) {
-      let errorDetails = `HTTP status ${response.status}`;
-      try {
-        // 오류 응답 본문이 있다면 포함
-        const errorBody = await response.text();
-        errorDetails += ` - ${errorBody}`;
-      } catch (e) {
-        // 오류 본문 읽기 실패 (이 부분은 특별히 추가 조치 필요 없음)
-      }
-      console.error(`TTS: 백엔드 요청 실패. ${errorDetails}`);
-      throw new Error(`TTS 백엔드 요청 실패: ${errorDetails}`); // 여기서 에러를 throw하면 바깥 catch로 넘어감
+export function playTTSFromText(text, voiceId) {
+  return new Promise(async (resolve, reject) => { // async 추가
+    if (!text || String(text).trim() === "") {
+      console.log("TTS: 말할 내용 없음.");
+      return resolve();
     }
+    console.log(`TTS: API 요청 - Text: "${text}", Voice ID: ${voiceId}`);
 
-    // 백엔드가 오디오 데이터를 직접 반환한다고 가정 (예: MP3, OGG, WAV 파일의 Blob)
-    const audioBlob = await response.blob();
+    try {
+      const response = await fetch(TTS_BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: text,
+          voice: voiceId // 백엔드 /api/tts 가 이 'voice' 키를 사용하도록 수정됨
+        }),
+      });
 
-    // 오디오 재생을 위한 Promise 생성
-    return new Promise((resolve, reject) => {
+      console.log(`TTS: API 응답 상태: ${response.status}`);
+
+      if (!response.ok) {
+        let errorDetails = `HTTP status ${response.status}`;
+        try {
+          const errorBody = await response.json(); // 오류 응답이 JSON 형태일 수 있음
+          errorDetails += ` - ${JSON.stringify(errorBody)}`;
+        } catch (e) {
+          // JSON 파싱 실패 시 텍스트로 읽기
+          try { errorDetails += ` - ${await response.text()}`; } catch (e2) {}
+        }
+        console.error(`TTS: 백엔드 요청 실패. ${errorDetails}`);
+        return reject(new Error(`TTS 백엔드 요청 실패: ${errorDetails}`));
+      }
+
+      const audioBlob = await response.blob();
+      console.log(`TTS: 오디오 Blob 수신 완료, 타입: ${audioBlob.type}, 크기: ${audioBlob.size}`);
+
+      if (audioBlob.size === 0) {
+          console.warn("TTS: 수신된 오디오 데이터 크기가 0입니다.");
+          return reject(new Error("수신된 오디오 데이터가 비어있습니다."));
+      }
+
       const audio = new Audio();
       const audioUrl = URL.createObjectURL(audioBlob);
       audio.src = audioUrl;
 
-      audio.onloadedmetadata = () => {
-        audio.play()
-          .catch(playError => {
-            console.error("TTS: 오디오 재생 중 오류 발생:", playError);
-            URL.revokeObjectURL(audioUrl);
-            reject(playError);
-          });
+      // 재생 관련 이벤트 핸들러
+      audio.onloadedmetadata = () => console.log("TTS: 오디오 메타데이터 로드됨.");
+      audio.oncanplaythrough = () => {
+        console.log("TTS: 오디오 재생 가능, 재생 시작...");
+        audio.play().catch(reject); // 재생 오류 시 reject
       };
-
       audio.onended = () => {
-        // console.log("TTS: 오디오 재생 완료.");
+        console.log("TTS: 오디오 재생 완료.");
         URL.revokeObjectURL(audioUrl);
-        resolve();
+        resolve(); // 재생 완료 시 resolve
       };
-
-      audio.onerror = (errorEvent) => {
-        const mediaError = errorEvent.target.error;
-        console.error("TTS: 오디오 요소 오류 발생.", mediaError ? `코드: ${mediaError.code}, 메시지: ${mediaError.message}` : errorEvent);
+      audio.onerror = (e) => {
+        console.error("TTS: 오디오 요소 오류 발생.", e.target.error);
         URL.revokeObjectURL(audioUrl);
-        reject(mediaError || new Error("오디오 재생 중 알 수 없는 오류"));
+        reject(e.target.error || new Error("오디오 재생 중 오류 발생"));
       };
-    }); // try 블록 내 new Promise의 닫는 괄호
+      audio.onstalled = () => console.warn("TTS: 오디오 로딩 지연됨."); // 네트워크 문제 등
 
-  } catch (error) { // 여기가 바깥 try...catch의 catch 블록 시작
-    // fetch 또는 기타 예외 처리
-    console.error("TTS: 음성 합성 또는 처리 중 오류:", error); // 이 라인이 89번째 줄 또는 그 근처
-    return Promise.reject(error); // <--- catch 블록에서 Promise를 reject 하도록 수정
-  } // <--- 여기가 catch (error) 블록의 닫는 중괄호 '}' 입니다. (이것이 누락되었을 가능성)
-
-} // <--- 여기가 export async function playTTSFromText 함수의 닫는 중괄호 '}' 입니다. (이것이 누락되었을 가능성)
+    } catch (error) {
+      console.error("TTS: 음성 합성 또는 처리 중 오류:", error);
+      reject(error); // 전체 프로세스 오류 시 reject
+    }
+  });
+}

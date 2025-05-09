@@ -1,7 +1,7 @@
-// ./js/stt.js (Base64 인코딩하여 JSON으로 전송하도록 수정)
+// ./js/stt.js (Base64 인코딩하여 JSON으로 백엔드 /api/stt 호출)
 
-// 실제 백엔드 STT 엔드포인트 (이전과 동일)
-const STT_BACKEND_URL = 'https://ggg-production.up.railway.app/api/stt';
+// 실제 백엔드 STT 엔드포인트
+const STT_BACKEND_URL = 'https://ggg-production.up.railway.app/api/stt'; // Railway 백엔드 주소 확인!
 
 /**
  * 오디오 Blob을 Base64 문자열로 변환하는 Helper 함수
@@ -13,10 +13,16 @@ function blobToBase64(blob) {
     const reader = new FileReader();
     reader.onerror = reject;
     reader.onload = () => {
-      // reader.result는 "data:audio/webm;codecs=opus;base64,xxxx..." 형태이므로
-      // 헤더 부분("data:...;base64,")을 제거하고 순수 Base64 데이터만 추출합니다.
-      const base64String = reader.result.split(',')[1];
-      resolve(base64String);
+      // reader.result는 "data:audio/webm;codecs=opus;base64,xxxx..." 형태
+      // 헤더 부분("data:...;base64,")을 제거하고 순수 Base64 데이터만 추출
+      const resultStr = reader.result;
+      if (typeof resultStr === 'string' && resultStr.includes(',')) {
+        const base64String = resultStr.split(',')[1];
+        resolve(base64String);
+      } else {
+        console.error("Base64 문자열 추출 실패: reader.result 형식이 예상과 다름", reader.result);
+        reject(new Error("오디오 데이터를 Base64로 변환하는데 실패했습니다."));
+      }
     };
     reader.readAsDataURL(blob);
   });
@@ -29,34 +35,43 @@ function blobToBase64(blob) {
  */
 export async function getSTTFromAudio(audioBlob) {
   if (!audioBlob || audioBlob.size === 0) {
-    console.warn("STT: 변환할 오디오 데이터가 없습니다.");
-    return Promise.resolve("");
+    console.warn("[stt.js] 변환할 오디오 데이터가 없습니다.");
+    return ""; // 빈 문자열 반환
   }
+  console.log(`[stt.js] 오디오 Blob 정보 - 크기: ${audioBlob.size}, 타입: ${audioBlob.type}`);
 
   try {
-    // Blob을 Base64 문자열로 변환
     const base64Audio = await blobToBase64(audioBlob);
+    console.log("[stt.js] Base64 인코딩 완료, API 호출 시작...");
 
-    // Base64 문자열을 JSON 본문에 담아 fetch 요청
     const response = await fetch(STT_BACKEND_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json', // Content-Type을 JSON으로 명시
+        'Content-Type': 'application/json', // JSON으로 보낸다고 명시
       },
-      body: JSON.stringify({ audioContent: base64Audio }), // 백엔드가 기대하는 JSON 형식
+      body: JSON.stringify({ audioContent: base64Audio }), // 백엔드가 기대하는 { "audioContent": "..." } 형식
     });
 
+    console.log(`[stt.js] STT API 응답 상태: ${response.status}`);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`STT API 요청 실패: ${response.status}`, errorText);
-      throw new Error(`STT API 요청 실패: ${response.status} - ${errorText}`);
+      let errorText = `HTTP 상태 ${response.status}`;
+      try {
+        const responseBody = await response.text();
+        errorText += ` - ${responseBody}`;
+      } catch (e) { /* 응답 본문 읽기 실패 무시 */ }
+      console.error(`[stt.js] STT API 요청 실패: ${errorText}`);
+      throw new Error(`STT API 요청 실패: ${errorText}`); // 오류를 throw하여 talk.html에서 catch하도록 변경
     }
 
-    const data = await response.json(); // 백엔드가 { "text": "..." } 형태로 반환한다고 가정
-    return data.text || "";
+    const data = await response.json();
+    console.log("[stt.js] STT API 응답 데이터:", data);
+    const receivedText = data.text || "";
+    console.log("[stt.js] 반환될 텍스트:", receivedText);
+    return receivedText;
+
   } catch (error) {
-    console.error("STT 서비스 호출 중 오류:", error);
-    // 오류 발생 시 빈 문자열 반환 또는 오류 throw 선택
-    return ""; // 또는 throw error;
+    console.error("[stt.js] STT 서비스 호출 중 오류:", error);
+    throw error; // 오류를 상위로 전달하여 talk.html에서 상세히 처리
   }
 }
