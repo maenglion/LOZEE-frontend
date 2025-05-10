@@ -31,13 +31,19 @@
         .step-background-main .content-box .description,
         .step-background-main .content-box label,
         .step-background-main .content-box p { color: var(--text-on-box); }
-        .step-background-main #finalUserPrompt { /* 5단계의 "이제 대화를 시작할 차례야..." 문구 */
+        
+        /* Step 5의 수정된 텍스트 스타일 */
+        .step-background-main #finalUserPrompt { 
             color: var(--text-on-main);
-            font-size: 28px; /* 더 큰 폰트 */
+            font-size: 28px; 
             font-weight: bold;
             line-height: 1.5;
             margin-bottom: 20px;
         }
+        .step-background-main .content-box #userFirstMessageInput { /* 5단계 입력창은 흰색 박스 안에 */
+             margin-top: 10px; /* 위 문구와의 간격 */
+        }
+
 
         .step-background-default { background-color: var(--default-page-bg); }
         .step-background-default .page-title { color: var(--main-color); }
@@ -49,10 +55,9 @@
         .description { font-size: 16px; margin-bottom: 25px; line-height: 1.6; }
         label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: bold; text-align: left; }
         input[type="text"], input[type="email"], input[type="number"], select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-family: 'KoPubWorld Dotum', sans-serif; box-sizing: border-box; }
-        textarea#userFirstMessageInput { /* 5단계 입력창 스타일 */
-            min-height: 120px; 
+        textarea#userFirstMessageInput { 
+            min-height: 100px; 
             resize: vertical; 
-            margin-top: 10px;
         }
         button.intro-btn { display: block; width: 100%; padding: 14px; background-color: var(--main-color); color: var(--text-on-main); border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; font-family: 'KoPubWorld Dotum', sans-serif; transition: background-color 0.2s ease; }
         .step-background-main button.intro-btn { background-color: white; color: var(--main-color); }
@@ -154,10 +159,10 @@
     <div id="step5" class="step step-background-main">
         <div class="intro-container">
             <h2 class="page-title">만나서 반가워, <span id="greetingName"></span>!</h2>
-            <p id="finalUserPrompt" class="description" style="font-size: 28px; font-weight: bold; line-height: 1.5; margin-bottom: 25px;">이제 대화를 시작할 차례야.<br>지금은 어때?</p>
+            <p id="finalUserPrompt" class="description">이제 대화를 시작할 차례야.<br>지금은 어때?</p> 
             
-            <div class="content-box"> {/* 텍스트 입력창을 흰색 박스 안으로 */}
-                 <textarea id="userFirstMessageInput" rows="5" placeholder="여기에 지금 어떤지, 하고 싶은 이야기를 적어주세요..."></textarea>
+            <div class="content-box"> {/* 흰색 박스 안에 입력창 배치 */}
+                 <textarea id="userFirstMessageInput" rows="5" placeholder="여기에 지금 어떤지, 하고 싶은 이야기를 간단히 적어주세요..."></textarea>
                  <div id="firstMessageError" class="error-message"></div>
                  <button id="startChatBtn" class="intro-btn">로지와 대화 시작하기</button>
             </div>
@@ -207,8 +212,8 @@
                 const testVoiceBtnIntro = document.getElementById('testVoiceBtnIntro');
                 const ttsLoadingIndicator = document.getElementById('tts-loading-intro');
                 const greetingName = document.getElementById('greetingName');
-                const userFirstMessageInput = document.getElementById('userFirstMessageInput'); // 새로 추가된 입력창
-                const firstMessageError = document.getElementById('firstMessageError'); // 입력창 오류 메시지
+                const userFirstMessageInput = document.getElementById('userFirstMessageInput'); // 5단계 입력창
+                const firstMessageError = document.getElementById('firstMessageError'); // 5단계 오류 메시지
 
                 const authorizedEmails = [
                     'maengnanyoung@gmail.com', 'maenghakjae@gmail.com', 
@@ -351,6 +356,7 @@
                     localStorage.setItem('lozee_voice', voice);
                     const currentUsername = localStorage.getItem('lozee_username') || "친구";
                     if (greetingName) greetingName.textContent = currentUsername;
+                    // 5단계의 userIntroPrompt는 이제 사용하지 않으므로 관련 로직 제거
                     showStep(5); 
                 });
 
