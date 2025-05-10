@@ -84,11 +84,9 @@ export async function getGptResponse(userText, userId, context = {}) {
     const data = await response.json();
     console.log("GPT: API 응답 데이터:", data);
 
-    // 실제 응답 텍스트 추출 (OpenAI 응답 구조에 따라 경로 수정 필요)
-    const aiReply = data?.choices?.[0]?.message?.content || "응답을 받지 못했습니다.";
-
-    // 백엔드에서 요약을 생성해서 함께 보내준다면 여기서 처리 가능
-    const summary = data?.summary; // 백엔드가 'summary' 필드를 준다고 가정
+// 백엔드가 보내주는 { rephrasing: "...", summary: "..." } 구조에 맞게 수정
+    const aiReply = data.rephrasing || "응답을 받지 못했습니다."; // data에서 직접 rephrasing을 가져옴
+    const summary = data.summary; // 백엔드가 summary를 보내준다면 이 값 사용, 아니면 undefined
 
     return { rephrasing: aiReply, summary: summary };
 
