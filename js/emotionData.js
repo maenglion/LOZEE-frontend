@@ -17,7 +17,7 @@ export const lozeeEmotions = [
   { sub: "서운해", main: "슬픔" }, 
   { sub: "속상해", main: "슬픔" },
   { sub: "허전해", main: "슬픔" }, 
-  { sub: "슬퍼해", main: "슬픔" }, // 또는 "슬퍼" 등 더 일반적인 단어로 수정하셔도 좋습니다.
+  { sub: "슬퍼해", main: "슬픔" },
   { sub: "실망이야", main: "슬픔" }, 
   { sub: "무기력해", main: "슬픔" },
   
@@ -37,7 +37,11 @@ export const lozeeEmotions = [
   { sub: "두려워", main: "불안" },
   { sub: "긴장돼", main: "불안" }, 
   { sub: "당황스러워", main: "불안" }, 
-  { sub: "혼란스러워", main: "불안" }
+  { sub: "혼란스러워", main: "불안" },
+
+  // 중립 또는 기타 감정 (새로 추가)
+  { sub: "특별한 느낌 없어", main: "중립" } // 사용자님 요청 반영
 ];
 
-// 단어 클라우드에 표시할 소분류 단어 목록만 추출
+// 단어 클라우드에 표시할 소분류 단어 목록만 추출하는 헬퍼 (필요시 사용)
+export const allEmotionWordsForCloud = lozeeEmotions.map(emotion => emotion.sub);
