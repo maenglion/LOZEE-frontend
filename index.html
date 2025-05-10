@@ -1,99 +1,210 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOZEE 초기 설정</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    /* style.css 외 추가 스타일 또는 style.css 내용을 여기에 포함 */
-    body { display: flex; flex-direction: column; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
-    .setup-container { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 400px; background-color: #f9f9f9; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .setup-container h2 { text-align: center; margin-top: 0; margin-bottom: 20px; color: #333; font-size: 24px; }
-    .setup-container input,
-    .setup-container select { padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; font-family: 'KoPubWorld Dotum', sans-serif; }
-    .setup-container button { height: 50px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; width: 100%; margin-top: 5px; font-family: 'KoPubWorld Dotum', sans-serif; transition: background-color 0.2s; }
-    #testVoiceBtn { background-color: #D2E9FF; color: #333; } /* 보조 버튼 스타일 */
-    #testVoiceBtn:hover { background-color: #b8d8f5; }
-    #saveSettingsBtn { background-color: #0095FF; color: white; } /* 메인 버튼 스타일 */
-    #saveSettingsBtn:hover { background-color: #007acc; }
-    .loading-indicator { display: none; /* 초기 숨김 */ text-align: center; margin-top: 10px; font-style: italic; color: #555; }
-  </style>
-</head>
-<body>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOZEE 시작하기</title>
+    <link rel="stylesheet" href="intro-style.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
+    </head>
+<body class="intro-body">
 
-  <div class="setup-container">
-    <h2>LOZEE 설정</h2>
-    <input type="text" id="userNameInput" placeholder="이름을 입력하세요 (필수)">
-    <input type="number" id="userAgeInput" placeholder="나이를 입력하세요 (필수)">
-    <input type="text" id="userDiseaseInput" placeholder="병명 또는 증상 (선택)">
-    <select id="voiceSelect">
-      <option value="">목소리 선택 (필수)</option>
-      <option value="ko-KR-Chirp3-HD-Zephyr">밝은 목소리의 젊은 여성 (기본)</option>
-      <option value="ko-KR-Chirp3-HD-Puck">밝은 목소리의 젊은 남성</option>
-      <option value="ko-KR-Chirp3-HD-Leda">차분한 목소리의 젊은 여성</option>
-      <option value="ko-KR-Neural2-B">차분한 목소리의 중년 여성</option>
-    </select>
-    <button id="testVoiceBtn">선택 목소리로 "안녕 나는 로지야" 듣기</button>
-    <div class="loading-indicator" id="tts-loading">음성 재생 준비 중...</div>
-    <button id="saveSettingsBtn">설정 완료하고 대화 시작</button>
-  </div>
+    <div id="step1" class="step active step-background-main">
+        <div class="intro-container">
+            <div class="content-box">
+                <h2 class="page-title">뭐라고 불러줄까?</h2>
+                <p class="description">이름 또는 닉네임을 입력해주세요.</p>
+                <input type="text" id="userNameInput" placeholder="예: 로지친구">
+                <div id="nameError" class="error-message"></div> 
+                <button id="toStep2Btn" class="intro-btn">다음</button>
+            </div>
+        </div>
+    </div>
 
-  <script type="module">
-    // tts.js에서 playTTSFromText 함수 가져오기 (경로 확인!)
-    import { playTTSFromText } from './js/tts.js';
+    <div id="step2" class="step"> <div class="intro-container">
+            <div class="content-box">
+                <h2 class="page-title">대화를 위한 정보</h2>
+                <p class="description">나이를 비롯한 정보로 대화의 단어, 표현을 설정하는데 큰 도움이 됩니다.</p>
+                
+                <label for="userAgeSelect">나이:</label>
+                <select id="userAgeSelect">
+                    <option value="">선택하세요</option>
+                    {/* JavaScript로 나이 옵션들(예: 8~100)을 채워넣거나, 직접 하드코딩 */}
+                </select>
+                <div id="ageError" class="error-message"></div>
 
-    const userNameInput = document.getElementById('userNameInput');
-    const userAgeInput = document.getElementById('userAgeInput');
-    const userDiseaseInput = document.getElementById('userDiseaseInput');
-    const voiceSelect = document.getElementById('voiceSelect');
-    const testVoiceBtn = document.getElementById('testVoiceBtn');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    const ttsLoadingIndicator = document.getElementById('tts-loading');
+                <label for="userDiagnosisInput">진단명 (선택 사항, 알고 계신다면):</label>
+                <input type="text" id="userDiagnosisInput" placeholder="예: 우울증 (편하게 적어주세요)">
+                
+                <button id="toStep3Btn" class="intro-btn">다음</button>
+            </div>
+        </div>
+    </div>
 
-    testVoiceBtn.addEventListener('click', async () => {
-      const selectedVoice = voiceSelect.value;
-      if (!selectedVoice) {
-        alert("목소리를 먼저 선택해주세요.");
-        return;
-      }
-      try {
-        ttsLoadingIndicator.style.display = 'block'; // 로딩 표시
-        testVoiceBtn.disabled = true; // 버튼 비활성화
-        await playTTSFromText("안녕 나는 로지야.", selectedVoice);
-      } catch (error) {
-        console.error("TTS 테스트 재생 실패:", error);
-        alert("음성 재생 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-      } finally {
-        ttsLoadingIndicator.style.display = 'none'; // 로딩 숨김
-        testVoiceBtn.disabled = false; // 버튼 다시 활성화
-      }
-    });
+    <div id="step3" class="step step-background-main">
+        <div class="intro-container">
+            <div class="content-box">
+                <h2 class="page-title">지금 어때?</h2>
+                <p class="description">지금 가장 가깝게 느끼는 감정 5가지를 골라주세요.</p>
+                <div id="emotionCloudContainer">
+                    </div>
+                <p>선택된 감정: <span id="selectedEmotionsDisplay">아직 없어요</span></p>
+                <div id="emotionSelectionError" class="error-message"></div>
+                <button id="toStep4Btn" class="intro-btn">다음</button>
+            </div>
+        </div>
+    </div>
 
-    saveSettingsBtn.addEventListener('click', () => {
-      const name = userNameInput.value.trim();
-      const age = userAgeInput.value;
-      const disease = userDiseaseInput.value.trim();
-      const voice = voiceSelect.value;
+    <div id="step4" class="step step-background-main">
+        <div class="intro-container">
+            <h2 class="page-title">만나서 반가워, <span id="greetingName"></span>!</h2>
+            <div id="lozieIntroBubble"> {/* 로지 소개는 흰색 말풍선 */}
+                <p>나는 로지(LOZEE)로 Listen, Observe, Zoom-in, Empathize, Evolve 를 뜻해.</p>
+                <p>너의 말과 감정을 경청하고 상황과 정서를 관찰하며 너의 중요한 감정이나 생각에 집중하고 너와 함께 성장하는 존재야.</p>
+            </div>
+            <div class="content-box"> {/* 사용자 입력 부분은 다시 흰색 박스 */}
+                 <p class="description" id="userIntroPrompt">이제 너에 대해서도 조금 소개해줄래? (오늘 어떤 이야기를 하고 싶은지, 지금 어떤 기분인지 등 편하게 적어줘)</p>
+                 <textarea id="userTypedIntro" rows="5" placeholder="여기에 로지에게 하고 싶은 첫 마디를 입력해주세요..."></textarea>
+                 <div id="typedIntroError" class="error-message"></div>
+                 <button id="startChatBtn" class="intro-btn">로지와 대화 시작하기</button>
+            </div>
+        </div>
+    </div>
 
-      if (!name || !age || !voice) {
-        alert("이름, 나이, 목소리는 필수 항목입니다.");
-        return;
-      }
+    <script type="module">
+        import { lozeeEmotions } from './js/emotionData.js'; // emotionData.js가 있다고 가정
 
-      // localStorage에 정보 저장
-      localStorage.setItem('lozee_username', name);
-      localStorage.setItem('lozee_userage', age);
-      localStorage.setItem('lozee_disease', disease); // 병명도 저장
-      localStorage.setItem('lozee_voice', voice);
-      localStorage.setItem('lozee_hasVisited', 'false'); // 처음 설정 완료 시 방문 기록은 false로
-      localStorage.removeItem('lozee_lastSummary'); // 이전 요약 정보 제거
+        const steps = [
+            document.getElementById('step1'),
+            document.getElementById('step2'),
+            document.getElementById('step3'),
+            document.getElementById('step4')
+        ];
+        let currentStep = 0;
 
-      // 모든 정보가 저장되었으면 talk.html로 이동
-      window.location.href = 'talk.html';
-    });
-  </script>
+        const userNameInput = document.getElementById('userNameInput');
+        const nameError = document.getElementById('nameError');
+        const userAgeSelect = document.getElementById('userAgeSelect');
+        const ageError = document.getElementById('ageError');
+        const userDiagnosisInput = document.getElementById('userDiagnosisInput');
+        
+        const emotionCloudContainer = document.getElementById('emotionCloudContainer');
+        const selectedEmotionsDisplay = document.getElementById('selectedEmotionsDisplay');
+        const emotionSelectionError = document.getElementById('emotionSelectionError');
+        
+        const greetingName = document.getElementById('greetingName'); // 4단계 인사 문구용
+        const userIntroPrompt = document.getElementById('userIntroPrompt'); // 사용자 소개 프롬프트용
+        const userTypedIntro = document.getElementById('userTypedIntro');
+        const typedIntroError = document.getElementById('typedIntroError');
 
+        let selectedEmotionObjects = [];
+
+        // 나이 드롭다운 채우기 (예시: 10세부터 100세)
+        for (let i = 8; i <= 100; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i + '세';
+            userAgeSelect.appendChild(option);
+        }
+
+        function showStep(stepIndex) {
+            steps.forEach((step, index) => {
+                step.style.display = (index === stepIndex) ? 'block' : 'none';
+            });
+            currentStep = stepIndex;
+            window.scrollTo(0,0); // 각 단계 시작 시 화면 상단으로
+        }
+
+        // 1단계 -> 2단계
+        document.getElementById('toStep2Btn').addEventListener('click', () => {
+            const username = userNameInput.value.trim();
+            nameError.textContent = ''; // 이전 에러 메시지 초기화
+            if (!username) {
+                nameError.textContent = '이름 또는 닉네임을 입력해주세요.';
+                return;
+            }
+            // TODO: 실제로는 여기서 백엔드에 username 중복 확인 API 호출
+            console.log("사용자 이름/닉네임:", username);
+            localStorage.setItem('lozee_username', username);
+            greetingName.textContent = username; // 4단계에서 사용할 이름 설정
+            showStep(1);
+        });
+
+        // 2단계 -> 3단계
+        document.getElementById('toStep3Btn').addEventListener('click', () => {
+            const age = userAgeSelect.value;
+            ageError.textContent = ''; // 이전 에러 메시지 초기화
+            if (!age) {
+                ageError.textContent = '나이를 선택해주세요.';
+                return;
+            }
+            localStorage.setItem('lozee_userage', age);
+            localStorage.setItem('lozee_userdiagnosis', userDiagnosisInput.value.trim());
+            console.log("나이:", age, "진단명:", userDiagnosisInput.value.trim());
+            showStep(2);
+        });
+        
+        // 3단계 (감정 선택) 로직
+        function populateEmotionCloud() {
+            lozeeEmotions.forEach(emotion => {
+                const emotionTag = document.createElement('div'); // div로 변경하여 블록처럼 배치 용이
+                emotionTag.textContent = emotion.sub;
+                emotionTag.className = 'emotion-tag';
+                emotionTag.dataset.mainCategory = emotion.main;
+                emotionTag.addEventListener('click', () => toggleEmotionSelection(emotionTag, emotion));
+                emotionCloudContainer.appendChild(emotionTag);
+            });
+        }
+
+        function toggleEmotionSelection(tagElement, emotionObject) {
+            const index = selectedEmotionObjects.findIndex(e => e.sub === emotionObject.sub);
+            emotionSelectionError.textContent = '';
+
+            if (index > -1) { 
+                selectedEmotionObjects.splice(index, 1);
+                tagElement.classList.remove('selected');
+            } else { 
+                if (selectedEmotionObjects.length < 5) {
+                    selectedEmotionObjects.push(emotionObject);
+                    tagElement.classList.add('selected');
+                } else {
+                    emotionSelectionError.textContent = "5가지 감정까지 선택할 수 있어요. 다른 감정을 고르려면 기존 선택을 먼저 취소해주세요.";
+                }
+            }
+            selectedEmotionsDisplay.textContent = selectedEmotionObjects.map(e => e.sub).join(', ') || "아직 없어요";
+        }
+        
+        populateEmotionCloud();
+
+        document.getElementById('toStep4Btn').addEventListener('click', () => {
+            emotionSelectionError.textContent = '';
+            if (selectedEmotionObjects.length === 0) { // 최소 3개는 선택하도록 유도
+                emotionSelectionError.textContent = "최소 3개 이상의 감정을 선택해주세요.";
+                return;
+            }
+            localStorage.setItem('lozee_selected_emotions', JSON.stringify(selectedEmotionObjects));
+            console.log("선택된 감정:", selectedEmotionObjects);
+            userIntroPrompt.innerHTML = `이제 ${localStorage.getItem('lozee_username')}님의 이야기를 들려주시겠어요? (오늘 어떤 이야기를 하고 싶은지, 지금 어떤 기분인지 등 편하게 적어줘)`;
+            showStep(3);
+        });
+
+        // 4단계 -> talk.html 로 이동
+        document.getElementById('startChatBtn').addEventListener('click', () => {
+            const typedIntro = userTypedIntro.value.trim();
+            typedIntroError.textContent = '';
+            if (!typedIntro) {
+                typedIntroError.textContent = "로지에게 하고 싶은 첫 마디를 간단하게라도 적어주세요.";
+                return;
+            }
+            localStorage.setItem('lozee_user_typed_intro', typedIntro);
+            localStorage.setItem('lozee_onboarding_complete', 'true'); 
+            console.log("사용자 첫마디:", typedIntro);
+            console.log("온보딩 완료, talk.html로 이동합니다.");
+            window.location.href = 'talk.html';
+        });
+
+        // 초기 화면 설정
+        showStep(0); 
+    </script>
 </body>
 </html>
