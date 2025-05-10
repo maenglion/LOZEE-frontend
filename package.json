@@ -1,0 +1,12 @@
+{
+  "name": "lozee-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend for the LOZEE application (static HTML, CSS, JS).",
+  "scripts": {
+    "start": "echo \"No start script for static frontend. Open index.html in a browser.\" && exit 0",
+    "build": "echo \"No build script needed for static frontend.\" && exit 0"
+  },
+  "author": "maenglion",
+  "license": "ISC"
+}
