@@ -194,8 +194,7 @@
                     <option value="ko-KR-Chirp3-HD-Rasalgethi">남성 높은톤 말느림</option>
                     <option value="ko-KR-Chirp3-HD-Vindemiatrix">여성 낮은톤 말빠름</option>
                     <option value="ko-KR-Chirp3-HD-Schedar">남성 높은톤 말빠름</option>
-                     <option value="ko-KR-Chirp3-HD-Kore
-">여성 중간톤 말빠름</option>
+                     <option value="ko-KR-Chirp3-HD-Kore">여성 중간톤 말빠름</option>
                 </select>
                 <div id="voiceError" class="error-message"></div>
                 <button type="button" id="testVoiceBtnIntro" class="intro-btn secondary">선택 목소리로 "안녕 나는 로지야" 듣기</button>
@@ -379,7 +378,7 @@
             console.log("선택된 목소리:", voice);
             const currentUsername = localStorage.getItem('lozee_username') || "친구";
             greetingName.textContent = currentUsername;
-            userIntroPrompt.innerHTML = `이제 ${currentUsername}님의 이야기를 들려주시겠어요? (오늘 어떤 이야기를 하고 싶은지, 지금 어떤 기분인지 등 편하게 적어줘)`;
+            userIntroPrompt.innerHTML = `이제 ${currentUsername}님의 이야기를 들려주시겠어요?
             showStep(4); 
         });
 
@@ -387,7 +386,7 @@
             const typedIntro = userTypedIntro.value.trim();
             typedIntroError.textContent = '';
             if (!typedIntro) {
-                typedIntroError.textContent = "로지에게 하고 싶은 첫 마디를 간단하게라도 적어주세요.";
+                typedIntroError.textContent = "자기소개를 해주세요.";
                 return;
             }
             localStorage.setItem('lozee_user_typed_intro', typedIntro);
@@ -401,7 +400,3 @@
     </script>
 </body>
 </html>
-```
-인트로 페이지의 감정 버블 테두리 두께를 수정했습니다. `.emotion-tag`의 `border` 속성을 `2px`에서 `4px`로 변경하여 요청하신 대로 더 두껍게 만들었습니다.
-
-이제 이 수정된 `intro.html` 코드를 사용하시면 감정 태그들이 좀 더 명확하게 보일 거예요. 다른 부분은 이전과 동일하게 유지했습
