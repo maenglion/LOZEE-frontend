@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --main-color: #0095FF; /* 로지의 메인 색상 */
+            --main-color: #0095FF; 
             --text-on-main: white;
             --box-background: white;
             --box-border-color: black;
@@ -17,7 +17,7 @@
             --emotion-selected-bg: #FFEB3B;
             --emotion-selected-border: #FBC02D;
             --emotion-selected-text: #424242;
-            --success-color: #007bff; /* 파란색 체크 */
+            --success-color: #007bff; 
             --error-color: #d9534f;
         }
         body { font-family: 'KoPubWorld Dotum', sans-serif; margin: 0; transition: background-color 0.3s ease-out; }
@@ -55,13 +55,22 @@
         .emotion-tag.selected { background-color: var(--emotion-selected-bg); border-color: var(--emotion-selected-border); color: var(--emotion-selected-text); font-weight: bold; }
         #selectedEmotionsDisplay { font-style: italic; color: #555; margin-top:10px; display: block;}
         .step-background-main #selectedEmotionsDisplay { color: #eee; }
-        #lozieIntroBubble { background-color: white; color: #333; padding: 20px; border-radius: 20px; margin: 20px auto; max-width: 100%; line-height: 1.7; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: left; }
-        #lozieIntroBubble p { margin: 10px 0; }
+        
+        /* 로지 소개 말풍선 및 사용자 입력 컨테이너 제거 후 대체 텍스트 스타일 */
+        #finalIntroMessage {
+            font-size: 28px; /* 더 큰 폰트 */
+            font-weight: bold;
+            color: var(--text-on-main); /* 메인 배경색 위이므로 흰색 계열 */
+            padding: 30px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
         .step-background-main .loading-indicator { color: #eee; }
     </style>
 </head>
-<body id="introBody" class="step-background-default"> 
+<body id="introBody" class="step-background-default">
 
     <div id="step0" class="step">
         <div class="intro-container">
@@ -143,25 +152,22 @@
     <div id="step5" class="step step-background-main">
         <div class="intro-container">
             <h2 class="page-title">만나서 반가워, <span id="greetingName"></span>!</h2>
-            <div id="lozieIntroBubble">
-                <p>나는 로지(LOZEE)로 Listen, Observe, Zoom-in, Empathize, Evolve 를 뜻해.</p>
-                <p>너의 말과 감정을 경청하고 상황과 정서를 관찰하며 너의 중요한 감정이나 생각에 집중하고 너와 함께 성장하는 존재야.</p>
+            
+            <div id="finalIntroMessage">
+                이제 대화를 시작할 차례야.<br>지금은 어때?
             </div>
-            <div class="content-box">
-                 <p class="description" id="userIntroPrompt">이제 너에 대해서도 조금 소개해줄래? (오늘 어떤 이야기를 하고 싶은지, 지금 어떤 기분인지 등 편하게 적어줘)</p>
-                 <textarea id="userTypedIntro" rows="5" placeholder="여기에 로지에게 하고 싶은 첫 마디를 입력해주세요..."></textarea>
-                 <div id="typedIntroError" class="error-message"></div>
-                 <button id="startChatBtn" class="intro-btn">로지와 대화 시작하기</button>
-            </div>
+            <button id="startChatBtn" class="intro-btn">로지와 대화 시작하기</button>
         </div>
     </div>
 
     <script type="module">
+        // ... (JavaScript 로직은 이전 intro_html_with_cbt_code_v1 문서의 내용과 거의 동일하게 유지)
+        // 단, step5의 userTypedIntro 관련 DOM 요소 및 로직은 제거하거나 주석 처리 필요
+        // startChatBtn 클릭 시 userTypedIntro 값 없이 localStorage에 저장하고 talk.html로 이동
         console.log("Intro script: 시작");
         
         document.addEventListener('DOMContentLoaded', async () => {
             console.log("Intro script: DOMContentLoaded 이벤트 발생");
-            // const pageErrorDisplay = document.getElementById('pageErrorDisplay'); // 더 이상 사용하지 않음
 
             try {
                 console.log("Intro script: 모듈 임포트 시도...");
@@ -200,25 +206,22 @@
                 const testVoiceBtnIntro = document.getElementById('testVoiceBtnIntro');
                 const ttsLoadingIndicator = document.getElementById('tts-loading-intro');
                 const greetingName = document.getElementById('greetingName');
-                const userIntroPrompt = document.getElementById('userIntroPrompt');
-                const userTypedIntro = document.getElementById('userTypedIntro');
-                const typedIntroError = document.getElementById('typedIntroError');
+                // const userIntroPrompt = document.getElementById('userIntroPrompt'); // Step 5에서 제거됨
+                // const userTypedIntro = document.getElementById('userTypedIntro'); // Step 5에서 제거됨
+                // const typedIntroError = document.getElementById('typedIntroError'); // Step 5에서 제거됨
 
                 const authorizedEmails = [
-                    'maengnanyoung@gmail.com', 
-                    'maenghakjae@gmail.com', 
-                    'soul.minhoo.maeng@gmail.com', 
-                    'yesook0613@naver.com',
+                    'maengnanyoung@gmail.com', 'maenghakjae@gmail.com', 
+                    'soul.minhoo.maeng@gmail.com', 'yesook0613@naver.com',
                     'primer0722@gmail.com'
                 ]; 
 
-                const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError };
+                // 필수 DOM 요소 확인 (제거된 요소들은 확인 목록에서도 제외)
+                const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName };
                 for (const key in requiredElements) {
                     if (key === 'steps' && !requiredElements[key].every(el => el)) {
-                         console.error(`Intro script: 필수 DOM 배열 'steps'의 일부 요소를 찾을 수 없습니다. HTML ID를 확인하세요.`);
                          throw new Error(`필수 DOM 배열 'steps' 요소 누락`);
                     } else if (key !== 'steps' && !requiredElements[key]) {
-                        console.error(`Intro script: 필수 DOM 요소 '${key}'를 찾을 수 없습니다. HTML ID를 확인하세요.`);
                         throw new Error(`필수 DOM 요소 '${key}' 누락`);
                     }
                 }
@@ -242,48 +245,32 @@
                 }
 
                 function showStep(stepIndex) {
-                    console.log(`Intro script: showStep(${stepIndex}) 호출됨`);
-                    if (stepIndex < 0 || stepIndex >= steps.length || !steps[stepIndex]) {
-                        console.error(`Intro script: 잘못된 stepIndex (${stepIndex}) 또는 해당 step DOM 요소 없음`);
-                        return;
-                    }
+                    if (stepIndex < 0 || stepIndex >= steps.length || !steps[stepIndex]) { return; }
                     steps.forEach((step, index) => {
                         if (step) step.style.display = (index === stepIndex) ? 'flex' : 'none';
                     });
                     currentStep = stepIndex;
                     updateBodyBackground(stepIndex);
                     window.scrollTo(0,0);
-                    console.log(`Intro script: ${stepIndex + 1}단계 표시됨`);
                 }
 
                 document.getElementById('toStep1Btn').addEventListener('click', () => {
                     const email = cbtCodeInput.value.trim().toLowerCase();
                     cbtCodeMessage.textContent = '';
                     cbtCodeMessage.className = 'error-message'; 
-
-                    if (!email) {
-                        cbtCodeMessage.textContent = 'CBT 코드(이메일)를 입력해주세요.';
-                        return;
-                    }
+                    if (!email) { cbtCodeMessage.textContent = 'CBT 코드(이메일)를 입력해주세요.'; return; }
                     if (authorizedEmails.includes(email)) {
                         cbtCodeMessage.textContent = '✔️ 확인되었습니다.';
                         cbtCodeMessage.className = 'success-message'; 
                         localStorage.setItem('lozee_cbt_code', email); 
-                        console.log("CBT 코드 확인됨:", email);
                         setTimeout(() => { showStep(1); }, 500); 
-                    } else {
-                        cbtCodeMessage.textContent = '등록되지 않은 CBT 코드입니다. 다시 확인해주세요.';
-                    }
+                    } else { cbtCodeMessage.textContent = '등록되지 않은 CBT 코드입니다.'; }
                 });
 
                 document.getElementById('toStep2Btn').addEventListener('click', () => {
                     const username = userNameInput.value.trim();
                     nameError.textContent = '';
-                    if (!username) {
-                        nameError.textContent = '이름 또는 닉네임을 입력해주세요.';
-                        return;
-                    }
-                    console.log("사용자 이름/닉네임:", username);
+                    if (!username) { nameError.textContent = '이름 또는 닉네임을 입력해주세요.'; return; }
                     localStorage.setItem('lozee_username', username);
                     if (greetingName) greetingName.textContent = username; 
                     showStep(2); 
@@ -292,22 +279,14 @@
                 document.getElementById('toStep3Btn').addEventListener('click', () => {
                     const age = userAgeSelect.value;
                     ageError.textContent = '';
-                    if (!age) {
-                        ageError.textContent = '나이를 선택해주세요.';
-                        return;
-                    }
+                    if (!age) { ageError.textContent = '나이를 선택해주세요.'; return; }
                     localStorage.setItem('lozee_userage', age);
                     localStorage.setItem('lozee_userdiagnosis', userDiagnosisInput.value.trim());
-                    console.log("나이:", age, "진단명:", userDiagnosisInput.value.trim());
                     showStep(3); 
                 });
                 
                 function populateEmotionCloud() {
-                    if (!lozeeEmotions || !emotionCloudContainer) {
-                        console.error("Intro script: lozeeEmotions 데이터 또는 emotionCloudContainer가 없습니다.");
-                        return;
-                    }
-                    console.log("Intro script: populateEmotionCloud 시작");
+                    if (!lozeeEmotions || !emotionCloudContainer) { return; }
                     emotionCloudContainer.innerHTML = ''; 
                     lozeeEmotions.forEach(emotion => {
                         const emotionTag = document.createElement('div');
@@ -317,13 +296,11 @@
                         emotionTag.addEventListener('click', () => toggleEmotionSelection(emotionTag, emotion));
                         emotionCloudContainer.appendChild(emotionTag);
                     });
-                    console.log("Intro script: populateEmotionCloud 완료");
                 }
 
                 function toggleEmotionSelection(tagElement, emotionObject) {
                     const index = selectedEmotionObjects.findIndex(e => e.sub === emotionObject.sub);
                     if(emotionSelectionError) emotionSelectionError.textContent = '';
-
                     if (index > -1) { 
                         selectedEmotionObjects.splice(index, 1);
                         tagElement.classList.remove('selected');
@@ -332,17 +309,13 @@
                             selectedEmotionObjects.push(emotionObject);
                             tagElement.classList.add('selected');
                         } else {
-                            if(emotionSelectionError) emotionSelectionError.textContent = "5가지 감정까지 선택할 수 있어요. 다른 감정을 고르려면 기존 선택을 먼저 취소해주세요.";
+                            if(emotionSelectionError) emotionSelectionError.textContent = "5가지 감정까지 선택할 수 있어요.";
                         }
                     }
                     if(selectedEmotionsDisplay) selectedEmotionsDisplay.textContent = selectedEmotionObjects.map(e => e.sub).join(', ') || "아직 없어요";
                 }
                 
-                if (lozeeEmotions && emotionCloudContainer) { 
-                    populateEmotionCloud();
-                } else {
-                     console.error("Intro script: 감정 데이터 또는 클라우드 컨테이너가 없어 populateEmotionCloud를 실행할 수 없습니다.");
-                }
+                if (lozeeEmotions && emotionCloudContainer) { populateEmotionCloud(); }
 
                 document.getElementById('toStep4Btn').addEventListener('click', () => {
                     if(emotionSelectionError) emotionSelectionError.textContent = '';
@@ -351,7 +324,6 @@
                         return;
                     }
                     localStorage.setItem('lozee_selected_emotions', JSON.stringify(selectedEmotionObjects));
-                    console.log("선택된 감정:", selectedEmotionObjects);
                     showStep(4); 
                 });
 
@@ -359,74 +331,49 @@
                     testVoiceBtnIntro.addEventListener('click', async () => {
                         const selectedVoice = voiceSelectInput.value;
                         if(voiceError) voiceError.textContent = '';
-                        if (!selectedVoice) {
-                            if(voiceError) voiceError.textContent = "목소리를 먼저 선택해주세요.";
-                            return;
-                        }
+                        if (!selectedVoice) { if(voiceError) voiceError.textContent = "목소리를 먼저 선택해주세요."; return; }
                         try {
                             if(ttsLoadingIndicator) ttsLoadingIndicator.style.display = 'block';
                             testVoiceBtnIntro.disabled = true;
                             await playTTSFromText("안녕 나는 로지야.", selectedVoice);
                         } catch (error) {
-                            console.error("TTS 테스트 재생 실패:", error);
                             if(voiceError) voiceError.textContent = "음성 재생 중 오류가 발생했습니다.";
                         } finally {
                             if(ttsLoadingIndicator) ttsLoadingIndicator.style.display = 'none';
                             testVoiceBtnIntro.disabled = false;
                         }
                     });
-                } else {
-                    console.warn("Intro script: testVoiceBtnIntro 요소를 찾을 수 없습니다.");
                 }
 
                 document.getElementById('toStep5Btn').addEventListener('click', () => {
                     const voice = voiceSelectInput.value;
                     if(voiceError) voiceError.textContent = '';
-                    if (!voice) {
-                        if(voiceError) voiceError.textContent = '로지의 목소리를 선택해주세요.';
-                        return;
-                    }
+                    if (!voice) { if(voiceError) voiceError.textContent = '로지의 목소리를 선택해주세요.'; return; }
                     localStorage.setItem('lozee_voice', voice);
-                    console.log("선택된 목소리:", voice);
                     const currentUsername = localStorage.getItem('lozee_username') || "친구";
                     if (greetingName) greetingName.textContent = currentUsername;
-                    if (userIntroPrompt) userIntroPrompt.innerHTML = `이제 ${currentUsername}님의 이야기를 들려주시겠어요? (오늘 어떤 이야기를 하고 싶은지, 지금 어떤 기분인지 등 편하게 적어줘)`;
                     showStep(5); 
                 });
 
+                // Step 5의 "로지와 대화 시작하기" 버튼 이벤트 리스너 수정
                 document.getElementById('startChatBtn').addEventListener('click', () => {
-                    const typedIntro = userTypedIntro.value.trim();
-                    if(typedIntroError) typedIntroError.textContent = '';
-                    if (!typedIntro) {
-                        if(typedIntroError) typedIntroError.textContent = "로지에게 하고 싶은 첫 마디를 간단하게라도 적어주세요.";
-                        return;
-                    }
-                    localStorage.setItem('lozee_user_typed_intro', typedIntro);
+                    // 사용자 첫마디 입력은 제거되었으므로, 해당 값은 저장하지 않음
+                    // localStorage.setItem('lozee_user_typed_intro', ''); // 빈 값 또는 아예 저장 안 함
                     localStorage.setItem('lozee_onboarding_complete', 'true'); 
-                    console.log("사용자 첫마디:", typedIntro);
                     console.log("온보딩 완료, talk.html로 이동합니다.");
                     window.location.href = 'talk.html';
                 });
                 
-                console.log("Intro script: 이벤트 리스너 설정 완료");
-                showStep(0); // 0단계 (CBT 코드 입력)부터 시작
-                console.log("Intro script: showStep(0) 호출 완료, 첫 화면 표시 시도");
+                showStep(0);
 
             } catch (error) { 
                 console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                // 오류 발생 시, 콘솔에만 기록하고, 첫 화면 로드를 시도합니다.
-                // 화면에 직접적인 오류 메시지를 표시하지 않아 "잔소리" 현상을 방지합니다.
                 if (typeof showStep === 'function') {
-                    console.warn("Intro script: 초기화 중 오류 발생. 첫 단계 표시 시도...");
                     showStep(0); 
-                } else {
-                    console.error("Intro script: showStep 함수를 찾을 수 없어 첫 단계를 표시할 수 없습니다.");
-                    // 이 경우, 정말 최소한의 사용자 안내가 필요할 수 있습니다.
-                    // alert("페이지 로딩 중 문제가 발생했습니다. 새로고침 해주세요.");
                 }
             }
         }); 
-        console.log("Intro script: 모든 스크립트 실행 완료 (DOMContentLoaded 리스너 등록)");
+        console.log("Intro script: 모든 스크립트 실행 완료");
     </script>
 </body>
 </html>
