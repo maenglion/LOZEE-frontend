@@ -59,16 +59,10 @@
         #lozieIntroBubble p { margin: 10px 0; }
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
         .step-background-main .loading-indicator { color: #eee; }
-        #pageErrorDisplay { /* 이 부분은 이제 사용하지 않지만, 혹시 모를 상황 대비해 숨겨만 둠 */
-            display: none; 
-            position: fixed; top: 0; left: 0; width: 100%;
-            background-color: #ffdddd; color: #d9534f; padding: 10px;
-            text-align: center; font-size: 16px; z-index: 1000; box-sizing: border-box;
-        }
+        /* #pageErrorDisplay는 더 이상 화면 전체를 덮지 않으므로, 필요시 다른 방식으로 오류를 알릴 수 있습니다. */
     </style>
 </head>
-<body id="introBody" class="step-background-main"> 
-    <div id="pageErrorDisplay"></div>
+<body id="introBody" class="step-background-default"> {/* 초기 배경은 0단계에 맞게 default로 */}
 
     <div id="step0" class="step">
         <div class="intro-container">
@@ -168,7 +162,7 @@
         
         document.addEventListener('DOMContentLoaded', async () => {
             console.log("Intro script: DOMContentLoaded 이벤트 발생");
-            const pageErrorDisplay = document.getElementById('pageErrorDisplay'); 
+            // const pageErrorDisplay = document.getElementById('pageErrorDisplay'); // 이전에 오류 표시용으로 사용
 
             try {
                 console.log("Intro script: 모듈 임포트 시도...");
@@ -211,9 +205,11 @@
                 const userTypedIntro = document.getElementById('userTypedIntro');
                 const typedIntroError = document.getElementById('typedIntroError');
 
-                const authorizedEmails = ['user1@example.com', 'test@example.com', 'lozee@lozee.com']; 
+                // 허락된 이메일 목록 (실제 운영 시에는 백엔드에서 관리)
+                // 실제 사용할 이메일 주소로 변경해주세요.
+                const authorizedEmails = ['user1@example.com', 'test@example.com', 'lozee@lozee.com', '사용자님의_테스트_이메일@도메인.com']; 
 
-                const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError, pageErrorDisplay };
+                const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError };
                 for (const key in requiredElements) {
                     if (key === 'steps' && !requiredElements[key].every(el => el)) {
                          console.error(`Intro script: 필수 DOM 배열 'steps'의 일부 요소를 찾을 수 없습니다. HTML ID를 확인하세요.`);
@@ -415,14 +411,21 @@
 
             } catch (error) { 
                 console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                if (pageErrorDisplay) { 
-                    pageErrorDisplay.textContent = `페이지 로딩 중 오류가 발생했습니다. 잠시 후 새로고침 해보세요. (오류: ${error.message})`;
-                    pageErrorDisplay.style.display = 'block'; // 오류 메시지를 상단에 표시
-                } else { 
-                    alert(`페이지 로딩 중 심각한 오류가 발생했습니다: ${error.message}`);
+                // 오류 발생 시, 화면에 직접적인 메시지를 표시하지 않고 콘솔에만 기록합니다.
+                // 그리고 첫 번째 단계를 보여주려고 시도합니다.
+                // (만약 showStep(0) 자체가 실패할 정도로 심각한 문제라면, 그 이전의 DOM 요소 가져오기 등에서 이미 throw 되었을 것입니다.)
+                if (typeof showStep === 'function') {
+                    console.warn("Intro script: 초기화 중 오류 발생. 첫 단계 표시 시도...");
+                    showStep(0); 
+                } else {
+                    console.error("Intro script: showStep 함수를 찾을 수 없어 첫 단계를 표시할 수 없습니다.");
+                    if (pageErrorDisplay) { // pageErrorDisplay가 있다면 여기에 간단한 메시지 표시
+                        pageErrorDisplay.textContent = "페이지 로드 중 문제가 발생했습니다. (코드: CATCH_NO_SHOWSTEP)";
+                        pageErrorDisplay.style.display = 'block';
+                    } else {
+                        alert("페이지 로드 중 심각한 오류가 발생했습니다.");
+                    }
                 }
-                // 오류 발생 시 첫 화면을 강제로 보여주지 않도록 변경
-                // showStep(0); // 이 부분을 주석 처리하거나 제거
             }
         }); 
         console.log("Intro script: 모든 스크립트 실행 완료 (DOMContentLoaded 리스너 등록)");
