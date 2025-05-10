@@ -180,11 +180,11 @@
 
   <div id="chat-container">
     <div id="chat-window">
-    </div>
+      </div>
     <div id="topic-selection">
       <h3>이야기를 이어가고 싶은 주제를 골라볼래?</h3>
       <div id="topic-options">
-      </div>
+        </div>
     </div>
   </div>
 
@@ -203,7 +203,7 @@
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    console.log("talk.html 스크립트 시작 (v3.4 - 온보딩 연동 강화)");
+    console.log("talk.html 스크립트 시작 (v3.8 - 관리자 음성 명령 이메일 조건 추가)");
 
     const talkBtn = document.getElementById('talk-btn');
     const chatWindow = document.getElementById('chat-window');
@@ -214,6 +214,10 @@
     const waitingUserName = document.getElementById('waitingUserName');
 
     const currentUserName = localStorage.getItem('lozee_username') || "친구";
+    // currentUserId는 index.html에서 CBT 코드로 입력받은 이메일 또는 사용자가 입력한 이름/닉네임일 수 있습니다.
+    // 여기서는 lozee_cbt_code에 저장된 이메일을 사용하는 것이 더 정확할 수 있습니다.
+    // 만약 lozee_username에 이메일이 저장된다고 확신하면 그대로 사용해도 됩니다.
+    // 여기서는 사용자 ID로 저장된 값을 사용합니다. (index.html에서 lozee_username에 이메일이 저장된다고 가정)
     const currentUserId = localStorage.getItem('lozee_username'); 
     const currentVoiceId = localStorage.getItem('lozee_voice');
     const currentUserAge = localStorage.getItem('lozee_userage');
@@ -222,7 +226,7 @@
     let lastSummary = localStorage.getItem('lozee_lastSummary') || '';
 
     const onboardingComplete = localStorage.getItem('lozee_onboarding_complete') === 'true';
-    const userTypedIntro = localStorage.getItem('lozee_user_typed_intro'); // intro.html에서 저장한 첫마디
+    const userTypedIntro = localStorage.getItem('lozee_user_typed_intro'); 
     const selectedEmotionsString = localStorage.getItem('lozee_selected_emotions');
     let selectedEmotions = [];
     if (selectedEmotionsString) {
@@ -234,8 +238,7 @@
         }
     }
 
-
-    console.log("사용자 정보:", { currentUserName, currentVoiceId, currentUserAge, currentUserDisease, hasVisited });
+    console.log("사용자 정보:", { currentUserName, currentUserId, currentVoiceId, currentUserAge, currentUserDisease, hasVisited });
     console.log("온보딩 완료 여부:", onboardingComplete);
     if(onboardingComplete) {
         console.log("온보딩 데이터 -> 사용자 첫마디:", userTypedIntro, "선택된 감정:", selectedEmotions);
@@ -251,6 +254,10 @@
     let initialGreetingText = "";    
     let recordingStartTime; 
 
+    // --- 개발자님 요청: 관리자용 비밀 음성 명령 및 이메일 ---
+    const ADMIN_SECRET_PHRASE = "고양이맹구름맹누리";
+    const ADMIN_EMAIL = "maengnanyoung@gmail.com"; // 관리자 이메일
+
     function appendMessage(text, role = 'ai', isError = false) {
       if (!text || String(text).trim() === "") { 
         console.log(`[appendMessage] 빈 메시지 (${role}), 추가 안함.`); 
@@ -264,8 +271,8 @@
       msgDiv.innerHTML = processedText; 
       
       if (role === 'user') { 
-          chatWindow.appendChild(msgDiv);
-          chatWindow.scrollTop = chatWindow.scrollHeight;
+            chatWindow.appendChild(msgDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
           resetSilenceTimer();
           return msgDiv; 
       } else { 
@@ -278,10 +285,101 @@
       console.log(`[disableTalkButton] ${disable ? '비활성화' : '활성화'}${reason ? ` (${reason})` : ''}`);
     }
 
-    async function loadRecentTopics() { /* ... (이전과 동일) ... */ }
-    function showTopicBox(topics) { /* ... (이전과 동일, 침묵 처리 로직 반영) ... */ }
-    function startSilenceTimer() { /* ... (이전과 동일) ... */ }
-    function resetSilenceTimer() { /* ... (이전과 동일) ... */ }
+    async function loadRecentTopics() {
+      if (!currentUserId) { 
+        console.warn("[loadRecentTopics] 사용자 ID 없음, 주제 로드 건너뜀.");
+        return []; 
+      }
+      try {
+        const backendUrl = 'https://ggg-production.up.railway.app'; 
+        console.log(`[loadRecentTopics] ${backendUrl}/api/topics?userId=${encodeURIComponent(currentUserId)} 호출 시도...`);
+        const response = await fetch(`${backendUrl}/api/topics?userId=${encodeURIComponent(currentUserId)}`);
+        console.log(`[loadRecentTopics] /api/topics 응답 상태: ${response.status}`);
+        if (!response.ok) { 
+          const errorText = await response.text(); 
+          console.error(`[loadRecentTopics] 최근 주제 불러오기 실패: ${response.status} - ${errorText}`); 
+          return []; 
+        }
+        const data = await response.json(); 
+        console.log("[loadRecentTopics] 최근 주제 데이터:", data);
+        return data.topics || [];
+      } catch (error) { 
+        console.error('[loadRecentTopics] 최근 주제 불러오기 중 오류:', error); 
+        return []; 
+      }
+    }
+
+    function showTopicBox(topics) {
+        topicOptionsContainer.innerHTML = ''; 
+        let hasOptions = false;
+        console.log("[showTopicBox] 주제 박스 표시 시도. 받은 주제:", topics);
+
+        if (topics && topics.length > 0) { 
+            topics.slice(0, 3).forEach(topic => {
+                const option = document.createElement('div'); option.className = 'topic-option';
+                option.textContent = topic;
+                option.onclick = () => {
+                    topicBox.style.display = 'none';
+                    appendMessage(`"${topic}"(으)로 대화를 이어갈게요.`, 'user');
+                    handleUserInteraction(`"${topic}"에 대해 이어서 이야기 해줘.`);
+                };
+                topicOptionsContainer.appendChild(option); 
+                hasOptions = true;
+            });
+        } else { 
+            const option1 = document.createElement('div'); option1.className = 'topic-option';
+            option1.textContent = "조금 이따가 이야기 할까요?";
+            option1.onclick = () => {
+                topicBox.style.display = 'none';
+                waitingUserName.textContent = currentUserName;
+                waitingOverlay.style.display = 'flex';
+                const waitingMsgDiv = appendMessage("(로지가 잠시 기다리고 있어요. 언제든 다시 화면을 클릭하거나 말을 걸어주세요.)", "ai", true);
+                if (waitingMsgDiv) chatWindow.appendChild(waitingMsgDiv);
+                clearTimeout(silenceTimer); 
+            };
+            topicOptionsContainer.appendChild(option1);
+
+            const option2 = document.createElement('div'); option2.className = 'topic-option';
+            option2.textContent = "다른 주제에 대해 물어봐도 될까요?";
+            option2.onclick = () => {
+                topicBox.style.display = 'none';
+                appendMessage("다른 주제에 대해 물어봐도 될까요?", 'user'); 
+                handleUserInteraction("가족에 대해 이야기 해 줄 수 있어?"); 
+            };
+            topicOptionsContainer.appendChild(option2);
+            hasOptions = true;
+        }
+        
+        if (hasOptions) {
+            topicBox.style.display = 'block'; 
+            setTimeout(() => chatWindow.scrollTop = chatWindow.scrollHeight, 0); 
+        } else {
+             topicBox.style.display = 'none';
+        }
+    }
+
+    function startSilenceTimer() {
+        clearTimeout(silenceTimer); 
+        console.log("[Timer] 침묵 타이머 시작...");
+        silenceTimer = setTimeout(async () => {
+            if (isRecording) { 
+                 console.log("[Timer] 녹음 중이므로 주제 추천 건너뜀."); return; 
+            }
+            console.log("[Timer] 침묵 감지됨. 주제 추천 표시 시도.");
+            const topics = await loadRecentTopics(); 
+            showTopicBox(topics);
+        }, SILENCE_TIMEOUT);
+    }
+
+    function resetSilenceTimer() {
+        clearTimeout(silenceTimer);
+        if (topicBox.style.display === 'none' && talkBtn.disabled === false) {
+            console.log("[Timer] 침묵 타이머 리셋 및 재시작."); 
+            startSilenceTimer();
+        } else { 
+            console.log("[Timer] 침묵 타이머 리셋 (주제 박스 표시 또는 버튼 비활성화로 인해 시작 안함)."); 
+        }
+    }
     
     async function handleUserInteraction(userText, context = {}) {
       if (!userText || userText.trim() === "") { return; }
@@ -297,6 +395,7 @@
             ...context 
         };
         const gptResponse = await getGptResponse(userText, currentUserId, gptContext); 
+        console.log("GPT 응답 결과:", gptResponse);
         
         let aiReply = "죄송해요, 답변을 이해하는 데 어려움이 있었어요.";
         let isError = true;
@@ -316,19 +415,19 @@
         
         setTimeout(async () => {
             loadingIndicatorTalk.style.display = 'none'; 
-            const aiBubbleDiv = appendMessage(aiReply, 'ai', isError);
+            const aiBubbleDiv = appendMessage(aiReply, 'ai', isError); 
             if (aiBubbleDiv) { 
                 chatWindow.appendChild(aiBubbleDiv); 
                 chatWindow.scrollTop = chatWindow.scrollHeight;
                  try {
                     await playTTSFromText(aiReply, currentVoiceId); 
-                 } catch (ttsError) {
-                    console.error("TTS 재생 중 오류 발생 (handleUserInteraction):", ttsError);
+                 } catch (e) {
+                    console.error("TTS 실패:", e);
                  }
             }
             disableTalkButton(false, "AI 응답 완료");
             resetSilenceTimer(); 
-        }, 2000);
+        }, 2000); 
 
       } catch (error) { 
         console.error("[handleUserInteraction] AI 응답 처리 중 예외:", error);
@@ -336,7 +435,7 @@
         const fallbackMsg = "죄송합니다, 응답 처리 중 예상치 못한 문제가 발생했어요.";
         const errorBubble = appendMessage(fallbackMsg, 'ai', true);
         if(errorBubble) chatWindow.appendChild(errorBubble);
-        try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) {}
+        try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) { console.error("TTS 실패 (오류 처리 중):", e); }
         disableTalkButton(false, "AI 응답 오류");
         resetSilenceTimer(); 
       } 
@@ -362,6 +461,7 @@
         mediaRecorder.ondataavailable = event => { 
             if (event.data.size > 0) { audioChunks.push(event.data); }
         };
+
         mediaRecorder.onstop = async () => {
             console.log("[onstop] 녹음 중지됨, 처리 시작...");
             talkBtn.innerHTML = '🎤'; 
@@ -383,14 +483,46 @@
             try {
                 const userText = await getSTTFromAudio(audioBlob, durationInSeconds); 
                 
+                // --- 개발자님 요청: 관리자 음성 명령 및 이메일 확인 ---
+                const normalizedUserText = userText ? userText.replace(/\s+/g, '') : ""; 
+                const isAdminUser = currentUserId === ADMIN_EMAIL; // 현재 로그인한 사용자의 ID(이메일)와 관리자 이메일 비교
+                
+                console.log(`[Admin Check] User ID: ${currentUserId}, Is Admin User: ${isAdminUser}, Normalized Text: "${normalizedUserText}"`);
+
+                if (isAdminUser && normalizedUserText === ADMIN_SECRET_PHRASE) {
+                    console.log(`[Admin Command] 관리자 이메일 및 비밀 음성 명령 감지: "${userText}"`);
+                    appendMessage(`(관리자 명령: "${ADMIN_SECRET_PHRASE}" 감지. analysis.html로 이동합니다.)`, 'ai', true);
+                    // 필요한 경우 현재 상태 저장 등의 로직 추가 가능
+                    // 예: localStorage.setItem('lozee_last_interaction_summary_before_admin_skip', lastSummary);
+                    
+                    // 잠시 후 페이지 이동 (메시지 확인 시간 부여)
+                    setTimeout(() => {
+                        window.location.href = 'analysis.html';
+                    }, 1500); // 1.5초 후 이동
+                    return; // 이후 로직 실행 안 함
+                }
+                // --- 관리자 음성 명령 확인 끝 ---
+                
                 if (userText && userText.trim() !== "") {
                     appendMessage(userText, 'user'); 
-                    await handleUserInteraction(userText); 
+                    const isFirstVoiceAfterOnboarding = onboardingComplete && !localStorage.getItem('lozee_first_voice_interaction_done');
+                    if (isFirstVoiceAfterOnboarding) {
+                        const contextForFirstVoice = {
+                            initialUserMessage: userText, 
+                            initialUserEmotions: selectedEmotions,
+                            isFirstChatAfterOnboarding: true
+                        };
+                        await handleUserInteraction(userText, contextForFirstVoice);
+                        localStorage.setItem('lozee_first_voice_interaction_done', 'true'); 
+                        localStorage.removeItem('lozee_selected_emotions'); 
+                    } else {
+                        await handleUserInteraction(userText); 
+                    }
                 } else {
                     const noSttMsg = "죄송해요, 잘 알아듣지 못했어요."; 
                     const errorBubble = appendMessage(noSttMsg, 'ai', true);
                     if(errorBubble) chatWindow.appendChild(errorBubble);
-                    try { await playTTSFromText(noSttMsg, currentVoiceId); } catch(e){}
+                    try { await playTTSFromText(noSttMsg, currentVoiceId); } catch(e){ console.error("TTS 실패 (STT 결과 없음):", e); }
                     disableTalkButton(false, "STT 결과 없음"); 
                     resetSilenceTimer();
                 }
@@ -399,7 +531,7 @@
                 const sttErrorMsg = "음성 인식 중 오류가 발생했어요."; 
                 const errorBubble = appendMessage(sttErrorMsg, 'ai', true);
                 if(errorBubble) chatWindow.appendChild(errorBubble);
-                try { await playTTSFromText(sttErrorMsg, currentVoiceId); } catch(e){}
+                try { await playTTSFromText(sttErrorMsg, currentVoiceId); } catch(e){ console.error("TTS 실패 (STT 오류):", e); }
                 disableTalkButton(false, "STT 오류"); 
                 resetSilenceTimer();
             }
@@ -414,7 +546,7 @@
         else message += `오류: ${error.message}`;
         const errorBubble = appendMessage(message, 'ai', true); 
         if(errorBubble) chatWindow.appendChild(errorBubble);
-        try { await playTTSFromText(message, currentVoiceId); } catch(e){}
+        try { await playTTSFromText(message, currentVoiceId); } catch(e){ console.error("TTS 실패 (녹음 시작 오류):", e); }
         isRecording = false; 
         talkBtn.classList.remove('active'); 
         talkBtn.innerHTML = '🎤';
@@ -441,29 +573,21 @@
     talkBtn.addEventListener('click', async () => {
       console.log("[talkBtn Click] 현재 녹음 상태:", isRecording, "첫 상호작용 완료:", firstInteractionDone);
       
-      waitingOverlay.style.display = 'none'; // 마이크 버튼 클릭 시 기다리는 중 오버레이 숨김
+      waitingOverlay.style.display = 'none'; 
 
-      if (!firstInteractionDone && !onboardingComplete) { 
+      if (!firstInteractionDone && !onboardingComplete && initialGreetingText) { 
         firstInteractionDone = true; 
         disableTalkButton(true, "초기 인사말 TTS 중");
         loadingIndicatorTalk.style.display = 'block';
-        if (initialGreetingText) {
-          try {
-            await playTTSFromText(initialGreetingText, currentVoiceId);
-          } catch (error) {
-            if (error.name === 'NotAllowedError') { 
-              appendMessage("(목소리를 들으려면 화면을 다시 한번 클릭하거나 마이크 버튼을 눌러주세요.)", "ai", true);
-            } else {
-              appendMessage("(초기 안내 음성 재생 중 문제가 발생했습니다.)", "ai", true);
-            }
-          } finally {
-            loadingIndicatorTalk.style.display = 'none';
-            disableTalkButton(false, "초기 인사말 TTS 완료/실패");
-            resetSilenceTimer();
-          }
-        } else { 
+        try {
+          await playTTSFromText(initialGreetingText, currentVoiceId);
+        } catch (error) {
+          const errorBubble = appendMessage( error.name === 'NotAllowedError' ? "(목소리를 들으려면 화면을 다시 한번 클릭하거나 마이크 버튼을 눌러주세요.)" : "(초기 안내 음성 재생 중 문제가 발생했습니다.)", "ai", true);
+          if(errorBubble) chatWindow.appendChild(errorBubble);
+          console.error("TTS 실패 (초기 인사):", error);
+        } finally {
           loadingIndicatorTalk.style.display = 'none';
-          disableTalkButton(false, "초기 인사말 없음");
+          disableTalkButton(false, "초기 인사말 TTS 완료/실패");
           resetSilenceTimer();
         }
         return; 
@@ -476,10 +600,9 @@
       }
     });
     
-    // 기다리는 중 오버레이 클릭 시 숨김
     waitingOverlay.addEventListener('click', () => {
         waitingOverlay.style.display = 'none';
-        resetSilenceTimer(); // 타이머 다시 시작
+        resetSilenceTimer(); 
     });
 
     async function initializeChat() {
@@ -487,7 +610,10 @@
       console.log("채팅 초기화 시작...");
 
       if (!currentUserId || !currentVoiceId) {
-          const errorMsg = "사용자 정보(ID 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 설정 또는 시작 페이지로 이동해주세요.";
+          // 이메일(currentUserId)이 없는 경우 관리자 명령을 사용할 수 없으므로,
+          // 사용자에게 명확한 안내를 제공하거나, 또는 이름/닉네임 기반의 다른 ID 체계를 고려해야 합니다.
+          // 현재는 currentUserId가 이메일이라고 가정하고 진행합니다.
+          const errorMsg = "사용자 정보(ID/이메일 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 설정 또는 시작 페이지로 이동해주세요.";
           console.error("[initializeChat]", errorMsg); 
           const errorBubble = appendMessage(errorMsg, 'ai', true);
           if(errorBubble) chatWindow.appendChild(errorBubble);
@@ -497,10 +623,9 @@
       }
 
       try {
-        // ★★★ 온보딩 완료 및 사용자가 intro.html에서 첫마디를 입력한 경우 ★★★
         if (onboardingComplete && userTypedIntro) { 
-            console.log("온보딩 완료됨. 사용자가 intro.html에서 입력한 첫마디와 감정으로 대화 시작.");
-            appendMessage(userTypedIntro, 'user'); // 사용자의 첫마디를 채팅창에 표시
+            console.log("온보딩 완료. 사용자가 intro.html에서 입력한 첫마디와 감정으로 대화 시작.");
+            appendMessage(userTypedIntro, 'user'); 
 
             const contextForFirstInteraction = { 
                 initialUserMessage: userTypedIntro, 
@@ -510,18 +635,14 @@
             await handleUserInteraction(userTypedIntro, contextForFirstInteraction);
             
             localStorage.removeItem('lozee_onboarding_complete'); 
-            localStorage.removeItem('lozee_user_typed_intro'); // 사용한 intro 메시지 제거
-            localStorage.removeItem('lozee_selected_emotions');
+            localStorage.removeItem('lozee_user_typed_intro'); 
             firstInteractionDone = true; 
 
-        } else if (onboardingComplete && !userTypedIntro) { // ★★★ 온보딩은 완료했으나, intro.html에서 첫마디 입력 없이 넘어온 경우 ★★★
-            console.log("온보딩 완료됨. 사용자의 첫 음성 입력을 기다립니다.");
-            // 로지의 첫인사 (예: "만나서 반가워요, [이름]님! 오늘 어떤 이야기를 나누고 싶으세요?")
-            // 이 부분은 getInitialGreeting을 사용하거나, 새로운 첫인사 로직을 만들 수 있습니다.
-            // 여기서는 사용자가 먼저 말하도록 유도하기 위해, 로지의 첫마디 없이 바로 마이크 활성화.
-            initialGreetingText = `만나서 반가워요, ${currentUserName}님! 오늘 어떤 이야기를 나누고 싶으세요? 아래 마이크 버튼을 눌러 말씀해주세요.`;
+        } else if (onboardingComplete && !userTypedIntro) { 
+            console.log("온보딩 완료. 사용자의 첫 음성 입력을 기다립니다.");
+            initialGreetingText = `만나서 반가워요, ${currentUserName}님! 이제 대화를 시작할 준비가 되었어요. 아래 마이크 버튼을 눌러 지금 어떤지 말씀해주세요.`;
             const aiGreetingBubble = appendMessage(initialGreetingText, 'ai');
-            if(aiGreetingBubble) chatWindow.appendChild(aiGreetingBubble);
+            if(aiGreetingBubble) chatWindow.appendChild(aiGreetingBubble); 
             
             loadingIndicatorTalk.style.display = 'block';
             try {
@@ -532,9 +653,9 @@
                 loadingIndicatorTalk.style.display = 'none';
             }
             disableTalkButton(false, "온보딩 후 첫 음성 입력 대기");
-            firstInteractionDone = true; // 이 경우, 첫 마이크 클릭이 바로 녹음 시작이 되도록.
+            firstInteractionDone = true; 
 
-        } else { // 온보딩을 안 했거나, 온보딩 데이터가 없는 경우 (기존 일반 시작 로직)
+        } else { 
             const urlParams = new URLSearchParams(window.location.search);
             const topicFromUrl = urlParams.get('topic');
             if (topicFromUrl) { 
