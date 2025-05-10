@@ -3,124 +3,330 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>무슨 일이 있었어?</title>
-  <link href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2207@1.0/KOPUBWORLD_DOTUM_MEDIUM.woff2" rel="stylesheet">
+  <title>LOZEE와 대화</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      background-color: #fff;
-      font-family: 'KOPUBWORLD DOTUM', sans-serif;
-      color: #222;
-    }
-    .title {
-      font-size: 22px;
-      margin-bottom: 16px;
-    }
-    .chat-box {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 16px;
-      height: 300px;
-      overflow-y: auto;
-      margin-bottom: 20px;
-    }
-    .user-input {
-      width: calc(100% - 100px);
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .submit-btn {
-      padding: 10px 20px;
-      background-color: #0095ff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .button-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
+    /* style.css 외 추가 스타일 또는 여기에 스타일 내용 포함 */
+    body { display: flex; flex-direction: column; min-height: 100vh; background-color: #ffffff; color: #333; font-family: 'KoPubWorld Dotum', sans-serif; }
+    #main-header { background-color: #0095FF; color: white; padding: 1rem; text-align: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+    #chat-container { flex: 1; display: flex; flex-direction: column; overflow-y: hidden; width: 100%; max-width: 700px; margin: 0 auto; box-sizing: border-box; }
+    #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; line-height: 1.6; font-size: 16px; white-space: pre-wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .user { background-color: #fff9c4; color: #333; align-self: flex-end; margin-left: auto; border-bottom-right-radius: 5px; }
+    .ai { background-color: #0095FF; color: white; align-self: flex-start; margin-right: auto; border-bottom-left-radius: 5px; }
+    .bubble.ai.error { background-color: #ff7373; color: white; }
+    #loading-indicator-talk { text-align: center; padding: 10px; display: none; color: #555; font-style: italic; }
+    #talk-btn-container { padding: 15px 0; background-color: #ffffff; flex-shrink: 0; text-align: center; border-top: 1px solid #eee; }
+    #talk-btn { font-family: 'KoPubWorld Dotum', sans-serif; width: 80px; height: 80px; border-radius: 50%; background-color: #b6b6b6; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; font-size: 36px; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; transition: transform 0.2s ease, background-color 0.3s; }
+    #talk-btn.active { background-color: #0095FF; transform: scale(1.1); }
+    #talk-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: scale(1.0); }
+    #topic-selection { display: none; background: #f0f0f0; padding: 20px; border-top: 1px solid #ddd; text-align: center; flex-shrink: 0; }
+    #topic-selection h3 { font-size: 18px; color: #333; margin-top: 0; margin-bottom: 15px; font-weight: bold; }
+    .topic-option { font-family: 'KoPubWorld Dotum', sans-serif; padding: 12px 15px; margin: 8px auto; background: white; border: 1px solid #0095FF; color: #0095FF; border-radius: 10px; cursor: pointer; max-width: 320px; font-size: 16px; font-weight: bold; transition: background-color 0.2s, color 0.2s; }
+    .topic-option:hover { background-color: #0095FF; color: white; }
   </style>
 </head>
 <body>
-  <div class="title">무슨 일이 있었어?</div>
-  <div class="chat-box" id="chatBox">
-    <p>🤖 안녕! 오늘 어떤 일이 있었는지 들려줄래?</p>
+  <header id="main-header">LOZEE와 대화하기</header>
+
+  <div id="chat-container">
+    <div id="chat-window"></div>
+    <div id="topic-selection">
+      <h3>이야기를 이어가고 싶은 주제를 골라볼래?</h3>
+      <div id="topic-options"></div>
+    </div>
   </div>
 
-  <div class="button-row">
-    <input type="text" id="userInput" class="user-input" placeholder="말하고 싶은 걸 적어줘 또는 마이크로 말해줘">
-    <button class="submit-btn" onclick="sendMessage()">보내기</button>
+  <div id="loading-indicator-talk">음성 준비 중...</div>
+  <div id="talk-btn-container">
+    <button id="talk-btn" aria-label="말하기">🎤</button>
   </div>
 
-  <div class="button-row">
-    <button onclick="startAnalysis()">분석하기</button>
-    <button onclick="goToNextPage()">다음 단계로</button>
-  </div>
+  <script type="module">
+    // 필요한 모듈 임포트 (경로 확인!)
+    import { playTTSFromText } from './js/tts.js';
+    import { getSTTFromAudio } from './js/stt.js'; // 로그 추가된 최신 버전 사용 가정
+    import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-  <script>
-    const chatBox = document.getElementById('chatBox');
-    const userInput = document.getElementById('userInput');
+    console.log("talk.html 스크립트 시작 (v3 - 첫 클릭 시 인사 재생, 로딩 인디케이터)");
 
-    // ✅ [1] 사용자 입력 보내기
-    function sendMessage() {
-      const message = userInput.value.trim();
-      if (message) {
-        const userBubble = document.createElement('p');
-        userBubble.textContent = `🙋‍♀️ ${message}`;
-        chatBox.appendChild(userBubble);
+    const talkBtn = document.getElementById('talk-btn');
+    const chatWindow = document.getElementById('chat-window');
+    const topicBox = document.getElementById('topic-selection');
+    const topicOptionsContainer = document.getElementById('topic-options');
+    const loadingIndicatorTalk = document.getElementById('loading-indicator-talk');
 
-        userInput.value = '';
+    const currentUserName = localStorage.getItem('lozee_username');
+    const currentUserId = localStorage.getItem('lozee_username');
+    const currentVoiceId = localStorage.getItem('lozee_voice');
+    const currentUserAge = localStorage.getItem('lozee_userage');
+    const currentUserDisease = localStorage.getItem('lozee_disease');
+    let hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
+    let lastSummary = localStorage.getItem('lozee_lastSummary') || '';
 
-        // ✅ [2] GPT 응답 연동
-        fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer 여기에_너의_API_KEY_입력'
-          },
-          body: JSON.stringify({
-            model: 'gpt-4',
-            messages: [
-              { role: 'system', content: '너는 아이의 이야기를 잘 들어주는 상담 선생님이야.' },
-              { role: 'user', content: message }
-            ]
-          })
-        })
-        .then(response => response.json())
-        .then(data => {
-          const reply = data.choices[0].message.content;
-          const botBubble = document.createElement('p');
-          botBubble.textContent = `🤖 ${reply}`;
-          chatBox.appendChild(botBubble);
+    console.log("사용자 정보:", { currentUserName, currentVoiceId, currentUserAge, currentUserDisease, hasVisited });
 
-          speak(reply); // ✅ TTS로 응답 읽어주기
-          chatBox.scrollTop = chatBox.scrollHeight;
-        })
-        .catch(error => console.error('GPT 오류:', error));
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+    let mediaStream = null;
+    let silenceTimer;
+    const SILENCE_TIMEOUT = 20000;
+
+    let firstInteractionDone = false; // 첫 상호작용(인사말 듣기) 여부 플래그
+    let initialGreetingText = "";    // 초기 인사말 텍스트 저장용
+
+    function appendMessage(text, role = 'ai', isError = false) {
+      if (!text || String(text).trim() === "") { console.log(`[appendMessage] 빈 메시지 (${role}), 추가 안함.`); return; }
+      console.log(`[appendMessage] (${role}): ${text.substring(0,50)}...`);
+      const msgDiv = document.createElement('div'); msgDiv.className = `bubble ${role}`;
+      if (isError && role === 'ai') msgDiv.classList.add('error');
+      text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+      msgDiv.innerHTML = text; chatWindow.appendChild(msgDiv);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      resetSilenceTimer();
+    }
+
+    function disableTalkButton(disable = true, reason = "") {
+      console.log(`[disableTalkButton] ${disable ? '비활성화' : '활성화'}${reason ? ` (${reason})` : ''}`);
+      talkBtn.disabled = disable;
+    }
+
+    async function loadRecentTopics() {
+      if (!currentUserId) { console.warn("[loadRecentTopics] 사용자 ID 없음, 주제 로드 건너뜀."); return []; }
+      try {
+        const backendUrl = 'https://ggg-production.up.railway.app';
+        console.log(`[loadRecentTopics] ${backendUrl}/api/topics 호출 시도... UserID: ${currentUserId}`);
+        const response = await fetch(`${backendUrl}/api/topics?userId=${encodeURIComponent(currentUserId)}`);
+        console.log(`[loadRecentTopics] /api/topics 응답 상태: ${response.status}`);
+        if (!response.ok) { const errorText = await response.text(); console.error(`[loadRecentTopics] 최근 주제 불러오기 실패: ${response.status} - ${errorText}`); return []; }
+        const data = await response.json(); console.log("[loadRecentTopics] 최근 주제 데이터:", data);
+        return data.topics || [];
+      } catch (error) { console.error('[loadRecentTopics] 최근 주제 불러오기 중 오류:', error); return []; }
+    }
+
+    function showTopicBox(topics) {
+        topicOptionsContainer.innerHTML = ''; let hasOptions = false;
+        console.log("[showTopicBox] 주제 박스 표시 시도. 받은 주제:", topics);
+        if (topics && topics.length > 0) {
+            topics.slice(0, 3).forEach(topic => {
+                const option = document.createElement('div'); option.className = 'topic-option';
+                option.textContent = topic;
+                option.onclick = () => {
+                    console.log(`[Topic Click] 주제 선택됨: "${topic}"`); topicBox.style.display = 'none';
+                    appendMessage(`"${topic}"(으)로 대화를 이어갈게요.`, 'user');
+                    handleUserInteraction(`"${topic}"에 대해 이어서 이야기 해줘.`);
+                };
+                topicOptionsContainer.appendChild(option); hasOptions = true;
+            });
+        }
+        const newTopicOption = document.createElement('div'); newTopicOption.className = 'topic-option';
+        newTopicOption.textContent = '🆕 새로운 주제로 이야기할래요';
+        newTopicOption.onclick = () => {
+            console.log("[Topic Click] '새로운 주제' 선택됨"); topicBox.style.display = 'none';
+            const newTopicMsg = "좋아요! 어떤 새로운 이야기를 하고 싶으신가요?";
+            appendMessage(newTopicMsg, 'ai');
+            playTTSFromText(newTopicMsg, currentVoiceId).catch(err => console.error("TTS 재생 오류 (새 주제):", err));
+            resetSilenceTimer();
+        };
+        topicOptionsContainer.appendChild(newTopicOption); hasOptions = true;
+        if (hasOptions) { topicBox.style.display = 'block'; setTimeout(() => chatWindow.scrollTop = chatWindow.scrollHeight, 0); console.log("[showTopicBox] 주제 박스 표시됨.");}
+    }
+
+    function startSilenceTimer() {
+        clearTimeout(silenceTimer); console.log("[Timer] 침묵 타이머 시작...");
+        silenceTimer = setTimeout(async () => {
+            if (isRecording) { console.log("[Timer] 녹음 중이므로 주제 추천 건너뜀."); return; }
+            console.log("[Timer] 침묵 감지됨. 주제 추천 표시 시도.");
+            const topics = await loadRecentTopics(); showTopicBox(topics);
+        }, SILENCE_TIMEOUT);
+    }
+
+    function resetSilenceTimer() {
+        clearTimeout(silenceTimer);
+        if (topicBox.style.display === 'none' && talkBtn.disabled === false) {
+            console.log("[Timer] 침묵 타이머 리셋 및 재시작."); startSilenceTimer();
+        } else { console.log("[Timer] 침묵 타이머 리셋 (주제 박스 또는 버튼 상태로 인해 시작 안함)."); }
+    }
+
+    async function handleUserInteraction(userText) {
+      if (!userText || userText.trim() === "") { console.warn("[handleUserInteraction] 빈 텍스트."); return; }
+      console.log("[handleUserInteraction] AI 응답 처리 시작. 입력:", userText);
+      disableTalkButton(true, "AI 응답 대기 중"); topicBox.style.display = 'none';
+      try {
+        const context = { userAge: currentUserAge, userDisease: currentUserDisease };
+        console.log("[handleUserInteraction] getGptResponse 호출...");
+        const gptResponse = await getGptResponse(userText, currentUserId, context);
+        console.log("[handleUserInteraction] getGptResponse 응답:", gptResponse);
+        let aiReply = "죄송해요, 답변 생성 중 문제가... :("; let isError = true;
+        if (gptResponse && gptResponse.rephrasing) {
+            aiReply = gptResponse.rephrasing; isError = false;
+            console.log("[handleUserInteraction] GPT 성공:", aiReply.substring(0,50)+"...");
+            if (gptResponse.summary) { localStorage.setItem('lozee_lastSummary', gptResponse.summary); lastSummary = gptResponse.summary; console.log("[handleUserInteraction] 새 요약 저장됨:", lastSummary); }
+        } else if (gptResponse && gptResponse.error) { aiReply = gptResponse.error; console.warn("[handleUserInteraction] GPT 오류(백엔드 보고):", aiReply); }
+        else { console.warn("[handleUserInteraction] GPT 응답 형식 이상:", gptResponse); }
+        appendMessage(aiReply, 'ai', isError);
+        loadingIndicatorTalk.style.display = 'block'; console.log("[handleUserInteraction] playTTSFromText 호출 (AI 응답)...");
+        await playTTSFromText(aiReply, currentVoiceId); console.log("[handleUserInteraction] playTTSFromText 완료 (AI 응답).");
+      } catch (error) {
+        console.error("[handleUserInteraction] AI 응답 처리 중 예외:", error);
+        const fallbackMsg = "죄송합니다, AI 응답 처리 중 문제가 발생했어요."; // 더 구체적인 메시지
+        appendMessage(fallbackMsg, 'ai', true);
+        try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) {}
+      } finally {
+        loadingIndicatorTalk.style.display = 'none'; disableTalkButton(false, "AI 응답 완료"); resetSilenceTimer();
+        console.log("[handleUserInteraction] 처리 완료.");
       }
     }
 
-    // ✅ [3] TTS 기능
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ko-KR';
-      utterance.rate = 1.0;
-      speechSynthesis.speak(utterance);
+    async function startRecording() {
+      if (isRecording) { console.log("[startRecording] 이미 녹음 중."); return; }
+      console.log("[startRecording] 녹음 시작 시도..."); topicBox.style.display = 'none';
+      try {
+        if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); console.log("[startRecording] 이전 스트림 정리."); }
+        console.log("[startRecording] 마이크 권한 요청...");
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("[startRecording] 마이크 권한 획득.");
+        isRecording = true; talkBtn.classList.add('active'); talkBtn.innerHTML = '⏹️';
+        disableTalkButton(false, "녹음 중"); // 중지 가능하도록 활성화
+        console.log("[startRecording] 녹음 상태 활성화.");
+        audioChunks = []; const options = { mimeType: 'audio/webm;codecs=opus' }; // Opus 코덱 사용 권장
+        try { mediaRecorder = new MediaRecorder(mediaStream, options); console.log(`[startRecording] MediaRecorder 생성 (mimeType: ${mediaRecorder.mimeType})`); }
+        catch (e1) { console.warn(`[startRecording] mimeType ${options.mimeType} 미지원, 기본값 시도`, e1); try { mediaRecorder = new MediaRecorder(mediaStream); console.log(`[startRecording] MediaRecorder 생성 (기본 mimeType: ${mediaRecorder.mimeType})`); } catch (e2) { console.error("[startRecording] MediaRecorder 초기화 최종 실패:", e2); throw new Error("녹음 장치를 시작할 수 없습니다."); }}
+        mediaRecorder.ondataavailable = event => { if (event.data.size > 0) { console.log(`[ondataavailable] 데이터 수신: ${event.data.size} bytes`); audioChunks.push(event.data); }};
+        mediaRecorder.onstop = async () => {
+            console.log("[onstop] 녹음 중지됨, 처리 시작...");
+            if (audioChunks.length === 0) { console.warn("[onstop] 녹음된 오디오 청크 없음."); disableTalkButton(false, "녹음 데이터 없음"); resetSilenceTimer(); return; }
+            const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType }); audioChunks = [];
+            console.log(`[onstop] 오디오 Blob 생성 - 크기: ${audioBlob.size}, 타입: ${mediaRecorder.mimeType}`);
+            disableTalkButton(true, "STT 처리 중");
+            try {
+                console.log("[onstop] getSTTFromAudio 호출...");
+                const userText = await getSTTFromAudio(audioBlob);
+                console.log("[onstop] getSTTFromAudio 완료. 인식된 텍스트:", `"${userText}"`); // 따옴표 추가하여 빈 문자열 명확히
+                if (userText && userText.trim() !== "") {
+                    console.log("[onstop] 유효 텍스트 인식, AI 응답 처리 시작."); appendMessage(userText, 'user');
+                    await handleUserInteraction(userText);
+                } else {
+                    console.log("[onstop] STT 결과 없음 또는 비어있음.");
+                    const noSttMsg = "죄송해요, 잘 알아듣지 못했어요. 다시 한번 말씀해주시겠어요?";
+                    appendMessage(noSttMsg, 'ai', true);
+                    try { await playTTSFromText(noSttMsg, currentVoiceId); } catch(e){}
+                    disableTalkButton(false, "STT 결과 없음"); resetSilenceTimer();
+                }
+            } catch (sttError) {
+                console.error("[onstop] STT 처리 중 예외:", sttError);
+                const sttErrorMsg = "음성 인식 중 오류가 발생했어요. 다시 시도해주세요.";
+                appendMessage(sttErrorMsg, 'ai', true);
+                try { await playTTSFromText(sttErrorMsg, currentVoiceId); } catch(e){}
+                disableTalkButton(false, "STT 오류"); resetSilenceTimer();
+            }
+        };
+        mediaRecorder.start(); console.log("[startRecording] 녹음 시작됨.");
+        resetSilenceTimer();
+      } catch (error) {
+        console.error("[startRecording] 녹음 시작 중 예외:", error);
+        let message = "마이크를 시작할 수 없어요. ";
+        if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") message += "마이크 사용 권한을 허용해주세요.";
+        else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") message += "연결된 마이크 장치를 찾을 수 없어요.";
+        else message += `오류: ${error.message}`;
+        appendMessage(message, 'ai', true); try { await playTTSFromText(message, currentVoiceId); } catch(e){}
+        isRecording = false; talkBtn.classList.remove('active'); talkBtn.innerHTML = '🎤';
+        disableTalkButton(false, "녹음 시작 오류");
+      }
     }
 
-    function startAnalysis() {
-      alert('감정 분석을 시작할게!');
-      window.location.href = 'analysis.html';
+    function stopRecording() {
+        console.log("[stopRecording] 녹음 중지 요청...");
+        if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); console.log("[stopRecording] mediaRecorder.stop() 호출됨."); }
+        else { console.log("[stopRecording] MediaRecorder 없음 또는 녹음 중 아님."); }
+        if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); mediaStream = null; console.log("[stopRecording] 미디어 스트림 트랙 중지됨."); }
+        isRecording = false; talkBtn.classList.remove('active'); talkBtn.innerHTML = '🎤';
+        console.log("[stopRecording] 녹음 상태 비활성화 및 버튼 UI 복원.");
     }
 
-    function goToNextPage() {
-      window.location.href = 'confirm.html';
+    talkBtn.addEventListener('click', async () => {
+      console.log("[talkBtn Click] 현재 녹음 상태:", isRecording, "첫 상호작용 완료:", firstInteractionDone);
+      if (!firstInteractionDone) { // 첫 번째 클릭: 초기 인사말 TTS 재생
+        firstInteractionDone = true;
+        disableTalkButton(true, "초기 인사말 TTS 중");
+        loadingIndicatorTalk.style.display = 'block';
+        console.log("[talkBtn Click] 첫 상호작용, 초기 인사말 TTS 재생 시도...");
+        if (initialGreetingText) {
+          try {
+            await playTTSFromText(initialGreetingText, currentVoiceId);
+            console.log("[talkBtn Click] 초기 인사말 TTS 재생 완료.");
+          } catch (error) {
+            console.error("[talkBtn Click] 초기 인사말 TTS 재생 오류:", error);
+            if (error.name === 'NotAllowedError') {
+              appendMessage("(목소리를 들으려면 화면을 다시 한번 클릭하거나 마이크 버튼을 눌러주세요.)", "ai", true);
+            } else {
+              appendMessage("(초기 안내 음성 재생 중 문제가 발생했습니다.)", "ai", true);
+            }
+          } finally {
+            loadingIndicatorTalk.style.display = 'none';
+            disableTalkButton(false, "초기 인사말 TTS 완료/실패");
+            resetSilenceTimer();
+          }
+        } else {
+          console.warn("[talkBtn Click] 재생할 초기 인사말 없음.");
+          loadingIndicatorTalk.style.display = 'none';
+          disableTalkButton(false, "초기 인사말 없음");
+          resetSilenceTimer();
+        }
+        return; // 녹음 시작 안 함
+      }
+
+      // 이후 클릭: 녹음 시작/중지
+      if (!isRecording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    });
+
+    async function initializeChat() {
+      disableTalkButton(true, "초기화 중");
+      console.log("채팅 초기화 시작...");
+      if (!currentUserId || !currentVoiceId) {
+          const errorMsg = "사용자 정보(ID 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 설정 페이지로 이동해주세요.";
+          console.error("[initializeChat]", errorMsg); appendMessage(errorMsg, 'ai', true);
+          loadingIndicatorTalk.style.display = 'none'; // 추가: 오류 시 로딩 숨김
+          disableTalkButton(false, "사용자 정보 없음"); // 추가: 버튼 활성화
+          return;
+      }
+
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const topicFromUrl = urlParams.get('topic');
+        console.log("[initializeChat] URL 주제:", topicFromUrl);
+
+        if (topicFromUrl) {
+          const userMsg = `"${topicFromUrl}"에 대해 이야기하고 싶어요.`; appendMessage(userMsg, 'user');
+          loadingIndicatorTalk.style.display = 'none'; // 추가: AI 응답 전 로딩 숨김
+          await handleUserInteraction(`"${topicFromUrl}" 관련해서 이야기 시작해줘.`);
+        } else {
+          console.log("[initializeChat] getInitialGreeting 호출...");
+          initialGreetingText = await getInitialGreeting(currentUserName, hasVisited, lastSummary, currentUserAge, currentUserDisease);
+          console.log("[initializeChat] getInitialGreeting 완료:", initialGreetingText);
+          appendMessage(initialGreetingText, 'ai');
+          // 초기 인사말 TTS는 첫 버튼 클릭 시 재생되므로, 여기서는 버튼만 활성화
+          loadingIndicatorTalk.style.display = 'none'; // 추가: 텍스트 표시 후 로딩 숨김
+          disableTalkButton(false, "초기화 완료, 첫 클릭 대기");
+        }
+        if (!hasVisited) { localStorage.setItem('lozee_hasVisited', 'true'); hasVisited = true; console.log("[initializeChat] 첫 방문 기록."); }
+      } catch (error) {
+          console.error("[initializeChat] 초기화 중 예외:", error);
+          appendMessage("채팅 시작 중 문제 발생.", 'ai', true);
+          loadingIndicatorTalk.style.display = 'none'; // 추가: 예외 시 로딩 숨김
+          disableTalkButton(false, "초기화 오류");
+      } finally {
+        console.log("채팅 초기화 완료.");
+        // 버튼 활성화 및 타이머 시작은 각 분기 또는 첫 클릭 핸들러에서 담당
+      }
     }
+    initializeChat();
   </script>
 </body>
 </html>
