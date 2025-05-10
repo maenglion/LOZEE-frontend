@@ -135,9 +135,26 @@
         
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
         .step-background-main .loading-indicator { color: #eee; }
+        
+        /* 오류 메시지를 위한 전용 공간 (화면 상단에 고정될 수 있도록) */
+        #pageErrorDisplay {
+            position: fixed; /* 화면에 고정 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #ffdddd; /* 눈에 띄는 배경색 */
+            color: #d9534f; /* 어두운 빨간색 글씨 */
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            z-index: 1000; /* 다른 요소들 위에 표시 */
+            display: none; /* 기본은 숨김 */
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body id="introBody" class="step-background-main"> 
+    <div id="pageErrorDisplay"></div> {/* 오류 메시지 표시 영역 */}
 
     <div id="step1" class="step">
         <div class="intro-container">
@@ -151,6 +168,7 @@
         </div>
     </div>
 
+    {/* ... 나머지 step2, step3, step4, step5 HTML은 이전과 동일하게 유지 ... */}
     <div id="step2" class="step step-background-default">
         <div class="intro-container">
             <div class="content-box">
@@ -225,10 +243,10 @@
         
         document.addEventListener('DOMContentLoaded', async () => {
             console.log("Intro script: DOMContentLoaded 이벤트 발생");
+            const pageErrorDisplay = document.getElementById('pageErrorDisplay'); // 오류 메시지 표시 영역
+
             try {
                 console.log("Intro script: 모듈 임포트 시도...");
-                // 경로가 올바른지, 파일에 오류가 없는지 확인 필요
-                // 예: './js/emotionData.js'가 intro.html과 같은 폴더 내의 js 폴더 안에 있는지
                 const emotionDataModule = await import('./js/emotionData.js');
                 const lozeeEmotions = emotionDataModule.lozeeEmotions;
                 console.log("Intro script: emotionData.js 로드 성공", lozeeEmotions ? `감정 ${lozeeEmotions.length}개` : '데이터 없음');
@@ -265,8 +283,7 @@
                 const userTypedIntro = document.getElementById('userTypedIntro');
                 const typedIntroError = document.getElementById('typedIntroError');
 
-                // 필수 DOM 요소들이 모두 존재하는지 확인
-                const requiredElements = { steps, bodyElement, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError };
+                const requiredElements = { steps, bodyElement, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError, pageErrorDisplay };
                 for (const key in requiredElements) {
                     if (key === 'steps' && !requiredElements[key].every(el => el)) {
                          console.error(`Intro script: 필수 DOM 배열 'steps'의 일부 요소를 찾을 수 없습니다. HTML ID를 확인하세요.`);
@@ -372,7 +389,7 @@
                     if(selectedEmotionsDisplay) selectedEmotionsDisplay.textContent = selectedEmotionObjects.map(e => e.sub).join(', ') || "아직 없어요";
                 }
                 
-                if (lozeeEmotions && emotionCloudContainer) { // 데이터와 컨테이너가 모두 있을 때만 실행
+                if (lozeeEmotions && emotionCloudContainer) { 
                     populateEmotionCloud();
                 } else {
                      console.error("Intro script: 감정 데이터 또는 클라우드 컨테이너가 없어 populateEmotionCloud를 실행할 수 없습니다.");
@@ -449,145 +466,16 @@
 
             } catch (error) { 
                 console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                const errorDiv = document.createElement('div');
-                errorDiv.textContent = "페이지를 불러오는 중 문제가 발생했습니다. 잠시 후 새로고침 해보세요. (오류 코드: DOM_LOAD_ERR)";
-                errorDiv.style.color = "red"; errorDiv.style.textAlign = "center"; errorDiv.style.padding = "20px"; errorDiv.style.fontSize = "18px";
-                if (document.body) { // body가 로드된 경우에만 innerHTML 수정
-                    document.body.innerHTML = ''; 
-                    document.body.appendChild(errorDiv);
-                } else { // body가 아직 없으면 alert으로 대체
-                    alert("페이지 로딩 중 심각한 오류가 발생했습니다.");
+                if (pageErrorDisplay) { // pageErrorDisplay 요소가 있다면 여기에 오류 메시지 표시
+                    pageErrorDisplay.textContent = `페이지 로딩 중 오류가 발생했습니다: ${error.message}. 잠시 후 새로고침 해보세요. (오류 코드: CATCH_ERR)`;
+                    pageErrorDisplay.style.display = 'block';
+                } else { // 없다면 alert으로
+                    alert(`페이지 로딩 중 심각한 오류가 발생했습니다: ${error.message}`);
                 }
+                // document.body.innerHTML = ''; // 더 이상 body 전체를 지우지 않음
             }
         }); 
         console.log("Intro script: 모든 스크립트 실행 완료 (DOMContentLoaded 리스너 등록)");
     </script>
 </body>
 </html>
-```
-
-```javascript
-// js/tts.js
-
-// 실제 백엔드 TTS 엔드포인트 (Railway 주소 등)
-const TTS_BACKEND_URL = 'https://ggg-production.up.railway.app/api/tts'; // 사용자님의 백엔드 주소로 변경해야 합니다.
-
-/**
- * 텍스트를 받아 백엔드 TTS API를 호출하고 오디오를 재생합니다.
- * @param {string} text - 음성으로 변환할 텍스트.
- * @param {string} voiceId - 사용할 목소리 ID (예: 'ko-KR-Chirp3-HD-Zephyr').
- * @returns {Promise<void>} 오디오 재생이 완료되면 resolve되는 Promise.
- */
-export function playTTSFromText(text, voiceId) {
-  console.log(`[tts.js] playTTSFromText 호출됨. Text: "${text}", Voice ID: ${voiceId}`);
-  return new Promise(async (resolve, reject) => {
-    if (!text || String(text).trim() === "") {
-      console.warn("TTS: 말할 내용 없음.");
-      return resolve(); // 빈 텍스트는 성공으로 처리 (아무것도 안 함)
-    }
-    if (!voiceId) {
-      console.warn("TTS: Voice ID 없음. 기본 목소리로 시도하거나 오류 처리 필요.");
-      // 필요시 기본 voiceId를 설정하거나, 오류를 reject할 수 있습니다.
-      // return reject(new Error("Voice ID가 제공되지 않았습니다."));
-    }
-
-    console.log(`TTS: API 요청 시작 - Text: "${text.substring(0, 30)}...", Voice ID: ${voiceId}`);
-
-    try {
-      const response = await fetch(TTS_BACKEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: text,
-          voice: voiceId // 백엔드 /api/tts가 이 'voice' 키를 기대한다고 가정
-        }),
-      });
-
-      console.log(`TTS: API 응답 상태: ${response.status}`);
-
-      if (!response.ok) {
-        let errorDetails = `HTTP status ${response.status}`;
-        try {
-          const errorBodyText = await response.text(); // 오류 응답 본문을 텍스트로 먼저 받음
-          errorDetails += ` - ${errorBodyText}`;
-          console.error(`TTS: 백엔드 요청 실패 상세: ${errorBodyText}`);
-        } catch (e) {
-          console.error("TTS: 오류 응답 본문 읽기 실패", e);
-        }
-        return reject(new Error(`TTS 백엔드 요청 실패: ${errorDetails}`));
-      }
-
-      const audioBlob = await response.blob();
-      console.log(`TTS: 오디오 Blob 수신 완료, 타입: ${audioBlob.type}, 크기: ${audioBlob.size}`);
-
-      if (audioBlob.size === 0) {
-          console.warn("TTS: 수신된 오디오 데이터 크기가 0입니다.");
-          return reject(new Error("수신된 오디오 데이터가 비어있습니다."));
-      }
-
-      const audio = new Audio();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      audio.src = audioUrl;
-
-      audio.onloadedmetadata = () => console.log("TTS: 오디오 메타데이터 로드됨.");
-      audio.oncanplaythrough = () => {
-        console.log("TTS: 오디오 재생 가능, 재생 시작...");
-        audio.play().catch(playError => {
-            console.error("TTS: audio.play() 실패", playError);
-            URL.revokeObjectURL(audioUrl); // 실패 시에도 URL 해제
-            reject(playError);
-        });
-      };
-      audio.onended = () => {
-        console.log("TTS: 오디오 재생 완료.");
-        URL.revokeObjectURL(audioUrl);
-        resolve(); 
-      };
-      audio.onerror = (e) => {
-        console.error("TTS: 오디오 요소 오류 발생.", e.target.error);
-        URL.revokeObjectURL(audioUrl);
-        reject(e.target.error || new Error("오디오 재생 중 알 수 없는 오류 발생"));
-      };
-      audio.onstalled = () => console.warn("TTS: 오디오 로딩 지연됨 (네트워크 문제 가능성).");
-
-    } catch (error) { // fetch 자체의 네트워크 오류 등
-      console.error("TTS: 음성 합성 API 호출 또는 처리 중 오류:", error);
-      reject(error);
-    }
-  });
-}
-```
-
-알겠습니다. `intro.html` 페이지가 여전히 "페이지를 불러오는 중 문제가 발생했습니다..."라는 메시지와 함께 빈 화면으로 나타나고, 개발자 도구 콘솔에 `Uncaught SyntaxError: Unexpected end of input` 오류가 표시되는 상황이시군요.
-
-이 오류는 JavaScript 코드의 마지막 부분이 예기치 않게 끝나서 발생하는 문법 오류입니다. 즉, 코드 어딘가에 괄호, 따옴표 등이 제대로 닫히지 않았거나 스크립트가 중간에 잘렸을 가능성이 높습니다.
-
-제가 이전에 드렸던 `intro_html_debug_v1` 문서의 코드를 다시 한번 면밀히 검토하고, 특히 JavaScript `<script type="module">` 블록의 마지막 부분과 전체적인 괄호 쌍 등을 확인하여 수정된 버전을 제공해 드리겠습니다.
-
-**주요 점검 및 수정 사항:**
-
-1.  **`DOMContentLoaded` 이벤트 리스너 사용:** 모든 DOM 조작 및 이벤트 리스너 설정 코드를 `DOMContentLoaded` 이벤트 리스너 안으로 옮겨서, HTML 문서가 완전히 로드되고 파싱된 후에 스크립트가 실행되도록 합니다. 이는 `document.getElementById` 등이 `null`을 반환하는 문제를 방지하는 데 도움이 됩니다.
-2.  **모듈 임포트 위치:** `await import(...)`는 `async` 함수 내에서 사용되어야 하므로, `DOMContentLoaded`의 콜백 함수를 `async`로 만들고 그 안에서 모듈을 가져오도록 합니다.
-3.  **철저한 DOM 요소 확인:** 각 `document.getElementById` 호출 후 해당 요소가 실제로 존재하는지 확인하는 방어적인 코드를 추가하고, 필수 요소가 없을 경우 명확한 오류 메시지를 콘솔에 남기고 사용자에게도 안내하도록 합니다.
-4.  **`try...catch` 블록 확장:** 메인 스크립트 로직 전체를 `try...catch`로 감싸서 예상치 못한 오류 발생 시에도 원인을 파악하고 사용자에게 안내할 수 있도록 합니다.
-5.  **`populateEmotionCloud` 함수 호출 시점:** `lozeeEmotions` 데이터가 로드된 후에 호출되도록 합니다.
-6.  **HTML에서 `.step.active` 클래스 제거:** JavaScript의 `showStep(0)` 함수가 초기 화면을 설정하도록 HTML에서는 `active` 클래스를 미리 지정하지 않습니다.
-
-위 사항들을 반영하여 `intro_html_debug_v1` 문서를 업데이트했습니다. 이 코드로 `intro.html` 파일을 덮어쓰신 후, 다시 브라우저에서 열고 개발자 도구 콘솔을 확인해보세요.
-
-**콘솔에서 확인하실 주요 로그:**
-
-* "Intro script: 시작"
-* "Intro script: DOMContentLoaded 이벤트 발생"
-* "Intro script: 모듈 임포트 시도..."
-* "Intro script: emotionData.js 로드 성공..."
-* "Intro script: tts.js 로드 성공"
-* "Intro script: steps DOM 요소 가져옴..."
-* "Intro script: 모든 주요 DOM 요소 가져오기 성공"
-* "Intro script: populateEmotionCloud 시작/완료"
-* "Intro script: 이벤트 리스너 설정 완료"
-* "Intro script: showStep(0) 호출됨"
-* "Intro script: 0단계 표시됨"
-* "Intro script: 모든 스크립트 실행 완료 (DOMContentLoaded 리스너 등록 완료)"
-
-이 로그들이 순서대로 잘 찍히는지, 그리고 중간에 다른 오류 메시지는 없는지 확인해주시면 됩니다. 만약 여전히 문제가 발생한다면, 콘솔에 나타나는 오류 메시지를 자세히 알려주
