@@ -203,7 +203,7 @@
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    console.log("talk.html 스크립트 시작 (v3.5 - 온보딩 연동, UI 정리, GPT 지연, 침묵 처리 개선)");
+    console.log("talk.html 스크립트 시작 (v3.6 - GPT 응답 로깅 및 TTS 오류 처리 강화)");
 
     const talkBtn = document.getElementById('talk-btn');
     const chatWindow = document.getElementById('chat-window');
@@ -263,11 +263,8 @@
       msgDiv.innerHTML = processedText; 
       
       if (role === 'user') { 
-          // 사용자 메시지는 즉시 추가 (0.5초 이내)
-          // setTimeout(() => { // 매우 짧은 지연을 원하시면 사용할 수 있으나, 보통은 즉시 추가
             chatWindow.appendChild(msgDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-          // }, 100); // 예: 0.1초 지연 (거의 즉시)
           resetSilenceTimer();
           return msgDiv; 
       } else { 
@@ -390,6 +387,8 @@
             ...context 
         };
         const gptResponse = await getGptResponse(userText, currentUserId, gptContext); 
+        // --- 개발자님 요청 사항 1: GPT 응답 결과 로깅 ---
+        console.log("GPT 응답 결과:", gptResponse); 
         
         let aiReply = "죄송해요, 답변을 이해하는 데 어려움이 있었어요.";
         let isError = true;
@@ -413,10 +412,11 @@
             if (aiBubbleDiv) { 
                 chatWindow.appendChild(aiBubbleDiv); 
                 chatWindow.scrollTop = chatWindow.scrollHeight;
+                 // --- 개발자님 요청 사항 2: TTS 호출 부분 try...catch로 감싸기 ---
                  try {
                     await playTTSFromText(aiReply, currentVoiceId); 
-                 } catch (ttsError) {
-                    console.error("TTS 재생 중 오류 발생 (handleUserInteraction):", ttsError);
+                 } catch (e) {
+                    console.error("TTS 실패:", e); // TTS 실패 시 콘솔에 오류 로깅
                  }
             }
             disableTalkButton(false, "AI 응답 완료");
@@ -429,7 +429,7 @@
         const fallbackMsg = "죄송합니다, 응답 처리 중 예상치 못한 문제가 발생했어요.";
         const errorBubble = appendMessage(fallbackMsg, 'ai', true);
         if(errorBubble) chatWindow.appendChild(errorBubble);
-        try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) {}
+        try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) { console.error("TTS 실패 (오류 처리 중):", e); }
         disableTalkButton(false, "AI 응답 오류");
         resetSilenceTimer(); 
       } 
@@ -478,17 +478,16 @@
                 
                 if (userText && userText.trim() !== "") {
                     appendMessage(userText, 'user'); 
-                    // 온보딩 후 첫 사용자 음성 입력인지 확인
                     const isFirstVoiceAfterOnboarding = onboardingComplete && !localStorage.getItem('lozee_first_voice_interaction_done');
                     if (isFirstVoiceAfterOnboarding) {
                         const contextForFirstVoice = {
-                            initialUserMessage: userText, // STT 결과를 첫 메시지로 사용
+                            initialUserMessage: userText, 
                             initialUserEmotions: selectedEmotions,
                             isFirstChatAfterOnboarding: true
                         };
                         await handleUserInteraction(userText, contextForFirstVoice);
                         localStorage.setItem('lozee_first_voice_interaction_done', 'true'); 
-                        localStorage.removeItem('lozee_selected_emotions'); // 사용한 감정 정보 정리
+                        localStorage.removeItem('lozee_selected_emotions'); 
                     } else {
                         await handleUserInteraction(userText); 
                     }
@@ -496,7 +495,7 @@
                     const noSttMsg = "죄송해요, 잘 알아듣지 못했어요."; 
                     const errorBubble = appendMessage(noSttMsg, 'ai', true);
                     if(errorBubble) chatWindow.appendChild(errorBubble);
-                    try { await playTTSFromText(noSttMsg, currentVoiceId); } catch(e){}
+                    try { await playTTSFromText(noSttMsg, currentVoiceId); } catch(e){ console.error("TTS 실패 (STT 결과 없음):", e); }
                     disableTalkButton(false, "STT 결과 없음"); 
                     resetSilenceTimer();
                 }
@@ -505,7 +504,7 @@
                 const sttErrorMsg = "음성 인식 중 오류가 발생했어요."; 
                 const errorBubble = appendMessage(sttErrorMsg, 'ai', true);
                 if(errorBubble) chatWindow.appendChild(errorBubble);
-                try { await playTTSFromText(sttErrorMsg, currentVoiceId); } catch(e){}
+                try { await playTTSFromText(sttErrorMsg, currentVoiceId); } catch(e){ console.error("TTS 실패 (STT 오류):", e); }
                 disableTalkButton(false, "STT 오류"); 
                 resetSilenceTimer();
             }
@@ -520,7 +519,7 @@
         else message += `오류: ${error.message}`;
         const errorBubble = appendMessage(message, 'ai', true); 
         if(errorBubble) chatWindow.appendChild(errorBubble);
-        try { await playTTSFromText(message, currentVoiceId); } catch(e){}
+        try { await playTTSFromText(message, currentVoiceId); } catch(e){ console.error("TTS 실패 (녹음 시작 오류):", e); }
         isRecording = false; 
         talkBtn.classList.remove('active'); 
         talkBtn.innerHTML = '🎤';
@@ -558,6 +557,7 @@
         } catch (error) {
           const errorBubble = appendMessage( error.name === 'NotAllowedError' ? "(목소리를 들으려면 화면을 다시 한번 클릭하거나 마이크 버튼을 눌러주세요.)" : "(초기 안내 음성 재생 중 문제가 발생했습니다.)", "ai", true);
           if(errorBubble) chatWindow.appendChild(errorBubble);
+          console.error("TTS 실패 (초기 인사):", error);
         } finally {
           loadingIndicatorTalk.style.display = 'none';
           disableTalkButton(false, "초기 인사말 TTS 완료/실패");
@@ -593,7 +593,6 @@
       }
 
       try {
-        // 온보딩 완료 및 사용자가 intro.html에서 첫마디를 입력한 경우
         if (onboardingComplete && userTypedIntro) { 
             console.log("온보딩 완료. 사용자가 intro.html에서 입력한 첫마디와 감정으로 대화 시작.");
             appendMessage(userTypedIntro, 'user'); 
@@ -607,10 +606,9 @@
             
             localStorage.removeItem('lozee_onboarding_complete'); 
             localStorage.removeItem('lozee_user_typed_intro'); 
-            // selectedEmotions는 첫 음성 입력 후 GPT 응답 시 사용되므로 아직 지우지 않음
             firstInteractionDone = true; 
 
-        } else if (onboardingComplete && !userTypedIntro) { // 온보딩은 완료했으나, intro.html에서 첫마디 입력 없이 넘어온 경우
+        } else if (onboardingComplete && !userTypedIntro) { 
             console.log("온보딩 완료. 사용자의 첫 음성 입력을 기다립니다.");
             initialGreetingText = `만나서 반가워요, ${currentUserName}님! 이제 대화를 시작할 준비가 되었어요. 아래 마이크 버튼을 눌러 지금 어떤지 말씀해주세요.`;
             const aiGreetingBubble = appendMessage(initialGreetingText, 'ai');
@@ -626,11 +624,8 @@
             }
             disableTalkButton(false, "온보딩 후 첫 음성 입력 대기");
             firstInteractionDone = true; 
-            // 이 시점에서 lozee_onboarding_complete는 아직 지우지 않고,
-            // 첫 음성 STT 성공 후 lozee_selected_emotions와 함께 지운다.
-            // (또는, 첫 음성 STT 시 isFirstChatAfterOnboarding 플래그를 위해 남겨둔다)
 
-        } else { // 온보딩을 안 했거나, 온보딩 데이터가 없는 경우 (기존 일반 시작 로직)
+        } else { 
             const urlParams = new URLSearchParams(window.location.search);
             const topicFromUrl = urlParams.get('topic');
             if (topicFromUrl) { 
