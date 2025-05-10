@@ -65,13 +65,14 @@ export async function getSTTFromAudio(audioBlob) {
     }
 
     const data = await response.json();
-    console.log("[stt.js] STT API 응답 데이터:", data);
-    const receivedText = data.text || "";
-    console.log("[stt.js] 반환될 텍스트:", receivedText);
+    console.log("[stt.js] STT API 응답 데이터:", data); // STT API 응답 전체를 보여주는 로그
+    const receivedText = data.text || ""; // 백엔드에서 { text: "..." } 형식으로 보내줌
+    console.log("[stt.js] 반환될 텍스트:", `"${receivedText}"`); // 빈 문자열일 경우 명확히
     return receivedText;
 
   } catch (error) {
     console.error("[stt.js] STT 서비스 호출 중 오류:", error);
-    throw error; // 오류를 상위로 전달하여 talk.html에서 상세히 처리
+    // talk.html에서 이 오류를 catch하여 사용자에게 적절한 메시지를 보여줄 수 있도록 throw
+    throw error; 
   }
 }
