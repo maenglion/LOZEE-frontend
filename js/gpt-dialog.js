@@ -52,17 +52,25 @@ export async function getGptResponse(userText, userId, context = {}) {
   try {
     // server.js의 /api/gpt-chat 이 기대하는 형식에 맞춰 messages 배열 구성
     // 여기서는 간단히 현재 userText를 user 역할 메시지로 만듦 (실제로는 대화 히스토리 필요)
-    const payload = {
-      messages: [{ role: "user", content: userText }],
-      // userId는 백엔드에서 필요시 사용 (요청 본문에 직접 넣거나 헤더로 전달 - 백엔드 구현에 따라 다름)
-      // model, temperature 등 OpenAI 파라미터는 백엔드에서 설정할 수도 있음
-      // context 정보는 messages 에 포함시키거나 별도 필드로 전달 (백엔드 구현 확인 필요)
-      // 예시: context 정보를 시스템 메시지로 추가
-      // messages: [
-      //   { role: "system", content: `User info: age=${context.userAge}, condition=${context.userDisease}` },
-      //   { role: "user", content: userText }
-      // ]
-    };
+ const payload = {
+  messages: [
+    {
+      role: "system",
+      content: `당신은 LOZEE라는 감정 코치이자 심리 코칭 심리상담 전문가입니다. 
+사용자의 이야기를 듣고 감정을 공감하며, 관련된 심리학 지식에 기반하여 분석해 주세요. 
+평가를 빨리 하지는 않되 생각을 더 확실하게 이야기 할 수 있는 질문과 가능한 가설을 제시하고, 사용자에게 추가 질문을 통해 더 깊이 있는 대화를 이끌어가세요. 
+말투는 따뜻하고 정중하며, 말끝은 부드럽게 처리하세요.`
+    },
+    ...(context.userAge || context.userDisease
+      ? [{
+          role: "system",
+          content: `사용자 정보: 나이 ${context.userAge || "미상"}, 진단: ${context.userDisease || "정보 없음"}`
+        }]
+      : []),
+    { role: "user", content: userText }
+  ]
+};
+
     console.log("GPT 요청 페이로드:", JSON.stringify(payload));
 
     const response = await fetch(GPT_BACKEND_URL, {
