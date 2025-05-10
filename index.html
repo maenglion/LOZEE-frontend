@@ -59,10 +59,9 @@
         #lozieIntroBubble p { margin: 10px 0; }
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
         .step-background-main .loading-indicator { color: #eee; }
-        /* #pageErrorDisplay는 더 이상 화면 전체를 덮지 않으므로, 필요시 다른 방식으로 오류를 알릴 수 있습니다. */
     </style>
 </head>
-<body id="introBody" class="step-background-default"> {/* 초기 배경은 0단계에 맞게 default로 */}
+<body id="introBody" class="step-background-default"> 
 
     <div id="step0" class="step">
         <div class="intro-container">
@@ -162,7 +161,7 @@
         
         document.addEventListener('DOMContentLoaded', async () => {
             console.log("Intro script: DOMContentLoaded 이벤트 발생");
-            // const pageErrorDisplay = document.getElementById('pageErrorDisplay'); // 오류 표시용 div (현재는 사용 안 함)
+            // const pageErrorDisplay = document.getElementById('pageErrorDisplay'); // 더 이상 사용하지 않음
 
             try {
                 console.log("Intro script: 모듈 임포트 시도...");
@@ -205,17 +204,14 @@
                 const userTypedIntro = document.getElementById('userTypedIntro');
                 const typedIntroError = document.getElementById('typedIntroError');
 
-                // ★★★ 허락된 이메일 목록 (실제 운영 시에는 백엔드에서 관리) ★★★
                 const authorizedEmails = [
                     'maengnanyoung@gmail.com', 
                     'maenghakjae@gmail.com', 
                     'soul.minhoo.maeng@gmail.com', 
                     'yesook0613@naver.com',
                     'primer0722@gmail.com'
-                    // 필요시 여기에 더 추가
                 ]; 
 
-                // 필수 DOM 요소 확인
                 const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError };
                 for (const key in requiredElements) {
                     if (key === 'steps' && !requiredElements[key].every(el => el)) {
@@ -260,29 +256,26 @@
                     console.log(`Intro script: ${stepIndex + 1}단계 표시됨`);
                 }
 
-                // 0단계 (CBT 코드) -> 1단계 (이름)
                 document.getElementById('toStep1Btn').addEventListener('click', () => {
                     const email = cbtCodeInput.value.trim().toLowerCase();
                     cbtCodeMessage.textContent = '';
-                    cbtCodeMessage.className = 'error-message'; // 기본은 에러 스타일
+                    cbtCodeMessage.className = 'error-message'; 
 
                     if (!email) {
                         cbtCodeMessage.textContent = 'CBT 코드(이메일)를 입력해주세요.';
                         return;
                     }
-                    
                     if (authorizedEmails.includes(email)) {
-                        cbtCodeMessage.textContent = '✔️ 확인되었습니다.'; // 파란색 체크 (스타일 필요)
+                        cbtCodeMessage.textContent = '✔️ 확인되었습니다.';
                         cbtCodeMessage.className = 'success-message'; 
                         localStorage.setItem('lozee_cbt_code', email); 
                         console.log("CBT 코드 확인됨:", email);
-                        setTimeout(() => { showStep(1); }, 500); // 성공 메시지 잠시 보여준 후 다음 단계
+                        setTimeout(() => { showStep(1); }, 500); 
                     } else {
                         cbtCodeMessage.textContent = '등록되지 않은 CBT 코드입니다. 다시 확인해주세요.';
                     }
                 });
 
-                // 1단계 -> 2단계
                 document.getElementById('toStep2Btn').addEventListener('click', () => {
                     const username = userNameInput.value.trim();
                     nameError.textContent = '';
@@ -296,7 +289,6 @@
                     showStep(2); 
                 });
 
-                // 2단계 -> 3단계
                 document.getElementById('toStep3Btn').addEventListener('click', () => {
                     const age = userAgeSelect.value;
                     ageError.textContent = '';
@@ -352,7 +344,6 @@
                      console.error("Intro script: 감정 데이터 또는 클라우드 컨테이너가 없어 populateEmotionCloud를 실행할 수 없습니다.");
                 }
 
-                // 3단계 (감정) -> 4단계 (목소리)
                 document.getElementById('toStep4Btn').addEventListener('click', () => {
                     if(emotionSelectionError) emotionSelectionError.textContent = '';
                     if (selectedEmotionObjects.length === 0) {
@@ -364,7 +355,6 @@
                     showStep(4); 
                 });
 
-                // 4단계 (목소리) -> 5단계 (로지 소개)
                 if (testVoiceBtnIntro) {
                     testVoiceBtnIntro.addEventListener('click', async () => {
                         const selectedVoice = voiceSelectInput.value;
@@ -404,7 +394,6 @@
                     showStep(5); 
                 });
 
-                // 5단계 (로지 소개) -> talk.html 로 이동
                 document.getElementById('startChatBtn').addEventListener('click', () => {
                     const typedIntro = userTypedIntro.value.trim();
                     if(typedIntroError) typedIntroError.textContent = '';
@@ -425,20 +414,15 @@
 
             } catch (error) { 
                 console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                // 오류 발생 시, 화면에 직접적인 메시지를 표시하지 않고 콘솔에만 기록합니다.
-                // 그리고 첫 번째 단계를 보여주려고 시도합니다.
+                // 오류 발생 시, 콘솔에만 기록하고, 첫 화면 로드를 시도합니다.
+                // 화면에 직접적인 오류 메시지를 표시하지 않아 "잔소리" 현상을 방지합니다.
                 if (typeof showStep === 'function') {
                     console.warn("Intro script: 초기화 중 오류 발생. 첫 단계 표시 시도...");
                     showStep(0); 
                 } else {
                     console.error("Intro script: showStep 함수를 찾을 수 없어 첫 단계를 표시할 수 없습니다.");
-                    // pageErrorDisplay가 있다면 여기에 간단한 메시지 표시 (선택적)
-                    // if (pageErrorDisplay) {
-                    //     pageErrorDisplay.textContent = "페이지 로드 중 문제가 발생했습니다. (코드: CATCH_NO_SHOWSTEP)";
-                    //     pageErrorDisplay.style.display = 'block';
-                    // } else {
-                    //     alert("페이지 로드 중 심각한 오류가 발생했습니다.");
-                    // }
+                    // 이 경우, 정말 최소한의 사용자 안내가 필요할 수 있습니다.
+                    // alert("페이지 로딩 중 문제가 발생했습니다. 새로고침 해주세요.");
                 }
             }
         }); 
