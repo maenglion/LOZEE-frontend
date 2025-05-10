@@ -90,7 +90,7 @@ export async function getGptResponse(userText, userId, context = {}) {
     // 백엔드에서 요약을 생성해서 함께 보내준다면 여기서 처리 가능
     const summary = data?.summary; // 백엔드가 'summary' 필드를 준다고 가정
 
-    return { rephrasing: aiReply, summary: summary }; // 프론트엔트가 기대하는 형식으로 반환
+    return { rephrasing: aiReply, summary: summary };
 
   } catch (error) {
     console.error("GPT 서비스 호출 중 오류:", error);
