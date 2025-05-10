@@ -193,7 +193,7 @@
 
   <script type="module">
     import { getGptResponse } from './js/gpt-dialog.js'; 
-    import { renderLiteracyAnalysis } from './js/literacyPatternCheckRenderer.js'; // 문해력 분석 함수 import
+    import { renderLiteracyAnalysis } from './js/literacyPatternCheckRenderer.js';
 
     const currentUserName = localStorage.getItem('lozee_username') || "사용자"; 
 
@@ -206,17 +206,19 @@
       const emotions = { 
         joy: { keywords: ['행복', '신나', '뿌듯', '감사', '만족', '좋아', '즐거', '기대', '편안', '안심', '사랑', '웃겨', '최고', '나아졌어', '다행', '재미있', '훌륭', '멋져', '완전 최고야'], count: 0, found: new Set() },
         sadness: { keywords: ['외로', '우울', '서운', '상처', '속상', '허전', '슬퍼', '눈물', '무기력', '지쳤어', '공허', '버려진', '실망'], count: 0, found: new Set() },
-        anger: { keywords: ['화나', '짜증', '억울', '답답', '싫어', '속이 뒤집', '무시', '존중받지 못', '부당', '못참겠', '참기 힘든', '분노', '미워', '싸웠어', '화냈더니', '씨발'], count: 0, found: new Set() },
+        // "분노" 감지 키워드에 욕설 및 "-새끼" 표현 추가
+        anger: { keywords: ['화나', '짜증', '억울', '답답', '싫어', '속이 뒤집', '무시', '존중받지 못', '부당', '못참겠', '참기 힘든', '분노', '미워', '싸웠어', '화냈더니', '씨발', '존나', '개빡', '미친', '새끼', '개새끼', '씹새끼', '병신'], count: 0, found: new Set() },
         anxiety: { keywords: ['걱정', '무서', '불안', '두려', '긴장', '당황', '초조', '민망', '조심스러', '낯설', '혼란', '잘못될까봐', '겁나', '떨려'], count: 0, found: new Set() }
       };
       history.forEach(msg => {
         if (typeof msg.content !== 'string') return;
-        const text = msg.content.toLowerCase();
+        const text = msg.content.toLowerCase(); // 비교를 위해 소문자로 변환
         for (const emotionKey in emotions) {
           emotions[emotionKey].keywords.forEach(word => {
-            if (text.includes(word)) {
+            // 키워드도 소문자로 변환하여 비교 정확도 향상 (이미 소문자 위주지만 확실히)
+            if (text.includes(word.toLowerCase())) {
               emotions[emotionKey].count++;
-              emotions[emotionKey].found.add(word); 
+              emotions[emotionKey].found.add(word); // 원본 키워드 저장
             }
           });
         }
@@ -298,12 +300,14 @@
     const strongEmotionKeywords = {
         joy: ['매우 행복', '너무 신나', '완전 최고', '정말 감사', '완전 최고야'],
         sadness: ['너무 슬퍼', '정말 우울', '깊은 상처', '너무 속상해', '완전 허전'],
-        anger: ['씨발', '존나', '개빡', '미친', '죽겠어', '너무 화나', '진짜 짜증나', '너무 억울해', '정말 답답해', '너무 싫어'],
+        anger: ['씨발', '존나', '개빡', '미친', '죽겠어', '너무 화나', '진짜 짜증나', '너무 억울해', '정말 답답해', '너무 싫어', '새끼', '개새끼', '씹새끼', '병신'], // 요청하신 욕설 추가
         anxiety: ['너무 걱정돼', '너무 무서워', '정말 불안해', '너무 두려워', '극도로 긴장', '완전 당황']
     };
     function isProfanity(text) {
-        const profanityList = ['씨발', '존나', '개빡', '미친', '새끼', '병신'];
-        return profanityList.some(word => text.toLowerCase().includes(word));
+        // strongEmotionKeywords.anger에 이미 대부분 포함되어 있으므로, 이 함수는 중복될 수 있습니다.
+        // 필요에 따라 이 함수를 사용하거나, strongEmotionKeywords.anger 목록을 더 정교하게 관리할 수 있습니다.
+        const profanityList = ['씨발', '존나', '개빡', '미친', '새끼', '병신', '개새끼', '씹새끼']; // 일관성을 위해 strongEmotionKeywords.anger와 유사하게 유지
+        return profanityList.some(word => text.toLowerCase().includes(word.toLowerCase()));
     }
     function selectImportantUtterances(conversationHistory, maxUtterances = 10) {
       const importantUtterances = [];
@@ -312,10 +316,15 @@
         if (importantUtterances.length >= maxUtterances) break;
         let isImportant = false;
         const text = utterance.content.toLowerCase();
-        if (isProfanity(text)) isImportant = true;
+        // isProfanity 함수를 사용하거나, strongEmotionKeywords.anger 목록을 직접 확인할 수 있습니다.
+        // 여기서는 strongEmotionKeywords.anger 목록을 통해 이미 욕설이 감지될 수 있도록 합니다.
+        if (isProfanity(text)) { // isProfanity 사용 또는 아래 로직으로 통합 가능
+             isImportant = true;
+        }
+
         if (!isImportant) {
           for (const emotionType in strongEmotionKeywords) {
-            if (strongEmotionKeywords[emotionType].some(keyword => text.includes(keyword))) {
+            if (strongEmotionKeywords[emotionType].some(keyword => text.includes(keyword.toLowerCase()))) {
               isImportant = true;
               break;
             }
@@ -350,7 +359,7 @@
             resultsContainerKeyEl.innerHTML = '<p class="loading-message">이번 대화에서는 특별히 분석할 만한 주요 발화가 발견되지 않았습니다.</p>';
             return;
         }
-        resultsContainerKeyEl.innerHTML = ''; // 기존 주요 발화 카드들 초기화
+        resultsContainerKeyEl.innerHTML = ''; 
 
         for (let i = 0; i < importantUtterances.length; i++) {
             const utterance = importantUtterances[i];
@@ -426,7 +435,6 @@
         
         console.log("[displayLiteracyAnalysis] 문해력 분석을 위한 데이터 준비...");
         try {
-            // 예시: 전체 사용자 발화 내용을 하나의 문자열로 합쳐서 전달
             const userConversationText = conversationHistory
                 .filter(msg => msg.role === 'user')
                 .map(msg => msg.content)
@@ -436,9 +444,6 @@
                 renderLiteracyAnalysis({ literacyFlags: ["분석할 사용자 발화 내용이 없습니다."], recommendations: [] }, literacyResultsContainerEl);
                 return;
             }
-            
-            // 백엔드에 문해력 분석 요청 (실제 구현 시 getGptResponse와 유사한 함수 사용)
-            // const literacyAnalysisResult = await getGptResponse(userConversationText, currentUserName, { analysisType: 'literacyPatternCheck' });
             
             // --- 임시 목업 데이터 시작 ---
             const mockLiteracyAnalysisResult = {
@@ -509,7 +514,7 @@
                   keyUtteranceAnalysisLoaded = true;
                 }
                 if (!literacyAnalysisLoaded) { 
-                    displayLiteracyAnalysis(conversationHistory); // 문해력 분석 호출
+                    displayLiteracyAnalysis(conversationHistory); 
                     literacyAnalysisLoaded = true;
                 }
               }
