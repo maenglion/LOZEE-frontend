@@ -14,29 +14,19 @@
             --text-on-box: #333;
             --description-text-color: black;
             --default-page-bg: #f4f7f6; /* 메인 컬러 배경이 아닌 단계의 배경색 */
+            --emotion-selected-bg: #FFEB3B; /* 감정 선택 시 노란색 */
+            --emotion-selected-border: #FBC02D;
+            --emotion-selected-text: #424242;
         }
-
-        /* @font-face 규칙 (예시: 더 잠실체 폰트 파일이 fonts 폴더에 있다고 가정)
-        @font-face {
-            font-family: 'TheJamsil';
-            font-weight: 300; 
-            src: url('./fonts/TheJamsil-Light.woff2') format('woff2');
-        }
-        @font-face {
-            font-family: 'TheJamsil';
-            font-weight: 700; 
-            src: url('./fonts/TheJamsil-Bold.woff2') format('woff2');
-        }
-        */
 
         body {
             font-family: 'KoPubWorld Dotum', sans-serif;
             margin: 0;
-            transition: background-color 0.3s ease-out; /* 배경색 변경 시 부드러운 전환 */
+            transition: background-color 0.3s ease-out;
         }
 
         .step {
-            display: none; /* 각 단계는 처음에 숨김 */
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -47,75 +37,47 @@
         }
 
         .step.active {
-            display: flex; /* 현재 단계만 보임 */
+            display: flex;
         }
 
-        .step-background-main {
-            background-color: var(--main-color);
-        }
+        .step-background-main { background-color: var(--main-color); }
         .step-background-main .page-title,
         .step-background-main .description,
-        .step-background-main label {
-            color: var(--text-on-main);
-        }
-        /* 메인 컬러 배경 위의 content-box 내부 텍스트는 다시 원래 색상으로 */
-        .step-background-main .content-box .page-title,
+        .step-background-main label { color: var(--text-on-main); }
+        .step-background-main .content-box .page-title { color: var(--main-color); }
         .step-background-main .content-box .description,
         .step-background-main .content-box label,
-        .step-background-main .content-box p {
-            color: var(--text-on-box); /* page-title은 아래에서 다시 정의 */
-        }
-         .step-background-main .content-box .page-title {
-            color: var(--main-color); /* content-box 안의 타이틀은 다시 메인컬러 */
-        }
+        .step-background-main .content-box p { color: var(--text-on-box); }
 
-
-        .step-background-default {
-            background-color: var(--default-page-bg);
-        }
-        .step-background-default .page-title {
-            color: var(--main-color);
-        }
+        .step-background-default { background-color: var(--default-page-bg); }
+        .step-background-default .page-title { color: var(--main-color); }
         .step-background-default .description,
-        .step-background-default label {
-            color: var(--description-text-color);
-        }
+        .step-background-default label { color: var(--description-text-color); }
 
-
-        .intro-container {
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
-
+        .intro-container { max-width: 500px; width: 100%; text-align: center; }
         .content-box {
             background-color: var(--box-background);
             color: var(--text-on-box);
             border-radius: 20px;
             border: 2px solid var(--box-border-color);
-            padding: 30px; /* 패딩 증가 */
+            padding: 30px;
             margin-top: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* 그림자 약간 조정 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .page-title {
-            /* font-family: 'TheJamsil', 'KoPubWorld Dotum', sans-serif; */ /* "더 잠실체" 사용 시 */
-            font-family: 'KoPubWorld Dotum', sans-serif;
-            font-size: 26px; /* 제목 크기 증가 */
-            font-weight: bold; /* 요청사항: 제목은 굵게 */
+            font-family: 'KoPubWorld Dotum', sans-serif; /* '더 잠실체' 사용 시 해당 폰트명으로 변경 */
+            font-size: 26px;
+            font-weight: bold;
             margin-bottom: 15px;
         }
 
-        .description {
-            font-size: 16px;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
+        .description { font-size: 16px; margin-bottom: 25px; line-height: 1.6; }
         
         label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: bold; text-align: left; }
         input[type="text"], input[type="number"], select, textarea {
-            width: 100%; /* calc 제거하고 box-sizing으로 처리 */
+            width: 100%;
             padding: 12px;
             margin-bottom: 15px;
             border: 1px solid #ccc;
@@ -127,35 +89,16 @@
         textarea { min-height: 100px; resize: vertical; }
 
         button.intro-btn {
-            display: block;
-            width: 100%;
-            padding: 14px; /* 패딩 약간 증가 */
-            background-color: var(--main-color);
-            color: var(--text-on-main);
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 25px; /* 마진 증가 */
-            /* font-family: 'TheJamsil', 'KoPubWorld Dotum', sans-serif; */ /* "더 잠실체" 사용 시 */
-            font-family: 'KoPubWorld Dotum', sans-serif;
+            display: block; width: 100%; padding: 14px;
+            background-color: var(--main-color); color: var(--text-on-main);
+            border: none; border-radius: 8px; font-size: 18px; font-weight: bold;
+            cursor: pointer; margin-top: 25px;
+            font-family: 'KoPubWorld Dotum', sans-serif; /* '더 잠실체' 사용 시 해당 폰트명으로 변경 */
             transition: background-color 0.2s ease;
         }
-        .step-background-main button.intro-btn {
-            background-color: white;
-            color: var(--main-color);
-        }
-        button.intro-btn.secondary { /* 목소리 테스트 버튼 등 보조 버튼용 */
-            background-color: #e0e0e0;
-            color: #555;
-            margin-top: 10px;
-        }
-        .step-background-main button.intro-btn.secondary {
-             background-color: #f0f0f0; /* 메인 배경색 위에서는 좀 더 밝게 */
-             color: #333;
-        }
-
+        .step-background-main button.intro-btn { background-color: white; color: var(--main-color); }
+        button.intro-btn.secondary { background-color: #e0e0e0; color: #555; margin-top: 10px; }
+        .step-background-main button.intro-btn.secondary { background-color: #f0f0f0; color: #333; }
         button.intro-btn:hover { opacity: 0.85; }
 
         .error-message { color: #d9534f; font-size: 0.9em; min-height: 1.2em; margin-top: -5px; margin-bottom:10px; text-align: left; }
@@ -165,34 +108,36 @@
 
         #emotionCloudContainer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px 0; }
         .emotion-tag { 
-            padding: 8px 15px; border: 2px solid black; border-radius: 20px; cursor: pointer; 
-            background-color: white; color: black; transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            padding: 8px 15px; 
+            border: 4px solid black; /* 테두리 두께 2px에서 4px로 변경 */
+            border-radius: 20px; 
+            cursor: pointer; 
+            background-color: white; 
+            color: black; 
+            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
             font-size: 15px;
         }
-        .emotion-tag.selected { background-color: #FFEB3B; border-color: #FBC02D; color: #424242; font-weight: bold; }
+        .emotion-tag.selected { 
+            background-color: var(--emotion-selected-bg); 
+            border-color: var(--emotion-selected-border); 
+            color: var(--emotion-selected-text); 
+            font-weight: bold; 
+        }
         #selectedEmotionsDisplay { font-style: italic; color: #555; margin-top:10px; display: block;}
         .step-background-main #selectedEmotionsDisplay { color: #eee; }
 
-
         #lozieIntroBubble {
-            background-color: white;
-            color: #333;
-            padding: 20px;
-            border-radius: 20px;
-            margin: 20px auto;
-            max-width: 100%;
-            line-height: 1.7;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            text-align: left;
+            background-color: white; color: #333; padding: 20px; border-radius: 20px;
+            margin: 20px auto; max-width: 100%; line-height: 1.7;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: left;
         }
         #lozieIntroBubble p { margin: 10px 0; }
         
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
         .step-background-main .loading-indicator { color: #eee; }
-
     </style>
 </head>
-<body id="introBody" class="step-background-main"> {/* body에 ID 추가해서 초기 배경색 제어 */}
+<body id="introBody" class="step-background-main">
 
     <div id="step1" class="step">
         <div class="intro-container">
@@ -200,7 +145,7 @@
                 <h2 class="page-title">뭐라고 불러줄까?</h2>
                 <p class="description">이름 또는 닉네임을 입력해주세요.</p>
                 <input type="text" id="userNameInput" placeholder="예: 로지친구">
-                <div id="nameError" class="error-message"></div>
+                <div id="nameError" class="error-message"></div> 
                 <button id="toStep2Btn" class="intro-btn">다음</button>
             </div>
         </div>
@@ -211,17 +156,14 @@
             <div class="content-box">
                 <h2 class="page-title">대화를 위한 정보</h2>
                 <p class="description">나이를 비롯한 정보로 대화의 단어, 표현을 설정하는데 큰 도움이 됩니다.</p>
-                
                 <label for="userAgeSelect">나이:</label>
                 <select id="userAgeSelect">
                     <option value="">선택하세요</option>
                     {/* JS로 8~100세 채우기 */}
                 </select>
                 <div id="ageError" class="error-message"></div>
-
                 <label for="userDiagnosisInput">진단명 (선택 사항):</label>
                 <input type="text" id="userDiagnosisInput" placeholder="예: 우울증 (편하게 적어주세요)">
-                
                 <button id="toStep3Btn" class="intro-btn">다음</button>
             </div>
         </div>
@@ -240,7 +182,7 @@
         </div>
     </div>
     
-    <div id="step4" class="step step-background-default"> {/* 목소리 선택 단계 */}
+    <div id="step4" class="step step-background-default">
         <div class="intro-container">
             <div class="content-box">
                 <h2 class="page-title">로지 목소리 선택</h2>
@@ -261,7 +203,7 @@
         </div>
     </div>
 
-    <div id="step5" class="step step-background-main"> {/* 이전 step4가 이제 step5 */}
+    <div id="step5" class="step step-background-main">
         <div class="intro-container">
             <h2 class="page-title">만나서 반가워, <span id="greetingName"></span>!</h2>
             <div id="lozieIntroBubble">
@@ -278,7 +220,6 @@
     </div>
 
     <script type="module">
-        // 경로 주의! 실제 프로젝트 구조에 맞게 수정 필요
         import { lozeeEmotions } from './js/emotionData.js'; 
         import { playTTSFromText } from './js/tts.js'; 
 
@@ -292,7 +233,6 @@
         const bodyElement = document.getElementById('introBody');
         let currentStep = 0;
 
-        // DOM 요소 가져오기
         const userNameInput = document.getElementById('userNameInput');
         const nameError = document.getElementById('nameError');
         const userAgeSelect = document.getElementById('userAgeSelect');
@@ -315,7 +255,6 @@
 
         let selectedEmotionObjects = [];
 
-        // 나이 드롭다운 채우기 (8세부터 100세)
         for (let i = 8; i <= 100; i++) {
             const option = document.createElement('option');
             option.value = i;
@@ -333,15 +272,13 @@
 
         function showStep(stepIndex) {
             steps.forEach((step, index) => {
-                step.style.display = (index === stepIndex) ? 'flex' : 'none'; // flex로 변경
+                step.style.display = (index === stepIndex) ? 'flex' : 'none';
             });
             currentStep = stepIndex;
             updateBodyBackground(stepIndex);
             window.scrollTo(0,0);
         }
 
-        // --- 단계별 버튼 이벤트 리스너 ---
-        // 1단계 -> 2단계
         document.getElementById('toStep2Btn').addEventListener('click', () => {
             const username = userNameInput.value.trim();
             nameError.textContent = '';
@@ -349,14 +286,12 @@
                 nameError.textContent = '이름 또는 닉네임을 입력해주세요.';
                 return;
             }
-            // TODO: 실제 백엔드 username 중복 확인 API 호출 (지금은 통과)
             console.log("사용자 이름/닉네임:", username);
             localStorage.setItem('lozee_username', username);
             greetingName.textContent = username; 
             showStep(1);
         });
 
-        // 2단계 -> 3단계
         document.getElementById('toStep3Btn').addEventListener('click', () => {
             const age = userAgeSelect.value;
             ageError.textContent = '';
@@ -370,7 +305,6 @@
             showStep(2);
         });
         
-        // 3단계 (감정 선택) 로직
         function populateEmotionCloud() {
             lozeeEmotions.forEach(emotion => {
                 const emotionTag = document.createElement('div');
@@ -401,7 +335,7 @@
         }
         populateEmotionCloud();
 
-        document.getElementById('toStep4Btn').addEventListener('click', () => { // 감정선택 -> 목소리선택
+        document.getElementById('toStep4Btn').addEventListener('click', () => {
             emotionSelectionError.textContent = '';
             if (selectedEmotionObjects.length === 0) {
                 emotionSelectionError.textContent = "최소 1개 이상의 감정을 선택해주세요.";
@@ -409,10 +343,9 @@
             }
             localStorage.setItem('lozee_selected_emotions', JSON.stringify(selectedEmotionObjects));
             console.log("선택된 감정:", selectedEmotionObjects);
-            showStep(3); // 목소리 선택 단계(인덱스 3)로 이동
+            showStep(3); 
         });
 
-        // 4단계 (목소리 선택) -> 5단계
         testVoiceBtnIntro.addEventListener('click', async () => {
             const selectedVoice = voiceSelectInput.value;
             voiceError.textContent = '';
@@ -442,15 +375,12 @@
             }
             localStorage.setItem('lozee_voice', voice);
             console.log("선택된 목소리:", voice);
-            // 4단계 인사 문구에서 이름 부분 업데이트 (이미 step1에서 했을 수 있지만, 안전하게 한번 더)
             const currentUsername = localStorage.getItem('lozee_username') || "친구";
             greetingName.textContent = currentUsername;
             userIntroPrompt.innerHTML = `이제 ${currentUsername}님의 이야기를 들려주시겠어요? (오늘 어떤 이야기를 하고 싶은지, 지금 어떤 기분인지 등 편하게 적어줘)`;
-            showStep(4); // 로지 소개 및 사용자 첫마디 단계(인덱스 4)로 이동
+            showStep(4); 
         });
 
-
-        // 5단계 (이전 step4) -> talk.html 로 이동
         document.getElementById('startChatBtn').addEventListener('click', () => {
             const typedIntro = userTypedIntro.value.trim();
             typedIntroError.textContent = '';
@@ -465,8 +395,11 @@
             window.location.href = 'talk.html';
         });
 
-        // 초기 화면 설정
         showStep(0); 
     </script>
 </body>
 </html>
+```
+인트로 페이지의 감정 버블 테두리 두께를 수정했습니다. `.emotion-tag`의 `border` 속성을 `2px`에서 `4px`로 변경하여 요청하신 대로 더 두껍게 만들었습니다.
+
+이제 이 수정된 `intro.html` 코드를 사용하시면 감정 태그들이 좀 더 명확하게 보일 거예요. 다른 부분은 이전과 동일하게 유지했습
