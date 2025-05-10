@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <script>
+    const isConfigured = localStorage.getItem('lozee_username') &&
+                         localStorage.getItem('lozee_voice') &&
+                         localStorage.getItem('lozee_userage');
+
+    const currentTopic = localStorage.getItem('lozee_current_topic');
+
+    if (isConfigured) {
+      const targetUrl = currentTopic ? `talk.html?topic=${encodeURIComponent(currentTopic)}` : 'talk.html';
+      window.location.href = targetUrl;
+    }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOZEE와 대화하기</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background-color: #222;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.3rem;
+    }
+    #chat-window {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .bubble {
+      max-width: 75%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .user {
+      align-self: flex-end;
+      background-color: #ffffff;
+      border-bottom-right-radius: 0;
+    }
+    .ai {
+      align-self: flex-start;
+      background-color: #eaeaea;
+      border-bottom-left-radius: 0;
+    }
+    #talk-btn {
+      background-color: #ffd400;
+      border: none;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px;
+      border-radius: 30px;
+      width: 90%;
+      max-width: 360px;
+      align-self: center;
+    }
+    #talk-btn.active {
+      background-color: #ffae00;
+    }
+  </style>
+</head>
+<body>
+  <header>LOZEE와 대화하기</header>
+  <div id="chat-window"></div>
+  <button id="talk-btn">🎤 말하기</button>
+
+  <script type="module">
+    import { getInitialGreeting } from './js/gpt-dialog.js';
+    import { playTTSFromText } from './js/tts.js';
+    import { getSTTFromAudio } from './js/stt.js';
+    import { getGptResponse } from './js/gpt-dialog.js';
+    import { initializeApp } from 'firebase/app';
+    import { getFirestore, collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function saveUserProfile() {
+      const userId = localStorage.getItem('lozee_username');
+      const diagnosis = localStorage.getItem('lozee_usernote') || '';
+      const voice = localStorage.getItem('lozee_voice');
+
+      if (!userId) return;
+
+      await setDoc(doc(db, 'users', userId), {
+        name: userId,
+        diagnosis,
+        voice,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    async function saveSessionLog(userText, aiReply) {
+      const userId = localStorage.getItem('lozee_username');
+      if (!userId) return;
+
+      await addDoc(collection(db, 'sessions'), {
+        userId,
+        timestamp: serverTimestamp(),
+        userText,
+        aiReply
+      });
+    }
+
+    async function saveJournalEntry(topic, summary) {
+      const userId = localStorage.getItem('lozee_username');
+      if (!userId || !topic || !summary) return;
+
+      await addDoc(collection(db, 'journals'), {
+        userId,
+        topic,
+        summary,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    saveUserProfile();
+
+    const chatWindow = document.getElementById('chat-window');
+    const talkBtn = document.getElementById('talk-btn');
+
+    let hasGreeted = false;
+    let isRecording = false;
+    let mediaRecorder;
+    let mediaStream;
+    let audioChunks = [];
+
+    const userName = localStorage.getItem('lozee_username') || '친구';
+    const hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
+    const voiceId = localStorage.getItem('lozee_voice') || 'ko-KR-Chirp3-HD-Zephyr';
+    const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
+    const currentTopic = new URLSearchParams(window.location.search).get('topic');
+
+    function appendMessage(text, role = 'ai') {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = text;
+      chatWindow.appendChild(bubble);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    async function initGreeting() {
+      const greeting = getInitialGreeting(userName, hasVisited, lastSummary);
+      appendMessage(greeting, 'ai');
+      await playTTSFromText(greeting, voiceId);
+      localStorage.setItem('lozee_hasVisited', 'true');
+    }
+
+    async function startRecording() {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(mediaStream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const userText = await getSTTFromAudio(blob);
+        appendMessage(userText, 'user');
+
+        const gptRes = await getGptResponse(userText);
+        const reply = gptRes.rephrasing || '음... 다시 말해줄래?';
+        appendMessage(reply, 'ai');
+        await playTTSFromText(reply, voiceId);
+        await saveSessionLog(userText, reply);
+
+        if (currentTopic && reply.length < 1000) {
+          await saveJournalEntry(currentTopic, reply);
+        }
+      };
+
+      mediaRecorder.start();
+    }
+
+    function stopRecording() {
+      mediaRecorder.stop();
+    }
+
+    talkBtn.addEventListener('click', async () => {
+      if (!hasGreeted) {
+        await initGreeting();
+        hasGreeted = true;
+        return;
+      }
+
+      if (!isRecording) {
+        await startRecording();
+        talkBtn.classList.add('active');
+        talkBtn.textContent = '⏹️ 멈추기';
+      } else {
+        stopRecording();
+        talkBtn.classList.remove('active');
+        talkBtn.textContent = '🎤 말하기';
+      }
+      isRecording = !isRecording;
+    });
+  </script>
+</body>
+</html>
