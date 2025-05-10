@@ -40,8 +40,8 @@
         .page-title { font-family: 'KoPubWorld Dotum', sans-serif; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
         .description { font-size: 16px; margin-bottom: 25px; line-height: 1.6; }
         label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: bold; text-align: left; }
-        input[type="text"], input[type="email"], input[type="number"], select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-family: 'KoPubWorld Dotum', sans-serif; box-sizing: border-box; }
-        textarea { min-height: 100px; resize: vertical; }
+        input[type="text"], input[type="email"], input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-family: 'KoPubWorld Dotum', sans-serif; box-sizing: border-box; }
+        /* textarea는 step5에서 제거됨 */
         button.intro-btn { display: block; width: 100%; padding: 14px; background-color: var(--main-color); color: var(--text-on-main); border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; font-family: 'KoPubWorld Dotum', sans-serif; transition: background-color 0.2s ease; }
         .step-background-main button.intro-btn { background-color: white; color: var(--main-color); }
         button.intro-btn.secondary { background-color: #e0e0e0; color: #555; margin-top: 10px; }
@@ -56,14 +56,21 @@
         #selectedEmotionsDisplay { font-style: italic; color: #555; margin-top:10px; display: block;}
         .step-background-main #selectedEmotionsDisplay { color: #eee; }
         
-        /* 로지 소개 말풍선 및 사용자 입력 컨테이너 제거 후 대체 텍스트 스타일 */
+        /* Step 5 UI 수정 */
+        #finalIntroMessageContainer { /* 로지 소개 말풍선 대신 사용될 컨테이너 */
+            background-color: var(--main-color); /* 배경은 메인 컬러 유지 */
+            padding: 30px;
+            border-radius: 20px; 
+            margin: 20px auto;
+            max-width: 100%;
+            text-align: center;
+        }
         #finalIntroMessage {
             font-size: 28px; /* 더 큰 폰트 */
             font-weight: bold;
             color: var(--text-on-main); /* 메인 배경색 위이므로 흰색 계열 */
-            padding: 30px;
-            text-align: center;
             line-height: 1.5;
+            margin-bottom: 30px; /* 버튼과의 간격 */
         }
         
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
@@ -153,17 +160,14 @@
         <div class="intro-container">
             <h2 class="page-title">만나서 반가워, <span id="greetingName"></span>!</h2>
             
-            <div id="finalIntroMessage">
-                이제 대화를 시작할 차례야.<br>지금은 어때?
+            <div id="finalIntroMessageContainer">
+                <p id="finalIntroMessage">이제 대화를 시작할 차례야.<br>지금은 어때?</p>
             </div>
             <button id="startChatBtn" class="intro-btn">로지와 대화 시작하기</button>
         </div>
     </div>
 
     <script type="module">
-        // ... (JavaScript 로직은 이전 intro_html_with_cbt_code_v1 문서의 내용과 거의 동일하게 유지)
-        // 단, step5의 userTypedIntro 관련 DOM 요소 및 로직은 제거하거나 주석 처리 필요
-        // startChatBtn 클릭 시 userTypedIntro 값 없이 localStorage에 저장하고 talk.html로 이동
         console.log("Intro script: 시작");
         
         document.addEventListener('DOMContentLoaded', async () => {
@@ -206,9 +210,7 @@
                 const testVoiceBtnIntro = document.getElementById('testVoiceBtnIntro');
                 const ttsLoadingIndicator = document.getElementById('tts-loading-intro');
                 const greetingName = document.getElementById('greetingName');
-                // const userIntroPrompt = document.getElementById('userIntroPrompt'); // Step 5에서 제거됨
-                // const userTypedIntro = document.getElementById('userTypedIntro'); // Step 5에서 제거됨
-                // const typedIntroError = document.getElementById('typedIntroError'); // Step 5에서 제거됨
+                // userIntroPrompt, userTypedIntro, typedIntroError는 5단계 UI 변경으로 제거됨
 
                 const authorizedEmails = [
                     'maengnanyoung@gmail.com', 'maenghakjae@gmail.com', 
@@ -216,7 +218,6 @@
                     'primer0722@gmail.com'
                 ]; 
 
-                // 필수 DOM 요소 확인 (제거된 요소들은 확인 목록에서도 제외)
                 const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName };
                 for (const key in requiredElements) {
                     if (key === 'steps' && !requiredElements[key].every(el => el)) {
@@ -225,7 +226,7 @@
                         throw new Error(`필수 DOM 요소 '${key}' 누락`);
                     }
                 }
-                console.log("Intro script: 모든 주요 DOM 요소 가져오기 성공");
+                console.log("Intro script: 모든 주요 DOM 요소 가져오기 성공 (userTypedIntro 관련 제외)");
 
                 let selectedEmotionObjects = [];
 
@@ -357,10 +358,10 @@
 
                 // Step 5의 "로지와 대화 시작하기" 버튼 이벤트 리스너 수정
                 document.getElementById('startChatBtn').addEventListener('click', () => {
-                    // 사용자 첫마디 입력은 제거되었으므로, 해당 값은 저장하지 않음
-                    // localStorage.setItem('lozee_user_typed_intro', ''); // 빈 값 또는 아예 저장 안 함
+                    // 사용자 첫마디 입력은 제거되었으므로, 관련 localStorage 항목도 제거하거나 저장 안 함
+                    localStorage.removeItem('lozee_user_typed_intro'); 
                     localStorage.setItem('lozee_onboarding_complete', 'true'); 
-                    console.log("온보딩 완료, talk.html로 이동합니다.");
+                    console.log("온보딩 완료 (사용자 첫마디 입력 없음), talk.html로 이동합니다.");
                     window.location.href = 'talk.html';
                 });
                 
@@ -368,8 +369,13 @@
 
             } catch (error) { 
                 console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                if (typeof showStep === 'function') {
+                if (typeof showStep === 'function') { // showStep 함수가 정의되었다면 첫 단계라도 보여주려고 시도
+                    console.warn("Intro script: 초기화 중 오류 발생. 첫 단계 표시 시도...");
                     showStep(0); 
+                } else { // showStep 조차 정의되지 않은 심각한 상황
+                    console.error("Intro script: showStep 함수를 찾을 수 없어 첫 단계를 표시할 수 없습니다.");
+                    // 사용자에게 최소한의 안내 (예: alert)
+                    // alert("페이지 로딩 중 문제가 발생했습니다. 새로고침 해주세요.");
                 }
             }
         }); 
