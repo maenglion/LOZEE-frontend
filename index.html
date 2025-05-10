@@ -31,6 +31,14 @@
         .step-background-main .content-box .description,
         .step-background-main .content-box label,
         .step-background-main .content-box p { color: var(--text-on-box); }
+        .step-background-main #finalUserPrompt { /* 5단계의 "이제 대화를 시작할 차례야..." 문구 */
+            color: var(--text-on-main);
+            font-size: 28px; /* 더 큰 폰트 */
+            font-weight: bold;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
         .step-background-default { background-color: var(--default-page-bg); }
         .step-background-default .page-title { color: var(--main-color); }
         .step-background-default .description,
@@ -40,8 +48,12 @@
         .page-title { font-family: 'KoPubWorld Dotum', sans-serif; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
         .description { font-size: 16px; margin-bottom: 25px; line-height: 1.6; }
         label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: bold; text-align: left; }
-        input[type="text"], input[type="email"], input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-family: 'KoPubWorld Dotum', sans-serif; box-sizing: border-box; }
-        /* textarea는 step5에서 제거됨 */
+        input[type="text"], input[type="email"], input[type="number"], select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-family: 'KoPubWorld Dotum', sans-serif; box-sizing: border-box; }
+        textarea#userFirstMessageInput { /* 5단계 입력창 스타일 */
+            min-height: 120px; 
+            resize: vertical; 
+            margin-top: 10px;
+        }
         button.intro-btn { display: block; width: 100%; padding: 14px; background-color: var(--main-color); color: var(--text-on-main); border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; font-family: 'KoPubWorld Dotum', sans-serif; transition: background-color 0.2s ease; }
         .step-background-main button.intro-btn { background-color: white; color: var(--main-color); }
         button.intro-btn.secondary { background-color: #e0e0e0; color: #555; margin-top: 10px; }
@@ -55,23 +67,6 @@
         .emotion-tag.selected { background-color: var(--emotion-selected-bg); border-color: var(--emotion-selected-border); color: var(--emotion-selected-text); font-weight: bold; }
         #selectedEmotionsDisplay { font-style: italic; color: #555; margin-top:10px; display: block;}
         .step-background-main #selectedEmotionsDisplay { color: #eee; }
-        
-        /* Step 5 UI 수정 */
-        #finalIntroMessageContainer { /* 로지 소개 말풍선 대신 사용될 컨테이너 */
-            background-color: var(--main-color); /* 배경은 메인 컬러 유지 */
-            padding: 30px;
-            border-radius: 20px; 
-            margin: 20px auto;
-            max-width: 100%;
-            text-align: center;
-        }
-        #finalIntroMessage {
-            font-size: 28px; /* 더 큰 폰트 */
-            font-weight: bold;
-            color: var(--text-on-main); /* 메인 배경색 위이므로 흰색 계열 */
-            line-height: 1.5;
-            margin-bottom: 30px; /* 버튼과의 간격 */
-        }
         
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
         .step-background-main .loading-indicator { color: #eee; }
@@ -159,11 +154,13 @@
     <div id="step5" class="step step-background-main">
         <div class="intro-container">
             <h2 class="page-title">만나서 반가워, <span id="greetingName"></span>!</h2>
+            <p id="finalUserPrompt" class="description" style="font-size: 28px; font-weight: bold; line-height: 1.5; margin-bottom: 25px;">이제 대화를 시작할 차례야.<br>지금은 어때?</p>
             
-            <div id="finalIntroMessageContainer">
-                <p id="finalIntroMessage">이제 대화를 시작할 차례야.<br>지금은 어때?</p>
+            <div class="content-box"> {/* 텍스트 입력창을 흰색 박스 안으로 */}
+                 <textarea id="userFirstMessageInput" rows="5" placeholder="여기에 지금 어떤지, 하고 싶은 이야기를 적어주세요..."></textarea>
+                 <div id="firstMessageError" class="error-message"></div>
+                 <button id="startChatBtn" class="intro-btn">로지와 대화 시작하기</button>
             </div>
-            <button id="startChatBtn" class="intro-btn">로지와 대화 시작하기</button>
         </div>
     </div>
 
@@ -210,7 +207,8 @@
                 const testVoiceBtnIntro = document.getElementById('testVoiceBtnIntro');
                 const ttsLoadingIndicator = document.getElementById('tts-loading-intro');
                 const greetingName = document.getElementById('greetingName');
-                // userIntroPrompt, userTypedIntro, typedIntroError는 5단계 UI 변경으로 제거됨
+                const userFirstMessageInput = document.getElementById('userFirstMessageInput'); // 새로 추가된 입력창
+                const firstMessageError = document.getElementById('firstMessageError'); // 입력창 오류 메시지
 
                 const authorizedEmails = [
                     'maengnanyoung@gmail.com', 'maenghakjae@gmail.com', 
@@ -218,7 +216,7 @@
                     'primer0722@gmail.com'
                 ]; 
 
-                const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName };
+                const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userFirstMessageInput, firstMessageError };
                 for (const key in requiredElements) {
                     if (key === 'steps' && !requiredElements[key].every(el => el)) {
                          throw new Error(`필수 DOM 배열 'steps' 요소 누락`);
@@ -226,7 +224,7 @@
                         throw new Error(`필수 DOM 요소 '${key}' 누락`);
                     }
                 }
-                console.log("Intro script: 모든 주요 DOM 요소 가져오기 성공 (userTypedIntro 관련 제외)");
+                console.log("Intro script: 모든 주요 DOM 요소 가져오기 성공");
 
                 let selectedEmotionObjects = [];
 
@@ -358,10 +356,16 @@
 
                 // Step 5의 "로지와 대화 시작하기" 버튼 이벤트 리스너 수정
                 document.getElementById('startChatBtn').addEventListener('click', () => {
-                    // 사용자 첫마디 입력은 제거되었으므로, 관련 localStorage 항목도 제거하거나 저장 안 함
-                    localStorage.removeItem('lozee_user_typed_intro'); 
+                    const firstMessage = userFirstMessageInput.value.trim(); // 새로 추가된 입력창에서 값 가져오기
+                    if(firstMessageError) firstMessageError.textContent = '';
+                    if (!firstMessage) { // 입력값이 없으면 오류 메시지 표시
+                        if(firstMessageError) firstMessageError.textContent = "지금 어떤지, 하고 싶은 이야기를 간단하게라도 적어주세요.";
+                        return;
+                    }
+                    localStorage.setItem('lozee_user_typed_intro', firstMessage); // 이 값을 talk.html에서 사용
                     localStorage.setItem('lozee_onboarding_complete', 'true'); 
-                    console.log("온보딩 완료 (사용자 첫마디 입력 없음), talk.html로 이동합니다.");
+                    console.log("사용자 첫마디 (텍스트 입력):", firstMessage);
+                    console.log("온보딩 완료, talk.html로 이동합니다.");
                     window.location.href = 'talk.html';
                 });
                 
@@ -369,13 +373,11 @@
 
             } catch (error) { 
                 console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                if (typeof showStep === 'function') { // showStep 함수가 정의되었다면 첫 단계라도 보여주려고 시도
+                if (typeof showStep === 'function') { 
                     console.warn("Intro script: 초기화 중 오류 발생. 첫 단계 표시 시도...");
                     showStep(0); 
-                } else { // showStep 조차 정의되지 않은 심각한 상황
+                } else {
                     console.error("Intro script: showStep 함수를 찾을 수 없어 첫 단계를 표시할 수 없습니다.");
-                    // 사용자에게 최소한의 안내 (예: alert)
-                    // alert("페이지 로딩 중 문제가 발생했습니다. 새로고침 해주세요.");
                 }
             }
         }); 
