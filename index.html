@@ -13,33 +13,16 @@
             --box-border-color: black;
             --text-on-box: #333;
             --description-text-color: black;
-            --default-page-bg: #f4f7f6; /* 메인 컬러 배경이 아닌 단계의 배경색 */
-            --emotion-selected-bg: #FFEB3B; /* 감정 선택 시 노란색 */
+            --default-page-bg: #f4f7f6;
+            --emotion-selected-bg: #FFEB3B;
             --emotion-selected-border: #FBC02D;
             --emotion-selected-text: #424242;
+            --success-color: #007bff; /* 파란색 체크 */
+            --error-color: #d9534f;
         }
-
-        body {
-            font-family: 'KoPubWorld Dotum', sans-serif;
-            margin: 0;
-            transition: background-color 0.3s ease-out;
-        }
-
-        .step {
-            display: none; /* 각 단계는 처음에 숨김 */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-            width: 100%;
-        }
-
-        .step.active { /* JavaScript에 의해 이 클래스가 추가되면 보이도록 함 */
-            display: flex; 
-        }
-
+        body { font-family: 'KoPubWorld Dotum', sans-serif; margin: 0; transition: background-color 0.3s ease-out; }
+        .step { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; width: 100%; }
+        .step.active { display: flex; }
         .step-background-main { background-color: var(--main-color); }
         .step-background-main .page-title,
         .step-background-main .description,
@@ -48,115 +31,58 @@
         .step-background-main .content-box .description,
         .step-background-main .content-box label,
         .step-background-main .content-box p { color: var(--text-on-box); }
-
         .step-background-default { background-color: var(--default-page-bg); }
         .step-background-default .page-title { color: var(--main-color); }
         .step-background-default .description,
         .step-background-default label { color: var(--description-text-color); }
-
         .intro-container { max-width: 500px; width: 100%; text-align: center; }
-        .content-box {
-            background-color: var(--box-background);
-            color: var(--text-on-box);
-            border-radius: 20px;
-            border: 2px solid var(--box-border-color);
-            padding: 30px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .page-title {
-            font-family: 'KoPubWorld Dotum', sans-serif;
-            font-size: 26px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
+        .content-box { background-color: var(--box-background); color: var(--text-on-box); border-radius: 20px; border: 2px solid var(--box-border-color); padding: 30px; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .page-title { font-family: 'KoPubWorld Dotum', sans-serif; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
         .description { font-size: 16px; margin-bottom: 25px; line-height: 1.6; }
-        
         label { display: block; margin-top: 15px; margin-bottom: 8px; font-weight: bold; text-align: left; }
-        input[type="text"], input[type="number"], select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: 'KoPubWorld Dotum', sans-serif;
-            box-sizing: border-box;
-        }
+        input[type="text"], input[type="email"], input[type="number"], select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; font-family: 'KoPubWorld Dotum', sans-serif; box-sizing: border-box; }
         textarea { min-height: 100px; resize: vertical; }
-
-        button.intro-btn {
-            display: block; width: 100%; padding: 14px;
-            background-color: var(--main-color); color: var(--text-on-main);
-            border: none; border-radius: 8px; font-size: 18px; font-weight: bold;
-            cursor: pointer; margin-top: 25px;
-            font-family: 'KoPubWorld Dotum', sans-serif;
-            transition: background-color 0.2s ease;
-        }
+        button.intro-btn { display: block; width: 100%; padding: 14px; background-color: var(--main-color); color: var(--text-on-main); border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; font-family: 'KoPubWorld Dotum', sans-serif; transition: background-color 0.2s ease; }
         .step-background-main button.intro-btn { background-color: white; color: var(--main-color); }
         button.intro-btn.secondary { background-color: #e0e0e0; color: #555; margin-top: 10px; }
         .step-background-main button.intro-btn.secondary { background-color: #f0f0f0; color: #333; }
         button.intro-btn:hover { opacity: 0.85; }
-
-        .error-message { color: #d9534f; font-size: 0.9em; min-height: 1.2em; margin-top: -5px; margin-bottom:10px; text-align: left; }
+        .error-message { color: var(--error-color); font-size: 0.9em; min-height: 1.2em; margin-top: -5px; margin-bottom:10px; text-align: left; }
         .step-background-main .error-message { color: #ffdddd; }
-        
-        #nameCheckResult { font-size: 0.9em; margin-left: 10px; min-height: 1.2em; }
-
+        .success-message { color: var(--success-color); font-weight: bold; font-size: 0.9em; min-height: 1.2em; margin-top: -5px; margin-bottom:10px; text-align: left;}
         #emotionCloudContainer { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px 0; }
-        .emotion-tag { 
-            padding: 8px 15px; 
-            border: 4px solid black;
-            border-radius: 20px; 
-            cursor: pointer; 
-            background-color: white; 
-            color: black; 
-            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-            font-size: 15px;
-        }
-        .emotion-tag.selected { 
-            background-color: var(--emotion-selected-bg); 
-            border-color: var(--emotion-selected-border); 
-            color: var(--emotion-selected-text); 
-            font-weight: bold; 
-        }
+        .emotion-tag { padding: 8px 15px; border: 4px solid black; border-radius: 20px; cursor: pointer; background-color: white; color: black; transition: background-color 0.2s, color 0.2s, border-color 0.2s; font-size: 15px; }
+        .emotion-tag.selected { background-color: var(--emotion-selected-bg); border-color: var(--emotion-selected-border); color: var(--emotion-selected-text); font-weight: bold; }
         #selectedEmotionsDisplay { font-style: italic; color: #555; margin-top:10px; display: block;}
         .step-background-main #selectedEmotionsDisplay { color: #eee; }
-
-        #lozieIntroBubble {
-            background-color: white; color: #333; padding: 20px; border-radius: 20px;
-            margin: 20px auto; max-width: 100%; line-height: 1.7;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: left;
-        }
+        #lozieIntroBubble { background-color: white; color: #333; padding: 20px; border-radius: 20px; margin: 20px auto; max-width: 100%; line-height: 1.7; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: left; }
         #lozieIntroBubble p { margin: 10px 0; }
-        
         .loading-indicator { display: none; text-align: center; margin-top: 10px; font-style: italic; color: #555; }
         .step-background-main .loading-indicator { color: #eee; }
-        
-        /* 오류 메시지를 위한 전용 공간 (화면 상단에 고정될 수 있도록) */
-        #pageErrorDisplay {
-            position: fixed; /* 화면에 고정 */
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: #ffdddd; /* 눈에 띄는 배경색 */
-            color: #d9534f; /* 어두운 빨간색 글씨 */
-            padding: 10px;
-            text-align: center;
-            font-size: 16px;
-            z-index: 1000; /* 다른 요소들 위에 표시 */
-            display: none; /* 기본은 숨김 */
-            box-sizing: border-box;
+        #pageErrorDisplay { /* 이 부분은 이제 사용하지 않지만, 혹시 모를 상황 대비해 숨겨만 둠 */
+            display: none; 
+            position: fixed; top: 0; left: 0; width: 100%;
+            background-color: #ffdddd; color: #d9534f; padding: 10px;
+            text-align: center; font-size: 16px; z-index: 1000; box-sizing: border-box;
         }
     </style>
 </head>
 <body id="introBody" class="step-background-main"> 
-    <div id="pageErrorDisplay"></div> {/* 오류 메시지 표시 영역 */}
+    <div id="pageErrorDisplay"></div>
 
-    <div id="step1" class="step">
+    <div id="step0" class="step">
+        <div class="intro-container">
+            <div class="content-box">
+                <h2 class="page-title">CBT 코드 입력</h2>
+                <p class="description">로지 사용을 위해 CBT 코드를 입력해주세요.<br>(등록된 이메일 주소)</p>
+                <input type="email" id="cbtCodeInput" placeholder="이메일 주소를 입력하세요">
+                <div id="cbtCodeMessage" class="error-message"></div> 
+                <button id="toStep1Btn" class="intro-btn">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="step1" class="step step-background-main">
         <div class="intro-container">
             <div class="content-box">
                 <h2 class="page-title">뭐라고 불러줄까?</h2>
@@ -168,7 +94,6 @@
         </div>
     </div>
 
-    {/* ... 나머지 step2, step3, step4, step5 HTML은 이전과 동일하게 유지 ... */}
     <div id="step2" class="step step-background-default">
         <div class="intro-container">
             <div class="content-box">
@@ -243,7 +168,7 @@
         
         document.addEventListener('DOMContentLoaded', async () => {
             console.log("Intro script: DOMContentLoaded 이벤트 발생");
-            const pageErrorDisplay = document.getElementById('pageErrorDisplay'); // 오류 메시지 표시 영역
+            const pageErrorDisplay = document.getElementById('pageErrorDisplay'); 
 
             try {
                 console.log("Intro script: 모듈 임포트 시도...");
@@ -256,6 +181,7 @@
                 console.log("Intro script: tts.js 로드 성공");
 
                 const steps = [
+                    document.getElementById('step0'), 
                     document.getElementById('step1'),
                     document.getElementById('step2'),
                     document.getElementById('step3'),
@@ -266,6 +192,8 @@
                 const bodyElement = document.getElementById('introBody');
                 let currentStep = 0;
 
+                const cbtCodeInput = document.getElementById('cbtCodeInput');
+                const cbtCodeMessage = document.getElementById('cbtCodeMessage');
                 const userNameInput = document.getElementById('userNameInput');
                 const nameError = document.getElementById('nameError');
                 const userAgeSelect = document.getElementById('userAgeSelect');
@@ -283,7 +211,9 @@
                 const userTypedIntro = document.getElementById('userTypedIntro');
                 const typedIntroError = document.getElementById('typedIntroError');
 
-                const requiredElements = { steps, bodyElement, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError, pageErrorDisplay };
+                const authorizedEmails = ['user1@example.com', 'test@example.com', 'lozee@lozee.com']; 
+
+                const requiredElements = { steps, bodyElement, cbtCodeInput, cbtCodeMessage, userNameInput, nameError, userAgeSelect, ageError, userDiagnosisInput, emotionCloudContainer, selectedEmotionsDisplay, emotionSelectionError, voiceSelectInput, voiceError, testVoiceBtnIntro, ttsLoadingIndicator, greetingName, userIntroPrompt, userTypedIntro, typedIntroError, pageErrorDisplay };
                 for (const key in requiredElements) {
                     if (key === 'steps' && !requiredElements[key].every(el => el)) {
                          console.error(`Intro script: 필수 DOM 배열 'steps'의 일부 요소를 찾을 수 없습니다. HTML ID를 확인하세요.`);
@@ -327,6 +257,26 @@
                     console.log(`Intro script: ${stepIndex + 1}단계 표시됨`);
                 }
 
+                document.getElementById('toStep1Btn').addEventListener('click', () => {
+                    const email = cbtCodeInput.value.trim().toLowerCase();
+                    cbtCodeMessage.textContent = '';
+                    cbtCodeMessage.className = 'error-message'; 
+
+                    if (!email) {
+                        cbtCodeMessage.textContent = 'CBT 코드(이메일)를 입력해주세요.';
+                        return;
+                    }
+                    if (authorizedEmails.includes(email)) {
+                        cbtCodeMessage.textContent = '✔️ 확인되었습니다.';
+                        cbtCodeMessage.className = 'success-message'; 
+                        localStorage.setItem('lozee_cbt_code', email); 
+                        console.log("CBT 코드 확인됨:", email);
+                        setTimeout(() => { showStep(1); }, 500); 
+                    } else {
+                        cbtCodeMessage.textContent = '등록되지 않은 CBT 코드입니다. 다시 확인해주세요.';
+                    }
+                });
+
                 document.getElementById('toStep2Btn').addEventListener('click', () => {
                     const username = userNameInput.value.trim();
                     nameError.textContent = '';
@@ -337,7 +287,7 @@
                     console.log("사용자 이름/닉네임:", username);
                     localStorage.setItem('lozee_username', username);
                     if (greetingName) greetingName.textContent = username; 
-                    showStep(1);
+                    showStep(2); 
                 });
 
                 document.getElementById('toStep3Btn').addEventListener('click', () => {
@@ -350,7 +300,7 @@
                     localStorage.setItem('lozee_userage', age);
                     localStorage.setItem('lozee_userdiagnosis', userDiagnosisInput.value.trim());
                     console.log("나이:", age, "진단명:", userDiagnosisInput.value.trim());
-                    showStep(2);
+                    showStep(3); 
                 });
                 
                 function populateEmotionCloud() {
@@ -395,7 +345,6 @@
                      console.error("Intro script: 감정 데이터 또는 클라우드 컨테이너가 없어 populateEmotionCloud를 실행할 수 없습니다.");
                 }
 
-
                 document.getElementById('toStep4Btn').addEventListener('click', () => {
                     if(emotionSelectionError) emotionSelectionError.textContent = '';
                     if (selectedEmotionObjects.length === 0) {
@@ -404,7 +353,7 @@
                     }
                     localStorage.setItem('lozee_selected_emotions', JSON.stringify(selectedEmotionObjects));
                     console.log("선택된 감정:", selectedEmotionObjects);
-                    showStep(3); 
+                    showStep(4); 
                 });
 
                 if (testVoiceBtnIntro) {
@@ -443,7 +392,7 @@
                     const currentUsername = localStorage.getItem('lozee_username') || "친구";
                     if (greetingName) greetingName.textContent = currentUsername;
                     if (userIntroPrompt) userIntroPrompt.innerHTML = `이제 ${currentUsername}님의 이야기를 들려주시겠어요? (오늘 어떤 이야기를 하고 싶은지, 지금 어떤 기분인지 등 편하게 적어줘)`;
-                    showStep(4); 
+                    showStep(5); 
                 });
 
                 document.getElementById('startChatBtn').addEventListener('click', () => {
@@ -461,18 +410,19 @@
                 });
                 
                 console.log("Intro script: 이벤트 리스너 설정 완료");
-                showStep(0); // 첫 번째 단계 표시
+                showStep(0); // 0단계 (CBT 코드 입력)부터 시작
                 console.log("Intro script: showStep(0) 호출 완료, 첫 화면 표시 시도");
 
             } catch (error) { 
                 console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                if (pageErrorDisplay) { // pageErrorDisplay 요소가 있다면 여기에 오류 메시지 표시
-                    pageErrorDisplay.textContent = `페이지 로딩 중 오류가 발생했습니다: ${error.message}. 잠시 후 새로고침 해보세요. (오류 코드: CATCH_ERR)`;
-                    pageErrorDisplay.style.display = 'block';
-                } else { // 없다면 alert으로
+                if (pageErrorDisplay) { 
+                    pageErrorDisplay.textContent = `페이지 로딩 중 오류가 발생했습니다. 잠시 후 새로고침 해보세요. (오류: ${error.message})`;
+                    pageErrorDisplay.style.display = 'block'; // 오류 메시지를 상단에 표시
+                } else { 
                     alert(`페이지 로딩 중 심각한 오류가 발생했습니다: ${error.message}`);
                 }
-                // document.body.innerHTML = ''; // 더 이상 body 전체를 지우지 않음
+                // 오류 발생 시 첫 화면을 강제로 보여주지 않도록 변경
+                // showStep(0); // 이 부분을 주석 처리하거나 제거
             }
         }); 
         console.log("Intro script: 모든 스크립트 실행 완료 (DOMContentLoaded 리스너 등록)");
