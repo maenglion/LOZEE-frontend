@@ -213,9 +213,9 @@
     import { playTTSFromText } from './js/tts.js';
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
-    import { getIsPoliteByAge, speakInterjection } from './js/interjection-helper.js';
+    // import { getIsPoliteByAge, speakInterjection } from './js/interjection-helper.js'; // 추임새 헬퍼 import 제거
 
-    console.log("talk.html 스크립트 시작 (v3.21 - 추임새 및 초기화 로직 오류 수정)");
+    console.log("talk.html 스크립트 시작 (v3.23 - 추임새 기능 제거, 안정성 강화)");
 
     const talkBtn = document.getElementById('talk-btn');
     const chatWindow = document.getElementById('chat-window');
@@ -278,7 +278,7 @@
     async function handleUserInteraction(userText, context = {}) { 
       if (!userText || userText.trim() === "") { 
         console.warn("[handleUserInteraction] userText가 비어있어 처리 중단.");
-        disableAllInputs(false, "사용자 입력 없음"); // 입력 UI 활성화 보장
+        disableAllInputs(false, "사용자 입력 없음");
         return; 
       }
       disableAllInputs(true, "AI 응답 대기 중"); 
@@ -288,17 +288,7 @@
       console.log("[handleUserInteraction] 시작. UserText:", userText.substring(0,50), "Context:", context);
 
       try {
-        // 추임새는 사용자의 연속 발화가 끝나고 AI가 응답을 시작할 때만 재생
-        if (userConsecutiveTurns === 0) { 
-          console.log("[Interjection] 추임새 재생 시도 (연속 발화 아님)...");
-          try {
-              const isPolite = getIsPoliteByAge();
-              speakInterjection(isPolite); 
-              console.log("[Interjection] 추임새 재생 요청됨.");
-          } catch (e) {
-              console.error("추임새 재생 중 오류 (handleUserInteraction 내부):", e);
-          }
-        }
+        // 추임새 로직 제거됨
 
         console.log("[handleUserInteraction] GPT 요청 시작...");
         const gptContext = { userAge: currentUserAge, userDisease: currentUserDisease, ...context };
@@ -314,9 +304,6 @@
             } else if (gptResponse.error) { aiReply = gptResponse.error; }
         }
         
-        // AI 메시지 표시 및 TTS는 약간의 지연 후 실행
-        // setTimeout을 Promise로 감싸서 TTS 완료 후 disableAllInputs(false)가 호출되도록 할 수 있으나,
-        // 현재는 TTS 재생이 백그라운드에서 이루어지므로, UI는 즉시 활성화되도록 함.
         loadingIndicatorTalk.style.display = 'none'; 
         console.log("[handleUserInteraction] AI 응답 UI에 표시 및 TTS 시작. AI Reply:", aiReply.substring(0,50));
         appendMessage(aiReply, 'ai', isError); 
@@ -329,19 +316,15 @@
                 console.error("TTS 실패 (handleUserInteraction):", e.message ? e.message : e); 
             }
         }
-        // disableAllInputs(false, "AI 응답 완료"); // finally 블록으로 이동
-
       } catch (error) { 
         console.error("[handleUserInteraction] AI 응답 처리 중 주 예외:", error);
         loadingIndicatorTalk.style.display = 'none';
         const fallbackMsg = "죄송합니다, 응답 처리 중 예상치 못한 문제가 발생했어요.";
         appendMessage(fallbackMsg, 'ai', true);
         try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) { console.error("TTS 실패 (오류 처리 중):", e.message ? e.message : e); }
-        // disableAllInputs(false, "AI 응답 오류"); // finally 블록으로 이동
       } finally {
-        // 어떤 경우든 로딩 인디케이터는 숨기고, 입력 UI는 활성화합니다.
         loadingIndicatorTalk.style.display = 'none';
-        disableAllInputs(false, "handleUserInteraction 완료");
+        disableAllInputs(false, "handleUserInteraction 완료"); 
         resetSilenceTimer(); 
         console.log("[handleUserInteraction] finally 블록 실행됨. 입력 UI 활성화.");
       }
@@ -350,14 +333,7 @@
     function stopRecordingIfMaxDuration() { /* 이전과 동일 */ }
     async function startRecording() { /* 이전과 동일 (관리자 명령 확인 로직 포함) */ }
     function stopRecording() { /* 이전과 동일 */ }
-    const toggleInputBtn = document.getElementById('toggle-input-btn'); 
-    const textInputArea = document.getElementById('text-input-area');
-    const userTextInput = document.getElementById('user-text-input');
-    const sendTextBtn = document.getElementById('send-text-btn');
-    const keyboardIconForToggle = document.getElementById('keyboard-icon-for-toggle'); 
-    // const micIconForToggleBtn = document.getElementById('mic-icon-for-toggle-btn'); // HTML에서 ID 수정 필요
-
-
+    
     toggleInputBtn.addEventListener('click', () => { /* 이전과 동일 */ });
     sendTextBtn.addEventListener('click', async () => { /* 이전과 동일 (관리자 명령 확인 로직 포함) */ });
     userTextInput.addEventListener('keypress', (event) => { /* 이전과 동일 */ });
@@ -367,7 +343,9 @@
     window.addEventListener('resize', adjustChatWindowPadding); 
 
     async function initializeChat() { 
-        console.log("[initializeChat] 시작됨. 온보딩 완료:", onboardingComplete, "사용자 첫마디:", userTypedIntro ? userTypedIntro.substring(0,30) : "없음");
+        console.log("[initializeChat] 시작됨.");
+        console.log("[initializeChat] LocalStorage 값 확인 - onboardingComplete:", onboardingComplete, "userTypedIntro:", userTypedIntro ? userTypedIntro.substring(0,30) : "없음", "currentUserId:", currentUserId, "currentVoiceId:", currentVoiceId);
+        
         disableAllInputs(true, "초기화 중");
         userConsecutiveTurns = 0; 
         lastUserUtterance = "";   
@@ -375,7 +353,7 @@
         talkBtn.style.display = 'inline-flex'; 
         textInputArea.style.display = 'none';
         const toggleIconTextT = document.getElementById('toggle-icon-text-T'); 
-        const micIconForToggle = document.getElementById('mic-icon-for-toggle-btn'); // ID 수정
+        const micIconForToggle = document.getElementById('mic-icon-for-toggle-btn'); 
         if (toggleIconTextT) toggleIconTextT.style.display = 'inline-block'; 
         if (micIconForToggle) micIconForToggle.style.display = 'none';  
 
@@ -384,13 +362,14 @@
         adjustChatWindowPadding(); 
 
         if (!currentUserId || !currentVoiceId) { 
-            const errorMsg = "사용자 정보(ID/이메일 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 설정 또는 시작 페이지로 이동해주세요.";
+            const errorMsg = "사용자 정보(ID/이메일 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 시작 페이지에서 정보를 다시 입력해주세요.";
             console.error("[initializeChat] 사용자 정보 부족:", errorMsg);
             appendMessage(errorMsg, 'ai', true); 
             loadingIndicatorTalk.style.display = 'none'; 
-            disableAllInputs(true, "사용자 정보 없음"); 
+            disableAllInputs(true, "필수 사용자 정보 없음");
             return; 
         }
+
         try {
             if (onboardingComplete && userTypedIntro && userTypedIntro.trim() !== "") { 
                 console.log("[initializeChat] 온보딩 데이터로 첫 대화 시작:", userTypedIntro.substring(0,30));
@@ -401,15 +380,13 @@
                     initialUserEmotions: selectedEmotions, 
                     isFirstChatAfterOnboarding: true 
                 };
-                // AI 응답 요청 및 이후 로직은 handleUserInteraction 내부에서 처리
                 await handleUserInteraction(userTypedIntro, contextForFirstInteraction); 
                 
-                // handleUserInteraction이 완료된 후 (성공/실패 모두) 아래 로직 실행
                 localStorage.removeItem('lozee_onboarding_complete'); 
                 localStorage.removeItem('lozee_user_typed_intro'); 
                 localStorage.removeItem('lozee_selected_emotions'); 
                 firstInteractionDone = true; 
-                console.log("[initializeChat] 온보딩 데이터 처리 완료 (localStorage 정리).");
+                console.log("[initializeChat] 온보딩 데이터 처리 완료.");
             } else if (onboardingComplete && (!userTypedIntro || userTypedIntro.trim() === "")) { 
                 console.log("[initializeChat] 온보딩은 완료했으나, 사용자의 첫마디가 없습니다. AI가 먼저 말을 겁니다.");
                 initialGreetingText = `만나서 반가워요, ${currentUserName}님! 이제 대화를 시작할 준비가 되었어요. 아래 입력 방식을 선택해 지금 어떤지 말씀해주세요.`;
@@ -435,7 +412,7 @@
                 } else { 
                   initialGreetingText = await getInitialGreeting(currentUserName, hasVisited, lastSummary, currentUserAge, currentUserDisease);
                   appendMessage(initialGreetingText, 'ai');
-                  loadingIndicatorTalk.style.display = 'block'; // TTS 재생 전 로딩 표시
+                  loadingIndicatorTalk.style.display = 'block'; 
                   try {
                       await playTTSFromText(initialGreetingText, currentVoiceId);
                   } catch (e) {
@@ -450,14 +427,16 @@
         } catch (error) { 
             console.error("[initializeChat] 초기화 중 예외:", error);
             appendMessage("채팅 시작 중 문제가 발생했어요. 페이지를 새로고침 해보세요.", 'ai', true);
-            loadingIndicatorTalk.style.display = 'none'; // 오류 시 로딩 숨김
-            disableAllInputs(true, "초기화 오류");
+            loadingIndicatorTalk.style.display = 'none'; 
+            disableAllInputs(true, "초기화 오류"); 
         } finally {
             console.log("채팅 초기화 완료 (finally 블록).");
-            // disableAllInputs(false)는 각 분기에서 처리하도록 함.
-            // 만약 어떤 분기에서도 disableAllInputs(false)가 호출되지 않는 경우가 있다면, 여기서 호출.
-            // 예를 들어, if (!currentUserId || !currentVoiceId) 블록은 return 하므로 여기서 처리 안 됨.
-            // 하지만 다른 성공/실패 경로는 각자 처리하고 있음.
+            if (currentUserId && currentVoiceId) { 
+                 if (talkBtn.disabled) { 
+                    console.log("[initializeChat] finally에서 입력 UI 최종 활성화 시도.");
+                    disableAllInputs(false, "초기화 완료 최종");
+                 }
+            }
             resetSilenceTimer(); 
         }
     }
