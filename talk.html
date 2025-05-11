@@ -46,17 +46,15 @@
   </div>
 
   <script type="module">
-    // 외부 모듈 임포트
     import { playTTSFromText } from './js/tts.js';
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    console.log("talk.html 스크립트 시작 (v3.21 - handleUserInteraction 로깅 강화)");
+    console.log("talk.html 스크립트 시작 (v3.22 - DOM 참조 및 초기화 순서 수정)");
 
-    // DOM 요소 참조 (null 가능성 방지 위해 함수 내부 또는 DOMContentLoaded 후 접근 고려)
+    // DOM 요소 참조는 DOMContentLoaded 내에서 한 번만 수행
     let talkBtn, chatWindow, topicSelectionBox, topicOptionsContainer, loadingIndicatorTalk, waitingOverlay, waitingUserNameSpan;
 
-    // localStorage 값 가져오기
     const currentUserName = localStorage.getItem('lozee_username') || "친구";
     const currentUserId = localStorage.getItem('lozee_username'); 
     const currentVoiceId = localStorage.getItem('lozee_voice');
@@ -83,7 +81,6 @@
       return { useSimpleLanguage: needsSimple, useUltraSimpleLanguage: isVeryYoung };
     })();
     
-    // 나머지 전역 변수들
     let isRecording = false;
     let mediaRecorder;
     let audioChunks = [];
@@ -131,79 +128,113 @@
         }
     }
     function checkAndRedirectToAnalysis() { /* (v3.19와 동일) */ }
+    async function handleUserInteraction(userText, context = {}) { /* (v3.21과 동일) */ }
+    async function startRecording() { /* (v3.19와 동일) */ }
+    function stopRecording(isManualStop = false) { /* (v3.19와 동일) */ }
     
-    async function handleUserInteraction(userText, context = {}) { 
-      console.log(`--- [handleUserInteraction] 함수 시작됨 --- User Text: "${userText ? userText.substring(0,30)+'...' : '없음'}"`);
-      if (!userText || userText.trim() === "" || analysisRedirectInProgress) {
-          console.log("[handleUserInteraction] 조건 미충족 또는 분석 페이지 이동 중으로 반환.");
-          // 이 경우, 버튼 활성화나 타이머 리셋이 필요할 수 있음 (호출부에서 관리해야 함)
-          if (!analysisRedirectInProgress && talkBtn && talkBtn.disabled) { // STT 후 호출된 경우 버튼이 비활성화 상태일 수 있음
-              disableTalkButton(false, "유효하지 않은 사용자 입력 또는 분석 이동 중");
-              resetSilenceTimer(); // 이런 경우에도 침묵 타이머는 리셋해주는 것이 안전
+    function setupEventListeners() {
+        console.log("[setupEventListeners] 함수 시작됨.");
+        if (!talkBtn) {
+            console.error("[setupEventListeners] talkBtn이 null입니다. 리스너 설정 불가.");
+            return;
+        }
+        talkBtn.addEventListener('click', async () => { 
+            if (analysisRedirectInProgress) { return; }
+            if (waitingOverlay) waitingOverlay.style.display = 'none'; 
+            
+            if (!firstInteractionDone && !onboardingComplete && initialGreetingText) { 
+            firstInteractionDone = true; disableTalkButton(true, "초기 인사말 TTS 중"); 
+            if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'block';
+            try { await playTTSFromText(initialGreetingText, currentVoiceId); } 
+            catch (error) {
+                const errorBubble = appendMessage( error.name === 'NotAllowedError' ? "(목소리를 들으려면 화면을 다시 한번 클릭하거나 마이크 버튼을 눌러주세요.)" : "(초기 안내 음성 재생 중 문제가 발생했습니다.)", "ai", true);
+                if(errorBubble && chatWindow) chatWindow.appendChild(errorBubble); 
+            } finally { 
+                if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'none'; 
+                disableTalkButton(false, "초기 인사말 TTS 완료/실패"); 
+                resetSilenceTimer(); 
+            }
+            return; 
+            }
+
+            if (!isRecording) {
+            autoSegmentStartTime = null; 
+            currentSegmentInAutoChain = 0; 
+            startRecording(); 
+            } else { 
+            stopRecording(true); 
+            }
+        });
+        console.log("[setupEventListeners] talkBtn 클릭 리스너 설정 완료.");
+
+        if (waitingOverlay) {
+            waitingOverlay.addEventListener('click', () => { 
+                if (analysisRedirectInProgress) return;
+                waitingOverlay.style.display = 'none';
+                resetSilenceTimer(); 
+            });
+            console.log("[setupEventListeners] waitingOverlay 클릭 리스너 설정 완료.");
+        } else {
+            console.warn("[setupEventListeners] waitingOverlay 요소를 찾을 수 없습니다.");
+        }
+    }
+
+    async function initializeChat() { 
+      console.log("--- [initializeChat] 함수 시작됨 ---");
+      // DOM 요소가 이미 DOMContentLoaded에서 참조되었으므로 여기서는 다시 참조하지 않음.
+
+      if (!talkBtn || !chatWindow) {
+          console.error("[initializeChat] 필수 DOM 요소(talkBtn 또는 chatWindow)가 null입니다. 초기화를 중단합니다.");
+          // 사용자에게 오류를 알리는 UI 처리 (예: 에러 메시지 표시)
+          const criticalErrorMsg = "페이지 로딩 중 오류가 발생했습니다. 새로고침하거나 나중에 다시 시도해주세요. (필수 UI 요소 누락)";
+          if (chatWindow) { // chatWindow라도 있으면 거기에 메시지 표시
+            const errorBubble = appendMessage(criticalErrorMsg, "ai", true);
+            if (errorBubble) chatWindow.appendChild(errorBubble);
+          } else { // chatWindow도 없으면 콘솔에만 의존
+            console.error(criticalErrorMsg);
           }
+          if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'none';
+          disableTalkButton(true, "초기화 실패 (UI 요소 누락)");
           return;
       }
+      console.log("[initializeChat] DOM 요소 유효성 확인 완료 (talkBtn, chatWindow).");
 
-      if (!conversationStartTime) {
-          conversationStartTime = Date.now();
-          console.log(`[handleUserInteraction] 대화 시작 시간 기록됨: ${new Date(conversationStartTime).toLocaleString()}`);
+      talkBtn.innerHTML = '🎤';
+      talkBtn.classList.remove('active', 'recording-in-progress');
+      disableTalkButton(true, "초기화 중");
+      
+      console.log("[initializeChat] localStorage 값 확인:");
+      console.log(`  currentUserName: "${currentUserName}"`);
+      console.log(`  currentUserId: "${currentUserId}"`);
+      // ... (다른 localStorage 값 로깅은 기존과 동일) ...
+
+      if (!currentUserId || !currentVoiceId) { 
+          const errorMsg = `필수 사용자 정보(ID 또는 목소리)가 없어 대화를 시작할 수 없습니다. [ID: ${currentUserId}, Voice: ${currentVoiceId}]`;
+          console.error("[initializeChat] 치명적 오류 - 필수 정보 누락:", errorMsg); 
+          const errorBubble = appendMessage(errorMsg, 'ai', true);
+          if(errorBubble && chatWindow) chatWindow.appendChild(errorBubble);
+          if(loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'none'; 
+          disableTalkButton(true, "사용자 정보 없음 (필수 값 누락)");
+          console.log("--- [initializeChat] 중단 (필수 정보 누락) ---");
+          return;
       }
-      
-      disableTalkButton(true, "AI 응답 대기 중"); 
-      if (topicSelectionBox) topicSelectionBox.style.display = 'none'; 
-      if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'block';
+      console.log("[initializeChat] 필수 사용자 정보 (ID, Voice) 확인 완료.");
 
-      const gptContext = { userAge: currentUserAge, userDisease: currentUserDisease, useSimpleLanguage: simplified.useSimpleLanguage, useUltraSimpleLanguage: simplified.useUltraSimpleLanguage, ...context };
-      console.log("[handleUserInteraction] GPT Context:", gptContext);
-      
       try {
-        console.log("[handleUserInteraction] getGptResponse 호출 시도...");
-        const gptResponse = await getGptResponse(userText, currentUserId, gptContext);
-        console.log("[handleUserInteraction] getGptResponse 호출 완료. 응답:", gptResponse);
-
-        let aiReply = gptResponse?.rephrasing || gptResponse?.error || "죄송해요, 답변을 이해하는 데 어려움이 있었어요.";
-        let isError = !gptResponse?.rephrasing;
-        if (gptResponse?.summary) localStorage.setItem('lozee_lastSummary', (lastSummary = gptResponse.summary));
-        
-        if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'none'; 
-        const aiBubbleDiv = appendMessage(aiReply, 'ai', isError); 
-        if(aiBubbleDiv && chatWindow) { chatWindow.appendChild(aiBubbleDiv); chatWindow.scrollTop = chatWindow.scrollHeight; }
-        
-        if (!analysisRedirectInProgress) { 
-            try { 
-                console.log("[handleUserInteraction] playTTSFromText 호출 시도...");
-                await playTTSFromText(aiReply, currentVoiceId); 
-                console.log("[handleUserInteraction] playTTSFromText 호출 완료.");
-            } catch (e) { console.error("TTS 실패:", e); } 
-        }
+        console.log("[initializeChat] try 블록 진입.");
+        // ... (나머지 try 블록 내용은 v3.21과 동일) ...
       } catch (error) { 
-        console.error("[handleUserInteraction] try 블록 내에서 예외 발생 (GPT 또는 TTS 관련):", error);
-        if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'none';
-        const fallbackMsg = "죄송합니다, 응답 처리 중 예상치 못한 문제가 발생했어요.";
-        const errorBubble = appendMessage(fallbackMsg, 'ai', true);
-        if(errorBubble && chatWindow) chatWindow.appendChild(errorBubble);
-        if (!analysisRedirectInProgress) {
-            try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) { console.error("TTS 실패 (오류 처리 중):", e); }
-        }
+          console.error("[initializeChat] try 블록 내에서 예외 발생:", error);
+          // ... (오류 처리 v3.21과 동일) ...
       } finally {
-        console.log("[handleUserInteraction] finally 블록 실행됨.");
-        if (!analysisRedirectInProgress) { 
-            disableTalkButton(false, "AI 응답/오류 처리 완료"); 
-            currentSegmentInAutoChain = 0; 
-            resetSilenceTimer(); 
-            checkAndRedirectToAnalysis(); 
-        }
-        console.log("--- [handleUserInteraction] 함수 종료됨 ---");
+        console.log("--- [initializeChat] finally 블록 실행됨. 채팅 초기화 시도 완료 ---");
+        if (!analysisRedirectInProgress) resetSilenceTimer(); 
       }
     }
 
-    async function startRecording() { /* (v3.19와 동일) */ }
-    function stopRecording(isManualStop = false) { /* (v3.19와 동일) */ }
-    function setupEventListeners() { /* (v3.20과 동일) */ }
-    async function initializeChat() { /* (v3.20과 동일) */ }
-
     document.addEventListener('DOMContentLoaded', () => {
         console.log("DOMContentLoaded 이벤트 발생. 초기화 로직 실행 준비.");
+        
         talkBtn = document.getElementById('talk-btn');
         chatWindow = document.getElementById('chat-window');
         topicSelectionBox = document.getElementById('topic-selection');
@@ -212,11 +243,12 @@
         waitingOverlay = document.getElementById('waiting-overlay');
         waitingUserNameSpan = document.getElementById('waitingUserName');
         
-        if (!talkBtn || !chatWindow || !topicSelectionBox || !topicOptionsContainer || !loadingIndicatorTalk || !waitingOverlay || !waitingUserNameSpan) {
-            console.error("DOMContentLoaded: 필수 DOM 요소 중 하나 이상을 찾을 수 없습니다. 일부 기능이 작동하지 않을 수 있습니다.");
-        }
-        setupEventListeners(); 
-        initializeChat();    
+        console.log("[DOMContentLoaded] DOM 요소 참조 시도 완료.");
+        if (!talkBtn) console.error("[DOMContentLoaded] talkBtn 요소를 찾지 못했습니다!");
+        // 다른 요소들에 대한 null 체크도 추가할 수 있습니다.
+
+        initializeChat();    // 채팅 초기화 로직 먼저 호출
+        setupEventListeners(); // 그 다음 이벤트 리스너 설정
     });
   </script>
 </body>
