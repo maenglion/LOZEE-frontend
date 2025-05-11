@@ -5,7 +5,7 @@ export const lozeeEmotions = [
   { sub: "행복해", main: "기쁨" }, 
   { sub: "신나", main: "기쁨" }, 
   { sub: "뿌듯해", main: "기쁨" }, 
-  { sub: "감사해", main: "기쁨" },
+  { sub: "고마워", main: "기쁨" },
   { sub: "좋아", main: "기쁨" },
   { sub: "기대감", main: "기쁨" }, 
   { sub: "편안해", main: "기쁨" }, 
@@ -17,8 +17,8 @@ export const lozeeEmotions = [
   { sub: "서운해", main: "슬픔" }, 
   { sub: "속상해", main: "슬픔" },
   { sub: "허전해", main: "슬픔" }, 
-  { sub: "슬퍼해", main: "슬픔" },
-  { sub: "실망이야", main: "슬픔" }, 
+  { sub: "슬퍼", main: "슬픔" },
+  { sub: "실망스러워", main: "슬픔" }, 
   { sub: "무기력해", main: "슬픔" },
   
   // 분노 (Anger)
@@ -40,7 +40,9 @@ export const lozeeEmotions = [
   { sub: "혼란스러워", main: "불안" },
 
   // 중립 또는 기타 감정 (새로 추가)
-  { sub: "특별한 느낌 없어", main: "중립" } // 사용자님 요청 반영
+  { sub: "특별한 느낌 없어", main: "중립" },
+  { sub: "부끄러워", main: "수치" },
+  { sub: "챙피해", main: "수치" }  // 사용자님 요청 반영
 ];
 
 // 단어 클라우드에 표시할 소분류 단어 목록만 추출하는 헬퍼 (필요시 사용)
