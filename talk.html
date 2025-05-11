@@ -203,7 +203,7 @@
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    console.log("talk.html 스크립트 시작 (v3.8 - 관리자 음성 명령 이메일 조건 추가)");
+    console.log("talk.html 스크립트 시작 (v3.6 - GPT 응답 로깅 및 TTS 오류 처리 강화)");
 
     const talkBtn = document.getElementById('talk-btn');
     const chatWindow = document.getElementById('chat-window');
@@ -214,10 +214,6 @@
     const waitingUserName = document.getElementById('waitingUserName');
 
     const currentUserName = localStorage.getItem('lozee_username') || "친구";
-    // currentUserId는 index.html에서 CBT 코드로 입력받은 이메일 또는 사용자가 입력한 이름/닉네임일 수 있습니다.
-    // 여기서는 lozee_cbt_code에 저장된 이메일을 사용하는 것이 더 정확할 수 있습니다.
-    // 만약 lozee_username에 이메일이 저장된다고 확신하면 그대로 사용해도 됩니다.
-    // 여기서는 사용자 ID로 저장된 값을 사용합니다. (index.html에서 lozee_username에 이메일이 저장된다고 가정)
     const currentUserId = localStorage.getItem('lozee_username'); 
     const currentVoiceId = localStorage.getItem('lozee_voice');
     const currentUserAge = localStorage.getItem('lozee_userage');
@@ -238,7 +234,7 @@
         }
     }
 
-    console.log("사용자 정보:", { currentUserName, currentUserId, currentVoiceId, currentUserAge, currentUserDisease, hasVisited });
+    console.log("사용자 정보:", { currentUserName, currentVoiceId, currentUserAge, currentUserDisease, hasVisited });
     console.log("온보딩 완료 여부:", onboardingComplete);
     if(onboardingComplete) {
         console.log("온보딩 데이터 -> 사용자 첫마디:", userTypedIntro, "선택된 감정:", selectedEmotions);
@@ -253,10 +249,6 @@
     let firstInteractionDone = false; 
     let initialGreetingText = "";    
     let recordingStartTime; 
-
-    // --- 개발자님 요청: 관리자용 비밀 음성 명령 및 이메일 ---
-    const ADMIN_SECRET_PHRASE = "고양이맹구름맹누리";
-    const ADMIN_EMAIL = "maengnanyoung@gmail.com"; // 관리자 이메일
 
     function appendMessage(text, role = 'ai', isError = false) {
       if (!text || String(text).trim() === "") { 
@@ -273,7 +265,25 @@
       if (role === 'user') { 
             chatWindow.appendChild(msgDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-          resetSilenceTimer();
+          
+        // --- 분석 조건: 일정 글자 수 이상 + 시간 경과 ---
+        const now = Date.now();
+        if (!window.__lozeeChatStartTime) window.__lozeeChatStartTime = now;
+        if (!window.__lozeeTotalCharCount) window.__lozeeTotalCharCount = 0;
+
+        window.__lozeeTotalCharCount += userText.length + (gptResponse?.rephrasing?.length || 0);
+
+        const timeElapsed = now - window.__lozeeChatStartTime;
+        const MAX_CHAR_FOR_ANALYSIS = 1200;
+        const MAX_TIME_FOR_ANALYSIS_MS = 300000; // 5분
+
+        if (window.__lozeeTotalCharCount >= MAX_CHAR_FOR_ANALYSIS || timeElapsed >= MAX_TIME_FOR_ANALYSIS_MS) {
+          console.log("[LOZEE] 분석 조건 충족 - analysis.html로 이동");
+          localStorage.setItem("adminOverride", "true");
+          setTimeout(() => { window.location.href = 'analysis.html'; }, 800);
+        }
+
+        resetSilenceTimer();
           return msgDiv; 
       } else { 
           return msgDiv; 
@@ -395,7 +405,8 @@
             ...context 
         };
         const gptResponse = await getGptResponse(userText, currentUserId, gptContext); 
-        console.log("GPT 응답 결과:", gptResponse);
+        // --- 개발자님 요청 사항 1: GPT 응답 결과 로깅 ---
+        console.log("GPT 응답 결과:", gptResponse); 
         
         let aiReply = "죄송해요, 답변을 이해하는 데 어려움이 있었어요.";
         let isError = true;
@@ -419,15 +430,16 @@
             if (aiBubbleDiv) { 
                 chatWindow.appendChild(aiBubbleDiv); 
                 chatWindow.scrollTop = chatWindow.scrollHeight;
+                 // --- 개발자님 요청 사항 2: TTS 호출 부분 try...catch로 감싸기 ---
                  try {
                     await playTTSFromText(aiReply, currentVoiceId); 
                  } catch (e) {
-                    console.error("TTS 실패:", e);
+                    console.error("TTS 실패:", e); // TTS 실패 시 콘솔에 오류 로깅
                  }
             }
             disableTalkButton(false, "AI 응답 완료");
             resetSilenceTimer(); 
-        }, 2000); 
+        }, 2000); // 2초 지연
 
       } catch (error) { 
         console.error("[handleUserInteraction] AI 응답 처리 중 예외:", error);
@@ -461,7 +473,6 @@
         mediaRecorder.ondataavailable = event => { 
             if (event.data.size > 0) { audioChunks.push(event.data); }
         };
-
         mediaRecorder.onstop = async () => {
             console.log("[onstop] 녹음 중지됨, 처리 시작...");
             talkBtn.innerHTML = '🎤'; 
@@ -482,26 +493,6 @@
             disableTalkButton(true, "STT 처리 중");
             try {
                 const userText = await getSTTFromAudio(audioBlob, durationInSeconds); 
-                
-                // --- 개발자님 요청: 관리자 음성 명령 및 이메일 확인 ---
-                const normalizedUserText = userText ? userText.replace(/\s+/g, '') : ""; 
-                const isAdminUser = currentUserId === ADMIN_EMAIL; // 현재 로그인한 사용자의 ID(이메일)와 관리자 이메일 비교
-                
-                console.log(`[Admin Check] User ID: ${currentUserId}, Is Admin User: ${isAdminUser}, Normalized Text: "${normalizedUserText}"`);
-
-                if (isAdminUser && normalizedUserText === ADMIN_SECRET_PHRASE) {
-                    console.log(`[Admin Command] 관리자 이메일 및 비밀 음성 명령 감지: "${userText}"`);
-                    appendMessage(`(관리자 명령: "${ADMIN_SECRET_PHRASE}" 감지. analysis.html로 이동합니다.)`, 'ai', true);
-                    // 필요한 경우 현재 상태 저장 등의 로직 추가 가능
-                    // 예: localStorage.setItem('lozee_last_interaction_summary_before_admin_skip', lastSummary);
-                    
-                    // 잠시 후 페이지 이동 (메시지 확인 시간 부여)
-                    setTimeout(() => {
-                        window.location.href = 'analysis.html';
-                    }, 1500); // 1.5초 후 이동
-                    return; // 이후 로직 실행 안 함
-                }
-                // --- 관리자 음성 명령 확인 끝 ---
                 
                 if (userText && userText.trim() !== "") {
                     appendMessage(userText, 'user'); 
@@ -610,10 +601,7 @@
       console.log("채팅 초기화 시작...");
 
       if (!currentUserId || !currentVoiceId) {
-          // 이메일(currentUserId)이 없는 경우 관리자 명령을 사용할 수 없으므로,
-          // 사용자에게 명확한 안내를 제공하거나, 또는 이름/닉네임 기반의 다른 ID 체계를 고려해야 합니다.
-          // 현재는 currentUserId가 이메일이라고 가정하고 진행합니다.
-          const errorMsg = "사용자 정보(ID/이메일 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 설정 또는 시작 페이지로 이동해주세요.";
+          const errorMsg = "사용자 정보(ID 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 설정 또는 시작 페이지로 이동해주세요.";
           console.error("[initializeChat]", errorMsg); 
           const errorBubble = appendMessage(errorMsg, 'ai', true);
           if(errorBubble) chatWindow.appendChild(errorBubble);
