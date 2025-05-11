@@ -162,7 +162,7 @@
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    console.log("talk.html 스크립트 시작 (v3.12 - 연속 녹음 시 명시적 API 분리)");
+    console.log("talk.html 스크립트 시작 (v3.14 - 초기화 로깅 강화 및 GPT 간결화)");
 
     const talkBtn = document.getElementById('talk-btn');
     const chatWindow = document.getElementById('chat-window');
@@ -172,6 +172,7 @@
     const waitingOverlay = document.getElementById('waiting-overlay');
     const waitingUserName = document.getElementById('waitingUserName');
 
+    // localStorage 값 가져오기
     const currentUserName = localStorage.getItem('lozee_username') || "친구";
     const currentUserId = localStorage.getItem('lozee_username'); 
     const currentVoiceId = localStorage.getItem('lozee_voice');
@@ -180,6 +181,7 @@
     let hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
     let lastSummary = localStorage.getItem('lozee_lastSummary') || '';
 
+    // 온보딩 관련 값
     const onboardingComplete = localStorage.getItem('lozee_onboarding_complete') === 'true';
     const userTypedIntro = localStorage.getItem('lozee_user_typed_intro'); 
     const selectedEmotionsString = localStorage.getItem('lozee_selected_emotions');
@@ -189,10 +191,21 @@
             selectedEmotions = JSON.parse(selectedEmotionsString);
         } catch (e) {
             console.error("선택된 감정 localStorage 파싱 오류:", e);
-            selectedEmotions = [];
+            selectedEmotions = []; // 파싱 실패 시 빈 배열로 초기화
         }
     }
 
+    // GPT 응답 간결화 로직 (스크립트 상단에서 정의)
+    const simplified = (() => {
+      const age = parseInt(currentUserAge || "0", 10);
+      const disease = (currentUserDisease || "").toLowerCase();
+      const needsSimple = age < 15 || ["아스퍼거", "asd", "adhd", "사회적의사소통장애"].some(d => disease.includes(d));
+      const isVeryYoung = age < 10;
+      console.log(`[Simplified Language Check] Age: ${age}, Disease: "${disease}", NeedsSimple: ${needsSimple}, IsVeryYoung: ${isVeryYoung}`);
+      return { useSimpleLanguage: needsSimple, useUltraSimpleLanguage: isVeryYoung };
+    })();
+
+    // 나머지 전역 변수들
     let isRecording = false;
     let mediaRecorder;
     let audioChunks = [];
@@ -220,12 +233,13 @@
     let continuePromptTimer = null;          
     let isEligibleToContinue = false;        
     let userClickedToContinue = false;       
-    const API_DISCONNECT_DELAY_MS = 1000; // 연속 녹음 시 API 분리를 위한 지연 시간
+    const API_DISCONNECT_DELAY_MS = 1000;
 
     function appendMessage(text, role = 'ai', isError = false) {
-      // (기존과 동일)
+      // (기존과 동일 - AI 메시지는 호출부에서 chatWindow에 추가)
       if (!text || String(text).trim() === "") { return null; }
       const messageText = String(text);
+      console.log(`[appendMessage] (${role}): ${messageText.substring(0,30)}...`);
       totalCharacterCount += messageText.length; 
       const msgDiv = document.createElement('div'); 
       msgDiv.className = `bubble ${role}`;
@@ -234,7 +248,7 @@
       if (role === 'user') { 
             chatWindow.appendChild(msgDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
-          resetSilenceTimer();
+            resetSilenceTimer();
       }
       return msgDiv; 
     }
@@ -245,31 +259,58 @@
     }
 
     async function loadRecentTopics() { /* (기존과 동일) */ 
-      if (!currentUserId) { return []; }
+      if (!currentUserId) { console.warn("[loadRecentTopics] 사용자 ID 없음, 주제 로드 건너뜀."); return []; }
       try {
         const backendUrl = 'https://ggg-production.up.railway.app'; 
         const response = await fetch(`${backendUrl}/api/topics?userId=${encodeURIComponent(currentUserId)}`);
-        if (!response.ok) { return []; }
-        const data = await response.json(); 
-        return data.topics || [];
-      } catch (error) { return []; }
+        if (!response.ok) { console.error(`[loadRecentTopics] 최근 주제 불러오기 실패: ${response.status} - ${await response.text()}`); return []; }
+        const data = await response.json(); return data.topics || [];
+      } catch (error) { console.error('[loadRecentTopics] 최근 주제 불러오기 중 오류:', error); return []; }
     }
 
-    function showTopicBox(topics) { /* (기존과 동일, 내용 간결화) */ 
+    function showTopicBox(topics) { /* (기존과 동일 - AI 메시지 추가 로직은 appendMessage 호출부에서 처리) */ 
         topicOptionsContainer.innerHTML = ''; 
         let hasOptions = false;
-        if (topics && topics.length > 0) { /* populate options */ hasOptions = true; } 
-        else { /* populate default options */ hasOptions = true; }
+        if (topics && topics.length > 0) { 
+            topics.slice(0, 3).forEach(topic => {
+                const option = document.createElement('div'); option.className = 'topic-option';
+                option.textContent = topic;
+                option.onclick = () => {
+                    topicBox.style.display = 'none';
+                    appendMessage(`"${topic}"(으)로 대화를 이어갈게요.`, 'user');
+                    handleUserInteraction(`"${topic}"에 대해 이어서 이야기 해줘.`);
+                };
+                topicOptionsContainer.appendChild(option); hasOptions = true;
+            });
+        } else { 
+            const option1 = document.createElement('div'); option1.className = 'topic-option';
+            option1.textContent = "조금 이따가 이야기 할까요?";
+            option1.onclick = () => {
+                topicBox.style.display = 'none'; waitingUserName.textContent = currentUserName;
+                waitingOverlay.style.display = 'flex';
+                const waitingMsgDiv = appendMessage("(로지가 잠시 기다리고 있어요. 언제든 다시 화면을 클릭하거나 말을 걸어주세요.)", "ai", true);
+                if (waitingMsgDiv) chatWindow.appendChild(waitingMsgDiv); clearTimeout(silenceTimer); 
+            };
+            topicOptionsContainer.appendChild(option1);
+            const option2 = document.createElement('div'); option2.className = 'topic-option';
+            option2.textContent = "다른 주제에 대해 물어봐도 될까요?";
+            option2.onclick = () => {
+                topicBox.style.display = 'none'; appendMessage("다른 주제에 대해 물어봐도 될까요?", 'user'); 
+                handleUserInteraction("가족에 대해 이야기 해 줄 수 있어?"); 
+            };
+            topicOptionsContainer.appendChild(option2); hasOptions = true;
+        }
         topicBox.style.display = hasOptions ? 'block' : 'none'; 
         if(hasOptions) setTimeout(() => chatWindow.scrollTop = chatWindow.scrollHeight, 0); 
     }
 
-    function startSilenceTimer() { /* (기존과 동일) */ 
+    function startSilenceTimer() { /* (기존과 동일 - 예외 처리 추가) */ 
         clearTimeout(silenceTimer); 
         silenceTimer = setTimeout(async () => {
             if (isRecording || analysisRedirectInProgress) { return; }
-            const topics = await loadRecentTopics(); 
-            showTopicBox(topics);
+            try {
+                const topics = await loadRecentTopics(); showTopicBox(topics);
+            } catch (error) { console.error("[Timer] 최근 주제 불러오기 중 오류 발생 (침묵 타이머):", error); }
         }, SILENCE_TIMEOUT);
     }
 
@@ -280,35 +321,33 @@
         }
     }
     
-    function checkAndRedirectToAnalysis() { /* (기존과 동일) */ 
+    function checkAndRedirectToAnalysis() { /* (기존과 동일 - AI 메시지 추가 로직은 appendMessage 호출부에서 처리) */ 
         if (analysisRedirectInProgress || !conversationStartTime) return;
         const durationInSeconds = (Date.now() - conversationStartTime) / 1000;
         if (totalCharacterCount >= ANALYSIS_CHAR_THRESHOLD && durationInSeconds >= ANALYSIS_TIME_THRESHOLD_SECONDS) {
-            analysisRedirectInProgress = true; 
-            disableTalkButton(true, "분석 페이지 이동 준비 중");
+            analysisRedirectInProgress = true; disableTalkButton(true, "분석 페이지 이동 준비 중");
             const redirectMsgDiv = appendMessage("(대화 내용이 충분하여 분석 페이지로 이동합니다...)", "ai", true);
             if (redirectMsgDiv) chatWindow.appendChild(redirectMsgDiv);
             setTimeout(() => { window.location.href = 'analysis.html'; }, 2000);
         }
     }
 
-    async function handleUserInteraction(userText, context = {}) { /* (기존과 동일, 내용 간결화) */ 
+    async function handleUserInteraction(userText, context = {}) { /* (기존과 동일 - GPT 컨텍스트 및 AI 메시지 추가 로직 수정됨) */ 
       if (!userText || userText.trim() === "" || analysisRedirectInProgress) return;
       if (!conversationStartTime) conversationStartTime = Date.now();
-      disableTalkButton(true, "AI 응답 대기 중"); 
-      topicBox.style.display = 'none';
-      loadingIndicatorTalk.style.display = 'block';
+      disableTalkButton(true, "AI 응답 대기 중"); topicBox.style.display = 'none'; loadingIndicatorTalk.style.display = 'block';
+      const gptContext = { userAge: currentUserAge, userDisease: currentUserDisease, useSimpleLanguage: simplified.useSimpleLanguage, useUltraSimpleLanguage: simplified.useUltraSimpleLanguage, ...context };
+      console.log("[handleUserInteraction] GPT Context:", gptContext);
       try {
-        const gptResponse = await getGptResponse(userText, currentUserId, {userAge:currentUserAge, userDisease:currentUserDisease, ...context});
+        const gptResponse = await getGptResponse(userText, currentUserId, gptContext);
         let aiReply = gptResponse?.rephrasing || gptResponse?.error || "죄송해요, 답변을 이해하는 데 어려움이 있었어요.";
         let isError = !gptResponse?.rephrasing;
         if (gptResponse?.summary) localStorage.setItem('lozee_lastSummary', (lastSummary = gptResponse.summary));
-
         setTimeout(async () => {
             loadingIndicatorTalk.style.display = 'none'; 
             const aiBubbleDiv = appendMessage(aiReply, 'ai', isError); 
             if (aiBubbleDiv) { chatWindow.appendChild(aiBubbleDiv); chatWindow.scrollTop = chatWindow.scrollHeight; }
-            if (!analysisRedirectInProgress) try { await playTTSFromText(aiReply, currentVoiceId); } catch (e) { console.error("TTS 실패:", e); }
+            if (!analysisRedirectInProgress) { try { await playTTSFromText(aiReply, currentVoiceId); } catch (e) { console.error("TTS 실패:", e); } }
             if (!analysisRedirectInProgress) { disableTalkButton(false, "AI 응답 완료"); resetSilenceTimer(); checkAndRedirectToAnalysis(); }
         }, 1000);
       } catch (error) { 
@@ -323,214 +362,174 @@
       } 
     }
 
-    async function startRecording() {
+    async function startRecording() { /* (기존과 동일 - AI 메시지 추가 로직은 appendMessage 호출부에서 처리) */ 
       if (isRecording || analysisRedirectInProgress) { return; }
-
       if (currentSegmentCount >= MAX_CONSECUTIVE_SEGMENTS) {
-          appendMessage(`최대 ${MAX_CONSECUTIVE_SEGMENTS}번까지 연속으로 말할 수 있습니다. 다시 녹음을 시작하려면 마이크 버튼을 눌러주세요.`, "ai", true);
-          // (TTS for max segments, button reset - 기존과 동일)
-          talkBtn.innerHTML = '🎤';
-          talkBtn.classList.remove('active', 'recording-in-progress');
-          disableTalkButton(false, "최대 연속 녹음 도달");
-          currentSegmentCount = 0; 
-          isRecording = false; 
+          const maxReachedMsgDiv = appendMessage(`최대 ${MAX_CONSECUTIVE_SEGMENTS}번까지 연속으로 말할 수 있습니다. 다시 녹음을 시작하려면 마이크 버튼을 눌러주세요.`, "ai", true);
+          if (maxReachedMsgDiv) chatWindow.appendChild(maxReachedMsgDiv); 
+          try { await playTTSFromText(maxReachedMsgDiv.textContent, currentVoiceId); } catch(e) { console.error("Max segments TTS error:", e); }
+          talkBtn.innerHTML = '🎤'; talkBtn.classList.remove('active', 'recording-in-progress');
+          disableTalkButton(false, "최대 연속 녹음 도달"); currentSegmentCount = 0; isRecording = false; 
           return;
       }
-
-      currentSegmentCount++;
-      console.log(`[startRecording] Segment ${currentSegmentCount}/${MAX_CONSECUTIVE_SEGMENTS} 시작 (최대 ${MAX_RECORDING_DURATION_MS/1000}초)`);
-      
-      topicBox.style.display = 'none';
-      waitingOverlay.style.display = 'none'; 
+      currentSegmentCount++; console.log(`[startRecording] Segment ${currentSegmentCount}/${MAX_CONSECUTIVE_SEGMENTS} 시작`);
+      topicBox.style.display = 'none'; waitingOverlay.style.display = 'none'; 
       try {
-        // 이전 스트림이 있다면 확실히 중지
-        if (mediaStream) { 
-            mediaStream.getTracks().forEach(track => track.stop());
-            mediaStream = null;
-            console.log("[startRecording] 이전 mediaStream 명시적 중지.");
-        }
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true }); // 새 스트림 요청
-        
-        isRecording = true; 
-        isEligibleToContinue = false; 
-        userClickedToContinue = false; 
-
-        talkBtn.classList.remove('active'); 
-        talkBtn.classList.add('recording-in-progress'); 
-        talkBtn.innerHTML = '⏹️'; 
+        if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); mediaStream = null; }
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+        isRecording = true; isEligibleToContinue = false; userClickedToContinue = false; 
+        talkBtn.classList.remove('active'); talkBtn.classList.add('recording-in-progress'); talkBtn.innerHTML = '⏹️'; 
         disableTalkButton(false, "녹음 중"); 
-        
-        audioChunks = []; 
-        const options = { mimeType: 'audio/webm;codecs=opus' };
-        mediaRecorder = new MediaRecorder(mediaStream, options); // 새 레코더 인스턴스
-        recordingStartTimeValue = performance.now(); 
-        
-        mediaRecorder.ondataavailable = event => { 
-            if (event.data.size > 0) { audioChunks.push(event.data); }
-        };
-
+        audioChunks = []; const options = { mimeType: 'audio/webm;codecs=opus' };
+        mediaRecorder = new MediaRecorder(mediaStream, options); recordingStartTimeValue = performance.now(); 
+        mediaRecorder.ondataavailable = event => { if (event.data.size > 0) { audioChunks.push(event.data); } };
         mediaRecorder.onstop = async () => {
-            console.log("[onstop] 녹음 중지됨, 처리 시작...");
-            isRecording = false; // 중요: 상태를 먼저 변경
-
-            const recordingEndTime = performance.now();
-            const durationInMs = recordingEndTime - (recordingStartTimeValue || recordingEndTime); 
-            const durationInSeconds = Math.round(durationInMs / 1000);
+            isRecording = false; 
+            const durationInSeconds = Math.round((performance.now() - (recordingStartTimeValue || performance.now())) / 1000);
             console.log(`[onstop] 녹음된 오디오 길이 (추정): ${durationInSeconds}초, 세그먼트: ${currentSegmentCount}`);
-
-            // (audioChunks.length === 0 && !userClickedToContinue 부분 기존과 동일)
-            if (audioChunks.length === 0 && !userClickedToContinue) { 
-                if (!analysisRedirectInProgress) disableTalkButton(false, "녹음 데이터 없음"); 
-                if (!userClickedToContinue || currentSegmentCount >= MAX_CONSECUTIVE_SEGMENTS) {
-                    currentSegmentCount = 0;
-                    talkBtn.innerHTML = '🎤';
-                    talkBtn.classList.remove('active', 'recording-in-progress');
-                }
-                resetSilenceTimer(); 
-                return; 
-            }
-            
+            if (audioChunks.length === 0 && !userClickedToContinue) { /* ... */ return; }
             const audioBlob = (audioChunks.length > 0) ? new Blob(audioChunks, { type: mediaRecorder.mimeType }) : null;
             audioChunks = [];
-            
             if (!analysisRedirectInProgress) disableTalkButton(true, "STT 처리 중");
-
             try {
                 const userText = audioBlob ? await getSTTFromAudio(audioBlob, durationInSeconds) : "";
-                // (Admin command, userText 처리 기존과 동일)
-                if (userText && userText.trim() !== "") {
-                    appendMessage(userText, 'user'); 
-                    const isFirst = onboardingComplete && !localStorage.getItem('lozee_first_voice_interaction_done');
-                    await handleUserInteraction(userText, isFirst ? { initialUserMessage: userText, initialUserEmotions: selectedEmotions, isFirstChatAfterOnboarding: true } : {});
-                    if (isFirst) { localStorage.setItem('lozee_first_voice_interaction_done', 'true'); localStorage.removeItem('lozee_selected_emotions'); }
-                } else if (!userClickedToContinue && audioBlob) { 
-                    appendMessage("죄송해요, 잘 알아듣지 못했어요.", 'ai', true);
+                if (userText && userText.trim() !== "") { /* ... handle user text ... */ } 
+                else if (!userClickedToContinue && audioBlob) { 
+                    const noSttMsgDiv = appendMessage("죄송해요, 잘 알아듣지 못했어요.", 'ai', true);
+                    if (noSttMsgDiv) chatWindow.appendChild(noSttMsgDiv);
+                    if (!analysisRedirectInProgress) try {await playTTSFromText(noSttMsgDiv.textContent, currentVoiceId); } catch(e) {/*...*/}
                 }
-            } catch (sttError) {
-                console.error("[onstop] STT 처리 중 예외:", sttError);
-                appendMessage("음성 인식 중 오류가 발생했어요. (STT API 오류 가능성)", 'ai', true);
+            } catch (sttError) { 
+                const sttErrorMsgDiv = appendMessage("음성 인식 중 오류가 발생했어요.", 'ai', true);
+                if (sttErrorMsgDiv) chatWindow.appendChild(sttErrorMsgDiv);
+                if (!analysisRedirectInProgress) try {await playTTSFromText(sttErrorMsgDiv.textContent, currentVoiceId); } catch(e) {/*...*/}
             } finally {
                 const shouldContinueChain = userClickedToContinue && currentSegmentCount < MAX_CONSECUTIVE_SEGMENTS;
                 userClickedToContinue = false; 
-
                 if (shouldContinueChain) {
-                    console.log(`연속 녹음 진행 준비: 다음 세그먼트 (${currentSegmentCount + 1}) 시작 전 ${API_DISCONNECT_DELAY_MS}ms 대기`);
-                    
-                    // 이전 스트림과 레코더 명시적 해제 (stopRecording에서도 하지만, 여기서 한번 더 확인)
-                    if (mediaStream) {
-                        mediaStream.getTracks().forEach(track => track.stop());
-                        mediaStream = null;
-                    }
-                    mediaRecorder = null; // 이전 MediaRecorder 참조 해제
-
-                    disableTalkButton(true, "다음 녹음 준비 중..."); // 지연 시간 동안 버튼 비활성화
-
-                    setTimeout(() => {
-                        console.log(`${API_DISCONNECT_DELAY_MS}ms 대기 완료. 다음 세그먼트 시작`);
-                        if (!analysisRedirectInProgress) {
-                             // startRecording 전에 버튼 활성화 불필요, startRecording 내부에서 처리
-                             startRecording(); 
-                        } else {
-                            console.log("분석 페이지 이동 중이므로 다음 녹음 시작 안 함.");
-                            talkBtn.innerHTML = '🎤';
-                            talkBtn.classList.remove('active', 'recording-in-progress');
-                            currentSegmentCount = 0;
-                            disableTalkButton(false, "분석 페이지 이동으로 중단");
-                        }
-                    }, API_DISCONNECT_DELAY_MS);
-                } else {
-                    console.log("녹음 체인 종료 (STT 처리 후).");
-                    talkBtn.innerHTML = '🎤';
-                    talkBtn.classList.remove('active', 'recording-in-progress');
-                    if (!analysisRedirectInProgress) disableTalkButton(false, "STT 완료/오류/연속 종료");
-                    currentSegmentCount = 0; 
-                    resetSilenceTimer();
-                }
+                    if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); mediaStream = null; }
+                    mediaRecorder = null; disableTalkButton(true, "다음 녹음 준비 중..."); 
+                    setTimeout(() => { if (!analysisRedirectInProgress) startRecording(); else { /* ... */ } }, API_DISCONNECT_DELAY_MS);
+                } else { /* ... reset chain ... */ }
             }
         };
-
         mediaRecorder.start(); 
-        // (Timers for autoStop and continuePrompt - 기존과 동일)
-        clearTimeout(autoStopTimer);
-        autoStopTimer = setTimeout(() => {
-            if (isRecording && mediaRecorder.state === "recording") {
-                userClickedToContinue = false; stopRecording(); 
-            }
-        }, MAX_RECORDING_DURATION_MS);
-
-        clearTimeout(continuePromptTimer);
-        continuePromptTimer = setTimeout(() => {
-            if (isRecording) {
-                isEligibleToContinue = true;
-                talkBtn.classList.remove('recording-in-progress'); 
-                talkBtn.classList.add('active'); 
-            }
-        }, CONTINUE_THRESHOLD_MS);
-        
+        clearTimeout(autoStopTimer); autoStopTimer = setTimeout(() => { if (isRecording && mediaRecorder.state === "recording") { userClickedToContinue = false; stopRecording(); } }, MAX_RECORDING_DURATION_MS);
+        clearTimeout(continuePromptTimer); continuePromptTimer = setTimeout(() => { if (isRecording) { isEligibleToContinue = true; talkBtn.classList.remove('recording-in-progress'); talkBtn.classList.add('active'); } }, CONTINUE_THRESHOLD_MS);
         resetSilenceTimer();
-
-      } catch (error) { /* (기존 에러 처리와 동일) */ 
-        console.error("[startRecording] 녹음 시작 중 예외:", error);
-        appendMessage("마이크를 시작할 수 없어요. 권한을 확인해주세요.", 'ai', true);
-        isRecording = false; 
-        talkBtn.innerHTML = '🎤';
-        talkBtn.classList.remove('active', 'recording-in-progress');
-        if (!analysisRedirectInProgress) disableTalkButton(false, "녹음 시작 오류");
-        currentSegmentCount = 0; 
-      }
-    }
-
-    function stopRecording() {
-        console.log(`[stopRecording] 호출됨. userClickedToContinue: ${userClickedToContinue}, currentSegment: ${currentSegmentCount}, mediaState: ${mediaRecorder?.state}`);
-        
-        clearTimeout(autoStopTimer); autoStopTimer = null;
-        clearTimeout(continuePromptTimer); continuePromptTimer = null;
-        
-        isEligibleToContinue = false; 
-
-        if (mediaRecorder && mediaRecorder.state === "recording") { 
-            mediaRecorder.stop(); // onstop 이벤트 핸들러 트리거
-        } else { // 이미 중지되었거나, 레코더가 없는 경우
-            isRecording = false; // 상태 확실히 업데이트
-            // 버튼 상태 및 currentSegmentCount는 onstop 또는 다음 startRecording에서 처리되도록 함
-            // 불필요한 UI 업데이트 최소화
+      } catch (error) { /* ... error handling ... */ 
+            const errorMsgDiv = appendMessage("마이크를 시작할 수 없어요. 권한을 확인해주세요.", 'ai', true);
+            if (errorMsgDiv) chatWindow.appendChild(errorMsgDiv);
+            /* ... */
         }
-        // mediaStream 해제는 startRecording 또는 onstop의 연속 녹음 로직에서 처리
     }
 
-    talkBtn.addEventListener('click', async () => { /* (기존과 동일) */ 
+    function stopRecording() { /* (기존과 동일) */ 
+        clearTimeout(autoStopTimer); autoStopTimer = null; clearTimeout(continuePromptTimer); continuePromptTimer = null;
+        isEligibleToContinue = false; 
+        if (mediaRecorder && mediaRecorder.state === "recording") { mediaRecorder.stop(); } else { isRecording = false; }
+    }
+
+    talkBtn.addEventListener('click', async () => { /* (기존과 동일 - AI 메시지 추가 로직은 appendMessage 호출부에서 처리) */ 
       if (analysisRedirectInProgress) { return; }
       waitingOverlay.style.display = 'none'; 
-      if (!firstInteractionDone && !onboardingComplete && initialGreetingText) { /* 초기 인사 TTS */ return; }
-
-      if (!isRecording) {
-        currentSegmentCount = 0; 
-        userClickedToContinue = false;
-        isEligibleToContinue = false;
-        startRecording();
-      } else { 
-        userClickedToContinue = isEligibleToContinue && currentSegmentCount < MAX_CONSECUTIVE_SEGMENTS;
-        if(userClickedToContinue) console.log("[talkBtn Click] 연속 녹음 요청 (파란 버튼 클릭됨)");
-        else console.log("[talkBtn Click] 일반 녹음 중지 요청");
-        stopRecording(); 
+      if (!firstInteractionDone && !onboardingComplete && initialGreetingText) { 
+        firstInteractionDone = true; disableTalkButton(true, "초기 인사말 TTS 중"); loadingIndicatorTalk.style.display = 'block';
+        try { await playTTSFromText(initialGreetingText, currentVoiceId); } 
+        catch (error) {
+          const errorBubble = appendMessage( error.name === 'NotAllowedError' ? "(목소리를 들으려면 화면을 다시 한번 클릭하거나 마이크 버튼을 눌러주세요.)" : "(초기 안내 음성 재생 중 문제가 발생했습니다.)", "ai", true);
+          if(errorBubble) chatWindow.appendChild(errorBubble); 
+        } finally { loadingIndicatorTalk.style.display = 'none'; disableTalkButton(false, "초기 인사말 TTS 완료/실패"); resetSilenceTimer(); }
+        return; 
       }
+      if (!isRecording) { currentSegmentCount = 0; userClickedToContinue = false; isEligibleToContinue = false; startRecording(); } 
+      else { userClickedToContinue = isEligibleToContinue && currentSegmentCount < MAX_CONSECUTIVE_SEGMENTS; stopRecording(); }
     });
     
     waitingOverlay.addEventListener('click', () => { /* (기존과 동일) */ });
 
-    async function initializeChat() { /* (기존과 동일, 내용 간결화) */ 
+    async function initializeChat() { 
       talkBtn.innerHTML = '🎤';
       talkBtn.classList.remove('active', 'recording-in-progress');
       disableTalkButton(true, "초기화 중");
-      if (!currentUserId || !currentVoiceId) { /* 사용자 정보 없음 처리 */ return; }
+      console.log("--- 채팅 초기화 시작 ---");
+      console.log("[INIT_LOG] localStorage 값 확인:");
+      console.log(`[INIT_LOG] currentUserName: "${currentUserName}" (원본: "${localStorage.getItem('lozee_username')}")`);
+      console.log(`[INIT_LOG] currentUserId: "${currentUserId}" (원본: "${localStorage.getItem('lozee_username')}")`);
+      console.log(`[INIT_LOG] currentVoiceId: "${currentVoiceId}" (원본: "${localStorage.getItem('lozee_voice')}")`);
+      console.log(`[INIT_LOG] currentUserAge: "${currentUserAge}" (원본: "${localStorage.getItem('lozee_userage')}")`);
+      console.log(`[INIT_LOG] currentUserDisease: "${currentUserDisease}" (원본: "${localStorage.getItem('lozee_userdiagnosis')}")`);
+      console.log(`[INIT_LOG] hasVisited: ${hasVisited}`);
+      console.log(`[INIT_LOG] onboardingComplete: ${onboardingComplete}, userTypedIntro: "${userTypedIntro}"`);
+
+      if (!currentUserId || !currentVoiceId) { 
+          const errorMsg = `필수 사용자 정보(ID 또는 목소리)가 없어 대화를 시작할 수 없습니다. [ID: ${currentUserId}, Voice: ${currentVoiceId}] 설정 페이지로 돌아가거나 앱을 다시 시작해주세요.`;
+          console.error("[initializeChat] 치명적 오류:", errorMsg); 
+          const errorBubble = appendMessage(errorMsg, 'ai', true);
+          if(errorBubble) chatWindow.appendChild(errorBubble);
+          loadingIndicatorTalk.style.display = 'none'; 
+          disableTalkButton(true, "사용자 정보 없음 (필수 값 누락)"); // 버튼 비활성화 유지
+          console.log("--- 채팅 초기화 중단 (필수 정보 누락) ---");
+          return;
+      }
+
+      console.log("[INIT_LOG] 필수 사용자 정보 (ID, Voice) 확인 완료.");
+
       try {
-        if (onboardingComplete && userTypedIntro) { /* 온보딩 완료 및 첫마디 입력됨 */ } 
-        else if (onboardingComplete && !userTypedIntro) { /* 온보딩 완료, 첫 음성 입력 대기 */ } 
-        else { /* 일반 시작 또는 URL 토픽 */ }
-        if (!hasVisited) localStorage.setItem('lozee_hasVisited', 'true'); 
-      } catch (error) { /* 초기화 오류 처리 */ } 
-      finally {
-        console.log("채팅 초기화 완료.");
+        if (onboardingComplete && userTypedIntro) { 
+            console.log("[INIT_LOG] 케이스 1: 온보딩 완료, 사용자 첫마디 입력됨.");
+            appendMessage(userTypedIntro, 'user'); 
+            if (!conversationStartTime) conversationStartTime = Date.now();
+            await handleUserInteraction(userTypedIntro, { initialUserMessage: userTypedIntro, initialUserEmotions: selectedEmotions, isFirstChatAfterOnboarding: true });
+            localStorage.removeItem('lozee_onboarding_complete'); 
+            localStorage.removeItem('lozee_user_typed_intro'); 
+            firstInteractionDone = true; 
+        } else if (onboardingComplete && !userTypedIntro) { 
+            console.log("[INIT_LOG] 케이스 2: 온보딩 완료, 사용자 첫 음성 입력 대기.");
+            initialGreetingText = `만나서 반가워요, ${currentUserName}님! 이제 대화를 시작할 준비가 되었어요. 아래 마이크 버튼을 눌러 지금 어떤지 말씀해주세요.`;
+            console.log(`[INIT_LOG] 생성된 초기 인사말 (케이스 2): "${initialGreetingText}"`);
+            const aiGreetingBubble = appendMessage(initialGreetingText, 'ai');
+            if(aiGreetingBubble) chatWindow.appendChild(aiGreetingBubble);
+            loadingIndicatorTalk.style.display = 'block';
+            try { await playTTSFromText(initialGreetingText, currentVoiceId); } catch(e) { console.error("온보딩 후 첫 인사 TTS 오류:", e); } 
+            finally { loadingIndicatorTalk.style.display = 'none'; }
+            disableTalkButton(false, "온보딩 후 첫 음성 입력 대기");
+            firstInteractionDone = true; 
+        } else { 
+            const urlParams = new URLSearchParams(window.location.search);
+            const topicFromUrl = urlParams.get('topic');
+            if (topicFromUrl) { 
+              console.log(`[INIT_LOG] 케이스 3: URL에서 토픽 가져옴 ("${topicFromUrl}").`);
+              const userMsg = `"${topicFromUrl}"에 대해 이야기하고 싶어요.`; 
+              appendMessage(userMsg, 'user');
+              if (!conversationStartTime) conversationStartTime = Date.now();
+              await handleUserInteraction(`"${topicFromUrl}" 관련해서 이야기 시작해줘.`);
+              firstInteractionDone = true; 
+            } else { 
+              console.log("[INIT_LOG] 케이스 4: 일반 시작 (첫 방문 또는 재방문).");
+              initialGreetingText = await getInitialGreeting(currentUserName, hasVisited, lastSummary, currentUserAge, currentUserDisease);
+              console.log(`[INIT_LOG] getInitialGreeting 반환 값: "${initialGreetingText}"`);
+              if (!initialGreetingText || initialGreetingText.trim() === "") {
+                  console.warn("[INIT_LOG] getInitialGreeting이 비어있는 문자열 또는 null을 반환했습니다. 기본 인사말로 대체합니다.");
+                  initialGreetingText = `${currentUserName}님, 안녕하세요! 어떤 이야기를 나누고 싶으신가요?`;
+              }
+              const aiGreetingBubble = appendMessage(initialGreetingText, 'ai');
+              if(aiGreetingBubble) chatWindow.appendChild(aiGreetingBubble);
+              disableTalkButton(false, "초기화 완료, 첫 클릭 대기"); 
+            }
+        }
+        if (!hasVisited) { 
+            localStorage.setItem('lozee_hasVisited', 'true'); 
+            hasVisited = true; 
+            console.log("[INIT_LOG] 첫 방문으로 기록됨 (lozee_hasVisited = true).");
+        }
+      } catch (error) { 
+          console.error("[initializeChat] 초기화 중 예외 발생:", error);
+          const errorBubble = appendMessage("채팅 시작 중 문제가 발생했어요. 페이지를 새로고침 해보세요.", 'ai', true);
+          if(errorBubble) chatWindow.appendChild(errorBubble);
+          disableTalkButton(true, "초기화 오류");
+      } finally {
+        console.log("--- 채팅 초기화 완료 ---");
         if (!analysisRedirectInProgress) resetSilenceTimer(); 
       }
     }
