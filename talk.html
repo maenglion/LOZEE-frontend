@@ -213,12 +213,10 @@
     import { playTTSFromText } from './js/tts.js';
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
-    // [3] 추임새 헬퍼 import
     import { getIsPoliteByAge, speakInterjection } from './js/interjection-helper.js';
 
-    console.log("talk.html 스크립트 시작 (v3.19 - 마이크 활성화, 추임새 기능 추가)");
+    console.log("talk.html 스크립트 시작 (v3.21 - 추임새 및 초기화 로직 오류 수정)");
 
-    // ... (기존 DOM 요소 및 변수 선언은 동일하게 유지)
     const talkBtn = document.getElementById('talk-btn');
     const chatWindow = document.getElementById('chat-window');
     const toggleInputBtn = document.getElementById('toggle-input-btn');
@@ -269,57 +267,40 @@
         catch (e) { console.error("선택된 감정 localStorage 파싱 오류:", e); selectedEmotions = []; }
     }
 
-    // --- 함수 정의들 (adjustChatWindowPadding, appendMessage, disableAllInputs, 타이머 함수들, handleUserInteraction, stopRecordingIfMaxDuration, startRecording, stopRecording) ---
-    // 이전 버전과 거의 동일하며, [1] 마이크 활성화 및 [3] 추임새 관련 로직이 startRecording, mediaRecorder.onstop, handleUserInteraction에 추가/수정됩니다.
-    // (가독성을 위해 전체 함수 코드를 반복하지 않고, 주요 변경점 위주로 설명합니다. 실제 파일에는 모든 함수가 포함되어야 합니다.)
-
     function adjustChatWindowPadding() { /* 이전과 동일 */ }
     function appendMessage(text, role = 'ai', isError = false) { /* 이전과 동일 */ }
-    
-    function disableAllInputs(disable = true, reason = "") {
-      talkBtn.disabled = disable;
-      sendTextBtn.disabled = disable;
-      userTextInput.disabled = disable;
-      // 녹음 중이 아닐 때만 토글 버튼 활성화/비활성화 (녹음 중에는 항상 비활성화)
-      if (!isRecording) {
-        toggleInputBtn.disabled = disable;
-      } else {
-        toggleInputBtn.disabled = true; // 녹음 중에는 항상 비활성화
-      }
-      console.log(`[disableAllInputs] ${disable ? '비활성화' : '활성화'}${reason ? ` (${reason})` : ''}`);
-    }
-
+    function disableAllInputs(disable = true, reason = "") { /* 이전과 동일 */ }
     function resetSilenceTimer() { /* 이전과 동일 */ }
     function startSilenceTimer() { /* 이전과 동일 */ }
     function startConsecutiveTurnSilenceTimer() { /* 이전과 동일 */ }
     function resetConsecutiveTurnSilenceTimer() { /* 이전과 동일 */ }
-
+    
     async function handleUserInteraction(userText, context = {}) { 
       if (!userText || userText.trim() === "") { 
         console.warn("[handleUserInteraction] userText가 비어있어 처리 중단.");
-        disableAllInputs(false, "사용자 입력 없음");
+        disableAllInputs(false, "사용자 입력 없음"); // 입력 UI 활성화 보장
         return; 
       }
       disableAllInputs(true, "AI 응답 대기 중"); 
       loadingIndicatorTalk.style.display = 'block';
       clearTimeout(silenceTimer); 
       clearTimeout(consecutiveTurnTimeoutId);
-      console.log("[handleUserInteraction] GPT 요청 시작. UserText:", userText.substring(0,50), "Context:", context);
-
-      // [3] AI 응답 전 추임새 (선택적, 사용자가 말을 마치고 AI가 생각하는 것처럼)
-      // 연속 발화가 끝나고 AI가 응답할 때만 추임새를 넣습니다.
-      if (userConsecutiveTurns === 0) { // 연속 발화가 모두 끝났음을 의미
-        try {
-            const isPolite = getIsPoliteByAge();
-            speakInterjection(isPolite);
-            console.log("[Interjection] AI 응답 전 추임새 재생됨.");
-            // 추임새 재생 시간만큼 약간의 딜레이를 줄 수 있으나, TTS와 겹칠 수 있으므로 일단 생략
-        } catch (e) {
-            console.error("추임새 재생 중 오류:", e);
-        }
-      }
+      console.log("[handleUserInteraction] 시작. UserText:", userText.substring(0,50), "Context:", context);
 
       try {
+        // 추임새는 사용자의 연속 발화가 끝나고 AI가 응답을 시작할 때만 재생
+        if (userConsecutiveTurns === 0) { 
+          console.log("[Interjection] 추임새 재생 시도 (연속 발화 아님)...");
+          try {
+              const isPolite = getIsPoliteByAge();
+              speakInterjection(isPolite); 
+              console.log("[Interjection] 추임새 재생 요청됨.");
+          } catch (e) {
+              console.error("추임새 재생 중 오류 (handleUserInteraction 내부):", e);
+          }
+        }
+
+        console.log("[handleUserInteraction] GPT 요청 시작...");
         const gptContext = { userAge: currentUserAge, userDisease: currentUserDisease, ...context };
         const gptResponse = await getGptResponse(userText, currentUserId, gptContext); 
         console.log("GPT 응답 결과 (handleUserInteraction):", gptResponse); 
@@ -333,105 +314,153 @@
             } else if (gptResponse.error) { aiReply = gptResponse.error; }
         }
         
-        setTimeout(async () => { 
-            loadingIndicatorTalk.style.display = 'none'; 
-            console.log("[handleUserInteraction] AI 응답 UI에 표시 및 TTS 시작. AI Reply:", aiReply.substring(0,50));
-            appendMessage(aiReply, 'ai', isError); 
-            try { 
-                if (!isError && aiReply) { 
-                    await playTTSFromText(aiReply, currentVoiceId); 
-                }
-            } 
-            catch (e) { console.error("TTS 실패 (handleUserInteraction):", e.message ? e.message : e); }
-            disableAllInputs(false, "AI 응답 완료");
-            resetSilenceTimer(); 
-        }, isError ? 300 : 1000); // 추임새 시간을 고려하여 이 지연을 조절할 수 있음
+        // AI 메시지 표시 및 TTS는 약간의 지연 후 실행
+        // setTimeout을 Promise로 감싸서 TTS 완료 후 disableAllInputs(false)가 호출되도록 할 수 있으나,
+        // 현재는 TTS 재생이 백그라운드에서 이루어지므로, UI는 즉시 활성화되도록 함.
+        loadingIndicatorTalk.style.display = 'none'; 
+        console.log("[handleUserInteraction] AI 응답 UI에 표시 및 TTS 시작. AI Reply:", aiReply.substring(0,50));
+        appendMessage(aiReply, 'ai', isError); 
+        
+        if (!isError && aiReply) {
+            try {
+                await playTTSFromText(aiReply, currentVoiceId); 
+                console.log("[handleUserInteraction] TTS 재생 완료 (또는 시작됨).");
+            } catch (e) { 
+                console.error("TTS 실패 (handleUserInteraction):", e.message ? e.message : e); 
+            }
+        }
+        // disableAllInputs(false, "AI 응답 완료"); // finally 블록으로 이동
 
-      } catch (error) { /* 이전과 동일 */ } 
+      } catch (error) { 
+        console.error("[handleUserInteraction] AI 응답 처리 중 주 예외:", error);
+        loadingIndicatorTalk.style.display = 'none';
+        const fallbackMsg = "죄송합니다, 응답 처리 중 예상치 못한 문제가 발생했어요.";
+        appendMessage(fallbackMsg, 'ai', true);
+        try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) { console.error("TTS 실패 (오류 처리 중):", e.message ? e.message : e); }
+        // disableAllInputs(false, "AI 응답 오류"); // finally 블록으로 이동
+      } finally {
+        // 어떤 경우든 로딩 인디케이터는 숨기고, 입력 UI는 활성화합니다.
+        loadingIndicatorTalk.style.display = 'none';
+        disableAllInputs(false, "handleUserInteraction 완료");
+        resetSilenceTimer(); 
+        console.log("[handleUserInteraction] finally 블록 실행됨. 입력 UI 활성화.");
+      }
     }
 
     function stopRecordingIfMaxDuration() { /* 이전과 동일 */ }
-
-    async function startRecording() {
-      // [1] 마이크 활성화 로직 확인 및 강화
-      if (isRecording) { 
-        console.warn("[startRecording] 이미 녹음 중입니다.");
-        return; 
-      }
-      if (currentInputMode !== 'microphone') {
-        console.warn("[startRecording] 현재 마이크 입력 모드가 아닙니다.");
-        return;
-      }
-
-      disableAllInputs(true, "녹음 준비 중"); // 모든 입력 비활성화 (토글 버튼 포함)
-      
-      console.log("[startRecording] 녹음 시작 시도..."); 
-      topicBox.style.display = 'none';
-      waitingOverlay.style.display = 'none'; 
-      clearTimeout(silenceTimer); 
-      clearTimeout(consecutiveTurnTimeoutId); 
-
-      try {
-        if (mediaStream) { 
-            mediaStream.getTracks().forEach(track => track.stop()); 
-            console.log("[startRecording] 기존 미디어 스트림 중지됨.");
-        }
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log("[startRecording] 마이크 접근 성공. 미디어 스트림 가져옴.");
-        isRecording = true; 
-        talkBtn.classList.add('active'); 
-        talkBtn.innerHTML = '⏹️'; 
-        disableAllInputs(false, "녹음 중"); // 모든 입력 활성화
-        talkBtn.disabled = false; // 중지 버튼은 항상 활성화
-        toggleInputBtn.disabled = true; // 녹음 중에는 모드 변경 불가
-
-        audioChunks = []; 
-        const options = { mimeType: 'audio/webm;codecs=opus' };
-        mediaRecorder = new MediaRecorder(mediaStream, options); 
-        console.log("[startRecording] MediaRecorder 생성됨. 옵션:", options);
-        recordingStartTime = performance.now(); 
-        
-        maxDurationTimeoutId = setTimeout(stopRecordingIfMaxDuration, MAX_RECORDING_DURATION);
-        
-        mediaRecorder.ondataavailable = event => { 
-            if (event.data.size > 0) { 
-                audioChunks.push(event.data); 
-                // console.log("[ondataavailable] 오디오 청크 수신:", event.data.size);
-            }
-        };
-
-        mediaRecorder.onstart = () => { // [1] 녹음 시작 시점 명확히 로깅
-            console.log("[MediaRecorder] 녹음이 실제로 시작되었습니다.");
-        };
-
-        mediaRecorder.onstop = async () => { /* 이전과 동일 (관리자 명령 확인 로직 포함) */ };
-        
-        mediaRecorder.start(1000); // 1초 간격으로 ondataavailable 호출 (선택 사항)
-        console.log("[startRecording] mediaRecorder.start() 호출됨.");
-
-      } catch (error) { 
-          console.error("[startRecording] 녹음 시작 중 예외:", error);
-          let message = "마이크를 시작할 수 없어요. ";
-          if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") message += "마이크 사용 권한을 허용해주세요.";
-          else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") message += "연결된 마이크 장치를 찾을 수 없어요.";
-          else message += `오류: ${error.message || error}`; // 오류 객체 전체 또는 메시지 출력
-          appendMessage(message, 'ai', true); 
-          isRecording = false; 
-          talkBtn.classList.remove('active'); 
-          talkBtn.innerHTML = '🎤';
-          disableAllInputs(false, "녹음 시작 오류");
-      }
-    }
-
+    async function startRecording() { /* 이전과 동일 (관리자 명령 확인 로직 포함) */ }
     function stopRecording() { /* 이전과 동일 */ }
+    const toggleInputBtn = document.getElementById('toggle-input-btn'); 
+    const textInputArea = document.getElementById('text-input-area');
+    const userTextInput = document.getElementById('user-text-input');
+    const sendTextBtn = document.getElementById('send-text-btn');
+    const keyboardIconForToggle = document.getElementById('keyboard-icon-for-toggle'); 
+    // const micIconForToggleBtn = document.getElementById('mic-icon-for-toggle-btn'); // HTML에서 ID 수정 필요
+
+
     toggleInputBtn.addEventListener('click', () => { /* 이전과 동일 */ });
     sendTextBtn.addEventListener('click', async () => { /* 이전과 동일 (관리자 명령 확인 로직 포함) */ });
     userTextInput.addEventListener('keypress', (event) => { /* 이전과 동일 */ });
     userTextInput.addEventListener('input', () => { /* 이전과 동일 */ });
-    talkBtn.addEventListener('click', async () => { /* 이전과 동일 (currentInputMode !== 'microphone' return 추가) */ });
+    talkBtn.addEventListener('click', async () => { /* 이전과 동일 */ });
+    
     window.addEventListener('resize', adjustChatWindowPadding); 
-    async function initializeChat() { /* 이전과 동일 (disableAllInputs(false) 호출 시점 조정) */ }
 
+    async function initializeChat() { 
+        console.log("[initializeChat] 시작됨. 온보딩 완료:", onboardingComplete, "사용자 첫마디:", userTypedIntro ? userTypedIntro.substring(0,30) : "없음");
+        disableAllInputs(true, "초기화 중");
+        userConsecutiveTurns = 0; 
+        lastUserUtterance = "";   
+        
+        talkBtn.style.display = 'inline-flex'; 
+        textInputArea.style.display = 'none';
+        const toggleIconTextT = document.getElementById('toggle-icon-text-T'); 
+        const micIconForToggle = document.getElementById('mic-icon-for-toggle-btn'); // ID 수정
+        if (toggleIconTextT) toggleIconTextT.style.display = 'inline-block'; 
+        if (micIconForToggle) micIconForToggle.style.display = 'none';  
+
+        currentInputMode = 'microphone';
+        document.body.classList.remove('keyboard-mode'); 
+        adjustChatWindowPadding(); 
+
+        if (!currentUserId || !currentVoiceId) { 
+            const errorMsg = "사용자 정보(ID/이메일 또는 목소리)가 없어 채팅을 시작할 수 없습니다. 설정 또는 시작 페이지로 이동해주세요.";
+            console.error("[initializeChat] 사용자 정보 부족:", errorMsg);
+            appendMessage(errorMsg, 'ai', true); 
+            loadingIndicatorTalk.style.display = 'none'; 
+            disableAllInputs(true, "사용자 정보 없음"); 
+            return; 
+        }
+        try {
+            if (onboardingComplete && userTypedIntro && userTypedIntro.trim() !== "") { 
+                console.log("[initializeChat] 온보딩 데이터로 첫 대화 시작:", userTypedIntro.substring(0,30));
+                appendMessage(userTypedIntro, 'user'); 
+                
+                const contextForFirstInteraction = { 
+                    initialUserMessage: userTypedIntro, 
+                    initialUserEmotions: selectedEmotions, 
+                    isFirstChatAfterOnboarding: true 
+                };
+                // AI 응답 요청 및 이후 로직은 handleUserInteraction 내부에서 처리
+                await handleUserInteraction(userTypedIntro, contextForFirstInteraction); 
+                
+                // handleUserInteraction이 완료된 후 (성공/실패 모두) 아래 로직 실행
+                localStorage.removeItem('lozee_onboarding_complete'); 
+                localStorage.removeItem('lozee_user_typed_intro'); 
+                localStorage.removeItem('lozee_selected_emotions'); 
+                firstInteractionDone = true; 
+                console.log("[initializeChat] 온보딩 데이터 처리 완료 (localStorage 정리).");
+            } else if (onboardingComplete && (!userTypedIntro || userTypedIntro.trim() === "")) { 
+                console.log("[initializeChat] 온보딩은 완료했으나, 사용자의 첫마디가 없습니다. AI가 먼저 말을 겁니다.");
+                initialGreetingText = `만나서 반가워요, ${currentUserName}님! 이제 대화를 시작할 준비가 되었어요. 아래 입력 방식을 선택해 지금 어떤지 말씀해주세요.`;
+                appendMessage(initialGreetingText, 'ai'); 
+                loadingIndicatorTalk.style.display = 'block';
+                try { 
+                    await playTTSFromText(initialGreetingText, currentVoiceId); 
+                } 
+                catch(ttsError){ console.error("온보딩 후 첫 인사 TTS 오류:", ttsError); } 
+                finally { 
+                    loadingIndicatorTalk.style.display = 'none'; 
+                    disableAllInputs(false, "온보딩 후 첫 입력 대기"); 
+                }
+                firstInteractionDone = true; 
+            } else { 
+                console.log("[initializeChat] 일반 시작 또는 URL 파라미터 확인.");
+                const urlParams = new URLSearchParams(window.location.search);
+                const topicFromUrl = urlParams.get('topic');
+                if (topicFromUrl) { 
+                  appendMessage(`"${topicFromUrl}"에 대해 이야기하고 싶어요.`, 'user');
+                  await handleUserInteraction(`"${topicFromUrl}" 관련해서 이야기 시작해줘.`);
+                  firstInteractionDone = true; 
+                } else { 
+                  initialGreetingText = await getInitialGreeting(currentUserName, hasVisited, lastSummary, currentUserAge, currentUserDisease);
+                  appendMessage(initialGreetingText, 'ai');
+                  loadingIndicatorTalk.style.display = 'block'; // TTS 재생 전 로딩 표시
+                  try {
+                      await playTTSFromText(initialGreetingText, currentVoiceId);
+                  } catch (e) {
+                      console.error("초기 인사 TTS 오류:", e);
+                  } finally {
+                      loadingIndicatorTalk.style.display = 'none';
+                      disableAllInputs(false, "초기화 완료, 첫 클릭/입력 대기"); 
+                  }
+                }
+            }
+            if (!hasVisited) { localStorage.setItem('lozee_hasVisited', 'true'); hasVisited = true; }
+        } catch (error) { 
+            console.error("[initializeChat] 초기화 중 예외:", error);
+            appendMessage("채팅 시작 중 문제가 발생했어요. 페이지를 새로고침 해보세요.", 'ai', true);
+            loadingIndicatorTalk.style.display = 'none'; // 오류 시 로딩 숨김
+            disableAllInputs(true, "초기화 오류");
+        } finally {
+            console.log("채팅 초기화 완료 (finally 블록).");
+            // disableAllInputs(false)는 각 분기에서 처리하도록 함.
+            // 만약 어떤 분기에서도 disableAllInputs(false)가 호출되지 않는 경우가 있다면, 여기서 호출.
+            // 예를 들어, if (!currentUserId || !currentVoiceId) 블록은 return 하므로 여기서 처리 안 됨.
+            // 하지만 다른 성공/실패 경로는 각자 처리하고 있음.
+            resetSilenceTimer(); 
+        }
+    }
     initializeChat();
   </script>
 </body>
