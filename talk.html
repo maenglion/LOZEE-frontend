@@ -55,7 +55,7 @@ async function handleUserTurn(text, systemPrompt=''){
 }
 
 // STT: SpeechRecognition 중심 + VAD optional
-declare let recognition, userBubble;
+let recognition, userBubble;
 (async()=>{
   // 마이크 권한 요청
   try { await navigator.mediaDevices.getUserMedia({audio:true}); }
