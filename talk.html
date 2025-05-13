@@ -14,7 +14,7 @@
     #chat-window { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem; }
     .bubble { max-width:80%; padding:0.75rem 1rem; border-radius:1rem; line-height:1.4; white-space:pre-wrap; }
     .user { background:#fff9c4; color:#333; align-self:flex-end; border-bottom-right-radius:0.25rem; }
-    .ai   { background:#0095FF;  color:#fff; align-self:flex-start; border-bottom-left-radius:0.25rem; }
+    .ai   { background:#0095FF; color:#fff; align-self:flex-start; border-bottom-left-radius:0.25rem; }
     #silence-banner { text-align:center; padding:0.5rem; background:#f0f0f0; color:#666; font-size:0.9rem; display:none; }
     #loading-indicator { display:none; text-align:center; padding:0.5rem; color:#555; font-style:italic; }
   </style>
@@ -53,11 +53,9 @@
       chatWindow.scrollTop = chatWindow.scrollHeight;
       return div;
     }
-
     function setMic(text) { micIndicator.textContent = text; }
     function showBanner(on) { silenceBanner.style.display = on ? 'block' : 'none'; }
     function showLoading(on) { loading.style.display = on ? 'block' : 'none'; }
-
     function transition(to) {
       clearTimeout(silenceTimer);
       currentState = to;
@@ -66,33 +64,36 @@
     }
 
     async function handleUserTurn(text) {
-      if (recognition) recognition.abort();
+      // STT 중지 (RECORD 상태일 때만)
+      if (recognition && currentState === State.RECORD) {
+        try { recognition.stop(); } catch(e) { console.warn('stop error', e); }
+      }
       setMic('🔵 대기 중');
       showLoading(true);
       if (currentTTS) { currentTTS.pause(); currentTTS = null; }
       appendMessage(text, 'user');
 
-      const res = await getGptResponse(text);
+      let res;
+      try {
+        res = await getGptResponse(text);
+      } catch (e) {
+        console.error('GPT 호출 오류', e);
+        res = { error: '죄송해, 대답하는 중 문제가 생겼어.' };
+      }
       showLoading(false);
+
       if (typeof res === 'string') {
         appendMessage(res, 'ai');
         currentTTS = await playTTSFromText(res, ttsVoice);
         currentTTS.onended = () => {
-          try {
-            recognition.start();
-            setMic('🔴 듣고 있어요');
-          } catch (e) {
-            console.warn('recognition already started');
-          }
+          // TTS 끝나고 인식 재시작
+          try { recognition.start(); setMic('🔴 듣고 있어요'); } catch (e) { console.warn('recognition start error', e); }
         };
+      } else if (res.rephrasing) {
+        appendMessage(res.rephrasing, 'ai');
       } else if (res.error) {
         appendMessage(res.error, 'ai');
-        try {
-          recognition.start();
-          setMic('🔴 듣고 있어요');
-        } catch (e) {
-          console.warn('recognition already started');
-        }
+        try { recognition.start(); setMic('🔴 듣고 있어요'); } catch(e) { console.warn('recognition start error after error', e); }
       }
       transition(State.READY);
     }
@@ -120,7 +121,6 @@
           userPlaceholder.textContent = interim;
         }
         if (final) {
-          if (userPlaceholder) { userPlaceholder.remove(); userPlaceholder = null; }
           userLastFinal = final;
         }
       };
@@ -138,12 +138,7 @@
 
       recognition.onend = () => {
         if (currentState === State.READY) {
-          try {
-            recognition.start();
-            setMic('🔴 듣고 있어요');
-          } catch (e) {
-            console.warn('recognition already started');
-          }
+          try { recognition.start(); setMic('🔴 듣고 있어요'); } catch (e) { console.warn('recognition already started'); }
         }
       };
 
