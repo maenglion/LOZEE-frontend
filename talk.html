@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LOZEE 상담</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <style>
     body { display:flex; flex-direction:column; height:100vh; margin:0; font-family:'KoPubWorld Dotum',sans-serif; }
     #main-header { background:#0095FF; color:#fff; padding:1rem; text-align:center; font-size:1.25rem; }
@@ -33,20 +33,17 @@
   import { playTTSFromText } from './js/tts.js';
   import { getGptResponse } from './js/gpt-dialog.js';
 
-  // 상태 머신
-  const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE', PROCESS:'PROCESS' };
-  let currentState = State.READY, silenceTimer, chunkTimer;
-  let recognition, userBubble;
+  const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE' };
+  let currentState = State.READY;
+  let silenceTimer;
+  let recognition, userBubble, currentTTS;
 
-  // DOM
   const chatWindow   = document.getElementById('chat-window');
   const micIndicator = document.getElementById('mic-indicator');
   const vuCanvas     = document.getElementById('vu-meter');
   const silenceBanner= document.getElementById('silence-banner');
   const loading      = document.getElementById('loading-indicator');
-
-  // TTS 설정
-  const ttsVoice = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
+  const ttsVoice     = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
 
   function appendMessage(text, role) {
     const div = document.createElement('div'); div.className=`bubble ${role}`; div.textContent=text;
@@ -55,107 +52,114 @@
   function setMic(text){ micIndicator.textContent=text; }
   function showBanner(on){ silenceBanner.style.display=on?'block':'none'; }
   function showLoading(on){ loading.style.display=on?'block':'none'; }
+
   function transition(to){
-    clearTimeout(silenceTimer); clearTimeout(chunkTimer);
-    currentState=to; showBanner(to===State.SILENCE);
+    clearTimeout(silenceTimer);
+    currentState = to;
+    showBanner(to===State.SILENCE);
     console.log('State→',to);
   }
 
-  // system prompt builder
-  function buildSystem(text){
-    const ems=JSON.parse(localStorage.getItem('lozee_selected_emotions')||'[]');
-    const emo=ems.length?`유저 감정: ${ems.map(e=>e.sub).join(', ')}.`:'';
-    const age=parseInt(localStorage.getItem('lozee_user_age'),10)||0;
-    const tone=age>=56?'존댓말로만 답하세요.':'반말로만 답하세요.';
-    return [emo,text,tone].filter(Boolean).join(' ');
-  }
-
-  async function handleUserTurn(text, extra=''){
+  async function handleUserTurn(text) {
+    // GPT 응답 전 음성 인식 중단하여 TTS가 인식되지 않도록 함
+    if (recognition) {
+      recognition.abort();
+      setMic('🔵 대기 중');
+    }
     appendMessage(text,'user'); showLoading(true);
-    const prompt=buildSystem(extra);
-    const res=await getGptResponse(text,prompt);
-    const aiText=typeof res==='string'?res:(res.error||res.rephrasing||'응답이 없습니다.');
-    appendMessage(aiText,'ai');
-    await playTTSFromText(aiText,ttsVoice);
+    if (currentTTS) { currentTTS.pause(); currentTTS = null; }
+    const res = await getGptResponse(text);
     showLoading(false);
+    if (typeof res === 'string') {
+      appendMessage(res,'ai');
+      // TTS 재생 및 재시작 콜백 설정
+      currentTTS = await playTTSFromText(res, ttsVoice);
+      currentTTS.onended = () => {
+        // TTS 완료 후 음성 인식 재시작
+        if (recognition) {
+          recognition.start();
+          setMic('🔴 듣고 있어요');
+        }
+      };
+    } else if (res.error) {
+      appendMessage(res.error,'ai');
+      // 오류 후에도 인식 재시작
+      if (recognition) {
+        recognition.start();
+        setMic('🔴 듣고 있어요');
+      }
+    }
+    transition(State.READY);
+  }
+    const res = await getGptResponse(text);
+    showLoading(false);
+    if (typeof res === 'string') {
+      appendMessage(res,'ai');
+      currentTTS = await playTTSFromText(res, ttsVoice);
+    } else if (res.error) {
+      appendMessage(res.error,'ai');
+    }
+    transition(State.READY);
   }
 
-  // STT init
   async function initSTT(){
-    try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-      setupVUMeter(stream);
-    }catch(e){ appendMessage('마이크 권한이 필요합니다. 설정을 확인하세요.','ai'); return; }
-    recognition=new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+    try { const stream = await navigator.mediaDevices.getUserMedia({audio:true}); setupVUMeter(stream); }
+    catch (e) { appendMessage('마이크 권한이 필요합니다.','ai'); return; }
+
+    recognition = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
     recognition.lang='ko-KR'; recognition.continuous=true; recognition.interimResults=true;
-    recognition.onresult=e=>{
-      let interim='',final='';
-      for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;
-        e.results[i].isFinal?final+=t:interim+=t;
-      }
-      if(interim) userBubble.textContent=interim;
-      if(final)   userBubble.textContent=final;
+    recognition.onresult = e => {
+      let interim='', final='';
+      for (let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; e.results[i].isFinal?final+=t:interim+=t; }
+      if (interim) userBubble.textContent=interim;
+      if (final)   userBubble.textContent=final;
     };
-    recognition.onspeechstart=onVoiceStart;
-    recognition.onspeechend=onVoiceEnd;
-    recognition.onerror=e=>console.warn('STT 오류',e);
-    // 즉시 듣기 시작
+    recognition.onspeechstart = () => onVoiceStart();
+    recognition.onspeechend   = () => onVoiceEnd();
+    recognition.onerror       = e => console.warn('STT 오류',e);
+
     transition(State.READY);
     recognition.start(); setMic('🔴 듣고 있어요');
   }
 
   function onVoiceStart(){
-    if(currentState===State.READY||currentState===State.SILENCE){
+    if (currentState===State.READY||currentState===State.SILENCE){
       transition(State.RECORD);
       setMic('🔴 듣고 있어요');
-      userBubble=appendMessage('','user');
-      // 30초 chunk timer
-      chunkTimer=setTimeout(()=>{if(currentState===State.RECORD) onVoiceEnd();},30000);
+      userBubble = appendMessage('','user');
+      clearTimeout(silenceTimer);
     }
   }
 
   function onVoiceEnd(){
-    if(currentState===State.RECORD){
+    if (currentState===State.RECORD){
       transition(State.SILENCE);
       setMic('🔵 대기 중');
       recognition.stop();
-      silenceTimer=setTimeout(async()=>{
-        await handleUserTurn(userBubble.textContent);
-        transition(State.READY);
+      silenceTimer = setTimeout(()=>{
+        handleUserTurn(userBubble.textContent);
         recognition.start(); setMic('🔴 듣고 있어요');
       },5000);
     }
   }
 
-  // VU meter
   function setupVUMeter(stream){
-    const ctx=new AudioContext();
-    const src=ctx.createMediaStreamSource(stream);
-    const analyser=ctx.createAnalyser(); analyser.fftSize=64;
-    src.connect(analyser);
+    const ctx=new AudioContext(); const src=ctx.createMediaStreamSource(stream);
+    const analyser=ctx.createAnalyser(); analyser.fftSize=64; src.connect(analyser);
     const data=new Uint8Array(analyser.frequencyBinCount);
-    const canvas=vuCanvas; const cw=canvas.width, ch=canvas.height;
-    const dib=canvas.getContext('2d');
-    function draw(){
-      analyser.getByteFrequencyData(data);
-      dib.clearRect(0,0,cw,ch);
-      const barWidth=cw/data.length;
-      data.forEach((v,i)=>{
-        const h=(v/ch)*ch;
-        dib.fillStyle='#4caf50';
-        dib.fillRect(i*barWidth,ch-h,barWidth-1,h);
-      });
-      requestAnimationFrame(draw);
-    }
-    draw();
+    const dib=vuCanvas.getContext('2d'); const cw=vuCanvas.width, ch=vuCanvas.height;
+    (function draw(){ analyser.getByteFrequencyData(data); dib.clearRect(0,0,cw,ch);
+      data.forEach((v,i)=>{const h=(v/ch)*ch; dib.fillStyle='#4caf50'; dib.fillRect(i*(cw/data.length),ch-h,(cw/data.length)-1,h);
+      }); requestAnimationFrame(draw);
+    })();
   }
 
-  // intro
   async function initIntro(){
-    const intro=localStorage.getItem('lozee_user_typed_intro');
-    if(intro){await handleUserTurn(intro);localStorage.removeItem('lozee_user_typed_intro');}
+    const intro = localStorage.getItem('lozee_user_typed_intro') || '';
+    if (intro) { await handleUserTurn(intro); localStorage.removeItem('lozee_user_typed_intro'); }
   }
 
-  window.addEventListener('DOMContentLoaded',async()=>{await initSTT();await initIntro();});
+  window.addEventListener('DOMContentLoaded',async()=>{ await initSTT(); await initIntro(); });
   </script>
 </body>
 </html>
