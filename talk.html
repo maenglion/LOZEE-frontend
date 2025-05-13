@@ -30,14 +30,31 @@
     import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
+    // 녹음 정책
+    function getRecordingPolicyByAge(age) {
+      age = parseInt(age, 10) || 16;
+      if (age <= 10) return { segmentDuration: 30000, maxDuration: 180000 };
+      if (age <= 15) return { segmentDuration: 30000, maxDuration: 300000 };
+      return { segmentDuration: 40000, maxDuration: 600000 };
+    }
+
+    // 침묵 시 시나리오 (10초)
+    const silenceScenarios = [
+      '무슨 이야기를 더 해볼까?',
+      '궁금한 게 있으면 언제든 말해줘.',
+      '조금 조용하네, 무슨 생각 중이야?'
+    ];
+
     const chatWindow = document.getElementById('chat-window');
     const talkBtn     = document.getElementById('talk-btn');
     const loading     = document.getElementById('loading-indicator');
 
+    let sessionStart = Date.now();
     let isRecording = false;
     let mediaRecorder, mediaStream, audioChunks = [];
     let firstDone = false;
-    const MAX_MS = 30000;
+    let segmentTimer, maxTimer, silenceTimer;
+    let segmentMs = 30000, maxMs = 180000;
 
     function appendMessage(text, role) {
       const div = document.createElement('div');
@@ -45,6 +62,7 @@
       div.textContent = text;
       chatWindow.appendChild(div);
       chatWindow.scrollTop = chatWindow.scrollHeight;
+      return div;
     }
 
     function toggleLoading(state) {
@@ -53,36 +71,34 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // 1) Greeting
-      const userName = localStorage.getItem('lozee_username') || '친구';
-      const hello = await getInitialGreeting(userName);
-      appendMessage(hello, 'ai');
+      // 정책 적용
+      const age = localStorage.getItem('lozee_user_age');
+      const policy = getRecordingPolicyByAge(age);
+      segmentMs = policy.segmentDuration;
+      maxMs = policy.maxDuration;
 
-      // 2) Index에서 입력된 첫 메시지
+      // 초기 인사
+      const name = localStorage.getItem('lozee_username') || '친구';
+      const greeting = await getInitialGreeting(name);
+      appendMessage(greeting, 'ai');
+
+      // Index에서 보낸 메시지
       const intro = localStorage.getItem('lozee_user_typed_intro');
       if (intro) {
-        appendMessage(intro, 'user');
-        toggleLoading(true);
-        try {
-          const ai = await getGptResponse(intro);
-          appendMessage(ai, 'ai');
-          await playTTSFromText(ai);
-        } catch {
-          appendMessage('오류가 발생했습니다.', 'ai');
-        } finally {
-          toggleLoading(false);
-        }
+        handleUserTurn(intro);
         localStorage.removeItem('lozee_user_typed_intro');
         firstDone = true;
       }
 
-      // 3) 마이크 버튼 클릭
+      // 말하기 버튼 이벤트
       talkBtn.addEventListener('click', async () => {
+        clearTimeout(silenceTimer);
         if (!firstDone) {
           firstDone = true;
           toggleLoading(true);
-          await playTTSFromText(hello);
+          await playTTSFromText(greeting);
           toggleLoading(false);
+          startSilenceTimer();
           return;
         }
         isRecording ? stopRecording() : startRecording();
@@ -90,18 +106,24 @@
     });
 
     async function startRecording() {
-      isRecording = true; audioChunks = [];
+      clearTimeout(silenceTimer);
+      isRecording = true;
+      audioChunks = [];
       mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder = new MediaRecorder(mediaStream);
       mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
       mediaRecorder.onstop = processAudio;
       mediaRecorder.start();
       talkBtn.classList.add('recording');
-      setTimeout(() => isRecording && stopRecording(), MAX_MS);
+      segmentTimer = setTimeout(stopRecording, segmentMs);
+      maxTimer = setTimeout(stopRecording, maxMs);
     }
 
     function stopRecording() {
+      if (!isRecording) return;
       isRecording = false;
+      clearTimeout(segmentTimer);
+      clearTimeout(maxTimer);
       mediaRecorder.stop();
       mediaStream.getTracks().forEach(t => t.stop());
       talkBtn.classList.remove('recording');
@@ -109,19 +131,45 @@
 
     async function processAudio() {
       const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      appendMessage('…', 'user');
+      const userBubble = appendMessage('…', 'user');
       toggleLoading(true);
       try {
-        const text = await getSTTFromAudio(blob);
-        chatWindow.lastChild.textContent = text;
-        const ai = await getGptResponse(text);
-        appendMessage(ai, 'ai');
-        await playTTSFromText(ai);
+        const transcript = await getSTTFromAudio(blob);
+        userBubble.textContent = transcript;
+        await handleUserTurn(transcript);
       } catch {
         appendMessage('오류가 발생했습니다.', 'ai');
       } finally {
         toggleLoading(false);
+        startSilenceTimer();
       }
+    }
+
+    // 사용자 발화 처리 + GPT 호출
+    async function handleUserTurn(text) {
+      appendMessage(text, 'user');
+      const age = parseInt(localStorage.getItem('lozee_user_age'), 10) || 16;
+      const elapsed = Date.now() - sessionStart;
+      // 시스템 프롬프트 구성
+      const sys = [];
+      if (elapsed < 10 * 60 * 1000) sys.push('초기 10분간 대화를 이끌어 내는 데 집중하세요.');
+      if (age < 10 && elapsed < 10 * 60 * 1000) sys.push('15글자 이상 응답을 자제하세요.');
+      sys.push(age <= 55 ? '반말로 답하세요.' : '존댓말로 답하세요.');
+      const systemPrompt = sys.join(' ');
+
+      // GPT 호출
+      const res = await getGptResponse(text, systemPrompt);
+      const aiText = (typeof res === 'string' ? res : (res.error || res.rephrasing || '응답이 없습니다.'));
+      appendMessage(aiText, 'ai');
+      await playTTSFromText(aiText);
+    }
+
+    function startSilenceTimer() {
+      silenceTimer = setTimeout(() => {
+        const prompt = silenceScenarios[Math.floor(Math.random() * silenceScenarios.length)];
+        appendMessage(prompt, 'ai');
+        playTTSFromText(prompt);
+      }, 10000);
     }
   </script>
 </body>
