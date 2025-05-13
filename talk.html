@@ -15,7 +15,6 @@
     .bubble { max-width:80%; padding:0.75rem 1rem; border-radius:1rem; line-height:1.4; white-space:pre-wrap; }
     .user { background:#fff9c4; color:#333; align-self:flex-end; border-bottom-right-radius:0.25rem; }
     .ai   { background:#0095FF; color:#fff; align-self:flex-start; border-bottom-left-radius:0.25rem; }
-    #silence-banner { text-align:center; padding:0.5rem; background:#f0f0f0; color:#666; font-size:0.9rem; display:none; }
     #loading-indicator { display:none; text-align:center; padding:0.5rem; color:#555; font-style:italic; }
   </style>
 </head>
@@ -26,22 +25,19 @@
     <canvas id="vu-meter"></canvas>
   </div>
   <div id="chat-window"></div>
-  <div id="silence-banner">말씀하시면 바로 들어드려요</div>
   <div id="loading-indicator">처리 중...</div>
 
   <script type="module">
     import { playTTSFromText } from './js/tts.js';
     import { getGptResponse } from './js/gpt-dialog.js';
 
-    const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE' };
+    const State = { READY:'READY', RECORD:'RECORD' };
     let currentState = State.READY;
-    let silenceTimer;
-    let recognition, userPlaceholder, userLastFinal, currentTTS;
+    let recognition, userPlaceholder, currentTTS;
 
     const chatWindow    = document.getElementById('chat-window');
     const micIndicator  = document.getElementById('mic-indicator');
     const vuCanvas      = document.getElementById('vu-meter');
-    const silenceBanner = document.getElementById('silence-banner');
     const loading       = document.getElementById('loading-indicator');
     const ttsVoice      = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
 
@@ -54,122 +50,79 @@
       return div;
     }
     function setMic(text) { micIndicator.textContent = text; }
-    function showBanner(on) { silenceBanner.style.display = on ? 'block' : 'none'; }
     function showLoading(on) { loading.style.display = on ? 'block' : 'none'; }
-    function transition(to) {
-      clearTimeout(silenceTimer);
-      currentState = to;
-      showBanner(to === State.SILENCE);
-      console.log('State →', to);
-    }
 
     async function handleUserTurn(text) {
-      // STT 중지 (RECORD 상태일 때만)
-      if (recognition && currentState === State.RECORD) {
-        try { recognition.stop(); } catch(e) { console.warn('stop error', e); }
-      }
-      setMic('🔵 대기 중');
       showLoading(true);
-      if (currentTTS) { currentTTS.pause(); currentTTS = null; }
       appendMessage(text, 'user');
+      // STT 중단
+      try { recognition.stop(); } catch(e) {}
+      if (currentTTS) { currentTTS.pause(); currentTTS = null; }
 
-      let res;
-      try {
-        res = await getGptResponse(text);
-      } catch (e) {
-        console.error('GPT 호출 오류', e);
-        res = { error: '죄송해, 대답하는 중 문제가 생겼어.' };
-      }
+      const res = await getGptResponse(text).catch(() => ({ error:'오류 발생' }));
       showLoading(false);
+      let reply = typeof res === 'string' ? res : res.error || res.rephrasing;
+      appendMessage(reply, 'ai');
 
-      if (typeof res === 'string') {
-        appendMessage(res, 'ai');
-        currentTTS = await playTTSFromText(res, ttsVoice);
-        currentTTS.onended = () => {
-          // TTS 끝나고 인식 재시작
-          try { recognition.start(); setMic('🔴 듣고 있어요'); } catch (e) { console.warn('recognition start error', e); }
-        };
-      } else if (res.rephrasing) {
-        appendMessage(res.rephrasing, 'ai');
-      } else if (res.error) {
-        appendMessage(res.error, 'ai');
-        try { recognition.start(); setMic('🔴 듣고 있어요'); } catch(e) { console.warn('recognition start error after error', e); }
-      }
-      transition(State.READY);
+      // AI TTS 재생, 끝나면 STT 재시작
+      currentTTS = await playTTSFromText(reply, ttsVoice);
+      currentTTS.onended = () => {
+        try { recognition.start(); setMic('🔴 듣고 있어요'); } catch(e) {}
+      };
     }
 
     async function initSTT() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         setupVUMeter(stream);
-      } catch (e) {
+      } catch {
         appendMessage('마이크 권한이 필요합니다.', 'ai');
         return;
       }
 
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
       recognition.lang = 'ko-KR'; recognition.continuous = true; recognition.interimResults = true;
 
-      recognition.onresult = (e) => {
-        let interim = '', final = '';
-        for (let i=e.resultIndex; i<e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          e.results[i].isFinal ? final += t : interim += t;
+      recognition.onresult = e => {
+        let interim='', finalText='';
+        for (let i=e.resultIndex;i<e.results.length;i++){
+          let t=e.results[i][0].transcript;
+          e.results[i].isFinal? finalText+=t : interim+=t;
         }
+        // interim 표시
         if (interim) {
           if (!userPlaceholder) userPlaceholder = appendMessage('', 'user');
           userPlaceholder.textContent = interim;
         }
-        if (final) {
-          userLastFinal = final;
-        }
-      };
-
-      recognition.onspeechstart = () => {
-        transition(State.RECORD); setMic('🔴 듣고 있어요'); clearTimeout(silenceTimer);
-      };
-
-      recognition.onspeechend = () => {
-        transition(State.SILENCE); setMic('🔵 대기 중'); recognition.stop();
-        silenceTimer = setTimeout(() => {
-          if (userLastFinal) { handleUserTurn(userLastFinal); userLastFinal = null; }
-        }, 5000);
-      };
-
-      recognition.onend = () => {
-        if (currentState === State.READY) {
-          try { recognition.start(); setMic('🔴 듣고 있어요'); } catch (e) { console.warn('recognition already started'); }
+        // final 처리
+        if (finalText) {
+          if (userPlaceholder) { userPlaceholder.remove(); userPlaceholder=null; }
+          handleUserTurn(finalText);
         }
       };
 
       recognition.onerror = e => console.warn('STT 오류', e);
 
-      transition(State.READY);
+      recognition.onstart = () => setMic('🔴 듣고 있어요');
+      recognition.onend = () => setMic('🔵 대기 중');
+
       recognition.start(); setMic('🔴 듣고 있어요');
     }
 
     function setupVUMeter(stream) {
-      const ctx = new AudioContext(); const src = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser(); analyser.fftSize = 64; src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      const dib = vuCanvas.getContext('2d'); const cw = vuCanvas.width, ch = vuCanvas.height;
-      (function draw() {
-        analyser.getByteFrequencyData(data);
+      const ctx=new AudioContext(),src=ctx.createMediaStreamSource(stream);
+      const analyser=ctx.createAnalyser(); analyser.fftSize=64; src.connect(analyser);
+      const data=new Uint8Array(analyser.frequencyBinCount);
+      const dib=vuCanvas.getContext('2d'); const cw=vuCanvas.width,ch=vuCanvas.height;
+      (function draw(){ analyser.getByteFrequencyData(data);
         dib.clearRect(0,0,cw,ch);
-        const barWidth = cw / data.length;
-        data.forEach((v,i) => { const h = (v/ch)*ch; dib.fillStyle='#4caf50'; dib.fillRect(i*barWidth, ch-h, barWidth-1, h); });
+        const w=cw/data.length;
+        data.forEach((v,i)=>dib.fillRect(i*w,ch-(v/ch)*ch,w-1,(v/ch)*ch));
         requestAnimationFrame(draw);
       })();
     }
 
-    async function initIntro() {
-      const intro = localStorage.getItem('lozee_user_typed_intro') || '';
-      if (intro) { await handleUserTurn(intro); localStorage.removeItem('lozee_user_typed_intro'); }
-    }
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      await initSTT(); await initIntro();
-    });
+    window.addEventListener('DOMContentLoaded', initSTT);
   </script>
 </body>
 </html>
