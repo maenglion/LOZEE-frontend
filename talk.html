@@ -3,158 +3,138 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LOZEE 대화 (자동 STT)</title>
+  <title>LOZEE 상담</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body { display:flex; flex-direction:column; min-height:100vh; margin:0; background:#fff; color:#333; font-family:'KoPubWorld Dotum',sans-serif; }
-    #main-header { background:#0095FF; color:#fff; padding:1rem; text-align:center; font-size:20px; }
-    #chat-window { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
-    .bubble { max-width:80%; padding:12px 18px; border-radius:20px; line-height:1.6; font-size:16px; white-space:pre-wrap; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
-    .user { background:#fff9c4; color:#333; align-self:flex-end; margin-left:auto; border-bottom-right-radius:5px; }
-    .ai { background:#0095FF; color:#fff; align-self:flex-start; margin-right:auto; border-bottom-left-radius:5px; }
-    #loading-indicator { text-align:center; padding:10px; display:none; color:#555; font-style:italic; }
+    body { display:flex; flex-direction:column; height:100vh; margin:0; font-family:'KoPubWorld Dotum',sans-serif; }
+    #main-header { background:#0095FF; color:#fff; padding:1rem; text-align:center; font-size:1.25rem; }
+    #chat-window { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem; }
+    .bubble { max-width:80%; padding:0.75rem 1rem; border-radius:1rem; line-height:1.4; white-space:pre-wrap; }
+    .user { background:#fff9c4; color:#333; align-self:flex-end; border-bottom-right-radius:0.25rem; }
+    .ai   { background:#0095FF;  color:#fff; align-self:flex-start; border-bottom-left-radius:0.25rem; }
+    #silence-banner { text-align:center; padding:0.5rem; background:#f0f0f0; color:#666; font-size:0.9rem; display:none; }
+    #loading-indicator { display:none; text-align:center; padding:0.5rem; color:#555; font-style:italic; }
   </style>
 </head>
 <body>
-  <header id="main-header">LOZEE 대화</header>
+  <header id="main-header">LOZEE 상담</header>
   <div id="chat-window"></div>
-  <div id="loading-indicator">음성 인식 중...</div>
+  <div id="silence-banner">말씀하시면 바로 들어드려요</div>
+  <div id="loading-indicator">처리 중...</div>
 
   <script type="module">
     import { playTTSFromText } from './js/tts.js';
-    import { getSTTFromAudio } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    const STT_WS_URL = 'wss://ggg-production.up.railway.app/api/sttStream';
-    const chatWindow  = document.getElementById('chat-window');
-    const loading     = document.getElementById('loading-indicator');
+    // 상태 머신 정의
+    const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE', PROCESS:'PROCESS' };
+    let currentState = State.READY;
+    let silenceTimer;
 
-    // 선택된 TTS 음성
-    const ttsVoiceId = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
-    function currentVoice() { return ttsVoiceId; }
+    const chatWindow = document.getElementById('chat-window');
+    const banner     = document.getElementById('silence-banner');
+    const loading    = document.getElementById('loading-indicator');
+
+    // TTS 음성
+    const ttsVoice = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
 
     // 메시지 추가
     function appendMessage(text, role) {
-      const div = document.createElement('div');
-      div.className = `bubble ${role}`;
-      div.textContent = text;
-      chatWindow.appendChild(div);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-      return div;
+      const div = document.createElement('div'); div.className = `bubble ${role}`; div.textContent = text;
+      chatWindow.appendChild(div); chatWindow.scrollTop = chatWindow.scrollHeight; return div;
+    }
+    function showBanner(on) { banner.style.display = on ? 'block' : 'none'; }
+    function showLoading(on) { loading.style.display = on ? 'block' : 'none'; }
+
+    // 상태 전환
+    function transition(to) {
+      clearTimeout(silenceTimer);
+      currentState = to;
+      showBanner(to === State.SILENCE);
+      console.log('State →', to);
     }
 
-    // 로딩 표시 토글
-    function toggleLoading(state) {
-      loading.style.display = state ? 'block' : 'none';
-    }
-
-    let audioContext, micStream, processor, ws;
-
-    // 사용자 발화 처리 (systemPrompt 선택적)
-    async function handleUserTurn(text, systemPrompt = '') {
+    // GPT 호출 처리
+    async function handleUserTurn(text, systemPrompt='') {
       appendMessage(text, 'user');
+      showLoading(true);
       const res = await getGptResponse(text, systemPrompt);
-      const aiText = typeof res === 'string' ? res : (res.error || res.rephrasing || '응답이 없습니다.');
+      const aiText = typeof res==='string' ? res : (res.error||res.rephrasing||'응답이 없습니다.');
       appendMessage(aiText, 'ai');
-      await playTTSFromText(aiText, currentVoice());
+      await playTTSFromText(aiText, ttsVoice);
+      showLoading(false);
     }
 
-    // 페이지 로드 시 초기화
-    window.addEventListener('DOMContentLoaded', async () => {
-      // 1) 인사말
-      const userName = localStorage.getItem('lozee_username') || '친구';
-      const greeting = await getInitialGreeting(userName);
-      appendMessage(greeting, 'ai');
-      await playTTSFromText(greeting, currentVoice());
+    // AudioWorklet VAD setup
+    let audioCtx, micStream, vadNode;
+    (async()=>{
+      audioCtx = new AudioContext();
+      await audioCtx.audioWorklet.addModule('vad-processor.js');
+      const mic = await navigator.mediaDevices.getUserMedia({ audio:true });
+      micStream = mic;
+      const source = audioCtx.createMediaStreamSource(mic);
+      vadNode = new AudioWorkletNode(audioCtx,'vad-processor');
+      source.connect(vadNode); vadNode.port.onmessage = e=>{
+        if(e.data.speaking) onVoiceStart(); else onVoiceEnd();
+      };
+    })();
 
-      // 2) 첫 마디 처리 (감정 태그 + 인트로)
-      const emotionTag = localStorage.getItem('lozee_emotion_tag');
-      const introText   = localStorage.getItem('lozee_user_intro');
-      if (introText) {
-        const systemPrompt = emotionTag ? `유저 감정: ${emotionTag}.` : '';
-        await handleUserTurn(introText, systemPrompt);
+    // Web Speech API interim STT
+    const recognition = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
+    recognition.continuous = true; recognition.interimResults = true; recognition.lang='ko-KR';
+    let userBubble;
+    recognition.onresult = e=>{
+      let interim='', final='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const r=e.results[i][0].transcript;
+        if(e.results[i].isFinal) final+=r; else interim+=r;
+      }
+      if(interim) userBubble.textContent = interim;
+      if(final) {
+        userBubble.textContent = final;
+      }
+    };
+
+    // 음성 시작/끝 이벤트
+    function onVoiceStart(){
+      if(currentState===State.READY||currentState===State.SILENCE){
+        transition(State.RECORD);
+        // 새 버블 준비
+        userBubble = appendMessage('...', 'user');
+        recognition.start();
+      }
+    }
+    function onVoiceEnd(){
+      if(currentState===State.RECORD){
+        transition(State.SILENCE);
+        recognition.stop();
+        // 20초 뒤 안내 및 처리
+        silenceTimer = setTimeout(async()=>{
+          // 안내 한번
+          appendMessage('지금 말씀하시면 언제든 다시 시작할게요', 'ai');
+          await playTTSFromText('지금 말씀하시면 언제든 다시 시작할게요', ttsVoice);
+          transition(State.READY);
+        },20000);
+      }
+    }
+
+    // 초기 인사 및 첫 인트로 처리
+    window.addEventListener('DOMContentLoaded', async()=>{
+      const name = localStorage.getItem('lozee_username')||'친구';
+      const greeting = await getInitialGreeting(name);
+      appendMessage(greeting,'ai'); await playTTSFromText(greeting,ttsVoice);
+
+      // 감정 태그 + 인트로
+      const emo = localStorage.getItem('lozee_emotion_tag')||'';
+      const intro = localStorage.getItem('lozee_user_intro')||'';
+      if(intro){
+        const sys = emo?`유저 감정: ${emo}.` : '';
+        await handleUserTurn(intro, sys);
         localStorage.removeItem('lozee_user_intro');
       }
 
-      // 3) 자동 STT 스트리밍 시작
-      startStreamingSTT();
+      transition(State.READY);
     });
-
-    // 스트리밍 STT 시작
-    async function startStreamingSTT() {
-      toggleLoading(true);
-      appendMessage('...', 'user');
-      const userBubble = chatWindow.lastChild;
-
-      ws = new WebSocket(STT_WS_URL);
-      ws.binaryType = 'arraybuffer';
-      ws.onopen = () => toggleLoading(true);
-      ws.onmessage = async ({ data }) => {
-        const msg = JSON.parse(data);
-        if (msg.transcript) userBubble.textContent = msg.transcript;
-        if (msg.isFinal) {
-          ws.close();
-          toggleLoading(false);
-          await handleUserTurn(userBubble.textContent);
-          startStreamingSTT();
-        }
-      };
-      ws.onerror = () => {
-        toggleLoading(false);
-        appendMessage('스트리밍 오류, 폴백 모드', 'ai');
-        stopStreamingSTT();
-        startChunkedSTT();
-      };
-
-      // 오디오 캡처 및 전송
-      audioContext = new (window.AudioContext||window.webkitAudioContext)();
-      micStream    = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const source  = audioContext.createMediaStreamSource(micStream);
-      processor     = audioContext.createScriptProcessor(4096, 1, 1);
-      source.connect(processor);
-      processor.connect(audioContext.destination);
-      processor.onaudioprocess = e => {
-        const input = e.inputBuffer.getChannelData(0);
-        const pcm   = float32ToInt16(input);
-        if (ws.readyState === WebSocket.OPEN) ws.send(pcm);
-      };
-    }
-
-    // 스트리밍 STT 중지
-    function stopStreamingSTT() {
-      if (processor) processor.disconnect();
-      if (micStream)  micStream.getTracks().forEach(t => t.stop());
-      if (audioContext && audioContext.state !== 'closed') audioContext.close();
-    }
-
-    function float32ToInt16(buffer) {
-      const l = buffer.length, buf = new Int16Array(l);
-      for (let i = 0; i < l; i++) buf[i] = Math.min(1, buffer[i]) * 0x7FFF;
-      return buf.buffer;
-    }
-
-    // 폴백: 청크 STT
-    async function startChunkedSTT() {
-      appendMessage('폴백 STT 모드로 인식합니다.', 'ai');
-      stopStreamingSTT();
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec    = new MediaRecorder(stream);
-      let chunks = [];
-      rec.ondataavailable = e => chunks.push(e.data);
-      rec.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        chunks = [];
-        try {
-          const txt = await getSTTFromAudio(blob);
-          await handleUserTurn(txt);
-        } catch {
-          appendMessage('청크 STT 오류', 'ai');
-        }
-        startStreamingSTT();
-      };
-      rec.start();
-      setTimeout(() => rec.stop(), 5000);
-    }
   </script>
 </body>
 </html>
