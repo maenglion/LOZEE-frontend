@@ -1,4 +1,3 @@
-// ./js/gpt-dialog.js
 
 const GPT_BACKEND_URL = 'https://ggg-production.up.railway.app/api/gpt-chat';
 
