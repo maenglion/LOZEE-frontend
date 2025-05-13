@@ -23,89 +23,138 @@
   <div id="chat-window"></div>
   <div id="silence-banner">말씀하시면 바로 들어드려요</div>
   <div id="loading-indicator">처리 중...</div>
+
 <script type="module">
 import { playTTSFromText } from './js/tts.js';
 import { getGptResponse } from './js/gpt-dialog.js';
 
-// 상태
+// 상태 머신
 const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE', PROCESS:'PROCESS' };
-let currentState = State.READY, silenceTimer;
-const chatWindow = document.getElementById('chat-window');
-const micIndicator= document.getElementById('mic-indicator');
-const silenceBanner= document.getElementById('silence-banner');
-const loading    = document.getElementById('loading-indicator');
+let currentState = State.READY;
+let silenceTimer;
+let recognition;
+let userBubble;
 
+// DOM 요소
+const chatWindow   = document.getElementById('chat-window');
+const micIndicator = document.getElementById('mic-indicator');
+const silenceBanner= document.getElementById('silence-banner');
+const loading      = document.getElementById('loading-indicator');
+
+// 저장된 설정
 const ttsVoice = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
 
+// 메시지 출력
 function appendMessage(text, role) {
-  const div = document.createElement('div'); div.className = `bubble ${role}`; div.textContent = text;
-  chatWindow.appendChild(div); chatWindow.scrollTop = chatWindow.scrollHeight; return div;
+  const div = document.createElement('div');
+  div.className = `bubble ${role}`;
+  div.textContent = text;
+  chatWindow.appendChild(div);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+  return div;
 }
-function setMic(text){ micIndicator.textContent = text; }
-function showBanner(on){ silenceBanner.style.display = on?'block':'none'; }
-function showLoading(on){ loading.style.display = on?'block':'none'; }
-function transition(to){ clearTimeout(silenceTimer); currentState = to; showBanner(to===State.SILENCE); console.log('State →',to); }
+function setMicStatus(text)   { micIndicator.textContent = text; }
+function showBanner(on)      { silenceBanner.style.display = on ? 'block' : 'none'; }
+function showLoading(on)     { loading.style.display = on ? 'block' : 'none'; }
+function transition(to) {
+  clearTimeout(silenceTimer);
+  currentState = to;
+  showBanner(to === State.SILENCE);
+  console.log('State →', to);
+}
 
-async function handleUserTurn(text, systemPrompt=''){
-  appendMessage(text,'user'); showLoading(true);
+// 톤 프롬프트 생성
+function buildSystemPrompt(extra='') {
+  const emotions = JSON.parse(localStorage.getItem('lozee_selected_emotions') || '[]');
+  const emoText = emotions.length ? `유저 감정: ${emotions.map(e=>e.sub).join(', ')}.` : '';
+  const age = parseInt(localStorage.getItem('lozee_user_age'),10) || 0;
+  const tone = age >= 56 ? '존댓말로만 답하세요.' : '반말로만 답하세요.';
+  return [emoText, extra, tone].filter(Boolean).join(' ');
+}
+
+// 사용자 발화 처리
+async function handleUserTurn(text, extraPrompt='') {
+  appendMessage(text,'user');
+  showLoading(true);
+  const systemPrompt = buildSystemPrompt(extraPrompt);
   const res = await getGptResponse(text, systemPrompt);
-  const aiText = typeof res==='string'?res:(res.error||res.rephrasing||'응답이 없습니다.');
-  appendMessage(aiText,'ai'); await playTTSFromText(aiText,ttsVoice);
+  const aiText = typeof res === 'string' ? res : (res.error || res.rephrasing || '응답이 없습니다.');
+  appendMessage(aiText,'ai');
+  await playTTSFromText(aiText,ttsVoice);
   showLoading(false);
 }
 
-// STT: SpeechRecognition 중심 + VAD optional
-let recognition, userBubble;
-(async()=>{
-  // 마이크 권한 요청
-  try { await navigator.mediaDevices.getUserMedia({audio:true}); }
-  catch(e){ console.warn('마이크 권한 거부',e); return; }
-
+// STT 초기화 및 권한 요청
+async function initSTT() {
+  // HTTPS 또는 localhost 확인 필요
+  try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    appendMessage('마이크 권한이 필요합니다. 설정에서 허용해주세요.', 'ai');
+    console.warn('마이크 권한 오류:', err);
+    return;
+  }
   // Web Speech API 설정
-  recognition = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-  recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'ko-KR';
-  recognition.onresult = e => {
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'ko-KR';
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (e) => {
     let interim='', final='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t=e.results[i][0].transcript;
-      e.results[i].isFinal? final+=t: interim+=t;
+    for (let i=e.resultIndex; i<e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      e.results[i].isFinal ? final+=t : interim+=t;
     }
-    if(interim) userBubble.textContent=interim;
-    if(final) userBubble.textContent=final;
+    if (interim) userBubble.textContent = interim;
+    if (final)   userBubble.textContent = final;
   };
   recognition.onspeechstart = () => onVoiceStart();
   recognition.onspeechend   = () => onVoiceEnd();
-  recognition.onerror       = e => console.warn('SpeechRec 오류',e);
+  recognition.onerror       = (e) => console.warn('SpeechRecognition 오류:',e);
 
+  // 즉시 대기 상태에서 STT 시작
   transition(State.READY);
-})();
+  recognition.start();
+  setMicStatus('🔴 듣고 있어요');
+}
 
-function onVoiceStart(){
-  if(currentState===State.READY||currentState===State.SILENCE){
+function onVoiceStart() {
+  if (currentState === State.READY || currentState === State.SILENCE) {
     transition(State.RECORD);
-    setMic('🔴 듣고 있어요');
+    setMicStatus('🔴 듣고 있어요');
     userBubble = appendMessage('','user');
-    recognition.start();
-  }
-}
-function onVoiceEnd(){
-  if(currentState===State.RECORD){
-    transition(State.SILENCE);
-    setMic('🔵 대기 중');
-    recognition.stop();
-    silenceTimer = setTimeout(async()=>{
-      const emo = localStorage.getItem('lozee_user_emotion_tag')||'';
-      const sys = emo?`유저 감정: ${emo}.`:'';
-      await handleUserTurn(userBubble.textContent,sys);
-      transition(State.READY);
-    },20000);
   }
 }
 
+function onVoiceEnd() {
+  if (currentState === State.RECORD) {
+    transition(State.SILENCE);
+    setMicStatus('🔵 대기 중');
+    recognition.stop();
+    // 20초 무음 후 처리
+    silenceTimer = setTimeout(async () => {
+      await handleUserTurn(userBubble.textContent);
+      transition(State.READY);
+      recognition.start();
+      setMicStatus('🔴 듣고 있어요');
+    }, 20000);
+  }
+}
+
+// 인트로 처리
+async function initIntro() {
+  const intro = localStorage.getItem('lozee_user_typed_intro');
+  if (intro) {
+    await handleUserTurn(intro);
+    localStorage.removeItem('lozee_user_typed_intro');
+  }
+}
+
+// 페이지 초기화
 window.addEventListener('DOMContentLoaded', async()=>{
-  const intro = localStorage.getItem('lozee_user_typed_intro')||'';
-  if(intro){ await handleUserTurn(intro); localStorage.removeItem('lozee_user_typed_intro'); }
-  transition(State.READY);
+  await initSTT();
+  await initIntro();
 });
 </script>
 </body>
