@@ -3,7 +3,7 @@
 const GPT_BACKEND_URL = 'https://ggg-production.up.railway.app/api/gpt-chat';
 
 /**
- * 텍스트를 분석해 의도를 분류 (감정 vs 사실)
+ * 텍스트 의도를 단순 분류: 감정 vs 사실
  */
 export function detectIntent(text) {
   const emotionKeywords = ['슬펐', '우울', '화났', '기분', '행복', '분노', '불안', '걱정', '스트레스', '힘들'];
@@ -11,43 +11,49 @@ export function detectIntent(text) {
 }
 
 /**
- * 시스템 프롬프트 구성
+ * 시스템 프롬프트를 조합
  */
 export function getSystemPrompt(context = {}, extraIntent = 'fact') {
-  const { userAge = 0, userName = '친구', currentStage = 'Stage 1', userDisease = '' } = context;
-  let prompt = `당신은 'LOZEE'라는 감정 중심 심리 코치이자 상담 동반자입니다. 현재 대화는 [${currentStage}] 단계입니다. 사용자의 발화를 잘 듣고 적절히 반응하세요.`;
+  const {
+    userAge = 0,
+    userDisease = '',
+    userName = '친구',
+    currentStage = 'Stage 1'
+  } = context;
 
-  // 말투 정책
+  let prompt = `당신은 'LOZEE'라는 감정 중심 심리 코치이자 상담 동반자입니다. 현재 대화는 [${currentStage}] 단계입니다. 사용자의 발화를 잘 듣고 적절히 반응하세요.`;
+  
+  // 말투 고정
   if (userAge >= 56) {
     prompt += ' 사용자는 56세 이상입니다. 반드시 존댓말만 사용하세요.';
   } else {
     prompt += ' 사용자는 55세 이하입니다. 반드시 반말만 사용하세요.';
   }
 
-  // 연령별 시나리오
+  // 연령별 응답 시나리오
   if (userAge < 10) {
-    prompt += ' 사용자가 10세 미만입니다. 문장 길이를 최소화하고 확인 중심의 짧은 질문을 해주세요.';
+    prompt += ' 사용자가 10세 미만입니다. 짧고 확인 중심의 질문으로 진행하세요.';
   } else if (userAge <= 14) {
-    prompt += ' 사용자가 11~14세입니다. 감정 단어 예시를 제공하며 유사 사례를 들어 공감 질문을 해주세요.';
+    prompt += ' 사용자가 11~14세입니다. 친근한 예시와 공감 질문을 섞어 진행하세요.';
   } else if (userAge < 60) {
-    prompt += ' 사용자가 15~59세입니다. 감정 복합성을 수용하고 상황 추론을 포함한 질문을 해주세요.';
+    prompt += ' 사용자가 15~59세입니다. 복합적인 감정과 상황 추론을 반영해 질문하세요.';
   } else {
-    prompt += ' 사용자가 60세 이상입니다. 경험을 존중하는 톤으로 질문하고, 대화를 부드럽게 이어가세요.';
+    prompt += ' 사용자가 60세 이상입니다. 존중하는 톤으로 경험 기반 질문을 이어가세요.';
   }
 
   // 진단명 기반 전략
-  if (['ADHD', 'ASD'].includes(userDisease)) {
-    prompt += ' 사용자가 ADHD/ASD 진단을 받았습니다. 두괄식 짧은 문장으로 핵심을 강조하고, yes/no 질문을 활용하세요.';
+  if (['ADHD','ASD','자폐','자폐스펙트럼','고기능자폐'].some(d => userDisease.includes(d))) {
+    prompt += ' 사용자가 ADHD/ASD 진단 정보가 있습니다. 핵심을 짧게 정리하고 yes/no 질문을 활용하세요.';
   }
 
-  // 발화 의도에 따른 지시
+  // 발화 의도별 가이드
   if (extraIntent === 'emotion') {
     prompt += '\n사용자가 감정 위주로 발화했습니다. "왜 그렇게 느꼈는지" 공감 질문을 먼저 해주세요.';
   } else {
-    prompt += '\n사용자가 사실/상황을 설명했습니다. 상황의 세부 맥락을 파고드는 질문을 먼저 해주세요.';
+    prompt += '\n사용자가 사실·상황을 설명했습니다. 상황의 세부 맥락을 파고드는 질문을 먼저 해주세요.';
   }
 
-  // 어린이 추가 정책
+  // 어린이 추가 제한
   if (userAge <= 10) {
     prompt += '\n사용자가 10세 이하입니다. 초기 10분간 15글자 이상의 긴 답변은 자제하세요.';
   }
@@ -56,7 +62,7 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
 }
 
 /**
- * 첫 인사 생성
+ * 첫 인사 문구 생성
  */
 export async function getInitialGreeting(userName = '친구', hasVisited = false) {
   return hasVisited
@@ -65,14 +71,13 @@ export async function getInitialGreeting(userName = '친구', hasVisited = false
 }
 
 /**
- * GPT 호출
+ * GPT API 호출
  */
 export async function getGptResponse(userText, context = {}) {
   const text = userText.trim();
   if (!text) {
     return { rephrasing: '음... 무슨 말인지 잘 모르겠어. 다시 말해줄래?' };
   }
-
   const intent = detectIntent(text);
   const systemPrompt = getSystemPrompt(context, intent);
   const payload = {
