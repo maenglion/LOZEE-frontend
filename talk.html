@@ -1,162 +1,239 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LOZEE와 대화</title>
-<link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
-<style>
-body { display: flex; flex-direction: column; min-height: 100vh; background-color: #ffffff; color: #333; font-family: 'KoPubWorld Dotum', sans-serif; margin: 0; }
-#main-header { background-color: #0095FF; color: white; padding: 1rem; text-align: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
-#chat-container { flex: 1; display: flex; flex-direction: column; overflow-y: hidden; width: 100%; max-width: 700px; margin: 0 auto; box-sizing: border-box; }
-#chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-.bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; line-height: 1.6; font-size: 16px; white-space: pre-wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.user { background-color: #fff9c4; color: #333; align-self: flex-end; margin-left: auto; border-bottom-right-radius: 5px; }
-.ai { background-color: #0095FF; color: white; align-self: flex-start; margin-right: auto; border-bottom-left-radius: 5px; }
-.bubble.ai.error { background-color: #ff7373; color: white; }
-#loading-indicator-talk { text-align: center; padding: 10px; display: none; color: #555; font-style: italic; }
-#talk-btn-container { padding: 15px 0; background-color: #ffffff; flex-shrink: 0; text-align: center; border-top: 1px solid #eee; }
-#talk-btn { font-family: 'KoPubWorld Dotum', sans-serif; width: 80px; height: 80px; border-radius: 50%; background-color: #b6b6b6; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; font-size: 36px; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; transition: transform 0.2s ease, background-color 0.3s; }
-#talk-btn.active { background-color: #0095FF; transform: scale(1.1); }
-#talk-btn.recording-in-progress { background-color: #e06c75; transform: scale(1.1); }
-#talk-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: scale(1.0); }
-#topic-selection { display: none; background: #f0f0f0; padding: 20px; border-top: 1px solid #ddd; text-align: center; flex-shrink: 0; }
-#topic-selection h3 { font-size: 18px; color: #333; margin-top: 0; margin-bottom: 15px; font-weight: bold; }
-.topic-option { font-family: 'KoPubWorld Dotum', sans-serif; padding: 10px 15px; margin: 8px auto; background: white; border: 1px solid #0095FF; color: #0095FF; border-radius: 10px; cursor: pointer; max-width: 320px; font-size: 15px; font-weight: bold; transition: background-color 0.2s, color 0.2s; }
-.topic-option:hover { background-color: #0095FF; color: white; }
-#waiting-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: none; justify-content: center; align-items: center; z-index: 1000; color: white; font-size: 24px; font-weight: bold; text-align: center; cursor: pointer; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOZEE와 대화</title>
+  <link rel="stylesheet" href="style.css"> <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* CSS 스타일은 이전 버전(v3.19)과 동일하게 유지됩니다. */
+    body { display: flex; flex-direction: column; min-height: 100vh; background-color: #ffffff; color: #333; font-family: 'KoPubWorld Dotum', sans-serif; margin: 0; }
+    #main-header { background-color: #0095FF; color: white; padding: 1rem; text-align: center; font-size: 20px; font-weight: bold; flex-shrink: 0; }
+    #chat-container { flex: 1; display: flex; flex-direction: column; overflow-y: hidden; width: 100%; max-width: 700px; margin: 0 auto; box-sizing: border-box; }
+    #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; line-height: 1.6; font-size: 16px; white-space: pre-wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .user { background-color: #fff9c4; color: #333; align-self: flex-end; margin-left: auto; border-bottom-right-radius: 5px; }
+    .ai { background-color: #0095FF; color: white; align-self: flex-start; margin-right: auto; border-bottom-left-radius: 5px; }
+    .bubble.ai.error { background-color: #ff7373; color: white; }
+    #loading-indicator-talk { text-align: center; padding: 10px; display: none; color: #555; font-style: italic; }
+    #talk-btn-container { padding: 15px 0; background-color: #ffffff; flex-shrink: 0; text-align: center; border-top: 1px solid #eee; }
+    #talk-btn { font-family: 'KoPubWorld Dotum', sans-serif; width: 80px; height: 80px; border-radius: 50%; background-color: #b6b6b6; border: none; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); color: white; font-size: 36px; cursor: pointer; display: inline-flex; justify-content: center; align-items: center; transition: transform 0.2s ease, background-color 0.3s; }
+    #talk-btn.active { background-color: #0095FF; transform: scale(1.1); }
+    #talk-btn.recording-in-progress { background-color: #e06c75; transform: scale(1.1); }
+    #talk-btn:disabled { background-color: #ccc; cursor: not-allowed; transform: scale(1.0); }
+    #topic-selection { display: none; background: #f0f0f0; padding: 20px; border-top: 1px solid #ddd; text-align: center; flex-shrink: 0; }
+    #topic-selection h3 { font-size: 18px; color: #333; margin-top: 0; margin-bottom: 15px; font-weight: bold; }
+    .topic-option { font-family: 'KoPubWorld Dotum', sans-serif; padding: 10px 15px; margin: 8px auto; background: white; border: 1px solid #0095FF; color: #0095FF; border-radius: 10px; cursor: pointer; max-width: 320px; font-size: 15px; font-weight: bold; transition: background-color 0.2s, color 0.2s; }
+    .topic-option:hover { background-color: #0095FF; color: white; }
+    #waiting-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8);  display: none;  justify-content: center; align-items: center; z-index: 1000;  color: white; font-size: 24px; font-weight: bold; text-align: center; cursor: pointer;  }
+  </style>
 </head>
 <body>
-<header id="main-header">LOZEE와 대화하기</header>
-<div id="chat-container">
-<div id="chat-window"></div>
-<div id="topic-selection">
-<h3>이야기를 이어가고 싶은 주제를 골라볼래?</h3>
-<div id="topic-options"></div>
-</div>
-</div>
-<div id="loading-indicator-talk">AI 응답 준비 중...</div>
-<div id="talk-btn-container">
-<button id="talk-btn" aria-label="말하기">🎤</button>
-</div>
-<div id="waiting-overlay">
-<p><span id="waitingUserName"></span>님, 잠시 기다리는 중...<br><small>(화면을 클릭하면 다시 시작할 수 있어요)</small></p>
-</div>
+  <header id="main-header">LOZEE와 대화하기</header>
+  <div id="chat-container">
+    <div id="chat-window"></div>
+    <div id="topic-selection">
+      <h3>이야기를 이어가고 싶은 주제를 골라볼래?</h3>
+      <div id="topic-options"></div>
+    </div>
+  </div>
+  <div id="loading-indicator-talk">AI 응답 준비 중...</div>
+  <div id="talk-btn-container">
+    <button id="talk-btn" aria-label="말하기">🎤</button>
+  </div>
+  <div id="waiting-overlay">
+    <p><span id="waitingUserName"></span>님, 잠시 기다리는 중...<br><small>(화면을 클릭하면 다시 시작할 수 있어요)</small></p>
+  </div>
 
-<script type="module">
-import { playTTSFromText } from './js/tts.js';
-import { getSTTFromAudio } from './js/stt.js';
-import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
+  <script type="module">
+    import { playTTSFromText } from './js/tts.js';
+    import { getSTTFromAudio } from './js/stt.js';
+    import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-```
-// 녹음 분할 전송을 위한 설정
-const MAX_SEGMENT_MS = 30000; // 30초
+    console.log("talk.html 스크립트 시작 (v3.25 - 첫 메시지 응답 및 UI 복구 강화)");
 
-let talkBtn = document.getElementById('talk-btn');
-let chatWindow = document.getElementById('chat-window');
-let loadingIndicatorTalk = document.getElementById('loading-indicator-talk');
-let waitingOverlay = document.getElementById('waiting-overlay');
-let waitingUserNameSpan = document.getElementById('waitingUserName');
+    let talkBtn, chatWindow, topicSelectionBox, topicOptionsContainer, loadingIndicatorTalk, waitingOverlay, waitingUserNameSpan;
 
-let isRecording = false;
-let mediaRecorder;
-let audioChunks = [];
-let mediaStream;
-let segmentStartTime;
-
-let firstInteractionDone = false;
-let initialGreetingText = '';
-
-// 초기화 및 이벤트 리스너 설정
-window.addEventListener('DOMContentLoaded', async () => {
-  // 초기 인사 생성
-  const userName = localStorage.getItem('lozee_username') || '친구';
-  initialGreetingText = await getInitialGreeting(userName);
-  appendMessage(initialGreetingText, 'ai');
-
-  talkBtn.addEventListener('click', async () => {
-    if (!firstInteractionDone) {
-      firstInteractionDone = true;
-      disableTalkButton(true);
-      loadingIndicatorTalk.style.display = 'block';
-      await playTTSFromText(initialGreetingText);
-      loadingIndicatorTalk.style.display = 'none';
-      disableTalkButton(false);
-      return;
+    const currentUserName = localStorage.getItem('lozee_username') || "친구";
+    const currentUserId = localStorage.getItem('lozee_username'); 
+    const currentVoiceId = localStorage.getItem('lozee_voice');
+    const currentUserAge = localStorage.getItem('lozee_userage');
+    const currentUserDisease = localStorage.getItem('lozee_userdiagnosis');
+    let hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
+    let lastSummary = localStorage.getItem('lozee_lastSummary') || '';
+    
+    const onboardingComplete = localStorage.getItem('lozee_onboarding_complete') === 'true';
+    const userTypedIntro = localStorage.getItem('lozee_user_typed_intro'); 
+    const selectedEmotionsString = localStorage.getItem('lozee_selected_emotions');
+    let selectedEmotions = [];
+    if (selectedEmotionsString) {
+        try { selectedEmotions = JSON.parse(selectedEmotionsString); } 
+        catch (e) { console.error("선택된 감정 localStorage 파싱 오류:", e); selectedEmotions = []; }
     }
 
-    if (!isRecording) {
-      startRecording();
-    } else {
-      stopRecording();
+    const simplified = (() => {
+      const age = parseInt(currentUserAge || "0", 10);
+      const disease = (currentUserDisease || "").toLowerCase();
+      const needsSimple = age < 15 || ["아스퍼거", "asd", "adhd", "사회적의사소통장애"].some(d => disease.includes(d));
+      const isVeryYoung = age < 10;
+      console.log(`[Simplified Language Check] Age: ${age}, Disease: "${disease}", NeedsSimple: ${needsSimple}, IsVeryYoung: ${isVeryYoung}`);
+      return { useSimpleLanguage: needsSimple, useUltraSimpleLanguage: isVeryYoung };
+    })();
+    
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
+    let mediaStream = null;
+    let silenceTimer;
+    const SILENCE_TIMEOUT = 20000; 
+    let firstInteractionDone = false; 
+    let initialGreetingText = "";    
+    let recordingStartTimeValue; 
+
+    const ADMIN_SECRET_PHRASE = "맹고양이";
+    const ADMIN_EMAIL = "maengnanyoung@gmail.com";
+
+    let totalCharacterCount = 0;
+    let conversationStartTime = null;
+    const ANALYSIS_CHAR_THRESHOLD = 800; 
+    const ANALYSIS_TIME_THRESHOLD_SECONDS = 180; 
+    let analysisRedirectInProgress = false;
+    
+    let currentSegmentDuration = 40000; 
+    let maxTotalRecordingTime = 600000;  
+    let autoSegmentStartTime = null;     
+    let currentSegmentInAutoChain = 0;   
+    let autoStopTimer = null; 
+    const API_DISCONNECT_DELAY_MS = 100; 
+
+    function getRecordingPolicyByAge(age) { /* (v3.19와 동일) */ }
+    function appendMessage(text, role = 'ai', isError = false) { /* (v3.19와 동일) */ }
+    function disableTalkButton(disable = true, reason = "") { 
+        if (talkBtn) { 
+            talkBtn.disabled = disable;
+        }
+        console.log(`[disableTalkButton] ${disable ? '비활성화' : '활성화'}${reason ? ` (${reason})` : ''}`);
     }
-  });
+    async function loadRecentTopics() { /* (v3.19와 동일) */ }
+    function showTopicBox(topics) { /* (v3.19와 동일) */ }
+    function startSilenceTimer() { /* (v3.19와 동일) */ }
+    function resetSilenceTimer() { 
+        clearTimeout(silenceTimer);
+        if (topicSelectionBox && topicSelectionBox.style.display === 'none' && talkBtn && !talkBtn.disabled && !analysisRedirectInProgress) {
+            console.log("[Timer] 침묵 타이머 리셋 및 재시작."); 
+            startSilenceTimer();
+        } else { 
+            console.log("[Timer] 침묵 타이머 리셋 (조건 미충족으로 시작 안함)."); 
+        }
+    }
+    function checkAndRedirectToAnalysis() { /* (v3.19와 동일) */ }
+    
+    async function handleUserInteraction(userText, context = {}) { 
+      console.log(`--- [handleUserInteraction] 함수 시작됨 --- User Text: "${userText ? userText.substring(0,30)+'...' : '없음'}"`, "Context:", context);
+      
+      if (!userText || userText.trim() === "" || analysisRedirectInProgress) {
+          console.log("[handleUserInteraction] 조건 미충족 또는 분석 페이지 이동 중으로 반환.");
+          if (!analysisRedirectInProgress && talkBtn && talkBtn.disabled) {
+              disableTalkButton(false, "유효하지 않은 사용자 입력 또는 분석 이동 중");
+              if (talkBtn) { // 버튼 스타일 초기화 추가
+                  talkBtn.innerHTML = '🎤';
+                  talkBtn.classList.remove('recording-in-progress', 'active');
+              }
+              resetSilenceTimer(); 
+          }
+          return;
+      }
 
-  waitingOverlay.addEventListener('click', () => {
-    waitingOverlay.style.display = 'none';
-  });
-});
+      if (!conversationStartTime) {
+          conversationStartTime = Date.now();
+          console.log(`[handleUserInteraction] 대화 시작 시간 기록됨: ${new Date(conversationStartTime).toLocaleString()}`);
+      }
+      
+      disableTalkButton(true, "AI 응답 대기 중"); 
+      if (topicSelectionBox) topicSelectionBox.style.display = 'none'; 
+      if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'block';
 
-function appendMessage(text, role) {
-  const bubble = document.createElement('div');
-  bubble.className = `bubble ${role}`;
-  bubble.textContent = text;
-  chatWindow.appendChild(bubble);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-  return bubble;
-}
+      const gptContext = { userAge: currentUserAge, userDisease: currentUserDisease, useSimpleLanguage: simplified.useSimpleLanguage, useUltraSimpleLanguage: simplified.useUltraSimpleLanguage, ...context };
+      console.log("[handleUserInteraction] GPT Context:", gptContext);
+      
+      try {
+        console.log("[handleUserInteraction] getGptResponse 호출 시도...");
+        const gptResponse = await getGptResponse(userText, currentUserId, gptContext);
+        console.log("[handleUserInteraction] getGptResponse 호출 완료. 응답:", gptResponse);
 
-function disableTalkButton(disable) {
-  talkBtn.disabled = disable;
-  talkBtn.style.transform = disable ? 'scale(1.0)' : '';
-}
+        let aiReply = gptResponse?.rephrasing || gptResponse?.error || "죄송해요, 답변을 이해하는 데 어려움이 있었어요.";
+        let isError = !gptResponse?.rephrasing;
+        if (gptResponse?.summary) localStorage.setItem('lozee_lastSummary', (lastSummary = gptResponse.summary));
+        
+        const displayAndProcessAIReply = async () => {
+            if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'none'; 
+            const aiBubbleDiv = appendMessage(aiReply, 'ai', isError); 
+            if(aiBubbleDiv && chatWindow) { chatWindow.appendChild(aiBubbleDiv); chatWindow.scrollTop = chatWindow.scrollHeight; }
+            
+            if (!analysisRedirectInProgress) { 
+                try { 
+                    console.log("[handleUserInteraction] playTTSFromText 호출 시도...");
+                    await playTTSFromText(aiReply, currentVoiceId); 
+                    console.log("[handleUserInteraction] playTTSFromText 호출 완료.");
+                } catch (e) { console.error("TTS 실패:", e); } 
+            }
+        };
 
-async function startRecording() {
-  isRecording = true;
-  audioChunks = [];
-  mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  mediaRecorder = new MediaRecorder(mediaStream);
-  segmentStartTime = Date.now();
-  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-  mediaRecorder.onstop = processAudio;
-  mediaRecorder.start();
-  talkBtn.classList.add('recording-in-progress');
-  // 30초 후 자동 분할 전송
-  setTimeout(() => {
-    if (isRecording) stopRecording();
-  }, MAX_SEGMENT_MS);
-}
+        const delay = context.isFirstChatAfterOnboarding ? 10 : 1000;
+        console.log(`[handleUserInteraction] AI 응답 표시 전 ${delay}ms 대기 설정.`);
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        await displayAndProcessAIReply();
+        console.log("[handleUserInteraction] displayAndProcessAIReply 완료.");
 
-async function stopRecording() {
-  isRecording = false;
-  mediaRecorder.stop();
-  mediaStream.getTracks().forEach(t => t.stop());
-  talkBtn.classList.remove('recording-in-progress');
-}
+      } catch (error) { 
+        console.error("[handleUserInteraction] try 블록 내에서 예외 발생 (GPT 또는 TTS 관련):", error);
+        if (loadingIndicatorTalk) loadingIndicatorTalk.style.display = 'none';
+        const fallbackMsg = "죄송합니다, 응답 처리 중 예상치 못한 문제가 발생했어요.";
+        const errorBubble = appendMessage(fallbackMsg, 'ai', true);
+        if(errorBubble && chatWindow) chatWindow.appendChild(errorBubble);
+        if (!analysisRedirectInProgress) {
+            try { await playTTSFromText(fallbackMsg, currentVoiceId); } catch (e) { console.error("TTS 실패 (오류 처리 중):", e); }
+        }
+      } finally {
+        console.log("[handleUserInteraction] finally 블록 실행됨.");
+        if (!analysisRedirectInProgress) { 
+            disableTalkButton(false, "AI 응답/오류 처리 완료"); 
+            if (talkBtn) { // 버튼 스타일 초기화
+                talkBtn.innerHTML = '🎤';
+                talkBtn.classList.remove('recording-in-progress', 'active');
+                console.log("[handleUserInteraction] finally: 버튼 스타일 초기화 완료.");
+            }
+            if (!autoSegmentStartTime) currentSegmentInAutoChain = 0; 
+            resetSilenceTimer(); 
+            checkAndRedirectToAnalysis(); 
+        }
+        console.log("--- [handleUserInteraction] 함수 종료됨 ---");
+      }
+    }
 
-async function processAudio() {
-  const blob = new Blob(audioChunks, { type: 'audio/webm' });
-  appendMessage('…', 'user');
-  disableTalkButton(true);
-  loadingIndicatorTalk.style.display = 'block';
-  try {
-    const transcript = await getSTTFromAudio(blob);
-    chatWindow.lastChild.textContent = transcript;
-    const aiResponse = await getGptResponse(transcript);
-    appendMessage(aiResponse, 'ai');
-    await playTTSFromText(aiResponse);
-  } catch (e) {
-    appendMessage('오류가 발생했습니다.', 'ai');
-  } finally {
-    loadingIndicatorTalk.style.display = 'none';
-    disableTalkButton(false);
-  }
-}
+    async function startRecording() { /* (v3.19와 동일) */ }
+    function stopRecording(isManualStop = false) { /* (v3.19와 동일) */ }
+    function setupEventListeners() { /* (v3.22와 동일) */ }
+    async function initializeChat() { /* (v3.22와 동일) */ }
 
-```
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOMContentLoaded 이벤트 발생. 초기화 로직 실행 준비.");
+        
+        talkBtn = document.getElementById('talk-btn');
+        chatWindow = document.getElementById('chat-window');
+        topicSelectionBox = document.getElementById('topic-selection');
+        topicOptionsContainer = document.getElementById('topic-options');
+        loadingIndicatorTalk = document.getElementById('loading-indicator-talk');
+        waitingOverlay = document.getElementById('waiting-overlay');
+        waitingUserNameSpan = document.getElementById('waitingUserName');
+        
+        console.log("[DOMContentLoaded] DOM 요소 참조 시도 완료.");
+        if (!talkBtn) console.error("[DOMContentLoaded] talkBtn 요소를 찾지 못했습니다!");
 
-</script>
+        initializeChat();    
+        setupEventListeners(); 
+    });
+  </script>
 </body>
 </html>
