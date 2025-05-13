@@ -104,17 +104,23 @@
 
       recognition.onresult = (e) => {
         let interim = '', final = '';
-        for (let i=e.resultIndex; i<e.results.length; i++) {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
           const t = e.results[i][0].transcript;
           e.results[i].isFinal ? final += t : interim += t;
         }
+        // Interim 표시
         if (interim) {
           if (!userPlaceholder) userPlaceholder = appendMessage('', 'user');
           userPlaceholder.textContent = interim;
         }
+        // Final 결과가 나오면 즉시 처리
         if (final) {
+          // placeholder 제거
           if (userPlaceholder) { userPlaceholder.remove(); userPlaceholder = null; }
-          userLastFinal = final;
+          // 발화 버블 추가
+          appendMessage(final, 'user');
+          // 즉시 GPT 호출
+          handleUserTurn(final);
         }
       };
 
@@ -122,18 +128,16 @@
         transition(State.RECORD); setMic('🔴 듣고 있어요'); clearTimeout(silenceTimer);
       };
       recognition.onspeechend = () => {
-        transition(State.SILENCE); setMic('🔵 대기 중'); recognition.stop();
-        silenceTimer = setTimeout(() => {
-          if (userLastFinal) {
-            handleUserTurn(userLastFinal);
-            userLastFinal = null;
-          }
-        }, 5000);
+        // 발화가 끝나면 인식 멈춤, TTS 재생 후 재시작은 handleUserTurn에서 처리
+        transition(State.SILENCE);
+        setMic('🔵 대기 중');
+        recognition.stop();
       };
       recognition.onend = () => {
-        // 항상 재시작
+        // 인식이 끝나면, READY 상태 시 다시 듣기 시작
         if (currentState === State.READY) {
-          recognition.start(); setMic('🔴 듣고 있어요');
+          recognition.start();
+          setMic('🔴 듣고 있어요');
         }
       };
 
