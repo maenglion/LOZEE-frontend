@@ -31,7 +31,7 @@
 
     // 선택된 TTS 음성
     const ttsVoiceId = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
-    function currentVoice() { return localStorage.getItem('lozee_tts_voice') || ttsVoiceId; }
+    function currentVoice() { return ttsVoiceId; }
 
     // 메시지 추가
     function appendMessage(text, role) {
@@ -43,33 +43,41 @@
       return div;
     }
 
-    // 로딩 토글
+    // 로딩 표시 토글
     function toggleLoading(state) {
       loading.style.display = state ? 'block' : 'none';
     }
 
     let audioContext, micStream, processor, ws;
 
+    // 사용자 발화 처리 (systemPrompt 선택적)
+    async function handleUserTurn(text, systemPrompt = '') {
+      appendMessage(text, 'user');
+      const res = await getGptResponse(text, systemPrompt);
+      const aiText = typeof res === 'string' ? res : (res.error || res.rephrasing || '응답이 없습니다.');
+      appendMessage(aiText, 'ai');
+      await playTTSFromText(aiText, currentVoice());
+    }
+
+    // 페이지 로드 시 초기화
     window.addEventListener('DOMContentLoaded', async () => {
-      // 초기 인사
+      // 1) 인사말
       const userName = localStorage.getItem('lozee_username') || '친구';
       const greeting = await getInitialGreeting(userName);
       appendMessage(greeting, 'ai');
       await playTTSFromText(greeting, currentVoice());
 
-      // 사용자가 선택한 감정 태그와 인트로 메시지 가져오기
+      // 2) 첫 마디 처리 (감정 태그 + 인트로)
       const emotionTag = localStorage.getItem('lozee_emotion_tag');
-      const introText = localStorage.getItem('lozee_user_intro');
+      const introText   = localStorage.getItem('lozee_user_intro');
       if (introText) {
-        // 첫 마디: 감정 태그와 인트로 전달
         const systemPrompt = emotionTag ? `유저 감정: ${emotionTag}.` : '';
         await handleUserTurn(introText, systemPrompt);
         localStorage.removeItem('lozee_user_intro');
       }
 
-      // 실시간 스트리밍 STT 시작
+      // 3) 자동 STT 스트리밍 시작
       startStreamingSTT();
-    });
     });
 
     // 스트리밍 STT 시작
@@ -78,7 +86,6 @@
       appendMessage('...', 'user');
       const userBubble = chatWindow.lastChild;
 
-      // WebSocket 연결
       ws = new WebSocket(STT_WS_URL);
       ws.binaryType = 'arraybuffer';
       ws.onopen = () => toggleLoading(true);
@@ -86,9 +93,9 @@
         const msg = JSON.parse(data);
         if (msg.transcript) userBubble.textContent = msg.transcript;
         if (msg.isFinal) {
-          ws.close(); toggleLoading(false);
+          ws.close();
+          toggleLoading(false);
           await handleUserTurn(userBubble.textContent);
-          // 다시 자동 대기→인식
           startStreamingSTT();
         }
       };
@@ -100,60 +107,49 @@
       };
 
       // 오디오 캡처 및 전송
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const source = audioContext.createMediaStreamSource(micStream);
-      processor = audioContext.createScriptProcessor(4096, 1, 1);
+      audioContext = new (window.AudioContext||window.webkitAudioContext)();
+      micStream    = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const source  = audioContext.createMediaStreamSource(micStream);
+      processor     = audioContext.createScriptProcessor(4096, 1, 1);
       source.connect(processor);
       processor.connect(audioContext.destination);
       processor.onaudioprocess = e => {
         const input = e.inputBuffer.getChannelData(0);
-        const int16 = float32ToInt16(input);
-        if (ws.readyState === WebSocket.OPEN) ws.send(int16);
+        const pcm   = float32ToInt16(input);
+        if (ws.readyState === WebSocket.OPEN) ws.send(pcm);
       };
     }
 
     // 스트리밍 STT 중지
     function stopStreamingSTT() {
       if (processor) processor.disconnect();
-      if (micStream) micStream.getTracks().forEach(t => t.stop());
+      if (micStream)  micStream.getTracks().forEach(t => t.stop());
       if (audioContext && audioContext.state !== 'closed') audioContext.close();
     }
 
     function float32ToInt16(buffer) {
-      const l = buffer.length;
-      const buf = new Int16Array(l);
+      const l = buffer.length, buf = new Int16Array(l);
       for (let i = 0; i < l; i++) buf[i] = Math.min(1, buffer[i]) * 0x7FFF;
       return buf.buffer;
-    }
-
-    // GPT 응답 처리
-    async function handleUserTurn(text) {
-      appendMessage(text, 'user');
-      const res = await getGptResponse(text);
-      const aiText = typeof res === 'string' ? res : (res.error || res.rephrasing || '응답이 없습니다.');
-      appendMessage(aiText, 'ai');
-      await playTTSFromText(aiText, currentVoice());
     }
 
     // 폴백: 청크 STT
     async function startChunkedSTT() {
       appendMessage('폴백 STT 모드로 인식합니다.', 'ai');
-      try { stopStreamingSTT(); } catch {}
+      stopStreamingSTT();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
+      const rec    = new MediaRecorder(stream);
       let chunks = [];
       rec.ondataavailable = e => chunks.push(e.data);
       rec.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         chunks = [];
         try {
-          const text = await getSTTFromAudio(blob);
-          await handleUserTurn(text);
+          const txt = await getSTTFromAudio(blob);
+          await handleUserTurn(txt);
         } catch {
           appendMessage('청크 STT 오류', 'ai');
         }
-        // 다시 자동 시작
         startStreamingSTT();
       };
       rec.start();
