@@ -30,159 +30,164 @@
   <div id="loading-indicator">처리 중...</div>
 
   <script type="module">
-  import { playTTSFromText } from './js/tts.js';
-  import { getGptResponse } from './js/gpt-dialog.js';
+    import { playTTSFromText } from './js/tts.js';
+    import { getGptResponse } from './js/gpt-dialog.js';
 
-  const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE' };
-  let currentState = State.READY;
-  let silenceTimer;
-  let recognition, userBubble, currentTTS;
+    const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE' };
+    let currentState = State.READY;
+    let silenceTimer;
+    let recognition, userBubble, currentTTS;
 
-  const chatWindow   = document.getElementById('chat-window');
-  const micIndicator = document.getElementById('mic-indicator');
-  const vuCanvas     = document.getElementById('vu-meter');
-  const silenceBanner= document.getElementById('silence-banner');
-  const loading      = document.getElementById('loading-indicator');
-  const ttsVoice     = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
+    const chatWindow    = document.getElementById('chat-window');
+    const micIndicator  = document.getElementById('mic-indicator');
+    const vuCanvas      = document.getElementById('vu-meter');
+    const silenceBanner = document.getElementById('silence-banner');
+    const loading       = document.getElementById('loading-indicator');
+    const ttsVoice      = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
 
-  function appendMessage(text, role) {
-    const div = document.createElement('div');
-    div.className = `bubble ${role}`;
-    div.textContent = text;
-    chatWindow.appendChild(div);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-    return div;
-  }
-
-  function setMic(text) { micIndicator.textContent = text; }
-  function showBanner(on) { silenceBanner.style.display = on ? 'block' : 'none'; }
-  function showLoading(on) { loading.style.display = on ? 'block' : 'none'; }
-
-  function transition(to) {
-    clearTimeout(silenceTimer);
-    currentState = to;
-    showBanner(to === State.SILENCE);
-    console.log('State →', to);
-  }
-
-  async function handleUserTurn(text) {
-    // 중단된 STT와 TTS 처리
-    if (recognition) {
-      recognition.abort();
-      setMic('🔵 대기 중');
-    }
-    appendMessage(text, 'user');
-    showLoading(true);
-    if (currentTTS) { currentTTS.pause(); currentTTS = null; }
-
-    const res = await getGptResponse(text);
-    showLoading(false);
-    if (typeof res === 'string') {
-      appendMessage(res, 'ai');
-      currentTTS = await playTTSFromText(res, ttsVoice);
-      currentTTS.onended = () => {
-        if (recognition) {
-          recognition.start();
-          setMic('🔴 듣고 있어요');
-        }
-      };
-    } else if (res.error) {
-      appendMessage(res.error, 'ai');
-      if (recognition) {
-        recognition.start();
-        setMic('🔴 듣고 있어요');
-      }
-    }
-    transition(State.READY);
-  }
-
-  async function initSTT() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setupVUMeter(stream);
-    } catch (e) {
-      appendMessage('마이크 권한이 필요합니다.', 'ai');
-      return;
+    function appendMessage(text, role) {
+      const div = document.createElement('div');
+      div.className = `bubble ${role}`;
+      div.textContent = text;
+      chatWindow.appendChild(div);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      return div;
     }
 
-    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'ko-KR';
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    function setMic(text) { micIndicator.textContent = text; }
+    function showBanner(on) { silenceBanner.style.display = on ? 'block' : 'none'; }
+    function showLoading(on) { loading.style.display = on ? 'block' : 'none'; }
 
-    recognition.onresult = e => {
-      let interim = '', final = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript;
-        e.results[i].isFinal ? final += t : interim += t;
-      }
-      if (interim) userBubble.textContent = interim;
-      if (final) userBubble.textContent = final;
-    };
-
-    recognition.onspeechstart = onVoiceStart;
-    recognition.onspeechend = onVoiceEnd;
-    recognition.onerror = e => console.warn('STT 오류', e);
-
-    transition(State.READY);
-    recognition.start();
-    setMic('🔴 듣고 있어요');
-  }
-
-  function onVoiceStart() {
-    if (currentState === State.READY || currentState === State.SILENCE) {
-      transition(State.RECORD);
-      setMic('🔴 듣고 있어요');
-      userBubble = appendMessage('', 'user');
+    function transition(to) {
       clearTimeout(silenceTimer);
+      currentState = to;
+      showBanner(to === State.SILENCE);
+      console.log('State →', to);
     }
-  }
 
-  function onVoiceEnd() {
-    if (currentState === State.RECORD) {
-      transition(State.SILENCE);
-      setMic('🔵 대기 중');
-      recognition.stop();
-      silenceTimer = setTimeout(() => {
-        handleUserTurn(userBubble.textContent);
-      }, 5000);
+    async function handleUserTurn(text) {
+      if (recognition) {
+        recognition.abort();
+        setMic('🔵 대기 중');
+      }
+      appendMessage(text, 'user');
+      showLoading(true);
+      if (currentTTS) { currentTTS.pause(); currentTTS = null; }
+
+      try {
+        const res = await getGptResponse(text);
+        showLoading(false);
+        if (typeof res === 'string') {
+          appendMessage(res, 'ai');
+          currentTTS = await playTTSFromText(res, ttsVoice);
+          currentTTS.onended = () => {
+            if (recognition) {
+              recognition.start();
+              setMic('🔴 듣고 있어요');
+            }
+          };
+        } else if (res.error) {
+          appendMessage(res.error, 'ai');
+          if (recognition) {
+            recognition.start();
+            setMic('🔴 듣고 있어요');
+          }
+        }
+      } catch (e) {
+        console.error(e);
+        showLoading(false);
+        appendMessage('오류가 발생했습니다.', 'ai');
+      }
+      transition(State.READY);
     }
-  }
 
-  function setupVUMeter(stream) {
-    const ctx = new AudioContext();
-    const src = ctx.createMediaStreamSource(stream);
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 64;
-    src.connect(analyser);
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    const dib = vuCanvas.getContext('2d');
-    const cw = vuCanvas.width, ch = vuCanvas.height;
-    (function draw() {
-      analyser.getByteFrequencyData(data);
-      dib.clearRect(0, 0, cw, ch);
-      const barWidth = cw / data.length;
-      data.forEach((v, i) => {
-        const h = (v / ch) * ch;
-        dib.fillStyle = '#4caf50';
-        dib.fillRect(i * barWidth, ch - h, barWidth - 1, h);
-      });
-      requestAnimationFrame(draw);
-    })();
-  }
+    async function initSTT() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setupVUMeter(stream);
+      } catch (e) {
+        appendMessage('마이크 권한이 필요합니다.', 'ai');
+        return;
+      }
 
-  async function initIntro() {
-    const intro = localStorage.getItem('lozee_user_typed_intro') || '';
-    if (intro) {
-      await handleUserTurn(intro);
-      localStorage.removeItem('lozee_user_typed_intro');
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'ko-KR';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onresult = e => {
+        let interim = '', final = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          e.results[i].isFinal ? final += t : interim += t;
+        }
+        if (interim) userBubble.textContent = interim;
+        if (final) userBubble.textContent = final;
+      };
+      recognition.onspeechstart = onVoiceStart;
+      recognition.onspeechend   = onVoiceEnd;
+      recognition.onerror       = e => console.warn('STT 오류', e);
+
+      transition(State.READY);
+      recognition.start();
+      setMic('🔴 듣고 있어요');
     }
-  }
 
-  window.addEventListener('DOMContentLoaded', async () => {
-    await initSTT();
-    await initIntro();
-  });
+    function onVoiceStart() {
+      if (currentState === State.READY || currentState === State.SILENCE) {
+        transition(State.RECORD);
+        setMic('🔴 듣고 있어요');
+        userBubble = appendMessage('', 'user');
+        clearTimeout(silenceTimer);
+      }
+    }
+
+    function onVoiceEnd() {
+      if (currentState === State.RECORD) {
+        transition(State.SILENCE);
+        setMic('🔵 대기 중');
+        recognition.stop();
+        silenceTimer = setTimeout(() => {
+          handleUserTurn(userBubble.textContent);
+        }, 5000);
+      }
+    }
+
+    function setupVUMeter(stream) {
+      const ctx = new AudioContext();
+      const src = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      src.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const dib = vuCanvas.getContext('2d');
+      const cw = vuCanvas.width, ch = vuCanvas.height;
+      function draw() {
+        analyser.getByteFrequencyData(data);
+        dib.clearRect(0, 0, cw, ch);
+        const barWidth = cw / data.length;
+        data.forEach((v, i) => {
+          const h = (v / ch) * ch;
+          dib.fillStyle = '#4caf50';
+          dib.fillRect(i * barWidth, ch - h, barWidth - 1, h);
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    async function initIntro() {
+      const intro = localStorage.getItem('lozee_user_typed_intro') || '';
+      if (intro) {
+        await handleUserTurn(intro);
+        localStorage.removeItem('lozee_user_typed_intro');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initSTT();
+      await initIntro();
+    });
   </script>
 </body>
 </html>
