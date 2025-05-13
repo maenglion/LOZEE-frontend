@@ -49,15 +49,10 @@
     const talkBtn     = document.getElementById('talk-btn');
     const loading     = document.getElementById('loading-indicator');
 
-    // 저장된 음성
-    const savedVoice = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Zephyr';
-    voiceSelect.value = savedVoice;
-    voiceSelect.addEventListener('change', () => {
-      localStorage.setItem('lozee_tts_voice', voiceSelect.value);
-    });
-    function currentVoice() { return localStorage.getItem('lozee_tts_voice') || savedVoice; }
-
-    function appendMessage(text, role) {
+        // TTS 음성 ID (index에서 설정된 값 사용)
+    const ttsVoiceId = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
+    function currentVoice() { return ttsVoiceId; }
+function appendMessage(text, role) {
       const div = document.createElement('div'); div.className = `bubble ${role}`; div.textContent = text;
       chatWindow.appendChild(div); chatWindow.scrollTop = chatWindow.scrollHeight; return div;
     }
