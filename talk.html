@@ -23,108 +23,88 @@
   <div id="chat-window"></div>
   <div id="silence-banner">말씀하시면 바로 들어드려요</div>
   <div id="loading-indicator">처리 중...</div>
-
 <script type="module">
 import { playTTSFromText } from './js/tts.js';
 import { getGptResponse } from './js/gpt-dialog.js';
 
-// 상태 머신
+// 상태
 const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE', PROCESS:'PROCESS' };
 let currentState = State.READY, silenceTimer;
 const chatWindow = document.getElementById('chat-window');
 const micIndicator= document.getElementById('mic-indicator');
-const banner     = document.getElementById('silence-banner');
+const silenceBanner= document.getElementById('silence-banner');
 const loading    = document.getElementById('loading-indicator');
 
-// TTS 설정
 const ttsVoice = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
 
 function appendMessage(text, role) {
   const div = document.createElement('div'); div.className = `bubble ${role}`; div.textContent = text;
-  chatWindow.appendChild(div); chatWindow.scrollTop = chatWindow.scrollHeight;
-  return div;
+  chatWindow.appendChild(div); chatWindow.scrollTop = chatWindow.scrollHeight; return div;
 }
-function showBanner(on) { banner.style.display = on ? 'block':'none'; }
-function showLoading(on){ loading.style.display = on? 'block':'none'; }
-function setMicStatus(text){ micIndicator.textContent = text; }
-function transition(to){ clearTimeout(silenceTimer); currentState = to; showBanner(to === State.SILENCE); console.log('State →', to); }
+function setMic(text){ micIndicator.textContent = text; }
+function showBanner(on){ silenceBanner.style.display = on?'block':'none'; }
+function showLoading(on){ loading.style.display = on?'block':'none'; }
+function transition(to){ clearTimeout(silenceTimer); currentState = to; showBanner(to===State.SILENCE); console.log('State →',to); }
 
 async function handleUserTurn(text, systemPrompt=''){
-  appendMessage(text, 'user'); showLoading(true);
+  appendMessage(text,'user'); showLoading(true);
   const res = await getGptResponse(text, systemPrompt);
-  const aiText = typeof res==='string' ? res : (res.error || res.rephrasing || '응답이 없습니다.');
-  appendMessage(aiText, 'ai');
-  await playTTSFromText(aiText, ttsVoice);
+  const aiText = typeof res==='string'?res:(res.error||res.rephrasing||'응답이 없습니다.');
+  appendMessage(aiText,'ai'); await playTTSFromText(aiText,ttsVoice);
   showLoading(false);
 }
 
-// STT 준비: getUserMedia 권한 요청 & VAD, SpeechRecognition 설정
-let recognition, userBubble;
+// STT: SpeechRecognition 중심 + VAD optional
+declare let recognition, userBubble;
 (async()=>{
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    transition(State.READY);
-    // AudioWorklet VAD
-    const ctx = new AudioContext();
-    await ctx.audioWorklet.addModule('vad-processor.js');
-    const src = ctx.createMediaStreamSource(stream);
-    const vadNode = new AudioWorkletNode(ctx, 'vad-processor');
-    src.connect(vadNode);
-    vadNode.port.onmessage = e => {
-      if (e.data.speaking) onVoiceStart(); else onVoiceEnd();
-    };
-  } catch (err) {
-    console.warn('마이크 권한/Worklet 로드 실패:', err);
-    transition(State.READY);
-  }
+  // 마이크 권한 요청
+  try { await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ console.warn('마이크 권한 거부',e); return; }
 
-  // SpeechRecognition fallback & interim
+  // Web Speech API 설정
   recognition = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
   recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'ko-KR';
   recognition.onresult = e => {
     let interim='', final='';
     for(let i=e.resultIndex;i<e.results.length;i++){
-      const t = e.results[i][0].transcript;
-      e.results[i].isFinal ? final += t : interim += t;
+      const t=e.results[i][0].transcript;
+      e.results[i].isFinal? final+=t: interim+=t;
     }
-    if (interim) userBubble.textContent = interim;
-    if (final) userBubble.textContent = final;
+    if(interim) userBubble.textContent=interim;
+    if(final) userBubble.textContent=final;
   };
-  recognition.onspeechstart = onVoiceStart;
-  recognition.onspeechend   = onVoiceEnd;
-  recognition.onerror       = e => console.warn('SpeechRec 오류', e);
+  recognition.onspeechstart = () => onVoiceStart();
+  recognition.onspeechend   = () => onVoiceEnd();
+  recognition.onerror       = e => console.warn('SpeechRec 오류',e);
+
+  transition(State.READY);
 })();
 
 function onVoiceStart(){
-  if (currentState === State.READY || currentState === State.SILENCE) {
+  if(currentState===State.READY||currentState===State.SILENCE){
     transition(State.RECORD);
-    setMicStatus('🔴 듣고 있어요');
-    userBubble = appendMessage('', 'user');
-    if (recognition) recognition.start();
+    setMic('🔴 듣고 있어요');
+    userBubble = appendMessage('','user');
+    recognition.start();
   }
 }
 function onVoiceEnd(){
-  if (currentState === State.RECORD) {
+  if(currentState===State.RECORD){
     transition(State.SILENCE);
-    setMicStatus('🔵 대기 중');
-    if (recognition) recognition.stop();
+    setMic('🔵 대기 중');
+    recognition.stop();
     silenceTimer = setTimeout(async()=>{
-      // 시스템 프롬프트에 감정태그 반영
-      const emo = localStorage.getItem('lozee_user_emotion_tag') || '';
-      const sys = emo ? `유저 감정: ${emo}.` : '';
-      await handleUserTurn(userBubble.textContent, sys);
+      const emo = localStorage.getItem('lozee_user_emotion_tag')||'';
+      const sys = emo?`유저 감정: ${emo}.`:'';
+      await handleUserTurn(userBubble.textContent,sys);
       transition(State.READY);
-    }, 20000);
+    },20000);
   }
 }
 
-// 시작: 인덱스에서 전달된 인트로 처리
 window.addEventListener('DOMContentLoaded', async()=>{
-  const intro = localStorage.getItem('lozee_user_typed_intro') || '';
-  if (intro) {
-    await handleUserTurn(intro);
-    localStorage.removeItem('lozee_user_typed_intro');
-  }
+  const intro = localStorage.getItem('lozee_user_typed_intro')||'';
+  if(intro){ await handleUserTurn(intro); localStorage.removeItem('lozee_user_typed_intro'); }
   transition(State.READY);
 });
 </script>
