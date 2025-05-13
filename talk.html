@@ -1,193 +1,109 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOZEE 상담</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    body { display:flex; flex-direction:column; height:100vh; margin:0; font-family:'KoPubWorld Dotum',sans-serif; }
-    #main-header { background:#0095FF; color:#fff; padding:1rem; text-align:center; font-size:1.25rem; }
-    #status-bar { display:flex; align-items:center; justify-content:center; gap:1rem; background:#eef; padding:0.5rem; }
-    #mic-indicator { font-size:0.9rem; }
-    #vu-meter { width:100px; height:20px; background:#ccc; border-radius:4px; }
-    #chat-window { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem; }
-    .bubble { max-width:80%; padding:0.75rem 1rem; border-radius:1rem; line-height:1.4; white-space:pre-wrap; }
-    .user { background:#fff9c4; color:#333; align-self:flex-end; border-bottom-right-radius:0.25rem; }
-    .ai   { background:#0095FF;  color:#fff; align-self:flex-start; border-bottom-left-radius:0.25rem; }
-    #silence-banner { text-align:center; padding:0.5rem; background:#f0f0f0; color:#666; font-size:0.9rem; display:none; }
-    #loading-indicator { display:none; text-align:center; padding:0.5rem; color:#555; font-style:italic; }
-  </style>
-</head>
-<body>
-  <header id="main-header">LOZEE 상담</header>
-  <div id="status-bar">
-    <div id="mic-indicator">🔵 대기 중</div>
-    <canvas id="vu-meter"></canvas>
-  </div>
-  <div id="chat-window"></div>
-  <div id="silence-banner">말씀하시면 바로 들어드려요</div>
-  <div id="loading-indicator">처리 중...</div>
+// ./js/gpt-dialog.js
 
-  <script type="module">
-    import { playTTSFromText } from './js/tts.js';
-    import { getGptResponse } from './js/gpt-dialog.js';
+const GPT_BACKEND_URL = 'https://ggg-production.up.railway.app/api/gpt-chat';
 
-    const State = { READY:'READY', RECORD:'RECORD', SILENCE:'SILENCE' };
-    let currentState = State.READY;
-    let silenceTimer;
-    let recognition, userBubble, currentTTS;
+/**
+ * 텍스트를 분석해 의도를 분류 (감정 vs 사실)
+ */
+export function detectIntent(text) {
+  const emotionKeywords = ['슬펐', '우울', '화났', '기분', '행복', '분노', '불안', '걱정', '스트레스', '힘들'];
+  return emotionKeywords.some(k => text.includes(k)) ? 'emotion' : 'fact';
+}
 
-    const chatWindow    = document.getElementById('chat-window');
-    const micIndicator  = document.getElementById('mic-indicator');
-    const vuCanvas      = document.getElementById('vu-meter');
-    const silenceBanner = document.getElementById('silence-banner');
-    const loading       = document.getElementById('loading-indicator');
-    const ttsVoice      = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
+/**
+ * 시스템 프롬프트 구성
+ */
+export function getSystemPrompt(context = {}, extraIntent = 'fact') {
+  const { userAge = 0, userName = '친구', currentStage = 'Stage 1', userDisease = '' } = context;
+  let prompt = `당신은 'LOZEE'라는 감정 중심 심리 코치이자 상담 동반자입니다. 현재 대화는 [${currentStage}] 단계입니다. 사용자의 발화를 잘 듣고 적절히 반응하세요.`;
 
-    function appendMessage(text, role) {
-      const div = document.createElement('div');
-      div.className = `bubble ${role}`;
-      div.textContent = text;
-      chatWindow.appendChild(div);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-      return div;
-    }
+  // 말투 정책
+  if (userAge >= 56) {
+    prompt += ' 사용자는 56세 이상입니다. 반드시 존댓말만 사용하세요.';
+  } else {
+    prompt += ' 사용자는 55세 이하입니다. 반드시 반말만 사용하세요.';
+  }
 
-    function setMic(text) { micIndicator.textContent = text; }
-    function showBanner(on) { silenceBanner.style.display = on ? 'block' : 'none'; }
-    function showLoading(on) { loading.style.display = on ? 'block' : 'none'; }
+  // 연령별 시나리오
+  if (userAge < 10) {
+    prompt += ' 사용자가 10세 미만입니다. 문장 길이를 최소화하고 확인 중심의 짧은 질문을 해주세요.';
+  } else if (userAge <= 14) {
+    prompt += ' 사용자가 11~14세입니다. 감정 단어 예시를 제공하며 유사 사례를 들어 공감 질문을 해주세요.';
+  } else if (userAge < 60) {
+    prompt += ' 사용자가 15~59세입니다. 감정 복합성을 수용하고 상황 추론을 포함한 질문을 해주세요.';
+  } else {
+    prompt += ' 사용자가 60세 이상입니다. 경험을 존중하는 톤으로 질문하고, 대화를 부드럽게 이어가세요.';
+  }
 
-    function transition(to) {
-      clearTimeout(silenceTimer);
-      currentState = to;
-      showBanner(to === State.SILENCE);
-      console.log('State →', to);
-    }
+  // 진단명 기반 전략
+  if (['ADHD', 'ASD'].includes(userDisease)) {
+    prompt += ' 사용자가 ADHD/ASD 진단을 받았습니다. 두괄식 짧은 문장으로 핵심을 강조하고, yes/no 질문을 활용하세요.';
+  }
 
-    async function handleUserTurn(text) {
-      if (recognition) {
-        recognition.abort();
-        setMic('🔵 대기 중');
-      }
-      appendMessage(text, 'user');
-      showLoading(true);
-      if (currentTTS) { currentTTS.pause(); currentTTS = null; }
+  // 발화 의도에 따른 지시
+  if (extraIntent === 'emotion') {
+    prompt += '\n사용자가 감정 위주로 발화했습니다. "왜 그렇게 느꼈는지" 공감 질문을 먼저 해주세요.';
+  } else {
+    prompt += '\n사용자가 사실/상황을 설명했습니다. 상황의 세부 맥락을 파고드는 질문을 먼저 해주세요.';
+  }
 
-      try {
-        const res = await getGptResponse(text);
-        showLoading(false);
-        if (typeof res === 'string') {
-          appendMessage(res, 'ai');
-          currentTTS = await playTTSFromText(res, ttsVoice);
-          currentTTS.onended = () => {
-            if (recognition) {
-              recognition.start();
-              setMic('🔴 듣고 있어요');
-            }
-          };
-        } else if (res.error) {
-          appendMessage(res.error, 'ai');
-          if (recognition) {
-            recognition.start();
-            setMic('🔴 듣고 있어요');
-          }
-        }
-      } catch (e) {
-        console.error(e);
-        showLoading(false);
-        appendMessage('오류가 발생했습니다.', 'ai');
-      }
-      transition(State.READY);
-    }
+  // 어린이 추가 정책
+  if (userAge <= 10) {
+    prompt += '\n사용자가 10세 이하입니다. 초기 10분간 15글자 이상의 긴 답변은 자제하세요.';
+  }
 
-    async function initSTT() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        setupVUMeter(stream);
-      } catch (e) {
-        appendMessage('마이크 권한이 필요합니다.', 'ai');
-        return;
-      }
+  return prompt;
+}
 
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'ko-KR';
-      recognition.continuous = true;
-      recognition.interimResults = true;
+/**
+ * 첫 인사 생성
+ */
+export async function getInitialGreeting(userName = '친구', hasVisited = false) {
+  return hasVisited
+    ? `다시 만나서 반가워요, ${userName}님. 무엇부터 이야기할까요?`
+    : `${userName}님, 안녕! 나는 로지야. 오늘 어떤 얘기를 해보고 싶어?`;
+}
 
-      recognition.onresult = e => {
-        let interim = '', final = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          e.results[i].isFinal ? final += t : interim += t;
-        }
-        if (interim) userBubble.textContent = interim;
-        if (final) userBubble.textContent = final;
-      };
-      recognition.onspeechstart = onVoiceStart;
-      recognition.onspeechend   = onVoiceEnd;
-      recognition.onerror       = e => console.warn('STT 오류', e);
+/**
+ * GPT 호출
+ */
+export async function getGptResponse(userText, context = {}) {
+  const text = userText.trim();
+  if (!text) {
+    return { rephrasing: '음... 무슨 말인지 잘 모르겠어. 다시 말해줄래?' };
+  }
 
-      transition(State.READY);
-      recognition.start();
-      setMic('🔴 듣고 있어요');
-    }
+  const intent = detectIntent(text);
+  const systemPrompt = getSystemPrompt(context, intent);
+  const payload = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: text }
+    ]
+  };
 
-    function onVoiceStart() {
-      if (currentState === State.READY || currentState === State.SILENCE) {
-        transition(State.RECORD);
-        setMic('🔴 듣고 있어요');
-        userBubble = appendMessage('', 'user');
-        clearTimeout(silenceTimer);
-      }
-    }
-
-    function onVoiceEnd() {
-      if (currentState === State.RECORD) {
-        transition(State.SILENCE);
-        setMic('🔵 대기 중');
-        recognition.stop();
-        silenceTimer = setTimeout(() => {
-          handleUserTurn(userBubble.textContent);
-        }, 5000);
-      }
-    }
-
-    function setupVUMeter(stream) {
-      const ctx = new AudioContext();
-      const src = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 64;
-      src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      const dib = vuCanvas.getContext('2d');
-      const cw = vuCanvas.width, ch = vuCanvas.height;
-      function draw() {
-        analyser.getByteFrequencyData(data);
-        dib.clearRect(0, 0, cw, ch);
-        const barWidth = cw / data.length;
-        data.forEach((v, i) => {
-          const h = (v / ch) * ch;
-          dib.fillStyle = '#4caf50';
-          dib.fillRect(i * barWidth, ch - h, barWidth - 1, h);
-        });
-        requestAnimationFrame(draw);
-      }
-      draw();
-    }
-
-    async function initIntro() {
-      const intro = localStorage.getItem('lozee_user_typed_intro') || '';
-      if (intro) {
-        await handleUserTurn(intro);
-        localStorage.removeItem('lozee_user_typed_intro');
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      await initSTT();
-      await initIntro();
+  try {
+    const resp = await fetch(GPT_BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-  </script>
-</body>
-</html>
+    if (!resp.ok) {
+      return { error: `죄송해, 답변을 가져오지 못했어. (코드 ${resp.status})` };
+    }
+    const data = await resp.json();
+    if (data.choices && data.choices[0]?.message?.content) {
+      return data.choices[0].message.content;
+    }
+    return { error: '응답을 받지 못했어.' };
+  } catch (e) {
+    return { error: '응답 중 문제가 생겼어.' };
+  }
+}
+
+/**
+ * 종료 인사 생성
+ */
+export function getExitPrompt(userName = '친구') {
+  return `${userName}야, 오늘 이야기해줘서 고마워. 또 대화하자.`;
+}
