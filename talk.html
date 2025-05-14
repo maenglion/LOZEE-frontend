@@ -4,39 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LOZEE 상담</title>
-  <link rel="stylesheet" href="styles.css" />
+  <!-- 스타일 시트 경로 수정 -->
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./emotion-colors.css" />
 </head>
 <body>
   <div id="chat-container">
-    <!-- 대화 UI: LOZEE 메시지, 사용자 메시지 영역 등 -->
+    <div id="status">
+      <span id="status-dot"></span>
+      <span id="status-text">대기 중</span>
+    </div>
     <div id="messages"></div>
   </div>
 
   <script type="module">
-    import { startSTT, stopSTT } from './stt.js';
-    import { startTTS } from './tts.js';
-    import { getGptResponse } from './gpt-dialog.js';
+    // JS 파일이 js 폴더에 있으므로 경로 ./js/로 수정
+    import { startSTT, stopSTT } from './js/stt.js';
+    import { startTTS }             from './js/tts.js';
+    import { getGptResponse }       from './js/gpt-dialog.js';
+
+    // onboarding 미완료 시 index로 리다이렉트
+    if (!sessionStorage.getItem('lozee_first_utterance')) {
+      window.location.replace('index.html');
+    }
 
     const messagesEl = document.getElementById('messages');
 
-    // 사용자 발화 처리
-    async function handleUserTurn(transcript) {
-      appendMessage('user', transcript);
-      stopSTT();
-
-      // GPT 응답 요청
-      appendMessage('bot', '...');
-      const gptText = await getGptResponse(transcript);
-
-      // TTS 재생
-      await startTTS(gptText);
-
-      // 재생 끝나면 다시 STT 시작
-      startSTT(handleUserTurn);
-      updateLastBotMessage(gptText);
-    }
-
-    // 메시지 화면에 추가
     function appendMessage(sender, text) {
       const msg = document.createElement('div');
       msg.className = sender === 'bot' ? 'bot-message' : 'user-message';
@@ -45,21 +38,24 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // 기존 마지막 "..." 텍스트를 실제 답변으로 교체
-    function updateLastBotMessage(text) {
+    async function handleUserTurn(transcript) {
+      appendMessage('user', transcript);
+      stopSTT();
+
+      appendMessage('bot', '…');
+      const gptText = await getGptResponse(transcript);
+
+      await startTTS(gptText);
+      startSTT(handleUserTurn);
+
       const botMsgs = messagesEl.querySelectorAll('.bot-message');
-      botMsgs[botMsgs.length - 1].textContent = text;
+      botMsgs[botMsgs.length - 1].textContent = gptText;
     }
 
-    // 초기 대화 루틴
     async function initConversation() {
-      const firstUtterance = sessionStorage.getItem('lozee_first_utterance');
-      if (firstUtterance) {
-        appendMessage('bot', firstUtterance);
-        await startTTS(firstUtterance);
-      }
-
-      // 사용자가 첫마디를 입력했다면, 이후 바로 STT
+      const first = sessionStorage.getItem('lozee_first_utterance');
+      appendMessage('bot', first);
+      await startTTS(first);
       startSTT(handleUserTurn);
     }
 
