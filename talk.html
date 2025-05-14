@@ -23,9 +23,10 @@
     .bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; line-height: 1.6; white-space: pre-wrap; }
     .user { background: #fff9c4; align-self: flex-end; border-bottom-right-radius: 5px; }
     .ai { background: #0095FF; color: #fff; align-self: flex-start; border-bottom-left-radius: 5px; }
-    #talk-btn-container { padding: 15px; text-align: center; border-top: 1px solid #eee; }
-    #talk-btn { width: 80px; height: 80px; border-radius: 50%; background-color: #b6b6b6; border: none; color: white; font-size: 36px; cursor: pointer; transition: transform 0.2s, background-color 0.3s; }
-    #talk-btn.recording { background: #e06c75; transform: scale(1.1); }
+    /* Volume Meter */
+    #meter-container { height: 60px; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
+    #volume-meter { width: 80%; height: 20px; border: 1px solid #ccc; border-radius: 10px; }
+    #volume-level { height: 100%; background: #0095FF; width: 0; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -68,8 +69,9 @@
   <div id="chat-container" class="hidden">
     <div id="chat-window"></div>
   </div>
-  <div id="talk-btn-container" class="hidden">
-    <button id="talk-btn" aria-label="말하기">🎤</button>
+  <!-- Volume Meter (auto VAD) -->
+  <div id="meter-container" class="hidden">
+    <div id="volume-meter"><div id="volume-level"></div></div>
   </div>
 
   <script type="module">
@@ -98,19 +100,18 @@
     });
     nextButtons.forEach((btn, idx) => btn.addEventListener('click', () => showStep(idx + 2)));
     startConvBtn.addEventListener('click', () => {
-      // 저장
       const name = document.getElementById('user-name-input').value || '친구';
       localStorage.setItem('lozee_username', name);
       document.getElementById('intro-container').classList.add('hidden');
       document.getElementById('main-header').classList.remove('hidden');
       document.getElementById('chat-container').classList.remove('hidden');
-      document.getElementById('talk-btn-container').classList.remove('hidden');
+      document.getElementById('meter-container').classList.remove('hidden');
       initConversation();
+      initVAD();
     });
 
     // Chat logic
     const chatWindow = document.getElementById('chat-window');
-    const talkBtn = document.getElementById('talk-btn');
     let firstInteraction = false;
     let initialGreeting = '';
 
@@ -126,30 +127,53 @@
       const userName = localStorage.getItem('lozee_username') || '친구';
       initialGreeting = await getInitialGreeting(userName);
       appendMessage(initialGreeting, 'ai');
+      await playTTSFromText(initialGreeting);
+      firstInteraction = true;
     }
 
-    talkBtn.addEventListener('click', async () => {
-      if (!firstInteraction) {
-        firstInteraction = true;
-        talkBtn.disabled = true;
-        await playTTSFromText(initialGreeting);
-        talkBtn.disabled = false;
-        return;
-      }
-      if (!talkBtn.classList.contains('recording')) {
-        talkBtn.classList.add('recording');
-        await startSTT();
-      } else {
-        talkBtn.disabled = true;
-        const transcript = await stopSTT();
-        talkBtn.classList.remove('recording');
-        appendMessage(transcript, 'user');
-        const aiText = await getGptResponse(transcript);
-        appendMessage(aiText, 'ai');
-        await playTTSFromText(aiText);
-        talkBtn.disabled = false;
-      }
-    });
+    // VAD & Volume Meter
+    function initVAD() {
+      const meter = document.getElementById('volume-level');
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 2048;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.fftSize);
+        let speaking = false;
+
+        function analyze() {
+          analyser.getByteTimeDomainData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            const v = (dataArray[i] / 128) - 1;
+            sum += v * v;
+          }
+          const volume = Math.sqrt(sum / dataArray.length);
+          meter.style.width = `${Math.min(volume * 200, 100)}%`;
+
+          if (volume > 0.05 && !speaking) {
+            speaking = true;
+            startSTT();
+          } else if (volume < 0.02 && speaking) {
+            speaking = false;
+            stopSTT()
+              .then(transcript => {
+                appendMessage(transcript, 'user');
+                return getGptResponse(transcript);
+              })
+              .then(aiText => {
+                appendMessage(aiText, 'ai');
+                return playTTSFromText(aiText);
+              })
+              .catch(console.error);
+          }
+          requestAnimationFrame(analyze);
+        }
+        analyze();
+      }).catch(err => console.error(err));
+    }
   </script>
 </body>
 </html>
