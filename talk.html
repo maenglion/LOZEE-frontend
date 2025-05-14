@@ -24,24 +24,25 @@
   <div id="chat-container"></div>
 
   <script type="module">
-    import { playTTSFromText, AVAILABLE_VOICES, DEFAULT_VOICE } from './js/tts.js';
-    import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
+    import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
+    import { getInitialGreeting, getGptResponse, getFirstQuestion } from './js/gpt-dialog.js';
     import { getSTTFromAudio } from './js/stt.js';
 
+    // DOM 요소 및 설정
     const chatContainer = document.getElementById('chat-container');
-    const meterLevel = document.getElementById('volume-level');
-
-    // 음성 옵션은 tts.js에서 관리
+    const meterLevel    = document.getElementById('volume-level');
     const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
 
-    function appendMessage(content, role) {
+    // 메시지 출력
+    function appendMessage(text, role) {
       const el = document.createElement('div');
       el.className = `bubble ${role}`;
-      el.textContent = typeof content === 'string' ? content : (content.text || JSON.stringify(content));
+      el.textContent = text;
       chatContainer.appendChild(el);
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
+    // 초기 인사
     async function initConversation() {
       const userName = localStorage.getItem('lozee_username') || '친구';
       const greeting = await getInitialGreeting(userName);
@@ -49,18 +50,20 @@
       await playTTSFromText(greeting, selectedVoice);
     }
 
+    // 음성 감지 및 녹음
     function initVAD() {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
           const audioCtx = new AudioContext();
-          const source = audioCtx.createMediaStreamSource(stream);
+          const source   = audioCtx.createMediaStreamSource(stream);
           const analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
           source.connect(analyser);
           const dataArr = new Uint8Array(analyser.fftSize);
 
           let recording = false, recorder = null, chunks = [];
           let silenceFrames = 0, speakFrames = 0;
-          const MIN_SPEAK_FRAMES = 5, MIN_SILENCE_FRAMES = 15;
+          const MIN_SPEAK_FRAMES   = 5;
+          const MIN_SILENCE_FRAMES = 15;
 
           function analyze() {
             analyser.getByteTimeDomainData(dataArr);
@@ -70,7 +73,7 @@
             meterLevel.style.width = `${Math.min(vol * 200, 100)}%`;
 
             if (vol > 0.05) { speakFrames++; silenceFrames = 0; }
-            else { silenceFrames++; }
+            else           { silenceFrames++; }
 
             if (!recording && speakFrames >= MIN_SPEAK_FRAMES) {
               recording = true; chunks = []; speakFrames = 0;
@@ -87,8 +90,8 @@
                   const aiText = await getGptResponse(sttText);
                   appendMessage(aiText, 'ai');
                   await playTTSFromText(aiText, selectedVoice);
-                } catch (err) {
-                  console.error(err);
+                } catch (e) {
+                  console.error(e);
                 }
               };
               recording = false; silenceFrames = 0;
@@ -102,8 +105,16 @@
         .catch(console.error);
     }
 
-    initConversation();
-    initVAD();
+    // 전체 초기화
+    (async () => {
+      await initConversation();
+      const age      = localStorage.getItem('lozee_userage');
+      const userName = localStorage.getItem('lozee_username') || '친구';
+      const firstQ   = getFirstQuestion(age, userName);
+      appendMessage(firstQ, 'ai');
+      await playTTSFromText(firstQ, selectedVoice);
+      initVAD();
+    })();
   </script>
 </body>
 </html>

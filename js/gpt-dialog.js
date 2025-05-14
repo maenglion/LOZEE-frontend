@@ -64,15 +64,21 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
 const API_BASE = '/api/gpt';
 
 /** 첫 인사문 생성 */
-export async function getInitialGreeting(userName) {
-  const res = await fetch(`${API_BASE}/init`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: userName })
-  });
-  if (!res.ok) throw new Error('초기 대화 불러오기 실패');
-  const { greeting } = await res.json();
-  return greeting;
+import { counselingTopicsByAge } from './counseling_topics.js';
+
+export function getFirstQuestion(age) {
+  const topics = counselingTopicsByAge[ getAgeGroup(age) ] || [];
+  const opts = topics.slice(0,5).join(', '); // 예: 상위 5개만
+  const userName = localStorage.getItem('lozee_username') || '친구';
+return `안녕하세요! ${userName} 만나서 반가워요. ${opts}. 이 중 하나를 골라 이야기해 볼까요?`;
+
+}
+
+function getAgeGroup(age) {
+  const a = parseInt(age, 10);
+  if (a >= 8 && a <= 10) return '8-10';
+  if (a >= 12 && a <= 15) return '12-15';
+  return '30+';
 }
 
 /** 유저 발화에 대한 GPT 응답 */
