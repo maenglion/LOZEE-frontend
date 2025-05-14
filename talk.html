@@ -18,12 +18,12 @@
   </div>
 
   <script type="module">
-    // JS 파일이 js 폴더에 있으므로 경로 ./js/로 수정
-    import { startSTT, stopSTT } from './js/stt.js';
-    import { startTTS }             from './js/tts.js';
-    import { getGptResponse }       from './js/gpt-dialog.js';
+    // stt.js의 내보내기 방식을 모두 import
+    import * as STT from './js/stt.js';
+    import { startTTS }       from './js/tts.js';
+    import { getGptResponse } from './js/gpt-dialog.js';
 
-    // onboarding 미완료 시 index로 리다이렉트
+    // onboarding 미완료 시 index로
     if (!sessionStorage.getItem('lozee_first_utterance')) {
       window.location.replace('index.html');
     }
@@ -40,13 +40,13 @@
 
     async function handleUserTurn(transcript) {
       appendMessage('user', transcript);
-      stopSTT();
+      STT.stopSTT();
 
       appendMessage('bot', '…');
       const gptText = await getGptResponse(transcript);
 
       await startTTS(gptText);
-      startSTT(handleUserTurn);
+      STT.startSTT(handleUserTurn);
 
       const botMsgs = messagesEl.querySelectorAll('.bot-message');
       botMsgs[botMsgs.length - 1].textContent = gptText;
@@ -56,7 +56,7 @@
       const first = sessionStorage.getItem('lozee_first_utterance');
       appendMessage('bot', first);
       await startTTS(first);
-      startSTT(handleUserTurn);
+      STT.startSTT(handleUserTurn);
     }
 
     document.addEventListener('DOMContentLoaded', initConversation);
