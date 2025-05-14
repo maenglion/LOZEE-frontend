@@ -78,7 +78,6 @@
     import { startSTT, stopSTT } from './js/stt.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    // Intro logic
     const steps = document.querySelectorAll('.intro-screen');
     const requestPermBtn = document.getElementById('request-permission-btn');
     const nextButtons = document.querySelectorAll('.intro-next');
@@ -108,7 +107,6 @@
       initVAD();
     });
 
-    // Chat
     const chatWindow = document.getElementById('chat-window');
     let initialGreeting = '';
 
@@ -127,7 +125,6 @@
       await playTTSFromText(initialGreeting);
     }
 
-    // VAD & Volume Meter
     function initVAD() {
       const meter = document.getElementById('volume-level');
       navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
@@ -141,21 +138,13 @@
         function analyze() {
           analyser.getByteTimeDomainData(dataArray);
           let sum = 0;
-          dataArray.forEach(vv => { const v = (vv/128)-1; sum += v*v; });
+          dataArray.forEach(vv => sum += Math.pow(vv/128-1,2));
           const volume = Math.sqrt(sum/dataArray.length);
           meter.style.width = `${Math.min(volume*200,100)}%`;
-          if (volume > 0.05 && !speaking) {
-            speaking = true;
-            startSTT();
-          } else if (volume < 0.02 && speaking) {
-            speaking = false;
-            stopSTT().then(transcript => {
-              appendMessage(transcript, 'user');
-              return getGptResponse(transcript);
-            }).then(aiText => {
-              appendMessage(aiText, 'ai');
-              return playTTSFromText(aiText);
-            }).catch(console.error);
+          if (volume > 0.05 && !speaking) { speaking = true; startSTT(); }
+          else if (volume < 0.02 && speaking) { speaking = false;
+            stopSTT().then(transcript => { appendMessage(transcript, 'user'); return getGptResponse(transcript); })
+            .then(aiText => { appendMessage(aiText, 'ai'); return playTTSFromText(aiText); }).catch(console.error);
           }
           requestAnimationFrame(analyze);
         }
