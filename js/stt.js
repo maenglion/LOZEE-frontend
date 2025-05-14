@@ -1,4 +1,31 @@
 // ./js/stt.js (Base64 인코딩하여 JSON으로 백엔드 /api/stt 호출)
+// 실제 STT 구현 부분은 프로젝트에 맞게 채워주세요.
+
+export async function startSTT() {
+  // 1) 마이크 스트림 얻기
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  // 2) SpeechRecognition 등으로 시작
+  const recognition = new window.SpeechRecognition();
+  recognition.lang = 'ko-KR';
+  recognition.interimResults = false;
+  recognition.start();
+  // 내부에 recognition 인스턴스를 보관해 두세요.
+  window.__lozeeRecognition = recognition;
+}
+
+export function stopSTT() {
+  return new Promise((resolve, reject) => {
+    const recognition = window.__lozeeRecognition;
+    if (!recognition) return reject(new Error('인식기 없음'));
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      resolve(transcript);
+    };
+    recognition.onerror = reject;
+    recognition.stop();
+  });
+}
 
 // 실제 백엔드 STT 엔드포인트
 const STT_BACKEND_URL = 'https://ggg-production.up.railway.app/api/stt'; // Railway 백엔드 주소 확인!
