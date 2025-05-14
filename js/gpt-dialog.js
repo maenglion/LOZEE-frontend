@@ -61,12 +61,30 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
 }
 
 /**
- * 첫 인사 문구 생성
- */
-export async function getInitialGreeting(userName = '친구', hasVisited = false) {
-  return hasVisited
-    ? `다시 만나서 반가워요, ${userName}님. 무엇부터 이야기할까요?`
-    : `${userName}님, 안녕! 나는 로지야. 오늘 어떤 얘기를 해보고 싶어?`;
+const API_BASE = '/api/gpt';
+
+/** 첫 인사문 생성 */
+export async function getInitialGreeting(userName) {
+  const res = await fetch(`${API_BASE}/init`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: userName })
+  });
+  if (!res.ok) throw new Error('초기 대화 불러오기 실패');
+  const { greeting } = await res.json();
+  return greeting;
+}
+
+/** 유저 발화에 대한 GPT 응답 */
+export async function getGptResponse(userText) {
+  const res = await fetch(`${API_BASE}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: userText })
+  });
+  if (!res.ok) throw new Error('GPT 응답 불러오기 실패');
+  const { reply } = await res.json();
+  return reply;
 }
 
 /**

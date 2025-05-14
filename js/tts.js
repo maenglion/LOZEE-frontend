@@ -70,4 +70,40 @@ export function playTTSFromText(text, voiceId) {
       reject(error); // 전체 프로세스 오류 시 reject
     }
   });
+  // 기존 AVAILABLE_VOICES, DEFAULT_VOICE 정의 유지
+export const AVAILABLE_VOICES = [
+  "ko-KR-Chirp3-HD-Vindemiatrix",
+  "ko-KR-Chirp3-HD-Rasalgethi",
+  "ko-KR-Chirp3-HD-Leda",
+  "ko-KR-Chirp3-HD-Sadachbia",
+  "ko-KR-Chirp3-HD-Kore",
+  "ko-KR-Chirp3-HD-Schedar"
+];
+export const DEFAULT_VOICE = AVAILABLE_VOICES[0];
+
+/**
+ * playTTSFromText(text, voiceId)
+ * - voiceId: string, 반드시 AVAILABLE_VOICES 중 하나여야 함
+ */
+export async function playTTSFromText(text, voiceId = DEFAULT_VOICE) {
+  if (!AVAILABLE_VOICES.includes(voiceId)) {
+    console.warn(`[tts.js] 제공되지 않는 음성입니다: ${voiceId}, 기본 음성 사용합니다.`);
+    voiceId = DEFAULT_VOICE;
+  }
+  console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceId}"`);
+  const response = await fetch('/api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, voice: voiceId })
+  });
+  if (!response.ok) {
+    throw new Error(`TTS API 오류: ${response.status}`);
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  return new Promise(resolve => {
+    audio.onended = resolve;
+    audio.play();
+  });
 }
