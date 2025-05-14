@@ -8,13 +8,10 @@
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body { margin: 0; padding: 0; font-family: 'KoPub World Dotum', sans-serif; background: #fff; color: #333; display: flex; flex-direction: column; height: 100vh; }
-    /* Chat Header */
-    #main-header { background-color: #0095FF; color: white; padding: 1rem; text-align: center; font-size: 1.25rem; }
-    /* Volume Meter (top) */
-    #meter-container { display: flex; align-items: center; justify-content: center; padding: 0.5rem 0; background: #f4f4f4; }
+    #main-header { background-color: #0095FF; color: white; padding: 1rem; text-align: center; font-size: 1.25rem; flex-shrink: 0; }
+    #meter-container { display: flex; align-items: center; justify-content: center; padding: 0.5rem 0; background: #f4f4f4; flex-shrink: 0; }
     #volume-meter { width: 80%; height: 8px; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
     #volume-level { height: 100%; background: #0095FF; width: 0; transition: width 0.1s ease; }
-    /* Chat Window */
     #chat-container { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
     .bubble { max-width: 80%; padding: 0.75rem 1rem; border-radius: 1rem; line-height: 1.5; white-space: pre-wrap; }
     .user { background: #fff9c4; align-self: flex-end; border-bottom-right-radius: 0.25rem; }
@@ -52,55 +49,61 @@
     }
 
     function initVAD() {
-      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        const audioCtx = new AudioContext();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 2048;
-        source.connect(analyser);
-        const dataArr = new Uint8Array(analyser.fftSize);
-        let recording = false;
-        let recorder;
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          const audioCtx = new AudioContext();
+          const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 2048;
+          source.connect(analyser);
+          const dataArr = new Uint8Array(analyser.fftSize);
 
-        function analyze() {
-          analyser.getByteTimeDomainData(dataArr);
-          let sum = 0;
-          dataArr.forEach(v => sum += Math.pow(v/128 - 1, 2));
-          const vol = Math.sqrt(sum / dataArr.length);
-          meterLevel.style.width = `${Math.min(vol * 200, 100)}%`;
+          let recording = false;
+          let recorder = null;
+          let chunks = [];
 
-          if (vol > 0.05 && !recording) {
-            recording = true;
-            recorder = new MediaRecorder(stream);
-            const chunks = [];
-            recorder.ondataavailable = e => chunks.push(e.data);
-            recorder.start();
+          function analyze() {
+            analyser.getByteTimeDomainData(dataArr);
+            let sum = 0;
+            dataArr.forEach(v => sum += Math.pow(v/128 - 1, 2));
+            const vol = Math.sqrt(sum / dataArr.length);
+            meterLevel.style.width = `${Math.min(vol * 200, 100)}%`;
+
+            // 시작 임계치 초과 시 녹음 시작
+            if (vol > 0.05 && !recording) {
+              recording = true;
+              chunks = []; // 이전 데이터 초기화
+              recorder = new MediaRecorder(stream);
+              recorder.ondataavailable = e => chunks.push(e.data);
+              recorder.start();
+            }
+
+            // 종료 임계치 미달 시 녹음 종료
+            if (vol < 0.02 && recording) {
+              recording = false;
+              recorder.onstop = async () => {
+                const blob = new Blob(chunks, { type: chunks[0]?.type });
+                try {
+                  const transcript = await getSTTFromAudio(blob);
+                  appendMessage(transcript, 'user');
+                  const aiResp = await getGptResponse(transcript);
+                  appendMessage(aiResp, 'ai');
+                  await playTTSFromText(aiResp);
+                } catch (err) {
+                  console.error(err);
+                }
+              };
+              recorder.stop();
+            }
+
+            requestAnimationFrame(analyze);
           }
-
-          if (vol < 0.02 && recording) {
-            recording = false;
-            recorder.onstop = async () => {
-              const blob = new Blob(chunks, { type: chunks[0].type });
-              try {
-                const transcript = await getSTTFromAudio(blob);
-                appendMessage(transcript, 'user');
-                const aiResp = await getGptResponse(transcript);
-                appendMessage(aiResp, 'ai');
-                await playTTSFromText(aiResp);
-              } catch (err) {
-                console.error(err);
-              }
-            };
-            recorder.stop();
-          }
-
-          requestAnimationFrame(analyze);
-        }
-        analyze();
-      }).catch(console.error);
+          analyze();
+        })
+        .catch(console.error);
     }
 
-    // 시작
+    // 페이지 로드 시 시작
     initConversation();
     initVAD();
   </script>
