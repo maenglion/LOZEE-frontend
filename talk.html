@@ -4,125 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LOZEE 상담</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    body { display:flex; flex-direction:column; height:100vh; margin:0; font-family:'KoPubWorld Dotum',sans-serif; }
-    #main-header { background:#0095FF; color:#fff; padding:1rem; text-align:center; font-size:1.25rem; }
-    #status-bar { display:flex; align-items:center; justify-content:center; gap:1rem; background:#eef; padding:0.5rem; }
-    #mic-indicator { font-size:0.9rem; }
-    #vu-meter { width:100px; height:20px; background:#ccc; border-radius:4px; }
-    #chat-window { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem; }
-    .bubble { max-width:80%; padding:0.75rem 1rem; border-radius:1rem; line-height:1.4; white-space:pre-wrap; }
-    .user { background:#fff9c4; color:#333; align-self:flex-end; border-bottom-right-radius:0.25rem; }
-    .ai   { background:#0095FF; color:#fff; align-self:flex-start; border-bottom-left-radius:0.25rem; }
-    #loading-indicator { display:none; text-align:center; padding:0.5rem; color:#555; font-style:italic; }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header id="main-header">LOZEE 상담</header>
-  <div id="status-bar">
-    <div id="mic-indicator">🔵 대기 중</div>
-    <canvas id="vu-meter"></canvas>
+  <div id="chat-container">
+    <!-- 대화 UI: LOZEE 메시지, 사용자 메시지 영역 등 -->
+    <div id="messages"></div>
   </div>
-  <div id="chat-window"></div>
-  <div id="loading-indicator">처리 중...</div>
 
   <script type="module">
-    import { playTTSFromText } from './js/tts.js';
-    import { getGptResponse } from './js/gpt-dialog.js';
+    import { startSTT, stopSTT } from './stt.js';
+    import { startTTS } from './tts.js';
+    import { getGptResponse } from './gpt-dialog.js';
 
-    const State = { READY:'READY', RECORD:'RECORD' };
-    let currentState = State.READY;
-    let recognition, userPlaceholder, currentTTS;
+    const messagesEl = document.getElementById('messages');
 
-    const chatWindow    = document.getElementById('chat-window');
-    const micIndicator  = document.getElementById('mic-indicator');
-    const vuCanvas      = document.getElementById('vu-meter');
-    const loading       = document.getElementById('loading-indicator');
-    const ttsVoice      = localStorage.getItem('lozee_tts_voice') || 'ko-KR-Chirp3-HD-Vindemiatrix';
+    // 사용자 발화 처리
+    async function handleUserTurn(transcript) {
+      appendMessage('user', transcript);
+      stopSTT();
 
-    function appendMessage(text, role) {
-      const div = document.createElement('div');
-      div.className = `bubble ${role}`;
-      div.textContent = text;
-      chatWindow.appendChild(div);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-      return div;
-    }
-    function setMic(text) { micIndicator.textContent = text; }
-    function showLoading(on) { loading.style.display = on ? 'block' : 'none'; }
+      // GPT 응답 요청
+      appendMessage('bot', '...');
+      const gptText = await getGptResponse(transcript);
 
-    async function handleUserTurn(text) {
-      showLoading(true);
-      appendMessage(text, 'user');
-      // STT 중단
-      try { recognition.stop(); } catch(e) {}
-      if (currentTTS) { currentTTS.pause(); currentTTS = null; }
+      // TTS 재생
+      await startTTS(gptText);
 
-      const res = await getGptResponse(text).catch(() => ({ error:'오류 발생' }));
-      showLoading(false);
-      let reply = typeof res === 'string' ? res : res.error || res.rephrasing;
-      appendMessage(reply, 'ai');
-
-      // AI TTS 재생, 끝나면 STT 재시작
-      currentTTS = await playTTSFromText(reply, ttsVoice);
-      currentTTS.onended = () => {
-        try { recognition.start(); setMic('🔴 듣고 있어요'); } catch(e) {}
-      };
+      // 재생 끝나면 다시 STT 시작
+      startSTT(handleUserTurn);
+      updateLastBotMessage(gptText);
     }
 
-    async function initSTT() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        setupVUMeter(stream);
-      } catch {
-        appendMessage('마이크 권한이 필요합니다.', 'ai');
-        return;
+    // 메시지 화면에 추가
+    function appendMessage(sender, text) {
+      const msg = document.createElement('div');
+      msg.className = sender === 'bot' ? 'bot-message' : 'user-message';
+      msg.textContent = text;
+      messagesEl.appendChild(msg);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // 기존 마지막 "..." 텍스트를 실제 답변으로 교체
+    function updateLastBotMessage(text) {
+      const botMsgs = messagesEl.querySelectorAll('.bot-message');
+      botMsgs[botMsgs.length - 1].textContent = text;
+    }
+
+    // 초기 대화 루틴
+    async function initConversation() {
+      const firstUtterance = sessionStorage.getItem('lozee_first_utterance');
+      if (firstUtterance) {
+        appendMessage('bot', firstUtterance);
+        await startTTS(firstUtterance);
       }
 
-      recognition = new (window.SpeechRecognition||window.webkitSpeechRecognition)();
-      recognition.lang = 'ko-KR'; recognition.continuous = true; recognition.interimResults = true;
-
-      recognition.onresult = e => {
-        let interim='', finalText='';
-        for (let i=e.resultIndex;i<e.results.length;i++){
-          let t=e.results[i][0].transcript;
-          e.results[i].isFinal? finalText+=t : interim+=t;
-        }
-        // interim 표시
-        if (interim) {
-          if (!userPlaceholder) userPlaceholder = appendMessage('', 'user');
-          userPlaceholder.textContent = interim;
-        }
-        // final 처리
-        if (finalText) {
-          if (userPlaceholder) { userPlaceholder.remove(); userPlaceholder=null; }
-          handleUserTurn(finalText);
-        }
-      };
-
-      recognition.onerror = e => console.warn('STT 오류', e);
-
-      recognition.onstart = () => setMic('🔴 듣고 있어요');
-      recognition.onend = () => setMic('🔵 대기 중');
-
-      recognition.start(); setMic('🔴 듣고 있어요');
+      // 사용자가 첫마디를 입력했다면, 이후 바로 STT
+      startSTT(handleUserTurn);
     }
 
-    function setupVUMeter(stream) {
-      const ctx=new AudioContext(),src=ctx.createMediaStreamSource(stream);
-      const analyser=ctx.createAnalyser(); analyser.fftSize=64; src.connect(analyser);
-      const data=new Uint8Array(analyser.frequencyBinCount);
-      const dib=vuCanvas.getContext('2d'); const cw=vuCanvas.width,ch=vuCanvas.height;
-      (function draw(){ analyser.getByteFrequencyData(data);
-        dib.clearRect(0,0,cw,ch);
-        const w=cw/data.length;
-        data.forEach((v,i)=>dib.fillRect(i*w,ch-(v/ch)*ch,w-1,(v/ch)*ch));
-        requestAnimationFrame(draw);
-      })();
-    }
-
-    window.addEventListener('DOMContentLoaded', initSTT);
+    document.addEventListener('DOMContentLoaded', initConversation);
   </script>
 </body>
 </html>
