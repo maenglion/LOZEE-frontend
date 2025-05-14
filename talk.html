@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; padding: 0; font-family: 'KoPubWorld Dotum', sans-serif; background: #fff; color: #333; display: flex; flex-direction: column; height: 100vh; }
+    body { margin: 0; padding: 0; font-family: 'KoPub World Dotum', sans-serif; background: #fff; color: #333; display: flex; flex-direction: column; height: 100vh; }
     .hidden { display: none !important; }
     /* Intro Screens */
     #intro-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
@@ -18,15 +18,15 @@
     .btn { padding: 0.75rem 1.5rem; background: #0095FF; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
     /* Chat UI */
     #main-header { background-color: #0095FF; color: white; padding: 1rem; text-align: center; font-size: 20px; flex-shrink: 0; }
+    /* Volume Meter (top) */
+    #meter-container { display: flex; align-items: center; justify-content: center; padding: 10px 0; background: #f4f4f4; flex-shrink: 0; }
+    #volume-meter { width: 80%; height: 12px; border: 1px solid #ccc; border-radius: 6px; overflow: hidden; }
+    #volume-level { height: 100%; background: #0095FF; width: 0; transition: width 0.1s ease; }
     #chat-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
     .bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; line-height: 1.6; white-space: pre-wrap; }
     .user { background: #fff9c4; align-self: flex-end; border-bottom-right-radius: 5px; }
     .ai { background: #0095FF; color: #fff; align-self: flex-start; border-bottom-left-radius: 5px; }
-    /* Volume Meter */
-    #meter-container { height: 60px; display: flex; align-items: center; justify-content: center; background: #f4f4f4; }
-    #volume-meter { width: 80%; height: 20px; border: 1px solid #ccc; border-radius: 10px; }
-    #volume-level { height: 100%; background: #0095FF; width: 0; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -66,12 +66,11 @@
 
   <!-- Chat Interface -->
   <header id="main-header" class="hidden">LOZEE와 대화하기</header>
-  <div id="chat-container" class="hidden">
-    <div id="chat-window"></div>
-  </div>
-  <!-- Volume Meter (auto VAD) -->
   <div id="meter-container" class="hidden">
     <div id="volume-meter"><div id="volume-level"></div></div>
+  </div>
+  <div id="chat-container" class="hidden">
+    <div id="chat-window"></div>
   </div>
 
   <script type="module">
@@ -81,9 +80,8 @@
 
     // Intro logic
     const steps = document.querySelectorAll('.intro-screen');
-    let currentStep = 0;
-    const nextButtons = document.querySelectorAll('.intro-next');
     const requestPermBtn = document.getElementById('request-permission-btn');
+    const nextButtons = document.querySelectorAll('.intro-next');
     const startConvBtn = document.getElementById('start-conversation-btn');
 
     function showStep(index) {
@@ -104,15 +102,14 @@
       localStorage.setItem('lozee_username', name);
       document.getElementById('intro-container').classList.add('hidden');
       document.getElementById('main-header').classList.remove('hidden');
-      document.getElementById('chat-container').classList.remove('hidden');
       document.getElementById('meter-container').classList.remove('hidden');
+      document.getElementById('chat-container').classList.remove('hidden');
       initConversation();
       initVAD();
     });
 
-    // Chat logic
+    // Chat
     const chatWindow = document.getElementById('chat-window');
-    let firstInteraction = false;
     let initialGreeting = '';
 
     function appendMessage(text, role) {
@@ -128,7 +125,6 @@
       initialGreeting = await getInitialGreeting(userName);
       appendMessage(initialGreeting, 'ai');
       await playTTSFromText(initialGreeting);
-      firstInteraction = true;
     }
 
     // VAD & Volume Meter
@@ -142,37 +138,29 @@
         source.connect(analyser);
         const dataArray = new Uint8Array(analyser.fftSize);
         let speaking = false;
-
         function analyze() {
           analyser.getByteTimeDomainData(dataArray);
           let sum = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            const v = (dataArray[i] / 128) - 1;
-            sum += v * v;
-          }
-          const volume = Math.sqrt(sum / dataArray.length);
-          meter.style.width = `${Math.min(volume * 200, 100)}%`;
-
+          dataArray.forEach(vv => { const v = (vv/128)-1; sum += v*v; });
+          const volume = Math.sqrt(sum/dataArray.length);
+          meter.style.width = `${Math.min(volume*200,100)}%`;
           if (volume > 0.05 && !speaking) {
             speaking = true;
             startSTT();
           } else if (volume < 0.02 && speaking) {
             speaking = false;
-            stopSTT()
-              .then(transcript => {
-                appendMessage(transcript, 'user');
-                return getGptResponse(transcript);
-              })
-              .then(aiText => {
-                appendMessage(aiText, 'ai');
-                return playTTSFromText(aiText);
-              })
-              .catch(console.error);
+            stopSTT().then(transcript => {
+              appendMessage(transcript, 'user');
+              return getGptResponse(transcript);
+            }).then(aiText => {
+              appendMessage(aiText, 'ai');
+              return playTTSFromText(aiText);
+            }).catch(console.error);
           }
           requestAnimationFrame(analyze);
         }
         analyze();
-      }).catch(err => console.error(err));
+      }).catch(console.error);
     }
   </script>
 </body>
