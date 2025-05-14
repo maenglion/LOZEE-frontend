@@ -1,66 +1,155 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOZEE 상담</title>
-  <!-- 스타일 시트 경로 수정 -->
-  <link rel="stylesheet" href="./style.css" />
-  <link rel="stylesheet" href="./emotion-colors.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOZEE와 대화</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; font-family: 'KoPubWorld Dotum', sans-serif; background: #fff; color: #333; display: flex; flex-direction: column; height: 100vh; }
+    .hidden { display: none !important; }
+    /* Intro Screens */
+    #intro-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+    .intro-screen { width: 100%; max-width: 500px; text-align: center; }
+    .intro-screen h2 { margin-bottom: 1rem; font-size: 1.5rem; }
+    .intro-screen p { margin-bottom: 1.5rem; line-height: 1.4; }
+    .intro-screen input, .intro-screen textarea { width: 100%; padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
+    .btn { padding: 0.75rem 1.5rem; background: #0095FF; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
+    /* Chat UI */
+    #main-header { background-color: #0095FF; color: white; padding: 1rem; text-align: center; font-size: 20px; flex-shrink: 0; }
+    #chat-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .bubble { max-width: 80%; padding: 12px 18px; border-radius: 20px; line-height: 1.6; white-space: pre-wrap; }
+    .user { background: #fff9c4; align-self: flex-end; border-bottom-right-radius: 5px; }
+    .ai { background: #0095FF; color: #fff; align-self: flex-start; border-bottom-left-radius: 5px; }
+    #talk-btn-container { padding: 15px; text-align: center; border-top: 1px solid #eee; }
+    #talk-btn { width: 80px; height: 80px; border-radius: 50%; background-color: #b6b6b6; border: none; color: white; font-size: 36px; cursor: pointer; transition: transform 0.2s, background-color 0.3s; }
+    #talk-btn.recording { background: #e06c75; transform: scale(1.1); }
+  </style>
 </head>
 <body>
-  <div id="chat-container">
-    <div id="status">
-      <span id="status-dot"></span>
-      <span id="status-text">대기 중</span>
+  <!-- Intro Flow -->
+  <div id="intro-container">
+    <div class="intro-screen" data-step="0">
+      <h2>마이크 권한 요청</h2>
+      <p>LOZEE가 음성을 듣기 위해 마이크 권한이 필요해요.</p>
+      <button class="btn" id="request-permission-btn">권한 허용하기</button>
     </div>
-    <div id="messages"></div>
+    <div class="intro-screen hidden" data-step="1">
+      <h2>LOZEE에 오신 것을 환영해요</h2>
+      <p>LOZEE가 당신의 이야기를 들어줄게요.</p>
+      <button class="btn intro-next">다음</button>
+    </div>
+    <div class="intro-screen hidden" data-step="2">
+      <h2>이름을 알려주세요</h2>
+      <input type="text" id="user-name-input" placeholder="이름 입력" />
+      <button class="btn intro-next">다음</button>
+    </div>
+    <div class="intro-screen hidden" data-step="3">
+      <h2>나이를 입력해주세요</h2>
+      <input type="number" id="user-age-input" placeholder="나이 입력" />
+      <button class="btn intro-next">다음</button>
+    </div>
+    <div class="intro-screen hidden" data-step="4">
+      <h2>알려둘 정보를 작성해주세요</h2>
+      <textarea id="user-info-input" rows="4" placeholder="진단 정보, 언어 특성 등"></textarea>
+      <button class="btn intro-next">다음</button>
+    </div>
+    <div class="intro-screen hidden" data-step="5">
+      <h2>이제 시작할게요</h2>
+      <p>아래 버튼을 눌러 대화를 시작해보세요.</p>
+      <button class="btn" id="start-conversation-btn">대화 시작</button>
+    </div>
+  </div>
+
+  <!-- Chat Interface -->
+  <header id="main-header" class="hidden">LOZEE와 대화하기</header>
+  <div id="chat-container" class="hidden">
+    <div id="chat-window"></div>
+  </div>
+  <div id="talk-btn-container" class="hidden">
+    <button id="talk-btn" aria-label="말하기">🎤</button>
   </div>
 
   <script type="module">
-    // stt.js와 tts.js 모듈 import
-    import * as STT from './js/stt.js';
-    import { playTTSFromText as startTTS } from './js/tts.js';
-    import { getGptResponse }      from './js/gpt-dialog.js';
+    import { playTTSFromText } from './js/tts.js';
+    import { startSTT, stopSTT } from './js/stt.js';
+    import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
 
-    // onboarding 미완료 시 index로 리다이렉트
-    if (!sessionStorage.getItem('lozee_first_utterance')) {
-      window.location.replace('index.html');
+    // Intro logic
+    const steps = document.querySelectorAll('.intro-screen');
+    let currentStep = 0;
+    const nextButtons = document.querySelectorAll('.intro-next');
+    const requestPermBtn = document.getElementById('request-permission-btn');
+    const startConvBtn = document.getElementById('start-conversation-btn');
+
+    function showStep(index) {
+      steps.forEach((el, i) => el.classList.toggle('hidden', i !== index));
     }
 
-    const messagesEl = document.getElementById('messages');
+    requestPermBtn.addEventListener('click', async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        showStep(1);
+      } catch {
+        alert('마이크 권한이 필요합니다.');
+      }
+    });
+    nextButtons.forEach((btn, idx) => btn.addEventListener('click', () => showStep(idx + 2)));
+    startConvBtn.addEventListener('click', () => {
+      // 저장
+      const name = document.getElementById('user-name-input').value || '친구';
+      localStorage.setItem('lozee_username', name);
+      document.getElementById('intro-container').classList.add('hidden');
+      document.getElementById('main-header').classList.remove('hidden');
+      document.getElementById('chat-container').classList.remove('hidden');
+      document.getElementById('talk-btn-container').classList.remove('hidden');
+      initConversation();
+    });
 
-    function appendMessage(sender, text) {
-      const msg = document.createElement('div');
-      msg.className = sender === 'bot' ? 'bot-message' : 'user-message';
-      msg.textContent = text;
-      messagesEl.appendChild(msg);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
+    // Chat logic
+    const chatWindow = document.getElementById('chat-window');
+    const talkBtn = document.getElementById('talk-btn');
+    let firstInteraction = false;
+    let initialGreeting = '';
 
-    async function handleUserTurn(transcript) {
-      appendMessage('user', transcript);
-      STT.stopSTT();
-
-      appendMessage('bot', '…');
-      const gptText = await getGptResponse(transcript);
-
-      // playTTSFromText를 startTTS로 alias하여 재생
-      await startTTS(gptText, 'ko-KR-Chirp3-HD-Zephyr');
-      STT.startSTT(handleUserTurn);
-
-      const botMsgs = messagesEl.querySelectorAll('.bot-message');
-      botMsgs[botMsgs.length - 1].textContent = gptText;
+    function appendMessage(text, role) {
+      const div = document.createElement('div');
+      div.className = `bubble ${role}`;
+      div.textContent = text;
+      chatWindow.appendChild(div);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
     async function initConversation() {
-      const first = sessionStorage.getItem('lozee_first_utterance');
-      appendMessage('bot', first);
-      await startTTS(first, 'ko-KR-Chirp3-HD-Zephyr');
-      STT.startSTT(handleUserTurn);
+      const userName = localStorage.getItem('lozee_username') || '친구';
+      initialGreeting = await getInitialGreeting(userName);
+      appendMessage(initialGreeting, 'ai');
     }
 
-    document.addEventListener('DOMContentLoaded', initConversation);
+    talkBtn.addEventListener('click', async () => {
+      if (!firstInteraction) {
+        firstInteraction = true;
+        talkBtn.disabled = true;
+        await playTTSFromText(initialGreeting);
+        talkBtn.disabled = false;
+        return;
+      }
+      if (!talkBtn.classList.contains('recording')) {
+        talkBtn.classList.add('recording');
+        await startSTT();
+      } else {
+        talkBtn.disabled = true;
+        const transcript = await stopSTT();
+        talkBtn.classList.remove('recording');
+        appendMessage(transcript, 'user');
+        const aiText = await getGptResponse(transcript);
+        appendMessage(aiText, 'ai');
+        await playTTSFromText(aiText);
+        talkBtn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
