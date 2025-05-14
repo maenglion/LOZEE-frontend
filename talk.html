@@ -24,19 +24,20 @@
   <div id="chat-container"></div>
 
   <script type="module">
-    import { playTTSFromText } from './js/tts.js';
+    import { playTTSFromText, AVAILABLE_VOICES, DEFAULT_VOICE } from './js/tts.js';
     import { getGptResponse, getInitialGreeting } from './js/gpt-dialog.js';
     import { getSTTFromAudio } from './js/stt.js';
 
     const chatContainer = document.getElementById('chat-container');
     const meterLevel = document.getElementById('volume-level');
-    // 1) 인덱스에서 선택한 음성 가져오기
-    const selectedVoice = localStorage.getItem('lozee_selectedVoice') || undefined;
 
-    function appendMessage(text, role) {
+    // 음성 옵션은 tts.js에서 관리
+    const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
+
+    function appendMessage(content, role) {
       const el = document.createElement('div');
       el.className = `bubble ${role}`;
-      el.textContent = typeof text === 'string' ? text : (text.text || JSON.stringify(text));
+      el.textContent = typeof content === 'string' ? content : (content.text || JSON.stringify(content));
       chatContainer.appendChild(el);
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
@@ -45,7 +46,7 @@
       const userName = localStorage.getItem('lozee_username') || '친구';
       const greeting = await getInitialGreeting(userName);
       appendMessage(greeting, 'ai');
-      await playTTSFromText(greeting, { voice: selectedVoice });
+      await playTTSFromText(greeting, selectedVoice);
     }
 
     function initVAD() {
@@ -68,29 +69,29 @@
             const vol = Math.sqrt(sum / dataArr.length);
             meterLevel.style.width = `${Math.min(vol * 200, 100)}%`;
 
-            if (vol > 0.05) { speakFrames++; silenceFrames = 0; } else { silenceFrames++; }
+            if (vol > 0.05) { speakFrames++; silenceFrames = 0; }
+            else { silenceFrames++; }
 
-            // 충분히 말하기 감지됐으면 녹음 시작
             if (!recording && speakFrames >= MIN_SPEAK_FRAMES) {
               recording = true; chunks = []; speakFrames = 0;
               recorder = new MediaRecorder(stream);
               recorder.ondataavailable = e => chunks.push(e.data);
               recorder.start();
             }
-
-            // 연속 무음 구간 확보 후 녹음 중지
             if (recording && silenceFrames >= MIN_SILENCE_FRAMES) {
-              recording = false; silenceFrames = 0;
               recorder.onstop = async () => {
                 const blob = new Blob(chunks, { type: chunks[0]?.type });
                 try {
-                  const sttResult = await getSTTFromAudio(blob);
-                  appendMessage(sttResult, 'user');
-                  const aiResp = await getGptResponse(sttResult);
-                  appendMessage(aiResp, 'ai');
-                  await playTTSFromText(aiResp, { voice: selectedVoice });
-                } catch (err) { console.error(err); }
+                  const sttText = await getSTTFromAudio(blob);
+                  appendMessage(sttText, 'user');
+                  const aiText = await getGptResponse(sttText);
+                  appendMessage(aiText, 'ai');
+                  await playTTSFromText(aiText, selectedVoice);
+                } catch (err) {
+                  console.error(err);
+                }
               };
+              recording = false; silenceFrames = 0;
               recorder.stop();
             }
 

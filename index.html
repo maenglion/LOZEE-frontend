@@ -361,21 +361,19 @@
                 });
 
                 // Step 5의 "로지와 대화 시작하기" 버튼 이벤트 리스너 수정
-               document.getElementById('startChatBtn').addEventListener('click', () => {
-    const firstMessage = userFirstMessageInput.value.trim();
-    if (firstMessageError) firstMessageError.textContent = '';
-    if (!firstMessage) {
-        if (firstMessageError) firstMessageError.textContent = "지금 어떤지, 하고 싶은 이야기를 간단하게라도 적어주세요.";
-        return;
-    }
-    // 1) 세션 스토리지에 “첫마디”로 저장
-    sessionStorage.setItem('lozee_first_utterance', firstMessage);
-    // 2) 온보딩 완료 플래그 (필요하다면 그대로 유지)
-    localStorage.setItem('lozee_onboarding_complete', 'true');
-    console.log("사용자 첫마디 (sessionStorage):", firstMessage);
-    console.log("talk.html 로 이동합니다.");
-    window.location.href = 'talk.html';
-});
+                document.getElementById('startChatBtn').addEventListener('click', () => {
+                    const firstMessage = userFirstMessageInput.value.trim(); // 새로 추가된 입력창에서 값 가져오기
+                    if(firstMessageError) firstMessageError.textContent = '';
+                    if (!firstMessage) { // 입력값이 없으면 오류 메시지 표시
+                        if(firstMessageError) firstMessageError.textContent = "지금 어떤지, 하고 싶은 이야기를 간단하게라도 적어주세요.";
+                        return;
+                    }
+                    localStorage.setItem('lozee_user_typed_intro', firstMessage); // 이 값을 talk.html에서 사용
+                    localStorage.setItem('lozee_onboarding_complete', 'true'); 
+                    console.log("사용자 첫마디 (텍스트 입력):", firstMessage);
+                    console.log("온보딩 완료, talk.html로 이동합니다.");
+                    window.location.href = 'talk.html';
+                });
                 
                 showStep(0);
 
