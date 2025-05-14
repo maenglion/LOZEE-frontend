@@ -173,7 +173,10 @@
         console.log("Intro script: 시작");
         
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log("Intro script: DOMContentLoaded 이벤트 발생");
+            // 필요한 모듈 로드
+            const { playTTSFromText } = await import('./js/tts.js');
+            const emotionDataModule = await import('./js/emotionData.js');
+            const lozeeEmotions = emotionDataModule.lozeeEmotions;
 
             try {
                 console.log("Intro script: 모듈 임포트 시도...");
@@ -359,37 +362,57 @@
                     // 5단계의 userIntroPrompt는 이제 사용하지 않으므로 관련 로직 제거
                     showStep(5); 
                 });
-
-                // Step 5의 "로지와 대화 시작하기" 버튼 이벤트 리스너 수정
-               document.getElementById('startChatBtn').addEventListener('click', () => {
-    const firstMessage = userFirstMessageInput.value.trim();
-    if (firstMessageError) firstMessageError.textContent = '';
-    if (!firstMessage) {
-        if (firstMessageError) firstMessageError.textContent = "지금 어떤지, 하고 싶은 이야기를 간단하게라도 적어주세요.";
-        return;
-    }
-    // 1) 세션 스토리지에 “첫마디”로 저장
-    sessionStorage.setItem('lozee_first_utterance', firstMessage);
-    // 2) 온보딩 완료 플래그 (필요하다면 그대로 유지)
-    localStorage.setItem('lozee_onboarding_complete', 'true');
-    console.log("사용자 첫마디 (sessionStorage):", firstMessage);
-    console.log("talk.html 로 이동합니다.");
-    window.location.href = 'talk.html';
-});
-                
-                showStep(0);
-
-            } catch (error) { 
-                console.error("Intro script: DOMContentLoaded 콜백 내 초기화 중 오류:", error);
-                if (typeof showStep === 'function') { 
-                    console.warn("Intro script: 초기화 중 오류 발생. 첫 단계 표시 시도...");
-                    showStep(0); 
-                } else {
-                    console.error("Intro script: showStep 함수를 찾을 수 없어 첫 단계를 표시할 수 없습니다.");
+ // Step5 종료 후 이동 버튼 이벤트
+            document.getElementById('toStep5Btn').addEventListener('click', () => {
+                const voice = voiceSelectInput.value;
+                voiceError.textContent = '';
+                if (!voice) {
+                    voiceError.textContent = '로지의 목소리를 선택해주세요.';
+                    return;
                 }
-            }
-        }); 
-        console.log("Intro script: 모든 스크립트 실행 완료");
+                // localStorage 키 통합: lozee_selectedVoice 사용
+                localStorage.setItem('lozee_selectedVoice', voice);
+                const currentUsername = localStorage.getItem('lozee_username') || '친구';
+                if (greetingName) greetingName.textContent = currentUsername;
+                showStep(5);
+            });
+
+            // TTS 테스트 버튼
+            testVoiceBtnIntro.addEventListener('click', async () => {
+                const selectedVoice = voiceSelectInput.value;
+                voiceError.textContent = '';
+                if (!selectedVoice) {
+                    voiceError.textContent = '목소리를 먼저 선택해주세요.';
+                    return;
+                }
+                try {
+                    ttsLoadingIndicator.style.display = 'block';
+                    testVoiceBtnIntro.disabled = true;
+                    await playTTSFromText('안녕 나는 로지야.', selectedVoice);
+                } catch (error) {
+                    voiceError.textContent = '음성 재생 중 오류가 발생했습니다.';
+                } finally {
+                    ttsLoadingIndicator.style.display = 'none';
+                    testVoiceBtnIntro.disabled = false;
+                }
+            });
+
+            // 로기 첫 메시지 저장 및 페이지 이동
+            startChatBtn.addEventListener('click', () => {
+                const firstMessage = userFirstMessageInput.value.trim();
+                firstMessageError.textContent = '';
+                if (!firstMessage) {
+                    firstMessageError.textContent = '지금 어떤지, 하고 싶은 이야기를 간단하게라도 적어주세요.';
+                    return;
+                }
+                sessionStorage.setItem('lozee_first_utterance', firstMessage);
+                localStorage.setItem('lozee_onboarding_complete', 'true');
+                window.location.href = 'talk.html';
+            });
+
+            // 초기 스텝 표시
+            showStep(0);
+        });
     </script>
 </body>
 </html>
