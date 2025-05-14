@@ -53,6 +53,7 @@
         .step-background-main .info-text {
             color: #e0e0e0; /* 보조 안내 텍스트 색상 */
             font-size: 0.9em;
+            margin-bottom: 10px;
         }
 
 
@@ -70,7 +71,7 @@
         }
 
         input[type="text"],
-        input[type="number"],
+        input[type="number"], /* 기존 숫자 입력 필드 스타일 유지 (필요시) */
         select,
         textarea {
             padding: 12px; /* 패딩 증가 */
@@ -210,8 +211,12 @@
         <p>로지가 당신을 어떻게 부르면 좋을까요?</p>
         <input type="text" id="nameInput" placeholder="이름 또는 별명">
         <div class="error-message" id="nameError"></div>
-        <p style="margin-top: 20px;">실제 나이를 알려주세요.</p>
-        <input type="number" id="ageInput" placeholder="나이 (숫자만 입력)">
+        
+        <p style="margin-top: 20px;">나이를 알려주세요.</p>
+        <p class="info-text">로지와 깊이 있는 대화를 나누기 위해서는 나이 정보가 중요해요.<br>실제 나이를 선택해주세요.</p>
+        <select id="ageSelectInput">
+            <option value="">나이를 선택해주세요</option>
+            </select>
         <div class="error-message" id="ageError"></div>
         <button id="submitNameAgeBtn">다음</button>
     </div>
@@ -229,7 +234,7 @@
             <button id="submitCustomTopicBtn">이 주제로 시작</button>
         </div>
         <div class="error-message" id="topicOverallError"></div>
-        </div>
+    </div>
 
     <div id="stepVoice" class="step">
         <h2>로지의 목소리를 선택해주세요.</h2>
@@ -257,17 +262,16 @@
 
     <script type="module">
         // counseling_topics.js 파일이 ./js/ 폴더에 있고, counselingTopicsByAge를 export 해야 합니다.
-        // 예: export const counselingTopicsByAge = { '8-10': [...], ... };
         let counselingTopicsByAge;
         try {
             const topicsModule = await import('./js/counseling_topics.js');
             counselingTopicsByAge = topicsModule.counselingTopicsByAge;
             if (!counselingTopicsByAge) {
-                console.error("counseling_topics.js에서 counselingTopicsByAge를 찾을 수 없거나 비어있습니다.");
+                console.error("Error: counselingTopicsByAge is not defined or empty in counseling_topics.js. Using fallback.");
                 counselingTopicsByAge = {}; // Fallback to empty object
             }
         } catch (e) {
-            console.error("./js/counseling_topics.js 모듈 로드 실패:", e);
+            console.error("Failed to load ./js/counseling_topics.js module. Error message:", e.message, "Stack:", e.stack);
             // Fallback mock data if import fails
             counselingTopicsByAge = {
                 '8-10': ['친구랑 싸웠어', '공부하기 싫어'],
@@ -277,38 +281,37 @@
             alert("상담 주제 파일을 불러오는데 실패했습니다. 임시 주제 목록이 사용됩니다.");
         }
 
-
         // 나이에 맞는 주제 목록을 반환하는 함수
         function getTopicsForAge(age) {
             const ageInt = parseInt(age);
 
-            if (isNaN(ageInt)) { // 나이가 숫자가 아니거나 제공되지 않은 경우
-                // 모든 연령대에 공통적으로 적용될 수 있는 기본 주제 목록이나, 가장 포괄적인 '30+'를 반환할 수 있습니다.
-                // 또는 빈 배열을 반환하여 사용자가 직접 입력하도록 유도할 수 있습니다.
-                // 여기서는 '30+'를 기본값으로 사용하거나, counselingTopicsByAge에 'default' 키가 있다면 그것을 사용합니다.
-                return counselingTopicsByAge['30+'] || []; // '30+'가 없으면 빈 배열
+            if (isNaN(ageInt)) {
+                return counselingTopicsByAge['30+'] || []; 
             }
 
             if (ageInt >= 8 && ageInt <= 10) {
                 return counselingTopicsByAge['8-10'] || [];
-            } else if (ageInt >= 11 && ageInt <= 15) { // 11세 포함
+            } else if (ageInt >= 11 && ageInt <= 15) { 
                 return counselingTopicsByAge['12-15'] || [];
-            } else if (ageInt >= 16) { // 16세 이상 (16-29세 포함하여 '30+' 사용)
+            } else if (ageInt >= 16) { // 16세부터 100세(혹은 그 이상)까지 '30+' 그룹 사용
                 return counselingTopicsByAge['30+'] || [];
             } else { // 8세 미만 등 기타 경우
-                return []; // 해당 연령 그룹의 주제가 없으면 빈 배열 반환
+                return []; 
             }
         }
 
         let playTTSFromText;
         try {
-            const ttsModule = await import('./js/tts.js'); // 실제 tts.js 경로 확인 필요
+            const ttsModule = await import('./js/tts.js'); 
             playTTSFromText = ttsModule.playTTSFromText;
+            if (typeof playTTSFromText !== 'function') {
+                console.error("Error: playTTSFromText is not a function in tts.js. Using mock TTS.");
+                throw new Error("playTTSFromText not a function"); // Force fallback
+            }
         } catch (e) {
-            console.warn("./js/tts.js 모듈을 찾을 수 없습니다. TTS 기능이 제한될 수 있습니다.");
+            console.warn("Failed to load ./js/tts.js module or it's invalid. Using mock TTS. Error:", e.message);
             playTTSFromText = async (text, voice) => {
                 console.log(`TTS Mock: "${text}" (목소리: ${voice})`);
-                // alert(`(TTS Mock) "${text}" 목소리: ${voice}`); // 개발 중 확인용으로만 사용
                 return new Promise(resolve => setTimeout(resolve, 1000));
             };
         }
@@ -330,7 +333,7 @@
         // Step 1 (Name/Age) elements
         const nameInput = document.getElementById('nameInput');
         const nameError = document.getElementById('nameError');
-        const ageInput = document.getElementById('ageInput');
+        const ageSelectInput = document.getElementById('ageSelectInput'); // **수정: ageInput -> ageSelectInput**
         const ageError = document.getElementById('ageError');
         const submitNameAgeBtn = document.getElementById('submitNameAgeBtn');
 
@@ -359,6 +362,19 @@
 
         let currentStep = 0;
 
+        // **추가: 나이 선택 옵션 동적 생성**
+        function populateAgeOptions() {
+            if (!ageSelectInput) return;
+            for (let i = 8; i <= 100; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i}세`;
+                ageSelectInput.appendChild(option);
+            }
+        }
+        populateAgeOptions(); // 페이지 로드 시 나이 옵션 채우기
+
+
         // 스텝 표시 함수
         function showStep(stepIndex) {
             steps.forEach((step, index) => {
@@ -374,7 +390,7 @@
                 if(topicUserAgeInfo && userAge) {
                     topicUserAgeInfo.textContent = `만 ${userAge}세`;
                 } else if (topicUserAgeInfo) {
-                    topicUserAgeInfo.textContent = "모든 연령"; // 나이 정보가 없을 때
+                    topicUserAgeInfo.textContent = "모든 연령"; 
                 }
                 customTopicContainer.style.display = 'none';
                 customTopicInput.value = '';
@@ -385,7 +401,6 @@
                 if (finalStepGreetingName) finalStepGreetingName.textContent = currentUsername;
 
                 const selectedTopicText = localStorage.getItem('lozee_selectedTopic') || '선택된 주제 없음';
-                // 이제 selectedTopic은 항상 텍스트이므로 별도 변환 불필요
                 if (finalStepTopicInfo) finalStepTopicInfo.textContent = `"${selectedTopicText}"`;
             }
         }
@@ -405,7 +420,7 @@
         // Step 1: 이름 및 나이 처리
         submitNameAgeBtn.addEventListener('click', () => {
             const name = nameInput.value.trim();
-            const age = ageInput.value;
+            const age = ageSelectInput.value; // **수정: ageInput.value -> ageSelectInput.value**
             nameError.textContent = '';
             ageError.textContent = '';
             let isValid = true;
@@ -414,13 +429,12 @@
                 nameError.textContent = '이름 또는 별명을 입력해주세요.';
                 isValid = false;
             }
-            if (!age) {
-                ageError.textContent = '나이를 입력해주세요.';
-                isValid = false;
-            } else if (isNaN(age) || age <= 0 || age > 120) {
-                ageError.textContent = '유효한 나이를 입력해주세요 (1-120).';
+            
+            if (!age) { // **수정: 나이 선택 여부 확인**
+                ageError.textContent = '나이를 선택해주세요.';
                 isValid = false;
             }
+            // 숫자 범위 검사는 select box로 대체되어 불필요하나, 빈 값 체크는 중요.
 
             if (isValid) {
                 localStorage.setItem('lozee_username', name);
@@ -434,10 +448,9 @@
             const userAge = localStorage.getItem('lozee_userAge');
             let topics = getTopicsForAge(userAge);
             
-            // "해당 없음" 또는 "해당없음" 문자열을 주제 목록에서 필터링 (전용 버튼이 있으므로)
             topics = topics.filter(topic => topic.trim() !== '해당 없음' && topic.trim() !== '해당없음');
 
-            topicSelection.innerHTML = ''; // 기존 버튼들 제거
+            topicSelection.innerHTML = ''; 
 
             if (topics.length === 0 && customTopicContainer.style.display === 'none') {
                  topicOverallError.textContent = '추천드릴 주제가 없네요. 직접 입력해주시거나 "해당사항 없음"을 눌러주세요.';
@@ -445,12 +458,9 @@
                 topicOverallError.textContent = '';
             }
 
-
-            topics.forEach(topicText => { // topicText는 이제 문자열입니다.
+            topics.forEach(topicText => { 
                 const button = document.createElement('button');
                 button.textContent = topicText;
-                // dataset.topicId 대신 topicText를 직접 사용하거나, 필요시 인덱스 사용 가능
-                // 여기서는 topicText를 직접 저장 값으로 사용
                 button.addEventListener('click', () => {
                     topicSelection.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
                     button.classList.add('selected');
@@ -458,8 +468,8 @@
                     customTopicInput.value = '';
                     customTopicError.textContent = '';
                     topicOverallError.textContent = '';
-                    localStorage.setItem('lozee_selectedTopic', topicText); // 선택된 주제 텍스트 저장
-                    showStep(3); // 목소리 선택으로 이동
+                    localStorage.setItem('lozee_selectedTopic', topicText); 
+                    showStep(3); 
                 });
                 topicSelection.appendChild(button);
             });
@@ -479,8 +489,8 @@
                 customTopicError.textContent = '주제를 입력해주세요.';
                 return;
             }
-            localStorage.setItem('lozee_selectedTopic', customTopic); // 사용자 입력 텍스트를 그대로 저장
-            showStep(3); // 목소리 선택으로 이동
+            localStorage.setItem('lozee_selectedTopic', customTopic); 
+            showStep(3); 
         });
 
 
@@ -508,7 +518,7 @@
                 testVoiceBtn.disabled = true;
                 await playTTSFromText('안녕하세요, 저는 로지예요. 만나서 반가워요.', selectedVoice);
             } catch (error) {
-                console.error("TTS Error:", error);
+                console.error("TTS Error during test:", error.message);
                 voiceError.textContent = '음성 재생 중 오류가 발생했습니다.';
             } finally {
                 ttsLoadingIndicator.style.display = 'none';
@@ -520,7 +530,7 @@
         confirmStartChatBtn.addEventListener('click', () => {
             if (!localStorage.getItem('lozee_selectedTopic') || !localStorage.getItem('lozee_selectedVoice')) {
                 alert("필수 정보(주제, 목소리)가 선택되지 않았습니다. 이전 단계로 돌아가 선택해주세요.");
-                showStep(localStorage.getItem('lozee_selectedTopic') ? 3 : 2); // 주제 없으면 주제로, 목소리 없으면 목소리로
+                showStep(localStorage.getItem('lozee_selectedTopic') ? 3 : 2); 
                 return;
             }
             localStorage.setItem('lozee_onboarding_complete', 'true');
@@ -528,14 +538,24 @@
         });
 
         // 초기 스텝 표시
-        if (localStorage.getItem('lozee_onboarding_complete') === 'true') {
-            // console.log("온보딩 완료 상태. talk.html로 이동해야 합니다. (현재는 테스트를 위해 Step 0 표시)");
-            // window.location.href = 'talk.html'; // 실제 서비스에서는 이 주석을 해제
-            showStep(0); // 테스트를 위해 온보딩 다시 시작
-        } else {
-            showStep(0);
+        // DOMContentLoaded 이벤트 핸들러의 마지막 부분
+        try {
+            if (localStorage.getItem('lozee_onboarding_complete') === 'true') {
+                // console.log("Onboarding complete. Should redirect to talk.html (currently showing step 0 for testing).");
+                // window.location.href = 'talk.html'; // Uncomment for production
+                showStep(0); // For testing, always start onboarding
+            } else {
+                showStep(0);
+            }
+        } catch (e) {
+            console.error("Error during initial step display:", e.message, e.stack);
+            // Fallback: try to display the first step anyway, or show a generic error message on the page
+            if(steps[0]) {
+                steps[0].classList.add('active');
+                steps[0].innerHTML = "<h2>오류 발생</h2><p>페이지를 로드하는 중 문제가 발생했습니다. 새로고침하거나 잠시 후 다시 시도해주세요.</p>";
+            }
         }
-    });
+    ;
     </script>
 </body>
 </html>
