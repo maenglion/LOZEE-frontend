@@ -106,4 +106,3 @@ export async function playTTSFromText(text, voiceId = DEFAULT_VOICE) {
     audio.onended = resolve;
     audio.play();
   });
-}
