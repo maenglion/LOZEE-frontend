@@ -1,121 +1,345 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LOZEE와 대화하기</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    body { margin:0; padding:0; font-family:'KoPub World Dotum',sans-serif; display:flex; flex-direction:column; height:100vh; background:#fff; color:#333; }
-    #main-header { background:#0095FF; color:#fff; padding:1rem; text-align:center; font-size:1.25rem; flex-shrink:0; }
-    #meter-container { display:flex; align-items:center; justify-content:center; padding:0.5rem 0; background:#f4f4f4; flex-shrink:0; }
-    #volume-meter { width:80%; height:8px; border:1px solid #ccc; border-radius:4px; overflow:hidden; }
-    #volume-level { height:100%; background:#0095FF; width:0; transition:width 0.1s ease; }
-    #chat-container { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:0.75rem; }
-    .bubble { max-width:80%; padding:0.75rem 1rem; border-radius:1rem; line-height:1.5; white-space:pre-wrap; }
-    .user { background:#fff9c4; align-self:flex-end; border-bottom-right-radius:0.25rem; }
-    .ai { background:#0095FF; color:#fff; align-self:flex-start; border-bottom-left-radius:0.25rem; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOZEE와 대화하기</title>
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin:0; 
+            padding:0; 
+            font-family:'KoPub World Dotum', sans-serif; 
+            display:flex; 
+            flex-direction:column; 
+            height:100vh; 
+            background:#f0f2f5; /* 배경색 변경 */ 
+            color:#333; 
+        }
+        #main-header { 
+            background:#6e8efb; /* 온보딩과 유사한 테마색 */
+            color:#fff; 
+            padding:1rem; 
+            text-align:center; 
+            font-size:1.25rem; 
+            font-weight: bold;
+            flex-shrink:0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #meter-container { 
+            display:flex; 
+            align-items:center; 
+            justify-content:center; 
+            padding:0.75rem 0; /* 패딩 조정 */
+            background:#e8eaf6; /* 테마색과 어울리는 연한 배경 */
+            flex-shrink:0; 
+        }
+        #volume-meter { 
+            width:80%; 
+            max-width: 300px; /* 최대 너비 설정 */
+            height:10px; /* 높이 증가 */
+            border:1px solid #c5cae9; /* 테두리 색상 변경 */
+            border-radius:5px; /* 둥글기 증가 */
+            overflow:hidden; 
+            background-color: #ffffff; /* 볼륨 미터 배경색 */
+        }
+        #volume-level { 
+            height:100%; 
+            background:#7986cb; /* 볼륨 레벨 색상 변경 (테마색) */
+            width:0; 
+            transition:width 0.1s ease; 
+            border-radius:4px; /* 내부 레벨도 둥글게 */
+        }
+        #chat-container { 
+            flex:1; 
+            overflow-y:auto; 
+            padding:1rem; 
+            display:flex; 
+            flex-direction:column; 
+            gap:0.85rem; /* 간격 조정 */
+            background-color: #ffffff; /* 채팅 영역 배경색 */
+        }
+        .bubble { 
+            max-width:85%; /* 최대 너비 조정 */
+            padding:0.8rem 1.1rem; /* 패딩 조정 */
+            border-radius:1.2rem; /* 둥글기 증가 */
+            line-height:1.6; /* 줄 간격 조정 */
+            white-space:pre-wrap; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* 부드러운 그림자 */
+            word-break: keep-all; /* 단어 단위 줄바꿈 (한국어) */
+        }
+        .user { 
+            background:#fff1a8; /* 사용자 말풍선 색 (연한 노랑) */
+            color: #5d4037; /* 사용자 말풍선 글자색 */
+            align-self:flex-end; 
+            border-bottom-right-radius:0.3rem; 
+        }
+        .ai { 
+            background:#6e8efb; /* AI 말풍선 색 (테마색) */
+            color:#fff; 
+            align-self:flex-start; 
+            border-bottom-left-radius:0.3rem; 
+        }
+        /* 로딩 스피너 (필요시) */
+        .loading-spinner {
+            display: none; /* 기본 숨김 */
+            align-self: center;
+            margin: 10px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6e8efb;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
 </head>
 <body>
-  <header id="main-header">LOZEE와 대화하기</header>
-  <div id="meter-container"><div id="volume-meter"><div id="volume-level"></div></div></div>
-  <div id="chat-container"></div>
+    <header id="main-header">LOZEE와 대화하기</header>
+    <div id="meter-container"><div id="volume-meter"><div id="volume-level"></div></div></div>
+    <div id="chat-container">
+        <div class="loading-spinner" id="aiLoadingSpinner"></div> </div>
 
-  <script type="module">
-    import { counselingTopicsByAge } from './js/counseling_topics.js';
-    import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
-    import { getInitialGreeting, getGptResponse, getFirstQuestion } from './js/gpt-dialog.js';
-    import { getSTTFromAudio } from './js/stt.js';
+    <script type="module">
+        // 필요한 모듈 import
+        // import { counselingTopicsByAge } from './js/counseling_topics.js'; // talk.html에서는 직접 사용 안 함
+        import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
+        import { getGptResponse, getFirstQuestion } from './js/gpt-dialog.js'; // getInitialGreeting 대신 getFirstQuestion 사용
+        // import { getSTTFromAudio } from './js/stt.js'; // STT 관련 함수 (필요시 경로 확인)
 
-    // DOM 요소 및 설정
-    const chatContainer = document.getElementById('chat-container');
-    const meterLevel    = document.getElementById('volume-level');
-    const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
+        // DOM 요소 및 설정
+        const chatContainer = document.getElementById('chat-container');
+        const meterLevel    = document.getElementById('volume-level');
+        const aiLoadingSpinner = document.getElementById('aiLoadingSpinner');
+        
+        // localStorage에서 사용자 정보 가져오기
+        const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
+        const userAge       = localStorage.getItem('lozee_userage');
+        const userName      = localStorage.getItem('lozee_username') || '친구';
+        const userDiseaseRaw = localStorage.getItem('lozee_userdisease') || '[]';
+        const selectedTopicRaw = localStorage.getItem('selectedTopic') || '{}';
+        const isCbtUser     = localStorage.getItem('isCbtUser') === 'true';
 
-    // 메시지 출력
-    function appendMessage(text, role) {
-      const el = document.createElement('div');
-      el.className = `bubble ${role}`;
-      el.textContent = text;
-      chatContainer.appendChild(el);
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
+        let userDisease = [];
+        try {
+            userDisease = JSON.parse(userDiseaseRaw);
+            if (!Array.isArray(userDisease)) userDisease = [userDiseaseRaw]; // 문자열이면 배열로
+        } catch(e) {
+            userDisease = [userDiseaseRaw]; // 파싱 실패 시 문자열 그대로 배열에
+            console.warn("userDisease 파싱 실패, 원본 문자열 사용:", userDiseaseRaw);
+        }
 
-    // 초기 인사
-    async function initConversation() {
-      const userName = localStorage.getItem('lozee_username') || '친구';
-      const greeting = await getInitialGreeting(userName);
-      appendMessage(greeting, 'ai');
-      await playTTSFromText(greeting, selectedVoice);
-    }
+        let selectedTopic = {};
+        try {
+            selectedTopic = JSON.parse(selectedTopicRaw);
+        } catch(e) {
+            selectedTopic = { displayText: "알 수 없는 주제", tags: ["오류"] }; // 파싱 실패 시 기본값
+            console.warn("selectedTopic 파싱 실패, 기본 객체 사용:", selectedTopicRaw);
+        }
+        
+        let chatHistory = []; // 대화 기록을 저장할 배열
 
-    // 음성 감지 및 녹음
-    function initVAD() {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          const audioCtx = new AudioContext();
-          const source   = audioCtx.createMediaStreamSource(stream);
-          const analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048;
-          source.connect(analyser);
-          const dataArr = new Uint8Array(analyser.fftSize);
+        // 메시지 출력 함수
+        function appendMessage(text, role) {
+            const el = document.createElement('div');
+            el.className = `bubble ${role}`;
+            el.textContent = text;
+            chatContainer.insertBefore(el, aiLoadingSpinner); // 스피너 앞에 메시지 추가
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
-          let recording = false, recorder = null, chunks = [];
-          let silenceFrames = 0, speakFrames = 0;
-          const MIN_SPEAK_FRAMES   = 5;
-          const MIN_SILENCE_FRAMES = 15;
-
-          function analyze() {
-            analyser.getByteTimeDomainData(dataArr);
-            let sum = 0;
-            dataArr.forEach(v => sum += Math.pow(v/128 - 1, 2));
-            const vol = Math.sqrt(sum / dataArr.length);
-            meterLevel.style.width = `${Math.min(vol * 200, 100)}%`;
-
-            if (vol > 0.05) { speakFrames++; silenceFrames = 0; }
-            else           { silenceFrames++; }
-
-            if (!recording && speakFrames >= MIN_SPEAK_FRAMES) {
-              recording = true; chunks = []; speakFrames = 0;
-              recorder = new MediaRecorder(stream);
-              recorder.ondataavailable = e => chunks.push(e.data);
-              recorder.start();
+            // 대화 기록에 추가 (AI 메시지와 사용자 메시지 모두)
+            if (text) { // 빈 텍스트는 기록하지 않음
+                 chatHistory.push({ role: role, content: text });
             }
-            if (recording && silenceFrames >= MIN_SILENCE_FRAMES) {
-              recorder.onstop = async () => {
-                const blob = new Blob(chunks, { type: chunks[0]?.type });
-                try {
-                  const sttText = await getSTTFromAudio(blob);
-                  appendMessage(sttText, 'user');
-                  const aiText = await getGptResponse(sttText);
-                  appendMessage(aiText, 'ai');
-                  await playTTSFromText(aiText, selectedVoice);
-                } catch (e) {
-                  console.error(e);
-                }
-              };
-              recording = false; silenceFrames = 0;
-              recorder.stop();
+        }
+
+        // AI 응답 로딩 스피너 표시/숨김
+        function showAiLoading(show) {
+            aiLoadingSpinner.style.display = show ? 'block' : 'none';
+            if (show) { // 스피너 보일 때 맨 아래로 스크롤
+                 chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        // 초기 대화 시작
+        async function initConversation() {
+            // getFirstQuestion은 이제 gpt-dialog.js에서 localStorage를 직접 읽으므로, 나이만 전달
+            const firstQ = getFirstQuestion(userAge); // userName은 gpt-dialog.js 내부에서 localStorage 통해 가져옴
+            
+            appendMessage(firstQ, 'ai');
+            await playTTSFromText(firstQ, selectedVoice); // 선택된 목소리로 TTS 재생
+        }
+
+        // Web Speech API 기반 STT (VAD 로직은 유지)
+        // Web Speech API는 AudioWorklet VAD와 직접적인 관련은 없으나, VAD로 녹음 시작/종료 시점을 잡고
+        // 그 녹음 데이터를 Web Speech API가 아닌 별도의 STT API(getSTTFromAudio)로 보내는 현재 구조를 유지합니다.
+        // 만약 Web Speech API의 자체적인 STT를 사용한다면 VAD 로직과 통합 방식이 달라집니다.
+        // 현재 코드는 MediaRecorder로 녹음 후 getSTTFromAudio를 호출하는 방식입니다.
+
+        // STT 함수 (임시 - 실제 STT API 연동 필요)
+        // 사용자 코드의 getSTTFromAudio 함수가 있다고 가정합니다.
+        // 이 함수는 Blob을 받아 텍스트를 반환하는 Promise를 리턴해야 합니다.
+        async function getSTTFromAudio(audioBlob) {
+            console.log("STT 요청:", audioBlob);
+            // 실제 STT API 호출 로직이 여기에 와야 합니다.
+            // 예시: return await sttApiModule.transcribe(audioBlob);
+            // 임시로, 음성 파일 대신 프롬프트를 통해 텍스트를 입력받는 것처럼 처리할 수 있습니다.
+            // 실제 구현에서는 이 부분을 STT 서비스와 연동해야 합니다.
+            // alert("음성 인식 결과(임시): " + "사용자 발화 내용");
+            // return "사용자 발화 내용 (STT 임시 결과)";
+            // 더 나은 테스트를 위해, 실제로는 음성 파일에서 텍스트를 추출해야 합니다.
+            // 지금은 임의의 텍스트를 반환하거나, 에러를 발생시켜 테스트합니다.
+            if (audioBlob.size > 0) {
+                // 실제 STT 호출 대신 임시 텍스트 반환
+                // 실제 사용 시에는 이 부분을 실제 STT API 호출로 교체해야 합니다.
+                // 예를 들어, 서버로 audioBlob을 전송하고 텍스트 결과를 받아옵니다.
+                console.warn("실제 STT API 호출이 필요합니다. 현재는 임시 텍스트를 반환합니다.");
+                // return "안녕하세요, 로지. 오늘 날씨가 좋네요."; // 테스트용 고정 텍스트
+                // 사용자에게 직접 입력을 받는 방식으로 임시 대체 (테스트용)
+                const userInput = prompt("음성 인식 결과(직접 입력):", "오늘 기분이 어때?");
+                return userInput || "내용 없음";
+
+            } else {
+                throw new Error("STT를 위한 오디오 데이터가 없습니다.");
+            }
+        }
+
+
+        // 음성 감지 및 녹음 (VAD 로직)
+        function initVAD() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error("이 브라우저에서는 MediaDevices API를 지원하지 않습니다.");
+                appendMessage("음성 입력을 사용할 수 없어요. 브라우저 설정을 확인해주세요.", "ai");
+                return;
             }
 
-            requestAnimationFrame(analyze);
-          }
-          analyze();
-        })
-        .catch(console.error);
-    }
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const source   = audioCtx.createMediaStreamSource(stream);
+                    const analyser = audioCtx.createAnalyser(); 
+                    analyser.fftSize = 2048; // VAD 민감도에 영향
+                    source.connect(analyser);
+                    const dataArr = new Uint8Array(analyser.frequencyBinCount); // getByteFrequencyData 사용 시
 
-    // 전체 초기화
-    (async () => {
-      await initConversation();
-      const age      = localStorage.getItem('lozee_userage');
-      const userName = localStorage.getItem('lozee_username') || '친구';
-      const firstQ   = getFirstQuestion(age, userName);
-      appendMessage(firstQ, 'ai');
-      await playTTSFromText(firstQ, selectedVoice);
-      initVAD();
-    })();
-  </script>
+                    let recording = false, recorder = null, chunks = [];
+                    let silenceFrames = 0, speakFrames = 0;
+                    const ENERGY_THRESHOLD = 0.03; // 음성 감지 임계값 (0.01 ~ 0.1 사이로 조절)
+                    const MIN_SPEAK_FRAMES   = 5;  // 말하기 시작으로 판단하는 최소 프레임
+                    const MIN_SILENCE_FRAMES = 25; // 침묵으로 판단하는 최소 프레임 (기존 15에서 늘림)
+
+                    function analyze() {
+                        analyser.getByteTimeDomainData(dataArr); // 파형 데이터 사용
+                        let sumSquares = 0.0;
+                        for (const amplitude of dataArr) {
+                            const normalizedAmplitude = amplitude / 128.0 - 1.0; // -1.0 to 1.0
+                            sumSquares += normalizedAmplitude * normalizedAmplitude;
+                        }
+                        const vol = Math.sqrt(sumSquares / dataArr.length);
+                        meterLevel.style.width = `${Math.min(vol * 300, 100)}%`; // vol 스케일 조정
+
+                        if (vol > ENERGY_THRESHOLD) { 
+                            speakFrames++; 
+                            silenceFrames = 0; 
+                        } else { 
+                            silenceFrames++; 
+                            if (speakFrames > 0) speakFrames--; // 음성 중간의 짧은 침묵은 무시하도록
+                        }
+
+                        if (!recording && speakFrames >= MIN_SPEAK_FRAMES) {
+                            console.log("녹음 시작...");
+                            recording = true; chunks = []; speakFrames = 0; // speakFrames 초기화
+                            recorder = new MediaRecorder(stream);
+                            recorder.ondataavailable = e => chunks.push(e.data);
+                            recorder.start();
+                            playTTSFromText("듣고 있어요.", selectedVoice).catch(console.error); // 녹음 시작 알림 (선택 사항)
+                        }
+                        if (recording && silenceFrames >= MIN_SILENCE_FRAMES && chunks.length > 0) {
+                            console.log("녹음 중지...");
+                            recorder.onstop = async () => {
+                                const blob = new Blob(chunks, { type: chunks[0]?.type || 'audio/webm' });
+                                recording = false; silenceFrames = 0; speakFrames = 0; // 상태 초기화
+                                chunks = []; // 청크 초기화
+
+                                if (blob.size === 0) {
+                                    console.warn("녹음된 오디오 데이터가 없습니다.");
+                                    requestAnimationFrame(analyze); // 계속 분석
+                                    return;
+                                }
+                                
+                                try {
+                                    appendMessage("음성 분석 중...", "ai"); // 사용자에게 STT 처리 중임을 알림
+                                    showAiLoading(true);
+                                    const sttText = await getSTTFromAudio(blob);
+                                    showAiLoading(false);
+                                    
+                                    if (sttText && sttText.trim() !== "내용 없음" && sttText.trim() !== "") {
+                                        appendMessage(sttText, 'user');
+                                        
+                                        // GPT 응답 요청 시 전체 컨텍스트 전달
+                                        const contextForGpt = {
+                                            userAge: userAge,
+                                            userName: userName,
+                                            userDisease: userDisease, // 파싱된 배열 형태
+                                            selectedTopic: selectedTopic, // 파싱된 객체 형태
+                                            isCbtUser: isCbtUser,
+                                            chatHistory: chatHistory.slice(-10) // 최근 10개 대화 기록 전달 (조절 가능)
+                                            // currentStage 등 다른 필요한 정보 추가 가능
+                                        };
+                                        showAiLoading(true);
+                                        const aiText = await getGptResponse(sttText, contextForGpt);
+                                        showAiLoading(false);
+
+                                        if (typeof aiText === 'string') {
+                                            appendMessage(aiText, 'ai');
+                                            await playTTSFromText(aiText, selectedVoice);
+                                        } else if (aiText && aiText.error) {
+                                            appendMessage(`로지가 답변 준비 중 오류가 발생했어요: ${aiText.error}`, 'ai');
+                                            await playTTSFromText(`오류가 발생했어요. ${aiText.error}`, selectedVoice);
+                                        } else {
+                                            appendMessage("로지가 지금은 답변하기 어려운 것 같아요. 다시 시도해주세요.", 'ai');
+                                            await playTTSFromText("로지가 지금은 답변하기 어려운 것 같아요.", selectedVoice);
+                                        }
+                                    } else {
+                                        console.log("STT 결과가 비어있거나 의미 없음.");
+                                        appendMessage("잘 못 들었어요. 다시 한 번 말씀해주시겠어요?", "ai");
+                                        await playTTSFromText("잘 못 들었어요. 다시 한 번 말씀해주시겠어요?", selectedVoice);
+                                    }
+                                } catch (e) {
+                                    showAiLoading(false);
+                                    console.error("STT 또는 GPT 처리 오류:", e);
+                                    appendMessage("죄송해요, 지금은 음성을 처리하기 어려워요. 잠시 후 다시 시도해주세요.", "ai");
+                                    await playTTSFromText("죄송해요, 지금은 음성을 처리하기 어려워요.", selectedVoice);
+                                }
+                            };
+                            if (recorder.state === "recording") { // 녹음 중일 때만 stop 호출
+                                recorder.stop();
+                            }
+                        }
+                        requestAnimationFrame(analyze);
+                    }
+                    analyze();
+                })
+                .catch(err => {
+                    console.error("마이크 접근 오류:", err);
+                    appendMessage("마이크를 사용할 수 없어요. 마이크 권한을 확인해주세요.", "ai");
+                    playTTSFromText("마이크를 사용할 수 없어요. 마이크 권한을 확인해주세요.", selectedVoice).catch(console.error);
+                });
+        }
+
+        // 전체 초기화
+        (async () => {
+            // 온보딩에서 저장된 정보 로깅 (개발용)
+            console.log("온보딩 정보:", { userAge, userName, userDisease, selectedTopic, isCbtUser, selectedVoice });
+
+            await initConversation(); // 첫 AI 인사
+            initVAD(); // 음성 활동 감지 시작
+        })();
+    </script>
 </body>
 </html>
