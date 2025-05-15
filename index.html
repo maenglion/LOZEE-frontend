@@ -11,9 +11,9 @@
             margin: 0;
             padding: 0;
             font-family: 'KoPub World Dotum', sans-serif;
-            color: #ffffff; /* 전체 기본 글자색을 흰색으로 변경 */
+            color: #ffffff; /* 전체 기본 글자색 흰색 */
             height: 100%;
-            overflow: hidden; /* 스크롤 방지 */
+            overflow: hidden; 
         }
 
         .step {
@@ -29,26 +29,25 @@
             position: absolute; 
             top: 0;
             left: 0;
-            /* color: white; 삭제 -> body 기본값 상속 */
         }
 
         .step.active {
             display: flex; 
         }
 
-        /* 배경 스타일 */
         .step-background-main {
-            background: linear-gradient(135deg, #6e8efb, #a777e3); 
-            /* color: white; 삭제 -> body 기본값 상속 */
+            background: linear-gradient(135deg, #6078ea, #a777e3); /* 배경색 약간 조정 */
         }
-        /* 입력 필드는 어두운 글자색 유지 */
         .step-background-main input,
         .step-background-main select,
         .step-background-main textarea {
-            color: #333;
+            color: #333; /* 입력 필드 내 텍스트는 어둡게 */
         }
         .step-background-main .error-message {
-            color: #ffdddd; 
+            color: #ffcdd2; /* 오류 메시지 색 (빨간 계열 연하게) */
+            background-color: rgba(0,0,0,0.1); /* 가독성 위한 미세한 배경 */
+            padding: 5px 8px;
+            border-radius: 4px;
         }
         .step-background-main .info-text {
             color: #e0e0e0; 
@@ -56,7 +55,7 @@
             margin-bottom: 10px;
         }
         .step-background-main .intro-message { 
-            color: #f0f0f0; 
+            color: #f5f5f5; 
             line-height: 1.9; 
             font-size: 1.05em; 
             max-width: 450px; 
@@ -72,26 +71,26 @@
          .step-background-main .intro-message .developer-contact {
             margin-top: 20px;
             font-size: 0.9em;
-            color: #ddd;
+            color: #e0e0e0;
         }
 
         h1, h2 {
             margin-bottom: 20px;
-            color: #ffffff; /* 제목 색상 명시적으로 흰색 */
+            color: #ffffff; 
         }
         h2 {
-            font-size: 1.8em; 
+            font-size: 1.9em; /* 제목 크기 약간 키움 */
+            font-weight: 700; /* 굵게 */
         }
 
         p { 
             margin-bottom: 15px;
             font-size: 1.1em; 
             line-height: 1.6;
-            color: #f0f0f0; /* 단락 텍스트 색상 약간 밝게 */
+            color: #f0f0f0; 
         }
-        /* 특정 p 태그는 더 밝게 */
-        #topicStepDescription, .info-text {
-            color: #e0e0e0;
+        #topicStepDescription, .info-text { /* 설명 텍스트 색상 일관성 */
+            color: #e8eaf6; /* 연한 보라/파랑 계열 */
         }
 
 
@@ -102,127 +101,117 @@
         textarea {
             padding: 12px;
             margin-bottom: 12px;
-            border: 1px solid #ccc;
+            border: 1px solid #bdbdbd; /* 테두리 약간 연하게 */
             border-radius: 8px;
             width: 85%;
             max-width: 350px;
             box-sizing: border-box;
             font-size: 1em;
+            background-color: #fdfdfd; /* 입력 필드 배경색 */
+        }
+        select {
+            background-color: #fdfdfd;
+            padding-right: 30px; /* 화살표 공간 */
         }
 
-        textarea {
-            height: 120px;
-            resize: none;
-        }
-
-        button {
-            padding: 12px 25px;
+        button { /* 기본 다음 버튼 */
+            padding: 13px 28px; /* 패딩 약간 증가 */
             background-color: #ffffff; 
-            color: #6e8efb; /* 밝은 배경에 어울리는 테마색 */
+            color: #6e8efb; 
             border: none;
             border-radius: 25px; 
             cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
-            margin-top: 15px; 
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            margin-top: 20px; /* 마진 증가 */
             font-weight: bold;
-            font-size: 1em;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-size: 1.05em; /* 폰트 약간 키움 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-
         button:hover {
-            background-color: #f0f0f0; 
+            background-color: #f5f5f5; 
             transform: translateY(-2px); 
         }
         button:active {
             transform: translateY(0px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
         button:disabled {
-            background-color: #ccc;
-            color: #666;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
+            background-color: #e0e0e0; color: #9e9e9e;
+            box-shadow: none; transform: none; cursor: not-allowed;
         }
 
         .error-message {
-            color: #ffd1d1; /* 오류 메시지 색상 더 잘보이게 */
-            font-weight: bold; /* 강조 */
-            font-size: 0.9em;
-            min-height: 1.2em; 
-            margin-top: -5px;
-            margin-bottom: 5px;
-            line-height: 1.2; 
+            font-weight: bold; 
+            font-size: 0.9em; min-height: 1.2em; 
+            margin-top: -5px; margin-bottom: 5px; line-height: 1.2; 
         }
         
+        /* 옵션 버튼 컨테이너 (진단, 주제 카테고리, 세부 주제) */
         .options-container { 
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; max-width: 450px; 
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; max-width: 480px; 
         }
-        .options-container button { 
-             background-color: rgba(255,255,255,0.25); /* 배경 약간 더 진하게 */
-             color: #ffffff; /* 글자색 흰색 명시 */
-             border: 1px solid rgba(255,255,255,0.6); /* 테두리 약간 더 진하게 */
+        .options-container button { /* 옵션 버튼 기본 (진단, 카테고리, 세부 주제 공통) */
+             background-color: rgba(255,255,255,0.2); 
+             color: #ffffff; 
+             border: 1px solid rgba(255,255,255,0.5); 
              padding: 10px 15px; border-radius: 20px; font-size: 0.9em; cursor: pointer; 
-             transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+             transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+             margin-top: 5px; /* 버튼 간 상하 간격도 고려 */
         }
         .options-container button.selected, 
         .options-container button:hover {
-            background-color: white; color: #5a7efc; /* 호버/선택 시 테마색 조금 더 진하게 */
-            border-color: white;
-            transform: scale(1.05); /* 약간 커지는 효과 */
+            background-color: #ffffff; color: #6078ea; /* 테마색에 맞춰 변경 */
+            border-color: #ffffff;
+            transform: translateY(-1px) scale(1.03); /* 약간의 입체감 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* 주제 선택 화면을 위한 추가 스타일 */
-        #topicCategorySelection, #subTopicSelectionContainer {
-            width: 100%; display: flex; flex-direction: column; align-items: center;
+        #topicCategorySelection .options-container button { /* 카테고리 버튼만 좀 더 크게 */
+            padding: 14px 18px; font-size: 1em; width: calc(50% - 12px); 
+            min-height: 55px; display: flex; align-items: center; justify-content: center;
         }
-        #topicCategorySelection .options-container button { 
-            padding: 15px 20px; font-size: 1.05em; width: calc(50% - 10px); 
-            min-height: 60px; display: flex; align-items: center; justify-content: center;
-        }
-
-        #subTopicButtons { 
-             display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; max-width: 480px;
-        }
-        .sub-topic-btn { 
-            font-size: 0.85em; padding: 8px 12px;
-            background-color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.6);
-        }
-        .sub-topic-btn:hover {
-             background-color: white; color: #5a7efc; border-color: white; transform: scale(1.05);
+        .sub-topic-btn { /* 세부 주제 버튼 스타일 */
+            font-size: 0.85em; padding: 9px 13px;
         }
 
+        /* 네비게이션 및 보조 액션 버튼 ("더보기", "뒤로가기", "여긴없어요" 등) */
         .navigation-buttons { 
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; width: 100%; max-width: 480px;
         }
         .navigation-buttons button { 
-            font-size: 0.9em; padding: 10px 18px;
-            background-color: rgba(255,255,255,0.2); /* 배경 약간 더 진하게 */
-            border: 1px solid rgba(255,255,255,0.5); /* 테두리 약간 더 진하게 */
-            color: #f0f0f0; /* 글자색 밝게 */
+            font-size: 0.95em; padding: 10px 20px;
+            background-color: rgba(255,255,255,0.1); /* 배경 더 투명하게 */
+            border: 1px solid rgba(255,255,255,0.3); 
+            color: #f0f0f0; 
+            font-weight: normal; /* 일반 버튼과 구분 */
+            box-shadow: none;
         }
          .navigation-buttons button:hover {
-            background-color: rgba(255,255,255,0.35);
+            background-color: rgba(255,255,255,0.2);
             color: #ffffff;
-            transform: scale(1.03);
+            transform: translateY(-1px);
+            border-color: rgba(255,255,255,0.5);
         }
-        button.secondary-button { 
-             margin-top: 5px; background-color: transparent; border: 1px solid #e0e0e0; /* 테두리 색상 조정 */
-             color: #e0e0e0; /* 글자색 조정 */
+        button.secondary-button { /* "여긴 없어요", "로지야 골라줘" 등에 적용 */
+             background-color: transparent; border: 1px solid #d1c4e9; /* 연보라 테두리 */
+             color: #d1c4e9; /* 연보라 글씨 */
+             font-weight: normal;
+             box-shadow: none;
         }
         button.secondary-button:hover {
-            background-color: rgba(255,255,255,0.15); color: #ffffff;
+            background-color: rgba(255,255,255,0.1); color: #ffffff;
+            border-color: #ede7f6;
         }
 
-
         @media (max-width: 600px) {
-            h2 { font-size: 1.6em; }
-            p, .step-background-main .intro-message { font-size: 0.95em; } 
+            h2 { font-size: 1.7em; }
+            p, .step-background-main .intro-message { font-size: 1em; } 
             input[type="text"], input[type="email"], input[type="number"], select, textarea { width: 90%; padding: 10px; }
-            button { padding: 10px 20px; font-size: 0.9em;}
-            .options-container button, button.secondary-button, .sub-topic-btn { padding: 8px 12px; font-size: 0.8em; }
-            #topicCategorySelection .options-container button { padding: 12px 15px; font-size: 0.95em; width: calc(50% - 10px); min-height: 50px;}
-            .navigation-buttons button { font-size: 0.85em; padding: 8px 12px; }
+            button { padding: 12px 22px; font-size: 0.95em;}
+            .options-container button, button.secondary-button, .sub-topic-btn { padding: 9px 13px; font-size: 0.85em; }
+            #topicCategorySelection .options-container button { padding: 13px 18px; font-size: 1em; min-height: 55px;}
+            .navigation-buttons button { font-size: 0.9em; padding: 9px 15px; }
         }
     </style>
 </head>
@@ -523,13 +512,16 @@
             });
         }
         
-        function renderFlatTopics(age, topicsArray) { 
+        function renderFlatTopics(age, topicsArrayInput) { 
             topicCategorySelection.style.display = 'none';
             subTopicSelectionContainer.style.display = 'flex'; 
             subTopicButtons.innerHTML = ''; 
             moreTopicsBtn.style.display = 'none'; 
 
-            if (!topicsArray || !Array.isArray(topicsArray) || topicsArray.length === 0) {
+            const topicsArray = topicsArrayInput || counselingTopicsByAge[getAgeKey(age)] || [];
+
+
+            if (!Array.isArray(topicsArray) || topicsArray.length === 0) {
                 subTopicButtons.innerHTML = '<p>추천 주제가 없어요. "여긴 없어요"를 눌러 직접 말해줄래요?</p>';
                 return;
             }
@@ -548,6 +540,13 @@
                 subTopicButtons.appendChild(button);
             });
         }
+        function getAgeKey(age) { 
+             const ageInt = parseInt(age, 10);
+             if (ageInt >= 8 && ageInt <= 10) return '8-10';
+             if (ageInt >= 11 && ageInt <= 15) return '11-15';
+             return '30+';
+        }
+
 
         function renderSubTopics() {
             subTopicButtons.innerHTML = ''; 
@@ -617,7 +616,7 @@
                 const randomIndex = Math.floor(Math.random() * allTopics.length);
                 const randomTopic = allTopics[randomIndex];
                 localStorage.setItem('selectedTopic', JSON.stringify(randomTopic));
-                playTTSFromText(`좋아! 오늘은 "${randomTopic.displayText}"에 대해 이야기해볼까?`);
+                playTTSFromText(`좋아! 오늘은 "${randomTopic.displayText}"(이)라는 주제에 대해 이야기해볼까?`);
                 proceedToDialog({ topic: randomTopic, selectionMethod: 'lozee_pick' });
             } else {
                 playTTSFromText("이런, 지금은 추천할 만한 주제가 없네. 직접 이야기하고 싶은 걸 말해줄래?");
@@ -627,8 +626,16 @@
 
         function proceedToDialog(data) {
             console.log("Proceeding to dialog with data:", data);
-            alert("온보딩 완료! 실제 대화창으로 이동합니다. (구현 필요)\nSelected Topic: " + (data.topic ? data.topic.displayText : "N/A") + "\n" + JSON.stringify(localStorage)); 
-            if(steps[currentStepIndex]) steps[currentStepIndex].classList.remove('active');
+            // 온보딩 완료 후 localStorage의 내용 확인
+            console.log("Current localStorage state:", JSON.stringify(localStorage));
+            alert(`좋아! 이제 "${data.topic ? data.topic.displayText : '네가 정한 주제'}"에 대해 로지와 함께 이야기를 시작해보자! 😊`); 
+            
+            if(steps[currentStepIndex]) { 
+                steps[currentStepIndex].classList.remove('active');
+            }
+            // 여기에 실제 대화창 UI를 표시하는 로직 추가
+            // 예: document.getElementById('chatInterface').style.display = 'flex';
+            // 또는 window.location.href = 'chat.html'; 
         }
 
         // --- DOMContentLoaded ---
