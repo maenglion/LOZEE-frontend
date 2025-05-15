@@ -11,50 +11,51 @@
             margin: 0;
             padding: 0;
             font-family: 'KoPub World Dotum', sans-serif;
-            color: #333; /* 기본 글자색은 어두운 색으로 유지 */
+            color: #ffffff; /* 전체 기본 글자색을 흰색으로 변경 */
             height: 100%;
             overflow: hidden; /* 스크롤 방지 */
         }
 
         .step {
-            display: none; /* 기본적으로 모든 스텝 숨김 */
+            display: none; 
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
             box-sizing: border-box;
             text-align: center;
-            height: 100vh; /* 전체 화면 높이 */
-            width: 100vw; /* 전체 화면 너비 */
-            position: absolute; /* 겹치도록 설정 */
+            height: 100vh; 
+            width: 100vw; 
+            position: absolute; 
             top: 0;
             left: 0;
-            color: white; /* 메인 배경 위에 표시될 글자색 */
+            /* color: white; 삭제 -> body 기본값 상속 */
         }
 
         .step.active {
-            display: flex; /* 활성화된 스텝만 보임 */
+            display: flex; 
         }
 
         /* 배경 스타일 */
         .step-background-main {
-            background: linear-gradient(135deg, #6e8efb, #a777e3); /* 메인 배경 그라데이션 */
-            color: white;
+            background: linear-gradient(135deg, #6e8efb, #a777e3); 
+            /* color: white; 삭제 -> body 기본값 상속 */
         }
+        /* 입력 필드는 어두운 글자색 유지 */
         .step-background-main input,
         .step-background-main select,
         .step-background-main textarea {
             color: #333;
         }
         .step-background-main .error-message {
-            color: #ffdddd; /* 메인 배경 위 오류 메시지 색상 */
+            color: #ffdddd; 
         }
         .step-background-main .info-text {
-            color: #e0e0e0; /* 보조 안내 텍스트 색상 */
+            color: #e0e0e0; 
             font-size: 0.9em;
             margin-bottom: 10px;
         }
-        .step-background-main .intro-message { /* 소개 화면 메시지 스타일 */
+        .step-background-main .intro-message { 
             color: #f0f0f0; 
             line-height: 1.9; 
             font-size: 1.05em; 
@@ -74,9 +75,9 @@
             color: #ddd;
         }
 
-
         h1, h2 {
             margin-bottom: 20px;
+            color: #ffffff; /* 제목 색상 명시적으로 흰색 */
         }
         h2 {
             font-size: 1.8em; 
@@ -86,7 +87,13 @@
             margin-bottom: 15px;
             font-size: 1.1em; 
             line-height: 1.6;
+            color: #f0f0f0; /* 단락 텍스트 색상 약간 밝게 */
         }
+        /* 특정 p 태그는 더 밝게 */
+        #topicStepDescription, .info-text {
+            color: #e0e0e0;
+        }
+
 
         input[type="text"],
         input[type="email"], 
@@ -111,7 +118,7 @@
         button {
             padding: 12px 25px;
             background-color: #ffffff; 
-            color: #6e8efb; 
+            color: #6e8efb; /* 밝은 배경에 어울리는 테마색 */
             border: none;
             border-radius: 25px; 
             cursor: pointer;
@@ -139,7 +146,8 @@
         }
 
         .error-message {
-            color: #ffdddd; 
+            color: #ffd1d1; /* 오류 메시지 색상 더 잘보이게 */
+            font-weight: bold; /* 강조 */
             font-size: 0.9em;
             min-height: 1.2em; 
             margin-top: -5px;
@@ -147,52 +155,63 @@
             line-height: 1.2; 
         }
         
-        .options-container { /* 진단 선택 등에 사용 */
+        .options-container { 
             display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; max-width: 450px; 
         }
-        .options-container button { /* 내부 버튼 기본 스타일 */
-             background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 10px 15px; border-radius: 20px; font-size: 0.9em; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease;
+        .options-container button { 
+             background-color: rgba(255,255,255,0.25); /* 배경 약간 더 진하게 */
+             color: #ffffff; /* 글자색 흰색 명시 */
+             border: 1px solid rgba(255,255,255,0.6); /* 테두리 약간 더 진하게 */
+             padding: 10px 15px; border-radius: 20px; font-size: 0.9em; cursor: pointer; 
+             transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
         }
         .options-container button.selected, 
         .options-container button:hover {
-            background-color: white; color: #6e8efb; border-color: white;
+            background-color: white; color: #5a7efc; /* 호버/선택 시 테마색 조금 더 진하게 */
+            border-color: white;
+            transform: scale(1.05); /* 약간 커지는 효과 */
         }
 
         /* 주제 선택 화면을 위한 추가 스타일 */
         #topicCategorySelection, #subTopicSelectionContainer {
             width: 100%; display: flex; flex-direction: column; align-items: center;
         }
-        #topicCategorySelection .options-container button { /* 카테고리 버튼 */
-            padding: 15px 20px; font-size: 1.05em; width: calc(50% - 10px); /* 2열 배치 */
+        #topicCategorySelection .options-container button { 
+            padding: 15px 20px; font-size: 1.05em; width: calc(50% - 10px); 
             min-height: 60px; display: flex; align-items: center; justify-content: center;
         }
 
-        #subTopicButtons { /* 세부 주제 버튼들을 담는 컨테이너 */
+        #subTopicButtons { 
              display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; max-width: 480px;
         }
-        .sub-topic-btn { /* 세부 주제 버튼 스타일 */
+        .sub-topic-btn { 
             font-size: 0.85em; padding: 8px 12px;
             background-color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.6);
         }
         .sub-topic-btn:hover {
-             background-color: white; color: #6e8efb; border-color: white;
+             background-color: white; color: #5a7efc; border-color: white; transform: scale(1.05);
         }
 
-        .navigation-buttons { /* 더보기, 뒤로가기 등 네비게이션 버튼 그룹 */
+        .navigation-buttons { 
             display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px;
         }
         .navigation-buttons button { 
             font-size: 0.9em; padding: 10px 18px;
-            background-color: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
+            background-color: rgba(255,255,255,0.2); /* 배경 약간 더 진하게 */
+            border: 1px solid rgba(255,255,255,0.5); /* 테두리 약간 더 진하게 */
+            color: #f0f0f0; /* 글자색 밝게 */
         }
          .navigation-buttons button:hover {
-            background-color: rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.35);
+            color: #ffffff;
+            transform: scale(1.03);
         }
-        button.secondary-button { /* "여긴 없어요" 등의 보조 버튼 */
-             margin-top: 5px; background-color: transparent; border: 1px solid white;
+        button.secondary-button { 
+             margin-top: 5px; background-color: transparent; border: 1px solid #e0e0e0; /* 테두리 색상 조정 */
+             color: #e0e0e0; /* 글자색 조정 */
         }
         button.secondary-button:hover {
-            background-color: white; color: #6e8efb;
+            background-color: rgba(255,255,255,0.15); color: #ffffff;
         }
 
 
@@ -259,7 +278,7 @@
 
     <div id="stepTopic" class="step"> 
         <h2 id="topicStepTitle">어떤 종류의 이야기를 하고 싶니?</h2> 
-        <p id="topicStepDescription"><span id="topicUserAgeInfo"></span> 친구들이 주로 이야기하는 주제의 종류야.<br>마음이 가는 곳을 골라봐!</p>
+        <p id="topicStepDescription"><span id="topicUserAgeInfo"></span> 친구야, 어떤 이야기가 네 마음을 당기니?<br>아래에서 골라봐!</p>
         
         <div id="topicCategorySelection" class="options-container"> 
             </div>
@@ -441,28 +460,26 @@
                 console.warn("counselingTopicsByAge 데이터가 비어있거나 로드되지 않았습니다."); return null;
             }
             const ageInt = parseInt(age, 10);
-            let key = '8-10'; // 기본적으로 '8-10' 주제 사용 (특정 진단 아동 대상)
+            let key = '8-10'; 
             
             const isCbtUser = localStorage.getItem('isCbtUser') === 'true';
             const userDiseasesString = localStorage.getItem('lozee_userdisease') || '[]';
             let userDiseases = [];
             try {
                 userDiseases = JSON.parse(userDiseasesString);
-                if (!Array.isArray(userDiseases)) userDiseases = [userDiseasesString]; // 문자열이면 배열로
+                if (!Array.isArray(userDiseases)) userDiseases = [userDiseasesString]; 
             } catch(e) {
-                userDiseases = [userDiseasesString]; // 파싱 실패 시 문자열 그대로 배열에
+                userDiseases = [userDiseasesString]; 
             }
 
             const targetDiagnoses = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e'];
             const hasSpecificDiagnosis = userDiseases.some(id => targetDiagnoses.includes(id.toLowerCase()));
 
             if (hasSpecificDiagnosis) {
-                key = '8-10'; // 특정 진단이 있으면 무조건 '8-10' (카테고리화된) 주제 사용
+                key = '8-10'; 
             } else {
-                // 특정 진단이 없는 경우, 실제 나이에 맞는 키 사용
                 if (ageInt >= 11 && ageInt <= 15) key = '11-15'; 
-                else if (ageInt > 15) key = '30+'; // 15세 초과는 '30+'로 (또는 더 세분화)
-                // 8-10세인데 특정 진단이 없는 경우도 '8-10' 유지
+                else if (ageInt > 15) key = '30+'; 
             }
             return counselingTopicsByAge[key] || null;
         }
@@ -477,7 +494,7 @@
             const topicData = getTopicDataForAge(age);
             if (!topicData || typeof topicData !== 'object' || Array.isArray(topicData)) { 
                 console.warn(`Age ${age}에 대한 카테고리화된 주제 데이터가 없거나 형식이 다릅니다. counseling_topics.js를 확인해주세요.`);
-                renderFlatTopics(age, topicData); // 카테고리가 없는 경우 플랫하게 표시
+                renderFlatTopics(age, topicData); 
                 return;
             }
 
@@ -506,11 +523,11 @@
             });
         }
         
-        function renderFlatTopics(age, topicsArray) { // 카테고리 없는 데이터 처리
+        function renderFlatTopics(age, topicsArray) { 
             topicCategorySelection.style.display = 'none';
-            subTopicSelectionContainer.style.display = 'flex'; // 세부 주제 컨테이너는 보이게
-            subTopicButtons.innerHTML = ''; // 이전 버튼들 초기화
-            moreTopicsBtn.style.display = 'none'; // 더보기 버튼 숨김 (일단 전체 표시)
+            subTopicSelectionContainer.style.display = 'flex'; 
+            subTopicButtons.innerHTML = ''; 
+            moreTopicsBtn.style.display = 'none'; 
 
             if (!topicsArray || !Array.isArray(topicsArray) || topicsArray.length === 0) {
                 subTopicButtons.innerHTML = '<p>추천 주제가 없어요. "여긴 없어요"를 눌러 직접 말해줄래요?</p>';
@@ -519,7 +536,6 @@
             topicsArray.forEach(topic => { 
                 const button = document.createElement('button');
                 button.className = 'sub-topic-btn';
-                // topic이 객체인지 문자열인지 확인하여 displayText 사용
                 const displayText = (typeof topic === 'object' && topic.displayText) ? `${topic.icon} ${topic.displayText}` : topic;
                 button.innerHTML = displayText;
                 button.onclick = () => {
