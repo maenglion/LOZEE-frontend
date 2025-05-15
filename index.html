@@ -54,22 +54,42 @@
             font-size: 0.9em;
             margin-bottom: 10px;
         }
+        .step-background-main .intro-message { /* 소개 화면 메시지 스타일 */
+            color: #f0f0f0; 
+            line-height: 1.9; 
+            font-size: 1.05em; 
+            max-width: 450px; 
+            margin-bottom: 25px; 
+            letter-spacing: 0.5px; 
+            text-align: left; 
+        }
+        .step-background-main .intro-message .app-name-meaning {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px; /* 각 줄 사이의 간격은 <br>로 조절 */
+        }
+         .step-background-main .intro-message .developer-contact {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #ddd;
+        }
+
 
         h1, h2 {
             margin-bottom: 20px;
         }
         h2 {
-            font-size: 1.8em; /* 제목 크기 조정 */
+            font-size: 1.8em; 
         }
 
-        p {
+        p { 
             margin-bottom: 15px;
-            font-size: 1.1em; /* 문단 글꼴 크기 조정 */
+            font-size: 1.1em; 
             line-height: 1.6;
         }
 
         input[type="text"],
-        input[type="email"], /* CBT 입력 필드 타입을 email로 변경 고려 */
+        input[type="email"], 
         input[type="number"],
         select,
         textarea {
@@ -164,7 +184,7 @@
         /* 반응형 디자인 */
         @media (max-width: 600px) {
             h2 { font-size: 1.5em; }
-            p { font-size: 1em; }
+            p, .step-background-main .intro-message { font-size: 1em; } 
             input[type="text"],
             input[type="email"],
             input[type="number"],
@@ -186,7 +206,8 @@
     <div id="stepCBT" class="step"> 
         <h2>로지와 대화 시작하기</h2>
         <p>CBT 참여자 이메일 주소를 입력해주세요.</p> 
-        <input type="email" id="cbtCodeInput" placeholder="CBT 이메일 주소"> <div class="error-message" id="cbtCodeError"></div>
+        <input type="email" id="cbtCodeInput" placeholder="CBT 이메일 주소"> 
+        <div class="error-message" id="cbtCodeError"></div>
         <button id="submitCbtCodeBtn">다음</button>
     </div>
 
@@ -214,18 +235,38 @@
         <button id="submitDiagnosisBtn">다음</button>
     </div>
 
+    <div id="stepLozeeIntro" class="step"> 
+        <h2>LOZEE 이야기</h2>
+        <p class="intro-message">
+            <span class="app-name-meaning">L</span> = Logic (논리적 사고)<br>
+            <span class="app-name-meaning">O</span> = Observation (관찰과 이해)<br>
+            <span class="app-name-meaning">Z</span> = Zest (감정의 생동감)<br>
+            <span class="app-name-meaning">E</span> = Expression (표현하기)<br>
+            <span class="app-name-meaning">E</span> = Empathy (공감하기)<br><br>
+            로지는 ASD, ADHD, 사회적 의사소통에 어려움을 느끼는<br>
+            친구들을 위한 마음 따뜻한 대화 친구예요.<br><br>
+            이 앱을 만든 저 역시 아스퍼거 증후군과 ADHD를 가지고 있고,<br>
+            사랑하는 저의 아이도 그렇답니다.<br>
+            아이가 세상을 조금 더 편안하게 마주하고,<br>
+            우리가 서로를 더 깊이 이해할 수 있는<br>
+            그런 대화 방식을 담아 이 앱을 만들었어요.<br>
+            <span class="developer-contact">개발자: neurodiversity.lozee@gmail.com</span>
+        </p>
+        <button id="confirmLozeeIntroBtn">확인</button>
+    </div>
+
     <div id="stepTopic" class="step"> 
         <h2>What would you like to talk about?</h2>
         <p><span id="topicUserAgeInfo"></span> Featured topics for users.<br>Please select the topic you want.</p>
         <div id="topicSelection" class="options-container"> 
             </div>
-        <button id="noTopicBtn" class="secondary-button">N/A</button>
+        <button id="noTopicBtn" class="secondary-button">여긴 없어요</button> 
         <div class="error-message" id="topicOverallError"></div>
     </div>
 
     <script type="module">
         import { counselingTopicsByAge } from './js/counseling_topics.js';
-        import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js'; // validateCbtEmail로 변경
+        import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js'; 
 
         // --- DOM 요소 바인딩 ---
         const introBody = document.getElementById('introBody');
@@ -247,6 +288,9 @@
         const diagnosisError = document.getElementById('diagnosisError');
         const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn');
 
+        const stepLozeeIntro = document.getElementById('stepLozeeIntro'); 
+        const confirmLozeeIntroBtn = document.getElementById('confirmLozeeIntroBtn'); 
+
         const stepTopic = document.getElementById('stepTopic');
         const topicUserAgeInfo = document.getElementById('topicUserAgeInfo');
         const topicSelection = document.getElementById('topicSelection');
@@ -255,7 +299,7 @@
 
         // --- 앱 상태 및 설정 ---
         let currentStepIndex = 0; 
-        const steps = [stepCBT, stepNameAge, stepDiagnosis, stepTopic]; 
+        const steps = [stepCBT, stepNameAge, stepDiagnosis, stepLozeeIntro, stepTopic]; 
 
         // --- TTS 함수 (단일 목소리 사용 가정) ---
         let playTTSFromText = async (text, voiceName = "ko-KR-Chirp3-HD-Vindemiatrix") => { 
@@ -277,6 +321,8 @@
             { id: 'adhd', text: 'ADHD' },
             { id: 'asd', text: 'ASD' },
             { id: 'asperger', text: 'ASD(아스퍼거증후군)' },
+            { id: 'social_comm_disorder', text: '사회적의사소통장애' }, 
+            { id: '2e', text: 'Audhd' },// 옵션 추가
             { id: 'borderline_intel', text: '경계선지능' },
             { id: 'developmental_dis', text: '발달장애' },
             { id: 'language_delay', text: '언어지연' },
@@ -315,7 +361,7 @@
             populateAgeOptions();
             populateDiagnosisOptions();
             
-            playTTSFromText("안녕하세요! 로지와의 대화를 시작하려면 CBT 참여자 이메일 주소를 입력해주세요."); // TTS 메시지 수정
+            playTTSFromText("안녕하세요! 로지와의 대화를 시작하려면 CBT 참여자 이메일 주소를 입력해주세요."); 
             showStep(currentStepIndex); 
         }
 
@@ -326,16 +372,23 @@
             });
             currentStepIndex = index;
         }
-
+        
         function validateAndProceedToNext(validationFn, errorElement, successCallback) {
             if (validationFn()) {
-                if (errorElement) errorElement.textContent = ''; 
-                if(successCallback) successCallback(); 
-                
-                if (currentStepIndex < steps.length - 1) {
-                    showStep(currentStepIndex + 1); 
-                } else {
-                    proceedToDialog({}); 
+                if (errorElement) errorElement.textContent = '';
+                let nextStepTarget = -1; 
+                if (successCallback) {
+                    nextStepTarget = successCallback(); 
+                }
+
+                if (typeof nextStepTarget === 'number' && nextStepTarget >= 0 && nextStepTarget < steps.length) {
+                    showStep(nextStepTarget);
+                } else if (nextStepTarget === 'PROCEED_TO_DIALOG') { 
+                    proceedToDialog({});
+                } else if (currentStepIndex < steps.length - 1 && nextStepTarget !== 'STAY') { 
+                    showStep(currentStepIndex + 1);
+                } else if (nextStepTarget !== 'STAY') { 
+                     proceedToDialog({});
                 }
             }
         }
@@ -344,18 +397,19 @@
         submitCbtCodeBtn.onclick = () => { 
             validateAndProceedToNext(
                 () => { 
-                    if (validateCbtEmail(cbtCodeInput.value)) { // validateCbtEmail 함수 사용
+                    if (validateCbtEmail(cbtCodeInput.value)) { 
                         return true;
                     }
                     cbtCodeError.textContent = getCbtErrorMessage(); 
-                    playTTSFromText(getCbtErrorMessage()); // 오류 메시지 TTS
+                    playTTSFromText(getCbtErrorMessage()); 
                     return false;
                 },
                 cbtCodeError, 
                 () => { 
-                    localStorage.setItem('cbtUserEmail', cbtCodeInput.value.trim().toLowerCase()); // 이메일 저장 (소문자로)
-                    localStorage.setItem('cbtVerified', 'true'); // 인증 상태 저장
+                    localStorage.setItem('cbtUserEmail', cbtCodeInput.value.trim().toLowerCase()); 
+                    localStorage.setItem('cbtVerified', 'true'); 
                     playTTSFromText("이메일이 확인되었어요. 만나서 반가워요! 로지가 당신을 어떻게 부르면 좋을까요?"); 
+                    return steps.indexOf(stepNameAge); 
                 }
             );
         };
@@ -388,30 +442,60 @@
                         localStorage.setItem('lozee_username', nameInput.value.trim());
                         localStorage.setItem('lozee_userage', ageSelectInput.value);
                         playTTSFromText("좋아요. 혹시 가지고 있는 어려움이 있다면 알려주세요. 로지가 당신을 더 잘 이해하는 데 도움이 될 수 있어요. 해당하는 것을 모두 선택해주세요. 선택하지 않아도 괜찮아요.");
+                        return steps.indexOf(stepDiagnosis); 
                     }
                 );
             }
         };
 
         submitDiagnosisBtn.onclick = () => {
-            const selectedDiagnoses = [];
+            const selectedDiagnosesIds = [];
             diagnosisSelection.querySelectorAll('button.selected').forEach(btn => {
-                selectedDiagnoses.push(btn.dataset.id); 
+                selectedDiagnosesIds.push(btn.dataset.id); 
             });
-            localStorage.setItem('lozee_userdisease', JSON.stringify(selectedDiagnoses)); 
+            localStorage.setItem('lozee_userdisease', JSON.stringify(selectedDiagnosesIds)); 
             
             validateAndProceedToNext(
                 () => true, 
                 diagnosisError,
                 () => {
-                    const userAge = localStorage.getItem('lozee_userage');
-                    if (topicUserAgeInfo) { 
-                       topicUserAgeInfo.textContent = userAge ? `${userAge} years old.` : ''; 
+                    const userAge = parseInt(localStorage.getItem('lozee_userage'), 10); // 나이를 숫자로 변환
+                    // 대상 진단명 ID 목록 (소문자로 일관성 유지)
+                    const targetDiagnoses = ['adhd', 'asd', 'asperger', 'social_comm_disorder']; 
+                    
+                    // 사용자가 선택한 진단 중 대상 진단에 해당하는 것이 있는지 확인
+                    // 배타적 옵션('none', 'prefer_not_to_say')이 선택된 경우, targetDiagnoses에 해당하지 않으므로 hasSpecificDiagnosis는 false가 됨.
+                    const hasSpecificDiagnosis = selectedDiagnosesIds.some(id => targetDiagnoses.includes(id.toLowerCase()));
+
+                    if (hasSpecificDiagnosis && userAge <= 10) {
+                        if (topicUserAgeInfo) { 
+                           topicUserAgeInfo.textContent = userAge ? `${userAge} years old.` : ''; 
+                        }
+                        renderTopicsForAge(userAge); 
+                        playTTSFromText("네, 알겠습니다. 어떤 주제로 이야기 나누고 싶으세요? 친구들이 주로 이야기하는 주제들이에요. 원하시는 주제를 선택해주세요."); 
+                        return steps.indexOf(stepTopic); 
+                    } else {
+                        const introP = stepLozeeIntro.querySelector('.intro-message');
+                        let ttsIntroText = "로지에 대해 잠시 안내해 드릴게요. ";
+                        if (introP) {
+                            const lines = introP.innerText.split('\n');
+                            // LOZEE 의미 설명 이후 본문 일부 (예: 6번째 줄부터 3줄)
+                            if (lines.length > 8) { // 충분한 줄이 있는지 확인
+                                ttsIntroText += lines.slice(6, 9).join(' ').replace(/<br>/g, ' ');
+                            } else {
+                                ttsIntroText += "로지는 여러분의 마음을 이해하고 함께 성장하는 친구입니다."; // 짧은 대체 텍스트
+                            }
+                        }
+                        playTTSFromText(ttsIntroText);
+                        return steps.indexOf(stepLozeeIntro); 
                     }
-                    renderTopicsForAge(userAge); 
-                    playTTSFromText("What would you like to talk about? Featured topics for users. Please select the topic you want."); 
                 }
             );
+        };
+
+        confirmLozeeIntroBtn.onclick = () => { 
+            playTTSFromText("이해해주셔서 감사합니다. 처음 단계로 돌아갑니다.");
+            showStep(0); 
         };
         
         // --- 주제 선택 관련 로직 ---
@@ -438,7 +522,7 @@
                  return;
             }
             if (topics.length === 0) { 
-                topicSelection.innerHTML = '<p>No recommended topics for this age. You can select "N/A".</p>';
+                topicSelection.innerHTML = '<p>No recommended topics for this age. You can select "여긴 없어요".</p>'; 
             }
 
             topics.forEach(topicText => {
@@ -448,7 +532,7 @@
                     console.log(`Topic selected: ${topicText}`);
                     localStorage.setItem('selectedTopic', topicText);
                     topicOverallError.textContent = '';
-                    playTTSFromText(`${topicText} topic has been selected.`);
+                    playTTSFromText(`${topicText} 주제를 선택하셨습니다.`); // TTS 메시지 수정
                     proceedToDialog({ topic: topicText, selectionMethod: 'recommended' });
                 };
                 topicSelection.appendChild(button);
@@ -459,7 +543,7 @@
             topicSelection.querySelectorAll('button.selected').forEach(btn => btn.classList.remove('selected'));
             topicOverallError.textContent = '';
             localStorage.setItem('selectedTopic', 'USER_WILL_DEFINE_IN_CHAT');
-            playTTSFromText("Okay. We can decide on a topic in our conversation.");
+            playTTSFromText("알겠어요. 어떤 이야기를 하고 싶은지 직접 말해주세요."); 
             proceedToDialog({ selectionMethod: 'user_will_define_in_chat' });
         };
 
@@ -470,8 +554,6 @@
             if(steps[currentStepIndex]) { 
                 steps[currentStepIndex].classList.remove('active');
             }
-            // 여기에 다음 화면(대화창)을 로드하거나 표시하는 코드를 추가합니다.
-            // 예: window.location.href = 'chat.html';
         }
 
         // --- DOMContentLoaded ---
