@@ -69,6 +69,7 @@
         }
 
         input[type="text"],
+        input[type="email"], /* CBT 입력 필드 타입을 email로 변경 고려 */
         input[type="number"],
         select,
         textarea {
@@ -126,27 +127,27 @@
             line-height: 1.2; 
         }
 
-        .options-container { /* 기존 topic-options와 유사하게, 진단 선택용 */
+        .options-container { 
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
-            max-width: 450px; /* 너비 약간 증가 */
+            max-width: 450px; 
         }
 
-        .options-container button, button.secondary-button { /* 기존 topic-options button과 스타일 공유 */
+        .options-container button, button.secondary-button { 
             background-color: rgba(255,255,255,0.2); 
             color: white;
             border: 1px solid rgba(255,255,255,0.5);
             padding: 10px 15px;
             border-radius: 20px; 
-            font-size: 0.9em; /* 크기 약간 조절 */
+            font-size: 0.9em; 
             cursor: pointer;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .options-container button.selected, /* 선택된 버튼 스타일 */
+        .options-container button.selected, 
         .options-container button:hover, 
         button.secondary-button:hover {
             background-color: white;
@@ -154,7 +155,7 @@
             border-color: white;
         }
         
-        button.secondary-button { /* N/A 버튼 등 */
+        button.secondary-button { 
             margin-top: 5px;
             background-color: transparent;
             border: 1px solid white;
@@ -165,6 +166,7 @@
             h2 { font-size: 1.5em; }
             p { font-size: 1em; }
             input[type="text"],
+            input[type="email"],
             input[type="number"],
             select,
             textarea {
@@ -174,22 +176,21 @@
             button { padding: 10px 20px; font-size: 0.95em;}
             .options-container button, button.secondary-button {
                 padding: 8px 12px;
-                font-size: 0.85em; /* 모바일에서 크기 약간 조절 */
+                font-size: 0.85em; 
             }
         }
     </style>
 </head>
 <body id="introBody" class="step-background-main">
 
-    <div id="stepCBT" class="step">
+    <div id="stepCBT" class="step"> 
         <h2>로지와 대화 시작하기</h2>
-        <p>CBT 코드를 입력해주세요.</p>
-        <input type="text" id="cbtCodeInput" placeholder="CBT 코드">
-        <div class="error-message" id="cbtCodeError"></div>
+        <p>CBT 참여자 이메일 주소를 입력해주세요.</p> 
+        <input type="email" id="cbtCodeInput" placeholder="CBT 이메일 주소"> <div class="error-message" id="cbtCodeError"></div>
         <button id="submitCbtCodeBtn">다음</button>
     </div>
 
-    <div id="stepNameAge" class="step">
+    <div id="stepNameAge" class="step"> 
         <h2>만나서 반가워요!</h2>
         <p>로지가 당신을 어떻게 부르면 좋을까요?</p>
         <input type="text" id="nameInput" placeholder="이름 또는 별명">
@@ -204,7 +205,8 @@
         <button id="submitNameAgeBtn">다음</button>
     </div>
 
-    <div id="stepDiagnosis" class="step"> <h2>가지고 있는 어려움이 있다면 알려주세요.</h2>
+    <div id="stepDiagnosis" class="step"> 
+        <h2>가지고 있는 어려움이 있다면 알려주세요.</h2>
         <p class="info-text">로지가 당신을 더 잘 이해하는 데 도움이 될 수 있어요.<br>해당하는 것을 모두 선택해주세요. (선택하지 않아도 괜찮아요)</p>
         <div id="diagnosisSelection" class="options-container">
             </div>
@@ -212,21 +214,23 @@
         <button id="submitDiagnosisBtn">다음</button>
     </div>
 
-    <div id="stepTopic" class="step"> <h2>What would you like to talk about?</h2>
+    <div id="stepTopic" class="step"> 
+        <h2>What would you like to talk about?</h2>
         <p><span id="topicUserAgeInfo"></span> Featured topics for users.<br>Please select the topic you want.</p>
-        <div id="topicSelection" class="options-container"> </div>
+        <div id="topicSelection" class="options-container"> 
+            </div>
         <button id="noTopicBtn" class="secondary-button">N/A</button>
         <div class="error-message" id="topicOverallError"></div>
     </div>
 
     <script type="module">
         import { counselingTopicsByAge } from './js/counseling_topics.js';
-        // TTS 관련 import는 실제 tts.js 구현에 따라 달라집니다.
-        // import { playTTS, setVoice } from './js/tts.js'; 
+        import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js'; // validateCbtEmail로 변경
 
         // --- DOM 요소 바인딩 ---
         const introBody = document.getElementById('introBody');
-        const stepCBT = document.getElementById('stepCBT');
+        
+        const stepCBT = document.getElementById('stepCBT'); 
         const cbtCodeInput = document.getElementById('cbtCodeInput');
         const cbtCodeError = document.getElementById('cbtCodeError');
         const submitCbtCodeBtn = document.getElementById('submitCbtCodeBtn');
@@ -238,7 +242,7 @@
         const ageError = document.getElementById('ageError');
         const submitNameAgeBtn = document.getElementById('submitNameAgeBtn');
 
-        const stepDiagnosis = document.getElementById('stepDiagnosis'); // 새 스텝
+        const stepDiagnosis = document.getElementById('stepDiagnosis');
         const diagnosisSelection = document.getElementById('diagnosisSelection');
         const diagnosisError = document.getElementById('diagnosisError');
         const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn');
@@ -250,31 +254,18 @@
         const topicOverallError = document.getElementById('topicOverallError');
 
         // --- 앱 상태 및 설정 ---
-        let currentStepIndex = 0;
-        const steps = [stepCBT, stepNameAge, stepDiagnosis, stepTopic]; // 스텝 순서 정의
-        const CBT_CODE = "LOZEE2024"; // 실제 CBT 코드
+        let currentStepIndex = 0; 
+        const steps = [stepCBT, stepNameAge, stepDiagnosis, stepTopic]; 
 
-        // --- TTS 함수 (목소리 선택 제거, 단일 목소리 사용 가정) ---
-        // 실제 TTS 구현 시 이 함수를 tts.js 모듈에서 가져오고, 
-        // "ko-KR-Chirp3-HD-Vindemiatrix" 목소리를 기본 또는 유일한 목소리로 설정해야 합니다.
+        // --- TTS 함수 (단일 목소리 사용 가정) ---
         let playTTSFromText = async (text, voiceName = "ko-KR-Chirp3-HD-Vindemiatrix") => { 
             console.log(`[MOCK TTS - Voice: ${voiceName}] ${text}`);
-            // 여기에 실제 Web Speech API 또는 외부 TTS 서비스 연동 코드
-            // 예: 
-            // if ('speechSynthesis' in window) {
-            //     const utterance = new SpeechSynthesisUtterance(text);
-            //     const voices = speechSynthesis.getVoices();
-            //     const selectedVoice = voices.find(v => v.name === voiceName);
-            //     if (selectedVoice) utterance.voice = selectedVoice;
-            //     utterance.lang = 'ko-KR';
-            //     speechSynthesis.speak(utterance);
-            // }
             return Promise.resolve(); 
         };
 
         // --- 초기화 함수 ---
         function populateAgeOptions() {
-            for (let i = 5; i <= 90; i++) { // 예: 5세부터 90세
+            for (let i = 5; i <= 90; i++) {
                 const option = document.createElement('option');
                 option.value = i;
                 option.textContent = `${i}세`;
@@ -306,17 +297,15 @@
                     const isExclusive = button.dataset.exclusive === "true";
                     
                     if (button.classList.contains('selected') && isExclusive) {
-                        // 배타적 옵션 선택 시 다른 모든 옵션 해제
                         diagnosisSelection.querySelectorAll('button').forEach(btn => {
                             if (btn !== button) btn.classList.remove('selected');
                         });
                     } else if (button.classList.contains('selected') && !isExclusive) {
-                        // 일반 옵션 선택 시 모든 배타적 옵션 해제
                         diagnosisSelection.querySelectorAll('button[data-exclusive="true"]').forEach(exBtn => {
                             exBtn.classList.remove('selected');
                         });
                     }
-                    diagnosisError.textContent = ''; // 오류 메시지 초기화
+                    diagnosisError.textContent = '';
                 };
                 diagnosisSelection.appendChild(button);
             });
@@ -325,13 +314,9 @@
         async function initializeApp() {
             populateAgeOptions();
             populateDiagnosisOptions();
-            // 목소리 선택 UI가 없으므로 관련 초기화 제거
-            // 예: await loadVoices(); if TTS module had it
-
-            // 초기 TTS 메시지 (첫 화면에 따라 다를 수 있음)
-            // 현재 첫 화면은 CBT 코드 입력이므로, 해당 화면의 TTS로 변경
-            playTTSFromText("안녕하세요! 로지와의 대화를 시작하려면 CBT 코드를 입력해주세요."); // 수정된 TTS
-            showStep(currentStepIndex); // currentStepIndex는 0으로 시작
+            
+            playTTSFromText("안녕하세요! 로지와의 대화를 시작하려면 CBT 참여자 이메일 주소를 입력해주세요."); // TTS 메시지 수정
+            showStep(currentStepIndex); 
         }
 
         // --- 스텝 네비게이션 ---
@@ -340,46 +325,37 @@
                 if(step) step.classList.toggle('active', i === index);
             });
             currentStepIndex = index;
-            // 각 스텝 진입 시 TTS 안내 (필요에 따라 추가)
-            // 너무 많은 TTS를 피하기 위해 스텝 진입 시 자동 TTS는 주석 처리. 필요시 다음 버튼 핸들러에서 명시적으로 호출.
-            // const currentStepElement = steps[currentStepIndex];
-            // if (currentStepElement) {
-            //     const titleElement = currentStepElement.querySelector('h2');
-            //     if (titleElement) {
-            //          playTTSFromText(titleElement.textContent); 
-            //     }
-            // }
         }
 
         function validateAndProceedToNext(validationFn, errorElement, successCallback) {
             if (validationFn()) {
-                errorElement.textContent = ''; // 에러 메시지 초기화
-                if(successCallback) successCallback(); // 성공 콜백 실행 (주로 localStorage 저장 및 다음 스텝 안내 TTS)
+                if (errorElement) errorElement.textContent = ''; 
+                if(successCallback) successCallback(); 
                 
                 if (currentStepIndex < steps.length - 1) {
-                    showStep(currentStepIndex + 1); // 다음 스텝으로 이동
-                    // 다음 스텝의 주요 안내 TTS (successCallback에서 이미 처리했다면 중복될 수 있으므로 주의)
-                    // 현재는 successCallback에서 다음 스텝 안내 TTS를 하도록 구성됨
+                    showStep(currentStepIndex + 1); 
                 } else {
-                    // 마지막 스텝 이후 로직 (예: 대화창으로 이동)
                     proceedToDialog({}); 
                 }
             }
         }
         
         // --- 이벤트 핸들러 ---
-        submitCbtCodeBtn.onclick = () => {
+        submitCbtCodeBtn.onclick = () => { 
             validateAndProceedToNext(
-                () => { // Validation Function
-                    if (cbtCodeInput.value.trim().toUpperCase() === CBT_CODE) return true;
-                    cbtCodeError.textContent = 'CBT 코드가 올바르지 않아요.';
-                    playTTSFromText('CBT 코드가 올바르지 않아요. 다시 확인해주세요.');
+                () => { 
+                    if (validateCbtEmail(cbtCodeInput.value)) { // validateCbtEmail 함수 사용
+                        return true;
+                    }
+                    cbtCodeError.textContent = getCbtErrorMessage(); 
+                    playTTSFromText(getCbtErrorMessage()); // 오류 메시지 TTS
                     return false;
                 },
-                cbtCodeError, // Error Element
-                () => { // Success Callback
-                    localStorage.setItem('cbtCodeVerified', 'true');
-                    playTTSFromText("코드가 확인되었어요. 만나서 반가워요! 로지가 당신을 어떻게 부르면 좋을까요?"); // 다음 스텝 안내
+                cbtCodeError, 
+                () => { 
+                    localStorage.setItem('cbtUserEmail', cbtCodeInput.value.trim().toLowerCase()); // 이메일 저장 (소문자로)
+                    localStorage.setItem('cbtVerified', 'true'); // 인증 상태 저장
+                    playTTSFromText("이메일이 확인되었어요. 만나서 반가워요! 로지가 당신을 어떻게 부르면 좋을까요?"); 
                 }
             );
         };
@@ -411,7 +387,7 @@
                     () => {
                         localStorage.setItem('lozee_username', nameInput.value.trim());
                         localStorage.setItem('lozee_userage', ageSelectInput.value);
-                        playTTSFromText("좋아요. 혹시 가지고 있는 어려움이 있다면 알려주세요. 로지가 당신을 더 잘 이해하는 데 도움이 될 수 있어요. 해당하는 것을 모두 선택해주세요. 선택하지 않아도 괜찮아요."); // 다음 스텝 안내
+                        playTTSFromText("좋아요. 혹시 가지고 있는 어려움이 있다면 알려주세요. 로지가 당신을 더 잘 이해하는 데 도움이 될 수 있어요. 해당하는 것을 모두 선택해주세요. 선택하지 않아도 괜찮아요.");
                     }
                 );
             }
@@ -429,11 +405,11 @@
                 diagnosisError,
                 () => {
                     const userAge = localStorage.getItem('lozee_userage');
-                    if (topicUserAgeInfo) { // topicUserAgeInfo 요소가 존재하는지 확인
+                    if (topicUserAgeInfo) { 
                        topicUserAgeInfo.textContent = userAge ? `${userAge} years old.` : ''; 
                     }
                     renderTopicsForAge(userAge); 
-                    playTTSFromText("What would you like to talk about? Featured topics for users. Please select the topic you want."); // 다음 스텝 안내 (영문)
+                    playTTSFromText("What would you like to talk about? Featured topics for users. Please select the topic you want."); 
                 }
             );
         };
@@ -446,11 +422,9 @@
             }
             const ageInt = parseInt(age, 10);
             let key;
-            // counseling_topics.js에 정의된 키와 정확히 일치해야 합니다.
             if (ageInt >= 8 && ageInt <= 10)    key = '8-10';
-            else if (ageInt >= 11 && ageInt <= 15) key = '11-15'; // 예시 키, 실제 파일과 일치 필요
-            // else if (ageInt >= 16 && ageInt <= 19) key = '16-19'; // 필요시 추가
-            else                                key = '30+'; // 기본값 또는 성인용
+            else if (ageInt >= 11 && ageInt <= 15) key = '11-15'; 
+            else                                key = '30+'; 
             
             return counselingTopicsByAge[key] || [];
         }
@@ -491,16 +465,13 @@
 
         function proceedToDialog(data) {
             console.log("Proceeding to dialog with data:", data);
-            // 실제 대화창(gpt-dialog.html 또는 해당 기능을 가진 UI)으로 이동하는 로직
-            // 예: window.location.href = 'chat.html'; 
-            // 또는 SPA(Single Page Application)인 경우 뷰 전환 로직
-            alert("온보딩 완료! 실제 대화창으로 이동합니다. (구현 필요)\n" + JSON.stringify(localStorage)); // localStorage 전체 내용 확인용
+            alert("온보딩 완료! 실제 대화창으로 이동합니다. (구현 필요)\n" + JSON.stringify(localStorage)); 
             
-            // 현재 스텝 숨기기
-            if(steps[currentStepIndex]) { // 현재 스텝 요소가 존재하는지 확인
+            if(steps[currentStepIndex]) { 
                 steps[currentStepIndex].classList.remove('active');
             }
             // 여기에 다음 화면(대화창)을 로드하거나 표시하는 코드를 추가합니다.
+            // 예: window.location.href = 'chat.html';
         }
 
         // --- DOMContentLoaded ---
