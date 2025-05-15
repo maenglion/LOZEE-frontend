@@ -66,7 +66,7 @@
         .step-background-main .intro-message .app-name-meaning {
             font-weight: bold;
             color: #fff;
-            margin-bottom: 10px; /* 각 줄 사이의 간격은 <br>로 조절 */
+            margin-bottom: 10px; 
         }
          .step-background-main .intro-message .developer-contact {
             margin-top: 20px;
@@ -322,7 +322,7 @@
             { id: 'asd', text: 'ASD' },
             { id: 'asperger', text: 'ASD(아스퍼거증후군)' },
             { id: 'social_comm_disorder', text: '사회적의사소통장애' }, 
-            { id: '2e', text: 'Audhd' },// 옵션 추가
+            { id: '2e', text: 'Audhd' },
             { id: 'borderline_intel', text: '경계선지능' },
             { id: 'developmental_dis', text: '발달장애' },
             { id: 'language_delay', text: '언어지연' },
@@ -407,6 +407,7 @@
                 cbtCodeError, 
                 () => { 
                     localStorage.setItem('cbtUserEmail', cbtCodeInput.value.trim().toLowerCase()); 
+                    localStorage.setItem('isCbtUser', 'true'); // CBT 사용자 플래그 저장
                     localStorage.setItem('cbtVerified', 'true'); 
                     playTTSFromText("이메일이 확인되었어요. 만나서 반가워요! 로지가 당신을 어떻게 부르면 좋을까요?"); 
                     return steps.indexOf(stepNameAge); 
@@ -459,15 +460,13 @@
                 () => true, 
                 diagnosisError,
                 () => {
-                    const userAge = parseInt(localStorage.getItem('lozee_userage'), 10); // 나이를 숫자로 변환
-                    // 대상 진단명 ID 목록 (소문자로 일관성 유지)
-                    const targetDiagnoses = ['adhd', 'asd', 'asperger', 'social_comm_disorder']; 
+                    const userAge = parseInt(localStorage.getItem('lozee_userage'), 10); 
+                    const targetDiagnoses = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e']; // '2e' (Audhd) 추가
                     
-                    // 사용자가 선택한 진단 중 대상 진단에 해당하는 것이 있는지 확인
-                    // 배타적 옵션('none', 'prefer_not_to_say')이 선택된 경우, targetDiagnoses에 해당하지 않으므로 hasSpecificDiagnosis는 false가 됨.
                     const hasSpecificDiagnosis = selectedDiagnosesIds.some(id => targetDiagnoses.includes(id.toLowerCase()));
 
-                    if (hasSpecificDiagnosis && userAge <= 10) {
+                    // 나이 제한 임시 해제: 특정 진단이 있으면 무조건 주제 선택으로 (추후 나이 제한 복구 시 아래 주석 해제)
+                    if (hasSpecificDiagnosis /* && userAge <= 10 */) { 
                         if (topicUserAgeInfo) { 
                            topicUserAgeInfo.textContent = userAge ? `${userAge} years old.` : ''; 
                         }
@@ -479,11 +478,10 @@
                         let ttsIntroText = "로지에 대해 잠시 안내해 드릴게요. ";
                         if (introP) {
                             const lines = introP.innerText.split('\n');
-                            // LOZEE 의미 설명 이후 본문 일부 (예: 6번째 줄부터 3줄)
-                            if (lines.length > 8) { // 충분한 줄이 있는지 확인
+                            if (lines.length > 8) { 
                                 ttsIntroText += lines.slice(6, 9).join(' ').replace(/<br>/g, ' ');
                             } else {
-                                ttsIntroText += "로지는 여러분의 마음을 이해하고 함께 성장하는 친구입니다."; // 짧은 대체 텍스트
+                                ttsIntroText += "로지는 여러분의 마음을 이해하고 함께 성장하는 친구입니다."; 
                             }
                         }
                         playTTSFromText(ttsIntroText);
@@ -506,6 +504,13 @@
             }
             const ageInt = parseInt(age, 10);
             let key;
+            // CBT 사용자이고 특정 진단이 있는 경우, 10세 이하 주제를 사용 (gpt-dialog.js에서 실제 나이 대신 effectiveAge를 사용하므로 여기서는 실제 나이로 키를 가져옴)
+            // 이 부분은 gpt-dialog.js의 getSystemPrompt에서 effectiveAge를 설정하는 것과 별개로,
+            // 주제 목록 자체를 10세 이하용으로 보여줄지 여부를 결정합니다.
+            // 현재 요청은 "10세가 아니어도 10세와의 대화를 경험"이므로, 주제 목록은 실제 나이 기준으로 보여주되,
+            // 대화 스타일만 10세 기준으로 맞추는 것이 더 자연스러울 수 있습니다.
+            // 만약 주제 목록도 10세 기준으로 보여주려면 아래 로직 수정 필요.
+            // 여기서는 일단 실제 나이 기준으로 주제를 가져오도록 유지합니다.
             if (ageInt >= 8 && ageInt <= 10)    key = '8-10';
             else if (ageInt >= 11 && ageInt <= 15) key = '11-15'; 
             else                                key = '30+'; 
@@ -532,7 +537,7 @@
                     console.log(`Topic selected: ${topicText}`);
                     localStorage.setItem('selectedTopic', topicText);
                     topicOverallError.textContent = '';
-                    playTTSFromText(`${topicText} 주제를 선택하셨습니다.`); // TTS 메시지 수정
+                    playTTSFromText(`${topicText} 주제를 선택하셨습니다.`); 
                     proceedToDialog({ topic: topicText, selectionMethod: 'recommended' });
                 };
                 topicSelection.appendChild(button);
