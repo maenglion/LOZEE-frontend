@@ -24,6 +24,7 @@
   <div id="chat-container"></div>
 
   <script type="module">
+    import { counselingTopicsByAge } from './js/counseling_topics.js';
     import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
     import { getInitialGreeting, getGptResponse, getFirstQuestion } from './js/gpt-dialog.js';
     import { getSTTFromAudio } from './js/stt.js';
