@@ -1,109 +1,122 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOZEE와 대화하기</title>
-    <link rel="stylesheet" href="style.css"> 
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOZEE와 대화하기</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet" />
 </head>
 <body>
-    <header id="main-header">LOZEE와 대화하기</header>
-    <div id="meter-container"><div id="volume-meter"><div id="volume-level"></div></div></div>
-    <div id="chat-container">
-        <!-- 스피너는 기본 숨김 -->
-        <div class="loading-spinner" id="aiLoadingSpinner" style="display:none;"></div> 
-    </div>
-    <div id="chat-input-container">
-        <input type="text" id="chat-input" placeholder="메시지를 입력하거나 마이크 버튼을 누르세요...">
-        <button id="send-button">전송</button>
-    </div>
+  <header id="main-header">LOZEE와 대화하기</header>
+  <div id="meter-container"><div id="volume-meter"><div id="volume-level"></div></div></div>
+  <div id="chat-container"></div>
 
-    <script type="module">
-        import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
-        import { getGptResponse, getFirstQuestion } from './js/gpt-dialog.js';
+  <div id="chat-input-container">
+    <button id="mic-button" title="음성 인식 시작/중지">🎤</button>
+    <input type="text" id="chat-input" placeholder="메시지를 입력하거나 마이크 버튼을 누르세요..." />
+    <button id="send-button">전송</button>
+  </div>
 
-        const chatContainer     = document.getElementById('chat-container');
-        const meterLevel        = document.getElementById('volume-level');
-        const aiLoadingSpinner  = document.getElementById('aiLoadingSpinner');
-        const chatInput         = document.getElementById('chat-input');
-        const sendButton        = document.getElementById('send-button');
+  <script type="module">
+    import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
+    import { getGptResponse } from './js/gpt-dialog.js';
 
-        const selectedVoice     = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
-        const userAge           = localStorage.getItem('lozee_userage');
-        const userName          = localStorage.getItem('lozee_username') || '친구';
-        const userDiseaseRaw    = localStorage.getItem('lozee_userdisease') || '[]';
-        const selectedTopicRaw  = localStorage.getItem('selectedTopic') || '{}';
-        const isCbtUser         = localStorage.getItem('isCbtUser') === 'true';
+    const chatContainer = document.getElementById('chat-container');
+    const meterLevel = document.getElementById('volume-level');
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    const micButton = document.getElementById('mic-button');
 
-        let chatHistory = [];
-        let userDisease;
-        try { userDisease = JSON.parse(userDiseaseRaw); if(!Array.isArray(userDisease)) userDisease = [userDiseaseRaw]; }
-        catch { userDisease = [userDiseaseRaw]; }
-        let selectedTopic;
-        try { selectedTopic = JSON.parse(selectedTopicRaw); }
-        catch { selectedTopic = { displayText:'알 수 없는 주제', tags:['오류'], icon:'❓' }; }
+    // 사용자 설정
+    const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
+    const userAge = localStorage.getItem('lozee_userage');
+    const userName = localStorage.getItem('lozee_username') || '친구';
+    const selectedTopic = JSON.parse(localStorage.getItem('selectedTopic') || '{}');
 
-        function appendMessage(text, role) {
-            const el = document.createElement('div');
-            el.className = `${role}-bubble bubble`;
-            el.textContent = text;
-            chatContainer.insertBefore(el, aiLoadingSpinner);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            chatHistory.push({role,content:text});
-        }
+    let recognitionActive = false;
+    let stt;
 
-        function showAiLoading(show) {
-            aiLoadingSpinner.style.display = show ? 'block' : 'none';
-            sendButton.disabled = show;
-            chatInput.disabled  = show;
-        }
+    function appendBubble(text, role) {
+      const el = document.createElement('div');
+      el.className = `bubble ${role}`;
+      el.textContent = text;
+      chatContainer.appendChild(el);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 
-        async function initConversation() {
-            showAiLoading(false); // 초기 로딩 스피너 숨김
-            const firstQ = getFirstQuestion(userAge);
-            appendMessage(firstQ, 'ai');
-            await playTTSFromText(firstQ, selectedVoice);
-        }
+    function showAiLoading(show) {
+      sendButton.disabled = show;
+      chatInput.disabled = show;
+      micButton.disabled = show;
+    }
 
-        async function handleUserText(text) {
-            if(!text.trim()) return;
-            showAiLoading(true);
-            try {
-                const context = { userAge, userName, userDisease, selectedTopic, isCbtUser, chatHistory: chatHistory.slice(-10) };
-                const aiRes = await getGptResponse(text, context);
-                const reply = typeof aiRes==='string'? aiRes : aiRes.rephrasing || aiRes.text || '죄송해요, 답변이 없습니다.';
-                appendMessage(reply, 'ai');
-                await playTTSFromText(reply, selectedVoice);
-            } catch(err) {
-                console.error(err);
-                appendMessage('죄송해요, 오류가 발생했어요.', 'ai');
-                await playTTSFromText('죄송해요, 오류가 발생했어요.', selectedVoice);
-            } finally { showAiLoading(false); }
-        }
+    // 초기 인사: 선택된 주제 반영
+    async function initConversation() {
+      const greeting = `${userName}님, 오늘은 "${selectedTopic.displayText || '대화'}" 주제로 이야기해볼까요?`;
+      appendBubble(greeting, 'bot');
+      await playTTSFromText(greeting, selectedVoice);
+    }
 
-        // 텍스트 전송
-        sendButton.onclick = () => {
-            const txt = chatInput.value.trim();
-            if(!txt) return;
-            appendMessage(txt, 'user');
-            chatInput.value = '';
-            handleUserText(txt);
-        };
-        chatInput.addEventListener('keydown', e=>{
-            if(e.key==='Enter' && !sendButton.disabled) sendButton.click();
-        });
+    // 스트리밍 방식 GPT 호출
+    async function handleUserText(text) {
+      if (!text.trim()) return;
+      appendBubble(text, 'user');
+      showAiLoading(true);
 
-        // STT 설정 (Web Speech API)
-        if(window.SpeechRecognition || window.webkitSpeechRecognition) {
-            const Recognition = window.SpeechRecognition||window.webkitSpeechRecognition;
-            const recog = new Recognition(); recog.lang='ko-KR'; recog.continuous=false; recog.interimResults=false;
-            recog.onresult = e => { const txt=e.results[0][0].transcript; appendMessage(txt,'user'); handleUserText(txt); };
-            recog.onerror  = e=> console.warn('STT error',e.error);
-            // 마이크 버튼 기능 추가 가능
-        }
+      // 버블 생성 후 스트리밍 응답을 한 버블에 이어쓰기
+      const botBubble = document.createElement('div');
+      botBubble.className = 'bubble bot';
+      chatContainer.appendChild(botBubble);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        document.addEventListener('DOMContentLoaded', initConversation);
-    </script>
+      // fetch streaming
+      const response = await fetch('/api/gpt-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, context: { userAge, userName, selectedTopic } })
+      });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunk = decoder.decode(value);
+        botBubble.textContent += chunk;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+      // 완성된 텍스트에 TTS 재생
+      await playTTSFromText(botBubble.textContent, selectedVoice);
+      showAiLoading(false);
+    }
+
+    // 텍스트 전송 이벤트
+    sendButton.onclick = () => {
+      const txt = chatInput.value;
+      chatInput.value = '';
+      handleUserText(txt);
+    };
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !sendButton.disabled) sendButton.click();
+    });
+
+    // STT 설정
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const API = window.SpeechRecognition || window.webkitSpeechRecognition;
+      stt = new API();
+      stt.lang = 'ko-KR'; stt.interimResults = false; stt.maxAlternatives = 1;
+      stt.onstart = () => { recognitionActive = true; micButton.textContent = '🔴'; };
+      stt.onend = () => { recognitionActive = false; micButton.textContent = '🎤'; };
+      stt.onresult = e => { const speech = e.results[0][0].transcript; handleUserText(speech); };
+
+      micButton.onclick = () => {
+        if (recognitionActive) stt.stop();
+        else stt.start();
+      };
+    }
+
+    document.addEventListener('DOMContentLoaded', initConversation);
+  </script>
 </body>
 </html>
