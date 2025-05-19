@@ -6,86 +6,130 @@ body {
     display:flex; 
     flex-direction:column; 
     height:100vh; 
-    background:#f0f2f5; /* 배경색 변경 */ 
-    color:#333; 
+    background:#2c3e50; /* 어두운 남색 계열 배경 */ 
+    color:#ecf0f1; /* 기본 글자색 밝게 */
 }
 #main-header { 
-    background:#6e8efb; /* 온보딩과 유사한 테마색 */
-    color:#fff; 
-    padding:1rem; 
+    background:#34495e; /* 헤더 배경색 (배경보다 약간 밝게) */
+    color:#ecf0f1; 
+    padding:1rem 1.25rem;
     text-align:center; 
-    font-size:1.25rem; 
+    font-size:1.3rem; 
     font-weight: bold;
     flex-shrink:0; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 #meter-container { 
     display:flex; 
     align-items:center; 
     justify-content:center; 
-    padding:0.75rem 0; /* 패딩 조정 */
-    background:#e8eaf6; /* 테마색과 어울리는 연한 배경 */
+    padding:0.8rem 0; 
+    background:#34495e; /* 헤더와 동일한 배경 */
     flex-shrink:0; 
+    border-bottom: 1px solid #4a6572; /* 구분선 */
 }
 #volume-meter { 
-    width:80%; 
-    max-width: 300px; /* 최대 너비 설정 */
-    height:10px; /* 높이 증가 */
-    border:1px solid #c5cae9; /* 테두리 색상 변경 */
-    border-radius:5px; /* 둥글기 증가 */
+    width:70%; 
+    max-width: 280px; 
+    height:12px; 
+    border:1px solid #7f8c8d; 
+    border-radius:6px; 
     overflow:hidden; 
-    background-color: #ffffff; /* 볼륨 미터 배경색 */
+    background-color: #566573; /* 볼륨 미터 배경 */
 }
 #volume-level { 
     height:100%; 
-    background:#7986cb; /* 볼륨 레벨 색상 변경 (테마색) */
-    width:0; 
-    transition:width 0.1s ease; 
-    border-radius:4px; /* 내부 레벨도 둥글게 */
+    background:#3498db; /* 볼륨 레벨 색상 (파란색 계열) */
+    width:0%; 
+    transition:width 0.08s ease-out; 
+    border-radius:4px; 
 }
 #chat-container { 
     flex:1; 
     overflow-y:auto; 
-    padding:1rem; 
+    padding:1.2rem; 
     display:flex; 
     flex-direction:column; 
-    gap:0.85rem; /* 간격 조정 */
-    background-color: #ffffff; /* 채팅 영역 배경색 */
+    gap:1rem; 
+    /* background-color: #ffffff; /* 채팅 영역 배경색 제거 (body 배경 사용) */
 }
 .bubble { 
-    max-width:85%; /* 최대 너비 조정 */
-    padding:0.8rem 1.1rem; /* 패딩 조정 */
-    border-radius:1.2rem; /* 둥글기 증가 */
-    line-height:1.6; /* 줄 간격 조정 */
+    max-width:80%; 
+    padding:0.9rem 1.2rem; 
+    border-radius:1.3rem; 
+    line-height:1.65; 
     white-space:pre-wrap; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* 부드러운 그림자 */
-    word-break: keep-all; /* 단어 단위 줄바꿈 (한국어) */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
+    word-break: keep-all; 
 }
 .user { 
-    background:#fff1a8; /* 사용자 말풍선 색 (연한 노랑) */
-    color: #5d4037; /* 사용자 말풍선 글자색 */
+    background:#bdc3c7; /* 사용자 말풍선 (연한 회색) */
+    color: #2c3e50; /* 사용자 말풍선 글자색 (어둡게) */
     align-self:flex-end; 
-    border-bottom-right-radius:0.3rem; 
+    border-bottom-right-radius:0.4rem; 
 }
 .ai { 
-    background:#6e8efb; /* AI 말풍선 색 (테마색) */
-    color:#fff; 
+    background:#3498db; /* AI 말풍선 색 (파란색 계열) */
+    color:#ffffff; 
     align-self:flex-start; 
-    border-bottom-left-radius:0.3rem; 
+    border-bottom-left-radius:0.4rem; 
 }
-/* 로딩 스피너 (필요시) */
+.bubble.interim { 
+    background: #7f8c8d; /* 중간 결과 (더 연한 회색) */
+    color: #ecf0f1; 
+    font-style: italic;
+    align-self: flex-end; 
+    border-bottom-right-radius:0.4rem; 
+}
 .loading-spinner {
-    display: none; /* 기본 숨김 */
+    display: none; 
     align-self: center;
-    margin: 10px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #6e8efb;
+    margin: 15px; 
+    border: 5px solid #7f8c8d; 
+    border-top: 5px solid #3498db; 
     border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
+    width: 35px; 
+    height: 35px; 
+    animation: spin 0.8s linear infinite; 
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* 채팅 입력 영역 스타일 */
+#chat-input-container {
+    display: flex;
+    padding: 0.75rem 1rem;
+    background-color: #34495e; /* 헤더와 유사한 배경 */
+    border-top: 1px solid #4a6572;
+    flex-shrink: 0;
+}
+#chat-input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #7f8c8d;
+    border-radius: 20px;
+    margin-right: 0.75rem;
+    font-size: 1rem;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+}
+#send-button {
+    padding: 0.75rem 1.25rem;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+#send-button:hover {
+    background-color: #2980b9;
+}
+#send-button:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
 }

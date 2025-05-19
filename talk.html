@@ -1,158 +1,336 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOZEE 대화</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
-  <style>
-    body,
-    html {
-      margin: 0;
-      padding: 0;
-      font-family: 'KoPub World Dotum', sans-serif;
-      background: #f2f2f2;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    #meter-container {
-      background: #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-    #volume-meter {
-      width: 80%;
-      height: 10px;
-      background: #bbb;
-      margin: 0 auto;
-      position: relative;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-    #volume-level {
-      height: 100%;
-      width: 0%;
-      background: #4caf50;
-      transition: width 0.1s;
-    }
-    #chatInterface {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .bubble {
-      max-width: 70%;
-      padding: 10px;
-      border-radius: 10px;
-      line-height: 1.4;
-    }
-    .user {
-      background: #fff;
-      align-self: flex-end;
-    }
-    .bot {
-      background: #6078ea;
-      color: #fff;
-      align-self: flex-start;
-    }
-    #inputBar {
-      display: flex;
-      padding: 10px;
-      background: #eee;
-    }
-    #userInput {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    #sendBtn {
-      margin-left: 10px;
-      padding: 10px 15px;
-      background: #6078ea;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOZEE와 대화하기</title>
+    <link rel="stylesheet" href="style.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- 볼륨 미터 -->
-  <div id="meter-container">
-    <div id="volume-meter">
-      <div id="volume-level"></div>
+    <header id="main-header">LOZEE와 대화하기</header>
+    <div id="meter-container"><div id="volume-meter"><div id="volume-level"></div></div></div>
+    <div id="chat-container">
+        <div class="loading-spinner" id="aiLoadingSpinner"></div> 
     </div>
-  </div>
+    <div id="chat-input-container">
+        <input type="text" id="chat-input" placeholder="메시지를 입력하거나 마이크 버튼을 누르세요...">
+        <button id="send-button">전송</button>
+        </div>
 
-  <!-- 채팅 인터페이스 -->
-  <div id="chatInterface"></div>
+    <script type="module">
+        // 필요한 모듈 import
+        import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js'; // 실제 tts.js 경로 확인
+        import { getGptResponse, getFirstQuestion } from './js/gpt-dialog.js'; // 실제 gpt-dialog.js 경로 확인
+        // vad-processor.js는 AudioWorklet.addModule에서 로드됩니다. 실제 경로는 './js/vad-processor.js'로 가정합니다.
 
-  <!-- 입력 바 -->
-  <div id="inputBar">
-    <input
-      type="text"
-      id="userInput"
-      placeholder="말을 입력하거나 마이크로 말해보세요."
-    />
-    <button id="sendBtn">전송</button>
-  </div>
+        // ── 1. DOM 요소 ──────────────────────────────
+        const chatContainer     = document.getElementById('chat-container');
+        const meterLevel        = document.getElementById('volume-level');
+        const aiLoadingSpinner  = document.getElementById('aiLoadingSpinner');
+        const chatInput         = document.getElementById('chat-input');
+        const sendButton        = document.getElementById('send-button');
 
-  <script type="module">
-    import { getGptResponse, playTTSFromText } from './js/gpt-dialog.js';
+        // ── 2. 유저 정보 로드 ──────────────────────────
+        const selectedVoice     = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
+        const userAge           = localStorage.getItem('lozee_userage');
+        const userName          = localStorage.getItem('lozee_username')      || '친구';
+        const userDiseaseRaw    = localStorage.getItem('lozee_userdisease')   || '[]';
+        const selectedTopicRaw  = localStorage.getItem('selectedTopic')       || '{}'; // 온보딩에서 JSON.stringify된 객체
+        const isCbtUser         = localStorage.getItem('isCbtUser') === 'true';
 
-    // 볼륨 미터 초기화
-    function initVolumeMeter() {
-      /* 웹 오디오 API 등으로 구현 */
-    }
+        // ── 3. 상태 변수 선언 ──────────────────────────
+        let chatHistory = []; // 대화 기록
+        let userDisease;      // 파싱된 사용자 진단 정보 (배열)
+        try {
+            userDisease = JSON.parse(userDiseaseRaw);
+            if (!Array.isArray(userDisease)) userDisease = [userDiseaseRaw];
+        } catch {
+            userDisease = [userDiseaseRaw]; // 파싱 실패 시 원본 문자열을 배열 요소로 사용
+            console.warn("userDisease 파싱 실패, 원본 문자열을 배열로 사용:", userDiseaseRaw);
+        }
 
-    // STT 리스너 설정
-    function setupSTTListener(onResult) {
-      /* SpeechRecognition API 등으로 구현 */
-    }
+        let selectedTopic;    // 파싱된 선택 주제 객체
+        try {
+            selectedTopic = JSON.parse(selectedTopicRaw);
+        } catch {
+            selectedTopic = { displayText: '알 수 없는 주제', tags: ['오류'], icon: '❓' }; // 파싱 실패 시 기본값
+            console.warn("selectedTopic 파싱 실패, 기본 객체 사용:", selectedTopicRaw);
+        }
+        
+        let micStream = null; // 마이크 스트림 참조
+        let recognitionActive = false; // Web Speech API STT 활성화 상태
 
-    const chat = document.getElementById('chatInterface');
-    function appendBubble(text, cls) {
-      const el = document.createElement('div');
-      el.className = `bubble ${cls}`;
-      el.textContent = text;
-      chat.appendChild(el);
-      chat.scrollTop = chat.scrollHeight;
-    }
+        // ── 4. 메시지 출력 및 로딩 함수 ─────────────────
+        function appendMessage(text, role) {
+            const el = document.createElement('div');
+            el.className = `bubble ${role}`;
+            el.textContent = text;
+            chatContainer.insertBefore(el, aiLoadingSpinner); // 스피너 앞에 메시지 추가
+            chatContainer.scrollTop = chatContainer.scrollHeight; // 항상 최하단으로 스크롤
+            if (text) { // 빈 텍스트는 기록하지 않음
+                 chatHistory.push({ role: role, content: text });
+            }
+        }
 
-    // 전송 버튼
-    document.getElementById('sendBtn').onclick = async () => {
-      const txt = document.getElementById('userInput').value.trim();
-      if (!txt) return;
-      appendBubble(txt, 'user');
-      document.getElementById('userInput').value = '';
-      const reply = await getGptResponse(txt);
-      appendBubble(reply, 'bot');
-      playTTSFromText(reply);
-    };
+        function showAiLoading(show) {
+            aiLoadingSpinner.style.display = show ? 'block' : 'none';
+            sendButton.disabled = show; // AI 응답 중에는 전송 버튼 비활성화
+            chatInput.disabled = show;  // AI 응답 중에는 입력창 비활성화
+            if (show) { // 스피너 보일 때 맨 아래로 스크롤
+                 chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
 
-    // 초기 대화 시작
-    window.addEventListener('DOMContentLoaded', async () => {
-      initVolumeMeter();
-      const name = localStorage.getItem('lozee_username');
-      const topic = JSON.parse(localStorage.getItem('selectedTopic') || '{}');
-      const welcome = `${name}님, 오늘은 "${topic.displayText || '대화'}" 주제로 시작해볼게요.`;
-      appendBubble(welcome, 'bot');
-      playTTSFromText(welcome);
-      setupSTTListener(async (txt) => {
-        appendBubble(txt, 'user');
-        const r = await getGptResponse(txt);
-        appendBubble(r, 'bot');
-        playTTSFromText(r);
-      });
-    });
-  </script>
+        // ── 5. 초기 대화 시작 ─────────────────────────
+        async function initConversation() {
+            // getFirstQuestion은 userAge를 받아 gpt-dialog.js 내부에서 localStorage의 selectedTopic 등을 참조
+            const firstQuestionText = getFirstQuestion(userAge); 
+            appendMessage(firstQuestionText, 'ai');
+            await playTTSFromText(firstQuestionText, selectedVoice); // 선택된 목소리로 TTS 재생
+        }
+
+        // ── 6. AudioWorklet VAD + Web Speech API(STT) ──
+        // 6.1) AudioWorklet VAD 설정
+        async function setupAudioWorkletVAD(onSpeechStart, onSpeechEnd) {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("MediaDevices API가 지원되지 않는 브라우저입니다.");
+                }
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                // AudioContext 상태 확인 및 재개 (사용자 인터랙션 후 시작하는 것이 좋음)
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                // vad-processor.js 파일이 js 폴더 내에 있다고 가정합니다.
+                await audioContext.audioWorklet.addModule('./js/vad-processor.js'); 
+                
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const sourceNode = audioContext.createMediaStreamSource(micStream);
+                const vadNode = new AudioWorkletNode(audioContext, 'vad-processor'); // vad-processor.js에 정의된 이름 사용
+
+                vadNode.port.onmessage = (event) => {
+                  // vad-processor.js에서 보내는 메시지 형식에 맞춤
+                  if (event.data.event === 'speechstart') {
+                      console.log("VAD: Speech Start 감지");
+                      if (!recognitionActive) { // STT가 이미 활성화된 상태가 아니면 시작
+                          onSpeechStart();
+                      }
+                  } else if (event.data.event === 'speechend') {
+                      console.log("VAD: Speech End 감지");
+                      if (recognitionActive) { // STT가 활성화된 상태일 때만 종료
+                          onSpeechEnd();
+                      }
+                  }
+                
+                  // 볼륨값도 event.data.volume 로 바로 읽기 (vad-processor.js에서 이 형식으로 보낸다고 가정)
+                  if (event.data.volume !== undefined && meterLevel) { 
+                       meterLevel.style.width = `${Math.min(event.data.volume * 300, 100)}%`; // 스케일 조절
+                  }
+                };
+                sourceNode.connect(vadNode); 
+                // vadNode.connect(audioContext.destination); // VAD 결과를 스피커로 출력할 필요 없음
+                console.log("AudioWorklet VAD 설정 완료");
+
+            } catch (err) {
+                console.error("AudioWorklet VAD 설정 오류:", err);
+                appendMessage("음성 감지 기능을 시작할 수 없어요. 마이크 권한이나 설정을 확인해주세요.", "ai");
+                playTTSFromText("음성 감지 기능을 시작할 수 없어요.", selectedVoice).catch(console.error);
+            }
+        }
+
+        // 6.2) Web Speech API(STT) 설정
+        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let sttRecognition; // 변수명 변경 (recognition -> sttRecognition)
+
+        if (SpeechRecognitionAPI) {
+            sttRecognition = new SpeechRecognitionAPI();
+            sttRecognition.continuous     = false; // speechend 후 자동 종료
+            sttRecognition.interimResults = true;  // 중간 결과 표시
+            sttRecognition.lang           = 'ko-KR';
+
+            let interimTranscriptBuffer = ''; // 중간 인식 결과 버퍼
+
+            sttRecognition.onstart = () => {
+                recognitionActive = true; // STT 활성화 상태로 변경
+                console.log("Web Speech API STT 시작됨");
+                playTTSFromText("듣고 있어요.", selectedVoice).catch(console.error); 
+            };
+
+            sttRecognition.onresult = (event) => {
+                interimTranscriptBuffer = ''; 
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscriptBuffer += event.results[i][0].transcript;
+                    }
+                }
+
+                if (interimTranscriptBuffer) { // 중간 결과가 있으면 표시
+                    showInterimSTTResult(interimTranscriptBuffer);
+                }
+
+                if (finalTranscript) { // 최종 결과가 나오면 처리
+                    console.log("STT 최종 결과:", finalTranscript);
+                    document.getElementById('interim-stt-bubble')?.remove(); // 중간 결과 말풍선 제거
+                    appendMessage(finalTranscript, 'user'); // 사용자 메시지로 추가
+                    // VAD의 speechend에서 sttRecognition.stop()이 호출되고, 
+                    // 그 결과로 onresult의 isFinal이 true가 되므로, 여기서 handleUserText 호출
+                    handleUserText(finalTranscript); 
+                }
+            };
+
+            sttRecognition.onerror = (event) => {
+                recognitionActive = false; // 오류 발생 시 STT 비활성화
+                console.error('Web Speech API STT 오류:', event.error);
+                document.getElementById('interim-stt-bubble')?.remove();
+
+                let errorMessage = '음성 인식 중 오류가 발생했어요.';
+                if (event.error === 'no-speech') {
+                    errorMessage = "음성이 감지되지 않았어요. 다시 말씀해주시겠어요?";
+                } else if (event.error === 'audio-capture') {
+                    errorMessage = "마이크에 문제가 있는 것 같아요. 확인 후 다시 시도해주세요.";
+                } else if (event.error === 'not-allowed') {
+                    errorMessage = "마이크 사용 권한이 필요해요. 브라우저 설정을 확인해주세요.";
+                } else if (event.error !== 'aborted') { // 사용자가 명시적으로 중단한게 아니라면
+                     errorMessage = `음성 인식 오류: ${event.error}`;
+                }
+                appendMessage(errorMessage, 'ai');
+                playTTSFromText(errorMessage, selectedVoice).catch(console.error);
+            };
+
+            sttRecognition.onend = () => {
+                recognitionActive = false; // STT 종료 시 비활성화
+                console.log("Web Speech API STT 종료됨");
+                document.getElementById('interim-stt-bubble')?.remove(); 
+            };
+        } else {
+            console.error("이 브라우저에서는 Web Speech API를 지원하지 않습니다.");
+            appendMessage("음성 인식 기능을 사용할 수 없어요. 다른 브라우저를 이용해주세요.", "ai");
+        }
+
+        // STT 중간 결과 표시 함수
+        function showInterimSTTResult(text) {
+            let el = document.getElementById('interim-stt-bubble');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'interim-stt-bubble';
+                el.className = 'bubble user interim'; // CSS에 .interim 스타일 추가
+                chatContainer.insertBefore(el, aiLoadingSpinner);
+            }
+            el.textContent = text;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // ── 7. GPT 호출 및 TTS 재생 / 사용자 입력 처리 ────────────────────
+        async function handleUserText(text) {
+            if (!text || text.trim() === "") {
+                console.log("빈 텍스트 입력 무시");
+                return;
+            }
+
+            // STT를 통해 입력된 경우 이미 appendMessage가 호출되었으므로,
+            // 텍스트 입력으로 들어온 경우에만 여기서 사용자 메시지를 추가합니다.
+            // (중복 추가 방지를 위해 chatHistory 마지막 메시지와 비교는 불필요할 수 있음, STT에서 이미 추가하므로)
+            // chatInput.value를 사용한 경우는 여기서 appendMessage를 호출해야 합니다.
+            // 현재는 STT의 finalTranscript와 텍스트 입력 모두 이 함수를 호출합니다.
+            // STT의 경우 onresult에서 이미 appendMessage('user')를 하므로,
+            // 텍스트 입력의 경우에만 여기서 appendMessage('user')를 하도록 구분하거나,
+            // appendMessage 호출을 이 함수로 일원화하고, STT onresult에서는 호출하지 않도록 할 수 있습니다.
+            // 여기서는 일관성을 위해, handleUserText가 호출되면 무조건 사용자 메시지를 먼저 기록한다고 가정 (STT에서 호출 시 중복될 수 있으니 주의)
+            // --> STT의 onresult에서 appendMessage('user')를 하므로, 여기서는 추가하지 않습니다. (중복 방지)
+
+
+            showAiLoading(true);
+            try {
+                const contextForGpt = {
+                    userAge: userAge,
+                    userName: userName,
+                    userDisease: userDisease, 
+                    selectedTopic: selectedTopic, // 온보딩에서 선택한 주제 객체 전달
+                    isCbtUser: isCbtUser,
+                    chatHistory: chatHistory.slice(-10) // 최근 대화 내용 전달
+                };
+                const aiResponse = await getGptResponse(text, contextForGpt);
+                
+                if (typeof aiResponse === 'string') {
+                    appendMessage(aiResponse, 'ai');
+                    await playTTSFromText(aiResponse, selectedVoice);
+                } else if (aiResponse && aiResponse.error) {
+                    appendMessage(`로지가 답변 준비 중 오류가 발생했어요: ${aiResponse.error}`, 'ai');
+                    await playTTSFromText(`오류가 발생했어요. ${aiResponse.error}`, selectedVoice);
+                } else if (aiResponse && aiResponse.rephrasing) { 
+                     appendMessage(aiResponse.rephrasing, 'ai');
+                    await playTTSFromText(aiResponse.rephrasing, selectedVoice);
+                } else { // 예상치 못한 응답 형식
+                    appendMessage("로지가 지금은 답변하기 어려운 것 같아요. 다시 시도해주세요.", 'ai');
+                    await playTTSFromText("로지가 지금은 답변하기 어려운 것 같아요.", selectedVoice);
+                }
+            } catch (err) {
+                console.error("GPT 응답 처리 오류:", err);
+                appendMessage('죄송해요, 답변을 가져오는 중 문제가 발생했어요.', 'ai');
+                await playTTSFromText('죄송해요, 답변을 가져오는 중 문제가 발생했어요.', selectedVoice);
+            } finally {
+                showAiLoading(false);
+            }
+        }
+
+        // 텍스트 입력 처리
+        sendButton.onclick = () => {
+            const inputText = chatInput.value;
+            if (inputText.trim() !== "") {
+                appendMessage(inputText, 'user'); // 텍스트 입력 시 사용자 메시지 추가
+                handleUserText(inputText);
+                chatInput.value = ''; // 입력창 비우기
+            }
+        };
+        chatInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && !sendButton.disabled) {
+                sendButton.click();
+            }
+        });
+
+        // ── 8. VAD ↔ STT 연동 시작 ─────────────────────
+        if (sttRecognition) { // Web Speech API가 지원될 때만 VAD 설정 및 연동
+            setupAudioWorkletVAD(
+                () => { // onSpeechStart 콜백
+                    if (sttRecognition && !recognitionActive && typeof sttRecognition.start === 'function') {
+                        try {
+                            document.getElementById('interim-stt-bubble')?.remove(); // 이전 중간 결과 제거
+                            console.log("STT 시작 시도 (VAD speechstart 감지)");
+                            sttRecognition.start();
+                        } catch (e) {
+                            console.warn("sttRecognition.start() 오류:", e.message);
+                            // 이미 시작된 경우(InvalidStateError)는 흔히 발생할 수 있으므로, 사용자에게 알리지 않을 수 있음
+                            if (e.name !== 'InvalidStateError') {
+                                appendMessage('음성 인식을 시작할 수 없어요.', 'ai');
+                            }
+                        }
+                    }
+                },
+                () => { // onSpeechEnd 콜백
+                    if (sttRecognition && recognitionActive && typeof sttRecognition.stop === 'function') {
+                        try {
+                            console.log("STT 중지 시도 (VAD speechend 감지)");
+                            sttRecognition.stop(); 
+                        } catch (e) {
+                             console.warn("sttRecognition.stop() 오류:", e.message);
+                        }
+                    }
+                }
+            ).catch(err => console.error("setupAudioWorkletVAD 실행 중 오류:", err));
+        }
+
+        // ── 9. 전체 초기화 ─────────────────────────────
+        (async () => {
+            // 온보딩에서 저장된 정보 로깅 (개발용)
+            console.log('온보딩 정보:', { userAge, userName, userDisease, selectedTopic, isCbtUser, selectedVoice });
+            await initConversation(); // 첫 AI 인사
+            // VAD 설정은 setupAudioWorkletVAD 함수 호출로 이미 시작됨 (Web Speech API 지원 시)
+        })();
+    </script>
 </body>
 </html>
