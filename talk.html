@@ -119,13 +119,33 @@
 
       // STT 설정 (Web Speech API)
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-        const API = window.SpeechRecognition || window.webkitSpeechRecognition;
-        stt = new API();
-        stt.lang = 'ko-KR'; stt.interimResults = false;
-        stt.onstart  = () => { recognitionActive = true; micButton.textContent = '🔴'; };
-        stt.onend    = () => { recognitionActive = false; micButton.textContent = '🎤'; };
-        stt.onresult = e => { const speech = e.results[0][0].transcript; handleUserText(speech); };
-        micButton.onclick = () => recognitionActive ? stt.stop() : stt.start();
+        // 마이크 권한 요청 후 STT 초기화
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(stream => {
+            const API = window.SpeechRecognition || window.webkitSpeechRecognition;
+            stt = new API();
+            stt.lang = 'ko-KR';
+            stt.interimResults = false;
+
+            stt.onstart = () => { recognitionActive = true; micButton.textContent = '🔴'; };
+            stt.onend   = () => { recognitionActive = false; micButton.textContent = '🎤'; };
+            stt.onresult = e => { const speech = e.results[0][0].transcript; handleUserText(speech); };
+
+            micButton.disabled = false;
+            micButton.onclick = () => {
+              if (recognitionActive) stt.stop();
+              else stt.start();
+            };
+          })
+          .catch(err => {
+            console.error('마이크 권한 요청 실패', err);
+            appendBubble('마이크 권한을 사용할 수 없어요. 설정을 확인해주세요.', 'bot');
+            micButton.disabled = true;
+          });
+      } else {
+        console.error('이 브라우저에서는 Web Speech API를 지원하지 않습니다.');
+        appendBubble('음성 인식 기능을 사용할 수 없어요.', 'bot');
+        micButton.disabled = true;
       }
 
       // 페이지 로드 시 초기 대화 실행
