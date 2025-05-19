@@ -1,85 +1,420 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOZEE 분석 대시보드</title>
-  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    body, html { margin:0; padding:0; font-family:'KoPub World Dotum',sans-serif; background:#fafafa; }
-    .container { max-width:800px; margin:20px auto; padding:0 20px; }
-    h2 { margin-top:40px; font-size:1.3em; color:#333; }
-    .section { background:#fff; padding:20px; margin-top:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
-    .feedback { margin-top:10px; padding:10px; background:#ffe0e0; border-left:4px solid #f44336; color:#b71c1c; border-radius:4px; }
-    #emotionChart, #situationChart { width:100%; height:300px; }
-    #tagCloud { min-height:100px; border:1px dashed #ccc; padding:10px; }
-    .badge { display:inline-block; margin:4px; padding:4px 8px; background:#e0e0e0; border-radius:4px; font-size:0.85em; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LOZEE 심층 분석 대시보드</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap"
+        rel="stylesheet"
+    />
+    <style>
+        body, html { 
+            margin:0; 
+            padding:0; 
+            font-family:'KoPub World Dotum', sans-serif; 
+            background:#f4f6f8; 
+            color: #333333; 
+        }
+        .container { 
+            max-width:900px; 
+            margin:25px auto; 
+            padding:0 25px; 
+        }
+        h1 {
+            color: #2c3e50; 
+            text-align: center;
+            font-size: 2em; 
+            margin-bottom: 15px; 
+            font-weight: 700;
+        }
+        .share-button-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        #reportShareButton {
+            background-color: #6078ea; 
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #reportShareButton:hover {
+            background-color: #536dfe;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .ai-analysis-notice { 
+            font-size: 0.75em;
+            color: #78909c; 
+            margin-top: -12px; /* 제목과의 간격 조정 */
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        h2 { 
+            margin-top:0; 
+            margin-bottom: 8px; 
+            font-size:1.5em; 
+            color:#34495e; 
+            border-bottom: 2px solid #e0e0e0; 
+            padding-bottom: 12px;
+        }
+        .section { 
+            background:#ffffff; 
+            padding:25px; 
+            margin-top:25px; 
+            border-radius:12px; 
+            box-shadow:0 4px 12px rgba(0,0,0,0.08); 
+        }
+        .section p {
+            color: #555555; 
+            line-height: 1.7;
+            font-size: 1em; 
+        }
+        .section p span { 
+            color: #2c3e50; 
+            font-weight: bold;
+        }
+        .feedback { 
+            margin-top:15px; 
+            padding:12px 18px; 
+            border-left-width:5px; 
+            border-left-style:solid;
+            border-radius:8px; 
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        .feedback.negative {
+            background:#ffebee; border-left-color: #c62828; color:#c62828; 
+        }
+        .feedback.positive {
+            background:#e8f5e9; border-left-color: #2e7d32; color:#2e7d32;
+        }
+        .feedback.neutral {
+            background:#eceff1; border-left-color: #546e7a; color:#37474f;
+        }
+
+        #emotionChart, #situationChart { 
+            width:100%; 
+            height:320px; 
+            background-color: #fdfdfd; 
+            border-radius: 8px;
+            border: 1px solid #e0e0e0; 
+            padding: 15px; 
+            box-sizing: border-box;
+        }
+        #tagCloud { 
+            min-height:120px; 
+            border:1px dashed #cccccc; 
+            padding:15px; 
+            margin-top: 20px; 
+            border-radius: 8px;
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            align-items: center; 
+        }
+        .badge { 
+            display:inline-block; 
+            margin:4px; 
+            padding:8px 12px; 
+            background:#e8eaf6; 
+            color: #3f51b5; 
+            border-radius:16px; 
+            font-size:0.9em; 
+            transition: background-color 0.2s, color 0.2s;
+            font-weight: 500;
+        }
+        .badge:hover {
+            background-color: #c5cae9;
+            color: #303f9f;
+        }
+
+        #patternDashboard, #situationAlerts {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9; 
+            border-radius: 8px;
+            color: #444;
+        }
+        #patternDashboard p, #situationAlerts p { 
+             color: #444;
+             margin-bottom: 8px; 
+        }
+        #situationAlerts .feedback { 
+            background:#fff3e0; border-left-color: #ff9800; color:#e65100;
+        }
+        .footer-ai-notice { 
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 0.8em;
+            color: #78909c;
+        }
+        
+        /* 분석 방법론 소개 섹션 스타일 */
+        .methodology-list {
+            list-style-type: none; 
+            padding-left: 0;
+            font-size: 0.9em; 
+            color: #555; 
+        }
+        .methodology-list li {
+            margin-bottom: 12px; 
+            padding-left: 20px; 
+            position: relative;
+        }
+        .methodology-list li::before { 
+            content: "✔"; 
+            color: #6078ea; 
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        .methodology-list li strong {
+            color: #34495e; 
+        }
+
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.7em; }
+            h2 { font-size: 1.3em; }
+            .section { padding: 20px; }
+            #emotionChart, #situationChart { height: 280px; }
+            .methodology-list { font-size: 0.85em; }
+        }
+        @media (max-width: 480px) {
+            .container { margin: 15px auto; padding: 0 15px; }
+            h1 { font-size: 1.5em; margin-bottom: 25px; }
+            h2 { font-size: 1.2em; }
+            .section { padding: 15px; margin-top: 20px;}
+            .section p { font-size: 0.95em; }
+            .feedback { padding: 10px 15px; font-size: 0.9em;}
+            #emotionChart, #situationChart { height: 250px; }
+            .badge { font-size: 0.85em; padding: 6px 10px;}
+            .ai-analysis-notice { font-size: 0.7em; }
+            .methodology-list { font-size: 0.8em; }
+        }
+
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>심층 분석 대시보드</h1>
+    <div class="container">
+        <h1>심층 분석 대시보드</h1>
+        <div class="share-button-container">
+            <button id="reportShareButton">보고서 공유하기 🔗</button>
+        </div>
 
-    <div class="section" id="languageAgeSection">
-      <!-- 언어연령은 1차/2차/3차 분석으로 총 대화 시간 기준(30분, 2시간, 6시간) 후 최종 3차 분석 결과가 전달됩니다. -->
-      <h2>언어·나이 분석</h2>
-      <p>사용자 실나이: <span id="realAge"></span>세</p>
-      <p>예측 언어연령: <span id="predictedLangAge"></span>세</p>
-      <div id="ageFeedback" class="feedback" style="display:none;"></div>
+        <div class="section" id="languageAgeSection">
+            <h2>언어·나이 분석</h2>
+            <p class="ai-analysis-notice">LOZEE AI 분석</p>
+            <p>사용자 실나이: <span id="realAge"></span>세</p>
+            <p>예측 언어연령: <span id="predictedLangAge"></span>세 <span id="ageDifferenceVisual" style="font-weight:normal; margin-left: 8px;"></span></p>
+            <div id="ageFeedback" class="feedback" style="display:none;"></div>
+        </div>
+
+        <div class="section" id="analysisMethodologySection">
+            <h2>LOZEE의 분석 방법론</h2>
+            <p class="ai-analysis-notice">LOZEE AI 분석</p>
+            <ul class="methodology-list">
+                <li><strong>Russell의 감정 원형 모형</strong>: Valence(쾌-불쾌)와 Arousal(각성-이완) 축을 기반으로 감정의 위치를 다차원적으로 분석합니다.</li>
+                <li><strong>Plutchik의 감정 바퀴</strong>: 8가지 기본 감정과 그 강도 및 유사성을 바탕으로 복합적인 감정 상태를 이해합니다.</li>
+                <li><strong>Lexicon 기반 감성 분석</strong>: 한국어 감성 사전(예: KOSAC)을 활용하여 텍스트의 긍정, 부정, 중립 극성을 판단합니다.</li>
+                <li><strong>딥러닝 분류 모델 (BERT/KoBERT)</strong>: 최신 자연어 처리 모델을 사용하여 문맥을 고려한 고정밀 감정 극성 및 세부 감정(예: 기쁨, 슬픔, 분노 등)을 분류합니다.</li>
+                <li><strong>인지왜곡 이론 (Beck의 CBT)</strong>: 인지행동치료 이론에 기반하여 대화에서 나타날 수 있는 대표적인 인지왜곡 패턴(예: 흑백논리, 과잉일반화 등)을 감지합니다.</li>
+                <li><strong>대화 주제 구조화</strong>: LOZEE AI의 자체 상담 토픽 데이터를 활용하여 대화의 흐름과 주요 주제를 체계적으로 파악하고 관련 피드백을 제공합니다.</li>
+            </ul>
+        </div>
+
+        <div class="section" id="emotionToneSection">
+            <h2>감정 어조 분석</h2>
+            <p class="ai-analysis-notice">LOZEE AI 분석</p>
+            <canvas id="emotionChart"></canvas>
+            <div id="tagCloud">
+            </div>
+        </div>
+
+        <div class="section" id="patternSection">
+            <h2>반복 감정·키워드 패턴</h2>
+            <p class="ai-analysis-notice">LOZEE AI 분석</p>
+            <div id="patternDashboard">
+            </div>
+        </div>
+
+        <div class="section" id="situationSection">
+            <h2>상황 분석 (인지왜곡 감지)</h2>
+            <p class="ai-analysis-notice">LOZEE AI 분석</p>
+            <canvas id="situationChart"></canvas>
+            <div id="situationAlerts">
+            </div>
+        </div>
+        <p class="footer-ai-notice">본 분석은 LOZEE AI에 의해 제공되었습니다.</p>
     </div>
 
-    <div class="section" id="emotionToneSection">
-      <h2>감정 어조 분석</h2>
-      <canvas id="emotionChart"></canvas>
-      <div id="tagCloud"></div>
-    </div>
+    <script type="module">
+        // Chart.js 사용 시, options.scales.x.ticks.color, options.scales.y.ticks.color, 
+        // options.plugins.legend.labels.color 등을 밝은 배경에 맞게 어두운 색으로 설정해야 합니다.
+        // 예: Chart.defaults.color = '#333'; Chart.defaults.borderColor = '#ddd';
 
-    <div class="section" id="patternSection">
-      <h2>반복 감정·키워드 패턴</h2>
-      <div id="patternDashboard"></div>
-    </div>
+        // --- 임시 Mock 함수들 (실제 모듈로 대체 필요) ---
+        const getPredictedLanguageAge = async () => { 
+            await new Promise(r => setTimeout(r, 100)); 
+            const baseAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 10;
+            return Math.max(1, baseAge + Math.floor(Math.random() * 4) - 3); 
+        };
+        const getEmotionData = async () => { 
+            await new Promise(r => setTimeout(r, 100)); 
+            return { 
+                getHistory: () => ({ 
+                    labels: ['1주차', '2주차', '3주차', '4주차', '5주차'], 
+                    datasets: [
+                        { label: '긍정적 대화 비율', data: [60,65,55,70,75], borderColor: '#4caf50', backgroundColor: 'rgba(76, 175, 80, 0.2)', tension: 0.1, fill: true}, 
+                        { label: '부정적 대화 비율', data: [20,15,25,10,10], borderColor: '#f44336', backgroundColor: 'rgba(244, 67, 54, 0.2)', tension: 0.1, fill: true}
+                    ]
+                }), 
+                getTags: () => [{text:'친구', weight:10}, {text:'학교', weight:8}, {text:'숙제', weight:3}, {text:'엄마', weight:7}, {text:'속상함', weight:6}, {text:'재미', weight:9}]
+            };
+        };
+        const renderEmotionChart = (canvasId, data) => { console.log(`Render Emotion Chart on ${canvasId} with:`, data); /* 실제 차트 라이브러리 연동 */ };
+        const renderTagCloud = (elementId, tags) => {
+            const cloudEl = document.getElementById(elementId);
+            if(cloudEl) {
+                cloudEl.innerHTML = tags.map(tag => {
+                    const size = 0.8 + (tag.weight / 15); 
+                    const opacity = Math.max(0.5, tag.weight / 10); 
+                    return `<span class="badge" style="opacity:${opacity}; font-size:${size}em;">${tag.text}</span>`;
+                }).join('');
+            }
+        };
+        const getPatternData = () => ({ patterns: ["'숙제' 관련 대화에서 '힘들다', '어렵다' 감정 표현이 자주 나타납니다.", "'친구'와 관련된 긍정적 감정 표현 빈도가 높습니다."] });
+        const renderPatternDashboard = (elementId, data) => {
+            const dashEl = document.getElementById(elementId);
+            if(dashEl && data.patterns) {
+                dashEl.innerHTML = data.patterns.map(p => `<p>💡 ${p}</p>`).join('');
+            }
+        };
+        const getSituationData = () => ({ 
+            history: { 
+                labels: ['시험 전', '친구와 다툼', '칭찬 받았을 때'], 
+                datasets: [{ label: '인지왜곡 의심 지수', data: [7, 8, 2], borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.2)', fill:true }]
+            }, 
+            distortions: ["시험 결과에 대해 '나는 항상 망쳐'라고 생각하는 경향 (과잉 일반화)", "친구의 한 마디에 '나를 싫어하는 게 틀림없어'라고 단정 (성급한 결론)"]
+        });
+        const renderSituationChart = (canvasId, data) => { console.log(`Render Situation Chart on ${canvasId} with:`, data); /* 실제 차트 라이브러리 연동 */};
+        const alertCognitiveDistortions = (elementId, distortions) => {
+            const alertEl = document.getElementById(elementId);
+            if(alertEl && distortions) {
+                alertEl.innerHTML = distortions.map(d => `<p class="feedback">${d}</p>`).join('');
+            }
+        };
+        // --- 임시 Mock 함수들 끝 ---
 
-    <div class="section" id="situationSection">
-      <h2>상황 분석 (인지왜곡 감지)</h2>
-      <canvas id="situationChart"></canvas>
-      <div id="situationAlerts"></div>
-    </div>
-  </div>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const realAgeEl = document.getElementById('realAge');
+            const predictedLangAgeEl = document.getElementById('predictedLangAge');
+            const ageFeedbackEl = document.getElementById('ageFeedback');
+            const ageDifferenceVisualEl = document.getElementById('ageDifferenceVisual');
+            const reportShareButton = document.getElementById('reportShareButton');
 
-  <script type="module">
-    import { getPredictedLanguageAge } from './js/basic-features.js';
-    import { renderEmotionChart, renderTagCloud } from './js/emotion-visuals.js';
-    import { getPatternData, renderPatternDashboard } from './js/pattern-tracker.js';
-    import { getSituationData, renderSituationChart, alertCognitiveDistortions } from './js/situation-analysis.js';
+            const realAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 0; 
+            if(realAgeEl) realAgeEl.textContent = realAge || "정보 없음";
+            
+            if(predictedLangAgeEl && ageFeedbackEl && ageDifferenceVisualEl){
+                try {
+                    const predicted = await getPredictedLanguageAge(); 
+                    predictedLangAgeEl.textContent = predicted || "분석 중";
+                    
+                    if (realAge && predicted) {
+                        const diffYears = realAge - predicted;
+                        const diffMonths = diffYears * 12;
+                        let feedbackMsg = '';
+                        let visualText = '';
+                        ageFeedbackEl.className = 'feedback'; 
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 1) 언어·나이 분석
-      const realAge = parseInt(localStorage.getItem('lozee_userage'), 10);
-      document.getElementById('realAge').textContent = realAge;
-      const predicted = await getPredictedLanguageAge(); // 학습 모델 호출
-      document.getElementById('predictedLangAge').textContent = predicted;
-      // 차이 계산 (개월 단위)
-      const diffMonths = (realAge - predicted) * 12;
-      if (Math.abs(diffMonths) >= 6) {
-        const fb = document.getElementById('ageFeedback');
-        fb.textContent = `언어연령과 실제 나이가 ${Math.abs(diffMonths)}개월 차이 납니다. 언어 발달 지원 활동을 권장합니다.`;
-        fb.style.display = 'block';
-      }
+                        if (diffMonths >= 6) { 
+                            feedbackMsg = `언어발달이 실제 나이보다 약 ${diffYears > 0 ? `${diffYears}년 ` : ''}${Math.abs(diffMonths % 12)}개월 정도 느립니다. 가정과 교육기관에서의 적극적인 언어 환경 지원을 권장합니다.`;
+                            visualText = `(실제 나이 대비 ${diffYears > 0 ? `${diffYears}년 ` : ''}${Math.abs(diffMonths % 12)}개월 늦음 🐢)`;
+                            ageFeedbackEl.classList.add('negative');
+                        } else if (diffMonths <= -6) { 
+                            feedbackMsg = `언어발달이 실제 나이보다 약 ${Math.abs(diffYears) > 0 ? `${Math.abs(diffYears)}년 ` : ''}${Math.abs(diffMonths % 12)}개월 정도 빠릅니다! 아이의 뛰어난 언어 능력을 계속해서 격려해주세요.`;
+                            visualText = `(실제 나이 대비 ${Math.abs(diffYears) > 0 ? `${Math.abs(diffYears)}년 ` : ''}${Math.abs(diffMonths % 12)}개월 빠름 🚀)`;
+                            ageFeedbackEl.classList.add('positive');
+                        } else if (Math.abs(diffMonths) > 0) { 
+                            const comparison = diffMonths > 0 ? "조금 느립니다" : "조금 빠릅니다";
+                            feedbackMsg = `언어연령과 실제 나이가 약 ${Math.abs(diffMonths)}개월 정도 차이 납니다. (${comparison})`;
+                            visualText = `(${comparison.replace('니다.', '')} ${Math.abs(diffMonths)}개월)`;
+                            ageFeedbackEl.classList.add('neutral');
+                        } else { 
+                            feedbackMsg = `언어연령이 실제 나이와 비슷하게 잘 발달하고 있습니다! 👍`;
+                            visualText = `(실제 나이와 유사함)`;
+                            ageFeedbackEl.classList.add('positive');
+                        }
+                        ageFeedbackEl.textContent = feedbackMsg;
+                        ageDifferenceVisualEl.textContent = visualText;
+                        ageFeedbackEl.style.display = 'block';
+                    }
+                } catch (e) {
+                    console.error("언어 연령 분석 오류:", e);
+                    predictedLangAgeEl.textContent = "분석 오류";
+                    if (ageDifferenceVisualEl) ageDifferenceVisualEl.textContent = '';
+                }
+            }
 
-      // 2) 감정 어조 시각화
-      const emotionData = await import('./js/emotion-data.js');
-      renderEmotionChart('emotionChart', emotionData.getHistory());
-      renderTagCloud('tagCloud', emotionData.getTags());
+            try {
+                const emotionModule = await getEmotionData(); 
+                if (typeof renderEmotionChart === 'function') {
+                     renderEmotionChart('emotionChart', emotionModule.getHistory());
+                }
+                if (typeof renderTagCloud === 'function') {
+                    renderTagCloud('tagCloud', emotionModule.getTags());
+                }
+            } catch (e) {
+                console.error("감정 어조 시각화 오류:", e);
+            }
+            
+            try {
+                if (typeof getPatternData === 'function' && typeof renderPatternDashboard === 'function') {
+                    const patterns = getPatternData();
+                    renderPatternDashboard('patternDashboard', patterns);
+                }
+            } catch (e) {
+                console.error("감정/키워드 패턴 오류:", e);
+            }
 
-      // 3) 감정·키워드 패턴
-      const patterns = getPatternData();
-      renderPatternDashboard('patternDashboard', patterns);
+            try {
+                if (typeof getSituationData === 'function' && typeof renderSituationChart === 'function' && typeof alertCognitiveDistortions === 'function') {
+                    const situationData = getSituationData();
+                    renderSituationChart('situationChart', situationData.history);
+                    alertCognitiveDistortions('situationAlerts', situationData.distortions);
+                }
+            } catch (e) {
+                console.error("상황 분석 오류:", e);
+            }
 
-      // 4) 상황 분석
-      const situationData = getSituationData();
-      renderSituationChart('situationChart', situationData.history);
-      alertCognitiveDistortions('situationAlerts', situationData.distortions);
-    });
-  </script>
+            if(reportShareButton) {
+                reportShareButton.onclick = () => {
+                    const reportId = localStorage.getItem('lozee_username') + "_" + new Date().getTime(); 
+                    const shareableLink = `${window.location.origin}${window.location.pathname}?report_id=${reportId}`;
+                    
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(shareableLink)
+                            .then(() => {
+                                alert('공유 링크가 복사되었습니다!\n' + shareableLink);
+                            })
+                            .catch(err => {
+                                console.error('클립보드 복사 실패:', err);
+                                alert('링크 복사에 실패했어요. 수동으로 복사해주세요:\n' + shareableLink);
+                            });
+                    } else {
+                        prompt('아래 링크를 복사하여 공유하세요:', shareableLink);
+                    }
+                };
+            }
+        });
+    </script>
 </body>
 </html>
