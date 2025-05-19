@@ -156,7 +156,6 @@
             color: #78909c;
         }
         
-        /* 분석 방법론 소개 섹션 스타일 */
         .methodology-list {
             list-style-type: none; 
             padding-left: 0;
@@ -178,7 +177,6 @@
         .methodology-list li strong {
             color: #34495e; 
         }
-
 
         @media (max-width: 768px) {
             h1 { font-size: 1.7em; }
@@ -329,27 +327,32 @@
                     predictedLangAgeEl.textContent = predicted || "분석 중";
                     
                     if (realAge && predicted) {
-                        const diffYears = realAge - predicted;
-                        const diffMonths = diffYears * 12;
+                        const diffMonthsTotal = (realAge - predicted) * 12; // 총 개월 수 차이 (양수: 예측이 어림, 음수: 예측이 높음)
                         let feedbackMsg = '';
                         let visualText = '';
-                        ageFeedbackEl.className = 'feedback'; 
+                        ageFeedbackEl.className = 'feedback'; // 기본 클래스
 
-                        if (diffMonths >= 6) { 
-                            feedbackMsg = `언어발달이 실제 나이보다 약 ${diffYears > 0 ? `${diffYears}년 ` : ''}${Math.abs(diffMonths % 12)}개월 정도 느립니다. 가정과 교육기관에서의 적극적인 언어 환경 지원을 권장합니다.`;
-                            visualText = `(실제 나이 대비 ${diffYears > 0 ? `${diffYears}년 ` : ''}${Math.abs(diffMonths % 12)}개월 늦음 🐢)`;
-                            ageFeedbackEl.classList.add('negative');
-                        } else if (diffMonths <= -6) { 
-                            feedbackMsg = `언어발달이 실제 나이보다 약 ${Math.abs(diffYears) > 0 ? `${Math.abs(diffYears)}년 ` : ''}${Math.abs(diffMonths % 12)}개월 정도 빠릅니다! 아이의 뛰어난 언어 능력을 계속해서 격려해주세요.`;
-                            visualText = `(실제 나이 대비 ${Math.abs(diffYears) > 0 ? `${Math.abs(diffYears)}년 ` : ''}${Math.abs(diffMonths % 12)}개월 빠름 🚀)`;
-                            ageFeedbackEl.classList.add('positive');
-                        } else if (Math.abs(diffMonths) > 0) { 
-                            const comparison = diffMonths > 0 ? "조금 느립니다" : "조금 빠릅니다";
-                            feedbackMsg = `언어연령과 실제 나이가 약 ${Math.abs(diffMonths)}개월 정도 차이 납니다. (${comparison})`;
-                            visualText = `(${comparison.replace('니다.', '')} ${Math.abs(diffMonths)}개월)`;
+                        if (Math.abs(diffMonthsTotal) >= 6) { // 6개월 이상 차이 나는 경우
+                            const years = Math.floor(Math.abs(diffMonthsTotal) / 12);
+                            const months = Math.abs(diffMonthsTotal) % 12;
+                            const diffDetailText = `${years > 0 ? `${years}년 ` : ''}${months}개월`;
+
+                            if (diffMonthsTotal > 0) { // 예측 언어 연령이 더 낮은 경우
+                                feedbackMsg = `예측 언어연령이 실제 나이보다 약 ${diffDetailText} 정도 낮습니다. 일상 대화와 놀이를 통해 언어 발달을 지원하는 활동을 권장합니다.`;
+                                visualText = `(실제 나이 대비 ${diffDetailText} 낮음 🐢)`;
+                                ageFeedbackEl.classList.add('negative');
+                            } else { // 예측 언어 연령이 더 높은 경우
+                                feedbackMsg = `예측 언어연령이 실제 나이보다 약 ${diffDetailText} 정도 높습니다! 아이의 뛰어난 언어 능력을 계속해서 격려하고 풍부한 언어 환경을 제공해주세요.`;
+                                visualText = `(실제 나이 대비 ${diffDetailText} 높음 🚀)`;
+                                ageFeedbackEl.classList.add('positive');
+                            }
+                        } else if (diffMonthsTotal !== 0) { // 6개월 미만 차이
+                            const comparison = diffMonthsTotal > 0 ? "조금 낮습니다" : "조금 높습니다";
+                            feedbackMsg = `예측 언어연령이 실제 나이와 약 ${Math.abs(diffMonthsTotal)}개월 정도 차이 납니다. (${comparison})`;
+                            visualText = `(${comparison.replace('니다.', '')} ${Math.abs(diffMonthsTotal)}개월)`;
                             ageFeedbackEl.classList.add('neutral');
-                        } else { 
-                            feedbackMsg = `언어연령이 실제 나이와 비슷하게 잘 발달하고 있습니다! 👍`;
+                        } else { // 차이 없음
+                            feedbackMsg = `예측 언어연령이 실제 나이와 비슷하게 잘 발달하고 있습니다! 👍`;
                             visualText = `(실제 나이와 유사함)`;
                             ageFeedbackEl.classList.add('positive');
                         }
@@ -364,6 +367,7 @@
                 }
             }
 
+            // (이하 감정 어조, 패턴, 상황 분석 로직은 이전과 동일)
             try {
                 const emotionModule = await getEmotionData(); 
                 if (typeof renderEmotionChart === 'function') {
