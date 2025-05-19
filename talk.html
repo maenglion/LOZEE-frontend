@@ -11,7 +11,6 @@
   <header id="main-header">LOZEE와 대화하기</header>
   <div id="meter-container"><div id="volume-meter"><div id="volume-level"></div></div></div>
   <div id="chat-container"></div>
-
   <div id="chat-input-container">
     <button id="mic-button" title="음성 인식 시작/중지">🎤</button>
     <input type="text" id="chat-input" placeholder="메시지를 입력하거나 마이크 버튼을 누르세요..." />
@@ -19,23 +18,23 @@
   </div>
 
   <script type="module">
+    import { topicsByAge } from './js/counseling_topics.js';
     import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
-    import { getGptResponse } from './js/gpt-dialog.js';
+    import { getGptResponse, getFirstQuestion } from './js/gpt-dialog.js';
+    import { trackTime, trackEmotionTone, trackSituation } from './js/basic-features.js';
 
     const chatContainer = document.getElementById('chat-container');
-    const meterLevel = document.getElementById('volume-level');
     const chatInput = document.getElementById('chat-input');
     const sendButton = document.getElementById('send-button');
     const micButton = document.getElementById('mic-button');
+    const meterLevel = document.getElementById('volume-level');
 
-    // 사용자 설정
     const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
     const userAge = localStorage.getItem('lozee_userage');
     const userName = localStorage.getItem('lozee_username') || '친구';
-    const selectedTopic = JSON.parse(localStorage.getItem('selectedTopic') || '{}');
+    let selectedTopic = JSON.parse(localStorage.getItem('selectedTopic') || '{}');
 
     let recognitionActive = false;
-    let stt;
 
     function appendBubble(text, role) {
       const el = document.createElement('div');
@@ -47,73 +46,93 @@
 
     function showAiLoading(show) {
       sendButton.disabled = show;
-      chatInput.disabled = show;
-      micButton.disabled = show;
+      chatInput.disabled  = show;
+      micButton.disabled  = show;
     }
 
-    // 초기 인사: 선택된 주제 반영
+    // 상담 토픽 확인 (인덱스에서 선택된 키로부터 데이터 로드)
+    function resolveTopicDetail() {
+      const ageKey = (() => {
+        const a = parseInt(userAge,10);
+        if (a>=8&&a<=10) return '8-10';
+        if (a>=11&&a<=15) return '11-15';
+        return '30+';
+      })();
+      const data = topicsByAge[ageKey] || {};
+      if (selectedTopic.category && data[selectedTopic.category]) {
+        return selectedTopic;
+      }
+      // fallback: first topic in first category
+      const firstCat = Object.keys(data)[0];
+      const firstTopic = data[firstCat]?.[0] || { displayText:'대화', icon:'💬' };
+      selectedTopic = firstTopic;
+      return selectedTopic;
+    }
+
+    // 초기 대화 시작: 인덱스 선택 주제 기반 GPT 첫 질문
     async function initConversation() {
-      const greeting = `${userName}님, 오늘은 "${selectedTopic.displayText || '대화'}" 주제로 이야기해볼까요?`;
-      appendBubble(greeting, 'bot');
-      await playTTSFromText(greeting, selectedVoice);
+      const topic = resolveTopicDetail();
+      const firstQ = getFirstQuestion(userAge, topic);
+      appendBubble(firstQ, 'bot');
+      await playTTSFromText(firstQ, selectedVoice);
+      // BASIC 기능 시작
+      trackTime();
+      trackEmotionTone();
+      trackSituation();
     }
 
-    // 스트리밍 방식 GPT 호출
+    // GPT 스트리밍 + TTS 재생
     async function handleUserText(text) {
       if (!text.trim()) return;
       appendBubble(text, 'user');
       showAiLoading(true);
 
-      // 버블 생성 후 스트리밍 응답을 한 버블에 이어쓰기
       const botBubble = document.createElement('div');
       botBubble.className = 'bubble bot';
       chatContainer.appendChild(botBubble);
       chatContainer.scrollTop = chatContainer.scrollHeight;
 
-      // fetch streaming
-      const response = await fetch('/api/gpt-stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, context: { userAge, userName, selectedTopic } })
-      });
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunk = decoder.decode(value);
-        botBubble.textContent += chunk;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+      try {
+        const res = await fetch('/api/gpt-stream', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ userInput:text, context:{ userAge, userName, selectedTopic } })
+        });
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let done=false;
+        while(!done) {
+          const {value, done: d} = await reader.read();
+          done = d;
+          botBubble.textContent += dec.decode(value, {stream:true});
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        await playTTSFromText(botBubble.textContent, selectedVoice);
+      } catch(err) {
+        console.error(err);
+        appendBubble('죄송해요, 오류가 발생했어요.', 'bot');
+        await playTTSFromText('죄송해요, 오류가 발생했어요.', selectedVoice);
+      } finally {
+        showAiLoading(false);
       }
-      // 완성된 텍스트에 TTS 재생
-      await playTTSFromText(botBubble.textContent, selectedVoice);
-      showAiLoading(false);
     }
 
-    // 텍스트 전송 이벤트
+    // 키보드 및 버튼 이벤트
     sendButton.onclick = () => {
-      const txt = chatInput.value;
-      chatInput.value = '';
-      handleUserText(txt);
+      const txt = chatInput.value.trim();
+      if (txt) { chatInput.value=''; handleUserText(txt); }
     };
-    chatInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !sendButton.disabled) sendButton.click();
+    chatInput.addEventListener('keydown',e=>{
+      if(e.key==='Enter' && !sendButton.disabled) sendButton.click();
     });
 
     // STT 설정
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const API = window.SpeechRecognition || window.webkitSpeechRecognition;
-      stt = new API();
-      stt.lang = 'ko-KR'; stt.interimResults = false; stt.maxAlternatives = 1;
-      stt.onstart = () => { recognitionActive = true; micButton.textContent = '🔴'; };
-      stt.onend = () => { recognitionActive = false; micButton.textContent = '🎤'; };
-      stt.onresult = e => { const speech = e.results[0][0].transcript; handleUserText(speech); };
-
-      micButton.onclick = () => {
-        if (recognitionActive) stt.stop();
-        else stt.start();
-      };
+    if ('SpeechRecognition' in window||'webkitSpeechRecognition' in window) {
+      const API = window.SpeechRecognition||window.webkitSpeechRecognition;
+      const stt = new API(); stt.lang='ko-KR'; stt.interimResults=false;
+      stt.onstart = ()=>{ recognitionActive=true; micButton.textContent='🔴'; };
+      stt.onend   = ()=>{ recognitionActive=false; micButton.textContent='🎤'; };
+      stt.onresult= e=>{ const speech=e.results[0][0].transcript; handleUserText(speech); };
+      micButton.onclick = ()=> recognitionActive? stt.stop() : stt.start();
     }
 
     document.addEventListener('DOMContentLoaded', initConversation);
