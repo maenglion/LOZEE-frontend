@@ -1,553 +1,84 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>님의 대화 분석 (통합)</title>
-  <link rel="stylesheet" href="style.css"> 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOZEE 분석 대시보드</title>
+  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'KoPubWorld Dotum', sans-serif; background-color: #f4f7f6;
-      color: #333; margin: 0; padding: 20px;
-    }
-    .container {
-      background-color: white; padding: 25px; border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); width: 100%;
-      max-width: 800px; margin: 0 auto; text-align: left;
-    }
-    h1 { text-align: center; color: #0095FF; margin-bottom: 25px; }
-    
-    /* 탭 스타일 */
-    .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #0095FF; width: 100%; }
-    .tab-button {
-      flex-grow: 1; text-align: center; padding: 12px 10px; cursor: pointer;
-      border: none; background-color: transparent; font-size: 1.1em; font-weight: bold;
-      color: #B6B6B6; border-bottom: 3px solid transparent; margin-bottom: -2px;
-      transition: color 0.3s, border-bottom-color 0.3s;
-    }
-    .tab-button:hover { color: #007bff; }
-    .tab-button.active { color: #0095FF; border-bottom: 3px solid #0095FF; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    .section-title {
-      font-size: 1.3em; font-weight: bold; color: #333; margin-top: 20px;
-      margin-bottom: 10px; border-bottom: 2px solid #0095FF; padding-bottom: 5px;
-    }
-    .section-title-deep { 
-      font-size: 1.4em; font-weight: bold; color: #007bff; margin-top: 30px;
-      margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 8px;
-    }
-
-    .conversation-log {
-      background-color: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px;
-      padding: 15px; max-height: 300px; overflow-y: auto;
-      white-space: pre-wrap; line-height: 1.6;
-    }
-    .conversation-log p { margin-bottom: 10px; }
-    .conversation-log .user-message strong { color: #28a745; } 
-    .conversation-log .assistant-message strong { color: #17a2b8; }
-    .conversation-log .system-message strong { color: #6c757d; }
-    
-    .audio-info, .emotion-summary-content, .literacy-analysis-container {
-      margin-top: 20px; font-size: 1em; background-color: #f9f9f9;
-      border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px;
-    }
-    .audio-info ul { list-style-type: none; padding-left: 0; }
-    .audio-info li { margin-bottom: 8px; padding: 5px; border-bottom: 1px dashed #eee; }
-    .audio-info li:last-child { border-bottom: none; }
-    .audio-info .sentence { font-style: italic; color: #555; }
-    .audio-info .volume { font-weight: bold; color: #007bff; }
-
-    .emotion-summary-container { display: flex; flex-direction: column; gap: 20px; }
-    .emotion-chart-container { width: 100%; max-width: 500px; height: 300px; margin: 0 auto; }
-    .emotion-text-summary { width: 100%; }
-    .emotion-summary-content ul, .literacy-analysis-container ul {
-      list-style-type: none; padding-left: 0; 
-    }
-    .emotion-summary-content ul {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-      gap: 10px;
-    }
-    .emotion-summary-content li, .literacy-analysis-container li {
-      margin-bottom: 8px; padding: 10px; border-radius: 4px; 
-    }
-    .emotion-summary-content li { background-color: #e9ecef; }
-    .literacy-analysis-container li { background-color: #eef2f7; border-left: 4px solid #007bff; }
-
-
-    .emotion-summary-content li strong { font-weight: bold; }
-    .emotion-summary-content li .emotion-label { min-width: 120px; display: inline-block;}
-    .emotion-summary-content li .emotion-keywords { font-size: 0.9em; color: #555; margin-top: 5px; display: block; padding-left: 5px;}
-    .emotion-summary-content li .emotion-keywords span { margin-right: 5px; background-color: #fff; padding: 1px 4px; border-radius: 3px; border: 1px solid #ddd; display: inline-block; margin-bottom: 3px;}
-    
-    .emotion-summary-content li.joy { border-left: 4px solid #ffc107; }
-    .emotion-summary-content li.sadness { border-left: 4px solid #007bff; }
-    .emotion-summary-content li.anger { border-left: 4px solid #dc3545; }
-    .emotion-summary-content li.anxiety { border-left: 4px solid #6f42c1; }
-
-    .important-utterance-card {
-      background-color: #f9f9f9; border: 1px solid #e0e0e0;
-      border-left: 5px solid #0095FF; border-radius: 8px;
-      padding: 20px; margin-bottom: 25px;
-    }
-    .utterance-text {
-      font-size: 1.1em; line-height: 1.7; margin-bottom: 15px;
-      padding-bottom: 15px; border-bottom: 1px dashed #ccc;
-    }
-    .utterance-text strong.user-name-emphasis { color: #28a745; } 
-    .analysis-section { margin-top: 10px; }
-    .analysis-section h4 { 
-        font-size: 1.1em; 
-        color: #007bff; 
-        margin-top: 20px;
-        margin-bottom: 10px;
-        padding-bottom: 5px;
-        border-bottom: 1px solid #eee;
-    }
-    .analysis-section p, .analysis-section ul { font-size: 0.95em; line-height: 1.6; color: #555; margin-bottom: 10px; }
-    .analysis-section ul { padding-left: 20px; }
-    .analysis-item { margin-bottom: 12px; } 
-    .analysis-item strong { color: #333; } 
-
-    .placeholder-note { font-style: italic; color: #777; font-size: 0.9em; }
-    .loading-message { text-align: center; padding: 20px; font-size: 1.1em; color: #555; }
-    
-    .button-container { text-align: center; margin-top: 30px; }
-    .btn-journal {
-        padding: 10px 20px; text-decoration: none; border-radius: 8px;
-        font-size: 16px; font-weight: bold; border: none; cursor: pointer;
-        background-color: #0095FF; color: white; 
-    }
-    .btn-journal:hover { background-color: #0077cc; }
-    
-    .admin-mode-footer {
-        text-align: center; margin-top: 40px; padding-top: 10px; 
-        border-top: 1px solid #ddd; font-size: 0.9em; color: #dc3545; font-weight: bold;
-    }
-
-    .conversation-log::-webkit-scrollbar { width: 8px; }
-    .conversation-log::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-    .conversation-log::-webkit-scrollbar-thumb { background: #0095FF; border-radius: 10px; }
-    .conversation-log::-webkit-scrollbar-thumb:hover { background: #0077cc; }
+    body, html { margin:0; padding:0; font-family:'KoPub World Dotum',sans-serif; background:#fafafa; }
+    .container { max-width:800px; margin:20px auto; padding:0 20px; }
+    h2 { margin-top:40px; font-size:1.3em; color:#333; }
+    .section { background:#fff; padding:20px; margin-top:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .feedback { margin-top:10px; padding:10px; background:#ffe0e0; border-left:4px solid #f44336; color:#b71c1c; border-radius:4px; }
+    #emotionChart, #situationChart { width:100%; height:300px; }
+    #tagCloud { min-height:100px; border:1px dashed #ccc; padding:10px; }
+    .badge { display:inline-block; margin:4px; padding:4px 8px; background:#e0e0e0; border-radius:4px; font-size:0.85em; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 id="analysis-page-title">님의 대화 분석</h1>
-    <div class="tabs">
-      <button class="tab-button active" data-tab="sentimentAnalysis">감정분석</button>
-      <button class="tab-button" data-tab="keyUtteranceAnalysis">주요 발화 분석</button>
+    <h1>심층 분석 대시보드</h1>
+
+    <div class="section" id="languageAgeSection">
+      <!-- 언어연령은 1차/2차/3차 분석으로 총 대화 시간 기준(30분, 2시간, 6시간) 후 최종 3차 분석 결과가 전달됩니다. -->
+      <h2>언어·나이 분석</h2>
+      <p>사용자 실나이: <span id="realAge"></span>세</p>
+      <p>예측 언어연령: <span id="predictedLangAge"></span>세</p>
+      <div id="ageFeedback" class="feedback" style="display:none;"></div>
     </div>
 
-    <div id="sentimentAnalysis" class="tab-content active">
-      <div class="section-title">대화 내용 다시보기</div>
-      <div id="conversation-display-sentiment" class="conversation-log"></div>
-      
-      <div class="section-title">주요 감정 분석</div> 
-      <div id="emotion-analysis-summary" class="emotion-summary-container">
-        <div class="emotion-chart-container">
-          <canvas id="emotionChart"></canvas>
-        </div>
-        <div id="emotion-text-details" class="emotion-summary-content emotion-text-summary">
-            
-        </div>
-      </div>
-
-      <div class="section-title">음성 정보 (가장 크게 말한 문장 Top 3)</div>
-      <div id="audio-level-display-sentiment" class="audio-info">
-          <p class="placeholder-note">가장 크게 말한 문장 Top 3 정보가 여기에 표시됩니다. (데이터 준비 중)</p>
-          <ul id="top-audio-sentences">
-            
-          </ul>
-          <p class="audio-level-note">이 정보는 사용자가 말한 문장 중 가장 소리가 컸던 상위 3개입니다.</p>
-      </div>
+    <div class="section" id="emotionToneSection">
+      <h2>감정 어조 분석</h2>
+      <canvas id="emotionChart"></canvas>
+      <div id="tagCloud"></div>
     </div>
 
-    <div id="keyUtteranceAnalysis" class="tab-content">
-      <p style="text-align: center; margin-bottom: 20px; color: #555;">
-        <span class="user-name-placeholder"></span>님의 대화 중 특별히 주목할 만한 부분을 AI가 분석하여 보여줍니다.<br>
-        <span class="placeholder-note">(현재 이전 대화 패턴 비교 기능은 개발 예정입니다.)</span>
-      </p>
-      
-      <div class="section-title">문해력/표현력 분석 (AI Beta)</div>
-      <div id="literacy-analysis-results" class="literacy-analysis-container">
-        <p class="loading-message">문해력/표현력 분석 내용을 불러오는 중입니다...</p>
-      </div>
-
-      <div id="analysis-results-key" class="key-utterance-results" style="margin-top: 30px;"> 
-        <p class="loading-message">주요 발화 심층 분석 내용을 불러오는 중입니다...</p>
-      </div>
-    </div>
-    
-    <div class="button-container">
-      <button id="btn-save-journal" class="btn-journal">요약하기</button>
+    <div class="section" id="patternSection">
+      <h2>반복 감정·키워드 패턴</h2>
+      <div id="patternDashboard"></div>
     </div>
 
-    <div id="admin-mode-indicator" class="admin-mode-footer" style="display: none;">
-      관리자 모드 활성화됨
+    <div class="section" id="situationSection">
+      <h2>상황 분석 (인지왜곡 감지)</h2>
+      <canvas id="situationChart"></canvas>
+      <div id="situationAlerts"></div>
     </div>
   </div>
 
   <script type="module">
-    import { getGptResponse } from './js/gpt-dialog.js'; 
-    import { renderLiteracyAnalysis } from './js/literacyPatternCheckRenderer.js';
+    import { getPredictedLanguageAge } from './js/basic-features.js';
+    import { renderEmotionChart, renderTagCloud } from './js/emotion-visuals.js';
+    import { getPatternData, renderPatternDashboard } from './js/pattern-tracker.js';
+    import { getSituationData, renderSituationChart, alertCognitiveDistortions } from './js/situation-analysis.js';
 
-    const currentUserName = localStorage.getItem('lozee_username') || "사용자"; 
-
-    document.title = `${currentUserName}의 대화 분석 (통합)`;
-    document.getElementById('analysis-page-title').textContent = `${currentUserName}님의 대화 분석`;
-    document.querySelectorAll('.user-name-placeholder').forEach(el => el.textContent = currentUserName);
-
-
-    function analyzeOverallEmotions(history) {
-      const emotions = { 
-        joy: { keywords: ['행복', '신나', '뿌듯', '감사', '만족', '좋아', '즐거', '기대', '편안', '안심', '사랑', '웃겨', '최고', '나아졌어', '다행', '재미있', '훌륭', '멋져', '완전 최고야'], count: 0, found: new Set() },
-        sadness: { keywords: ['외로', '우울', '서운', '상처', '속상', '허전', '슬퍼', '눈물', '무기력', '지쳤어', '공허', '버려진', '실망'], count: 0, found: new Set() },
-        // "분노" 감지 키워드에 욕설 및 "-새끼" 표현 추가
-        anger: { keywords: ['화나', '짜증', '억울', '답답', '싫어', '속이 뒤집', '무시', '존중받지 못', '부당', '못참겠', '참기 힘든', '분노', '미워', '싸웠어', '화냈더니', '씨발', '존나', '개빡', '미친', '새끼', '개새끼', '씹새끼', '병신'], count: 0, found: new Set() },
-        anxiety: { keywords: ['걱정', '무서', '불안', '두려', '긴장', '당황', '초조', '민망', '조심스러', '낯설', '혼란', '잘못될까봐', '겁나', '떨려'], count: 0, found: new Set() }
-      };
-      history.forEach(msg => {
-        if (typeof msg.content !== 'string') return;
-        const text = msg.content.toLowerCase(); // 비교를 위해 소문자로 변환
-        for (const emotionKey in emotions) {
-          emotions[emotionKey].keywords.forEach(word => {
-            // 키워드도 소문자로 변환하여 비교 정확도 향상 (이미 소문자 위주지만 확실히)
-            if (text.includes(word.toLowerCase())) {
-              emotions[emotionKey].count++;
-              emotions[emotionKey].found.add(word); // 원본 키워드 저장
-            }
-          });
-        }
-      });
-      return {
-        joy: { count: emotions.joy.count, keywords: Array.from(emotions.joy.found) },
-        sadness: { count: emotions.sadness.count, keywords: Array.from(emotions.sadness.found) },
-        anger: { count: emotions.anger.count, keywords: Array.from(emotions.anger.found) },
-        anxiety: { count: emotions.anxiety.count, keywords: Array.from(emotions.anxiety.found) },
-      };
-    }
-
-    function displaySentimentAnalysis(conversationHistory, topAudioSentencesData) { 
-        const conversationDisplaySentimentEl = document.getElementById('conversation-display-sentiment');
-        const topAudioSentencesEl = document.getElementById('top-audio-sentences'); 
-        const emotionTextDetailsDisplayEl = document.getElementById('emotion-text-details');
-        const emotionChartCanvasEl = document.getElementById('emotionChart').getContext('2d');
-
-        let conversationHtml = '';
-        if (conversationHistory && conversationHistory.length > 0) {
-            conversationHistory.forEach(msg => {
-                const safeContent = (msg.content || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                const speakerClass = msg.role === 'user' ? 'user-message' : (msg.role === 'assistant' ? 'assistant-message' : 'system-message');
-                const speakerName = msg.role === 'user' ? currentUserName : (msg.role === 'assistant' ? 'AI 친구' : '안내');
-                conversationHtml += `<p class="${speakerClass}"><strong class="${speakerClass.split('-')[0] + '-strong'}">${speakerName}:</strong> ${safeContent}</p>`;
-            });
-            conversationDisplaySentimentEl.innerHTML = conversationHtml;
-        } else {
-            conversationDisplaySentimentEl.innerHTML = '<p>표시할 대화 내용이 없습니다.</p>';
-        }
-
-        if (topAudioSentencesData && topAudioSentencesData.length > 0) {
-            let audioSentencesHtml = '';
-            topAudioSentencesData.forEach(item => {
-                const safeSentence = (item.sentence || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                const safeVolume = (item.volume !== undefined ? item.volume.toFixed(2) : "정보 없음").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                audioSentencesHtml += `<li><span class="sentence">"${safeSentence}"</span> - <span class="volume">크기: ${safeVolume}</span></li>`;
-            });
-            topAudioSentencesEl.innerHTML = audioSentencesHtml;
-        } else {
-            topAudioSentencesEl.innerHTML = '<li>가장 크게 말한 문장 정보가 없습니다.</li>';
-        }
-
-
-        if (conversationHistory && conversationHistory.length > 0) {
-            const emotionAnalysis = analyzeOverallEmotions(conversationHistory);
-            let summaryTextHtml = '<ul>';
-            summaryTextHtml += `<li class="joy"><strong class="emotion-label">기쁨 (Joy):</strong> <span>${emotionAnalysis.joy.count}</span>회 <div class="emotion-keywords">${emotionAnalysis.joy.keywords.length > 0 ? '주요 표현: ' + emotionAnalysis.joy.keywords.slice(0,3).map(kw => `<span>${kw.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>`).join('') : '관련 표현 없음'}</div></li>`;
-            summaryTextHtml += `<li class="sadness"><strong class="emotion-label">슬픔 (Sadness):</strong> <span>${emotionAnalysis.sadness.count}</span>회 <div class="emotion-keywords">${emotionAnalysis.sadness.keywords.length > 0 ? '주요 표현: ' + emotionAnalysis.sadness.keywords.slice(0,3).map(kw => `<span>${kw.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>`).join('') : '관련 표현 없음'}</div></li>`;
-            summaryTextHtml += `<li class="anger"><strong class="emotion-label">분노 (Anger):</strong> <span>${emotionAnalysis.anger.count}</span>회 <div class="emotion-keywords">${emotionAnalysis.anger.keywords.length > 0 ? '주요 표현: ' + emotionAnalysis.anger.keywords.slice(0,3).map(kw => `<span>${kw.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>`).join('') : '관련 표현 없음'}</div></li>`;
-            summaryTextHtml += `<li class="anxiety"><strong class="emotion-label">불안 (Anxiety/Fear):</strong> <span>${emotionAnalysis.anxiety.count}</span>회 <div class="emotion-keywords">${emotionAnalysis.anxiety.keywords.length > 0 ? '주요 표현: ' + emotionAnalysis.anxiety.keywords.slice(0,3).map(kw => `<span>${kw.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>`).join('') : '관련 표현 없음'}</div></li>`;
-            summaryTextHtml += '</ul>';
-            emotionTextDetailsDisplayEl.innerHTML = summaryTextHtml;
-
-            if (window.mySentimentChart instanceof Chart) { window.mySentimentChart.destroy(); }
-            window.mySentimentChart = new Chart(emotionChartCanvasEl, {
-                type: 'bar',
-                data: {
-                    labels: ['기쁨', '슬픔', '분노', '불안'], 
-                    datasets: [{
-                        label: '감정 표현 빈도',
-                        data: [emotionAnalysis.joy.count, emotionAnalysis.sadness.count, emotionAnalysis.anger.count, emotionAnalysis.anxiety.count],
-                        backgroundColor: ['rgba(255, 206, 86, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 99, 132, 0.7)', 'rgba(153, 102, 255, 0.7)'],
-                        borderColor: ['rgba(255, 206, 86, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 99, 132, 1)', 'rgba(153, 102, 255, 1)'],
-                        borderWidth: 1
-                    }]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } } }, y: { beginAtZero: true, ticks: { font: { size: 12 } } } },
-                    plugins: { legend: { display: false }, title: { display: true, text: '대화 중 주요 감정 표현 빈도', font: { size: 14 } } }
-                }
-            });
-        } else { 
-            emotionTextDetailsDisplayEl.innerHTML = '<p>분석할 대화 내용이 없어 감정 분석을 수행할 수 없습니다.</p>';
-        }
-    }
-
-    const strongEmotionKeywords = {
-        joy: ['매우 행복', '너무 신나', '완전 최고', '정말 감사', '완전 최고야'],
-        sadness: ['너무 슬퍼', '정말 우울', '깊은 상처', '너무 속상해', '완전 허전'],
-        anger: ['씨발', '존나', '개빡', '미친', '죽겠어', '너무 화나', '진짜 짜증나', '너무 억울해', '정말 답답해', '너무 싫어', '새끼', '개새끼', '씹새끼', '병신'], // 요청하신 욕설 추가
-        anxiety: ['너무 걱정돼', '너무 무서워', '정말 불안해', '너무 두려워', '극도로 긴장', '완전 당황']
-    };
-    function isProfanity(text) {
-        // strongEmotionKeywords.anger에 이미 대부분 포함되어 있으므로, 이 함수는 중복될 수 있습니다.
-        // 필요에 따라 이 함수를 사용하거나, strongEmotionKeywords.anger 목록을 더 정교하게 관리할 수 있습니다.
-        const profanityList = ['씨발', '존나', '개빡', '미친', '새끼', '병신', '개새끼', '씹새끼']; // 일관성을 위해 strongEmotionKeywords.anger와 유사하게 유지
-        return profanityList.some(word => text.toLowerCase().includes(word.toLowerCase()));
-    }
-    function selectImportantUtterances(conversationHistory, maxUtterances = 10) {
-      const importantUtterances = [];
-      const userUtterances = conversationHistory.filter(msg => msg.role === 'user');
-      for (const utterance of userUtterances) {
-        if (importantUtterances.length >= maxUtterances) break;
-        let isImportant = false;
-        const text = utterance.content.toLowerCase();
-        // isProfanity 함수를 사용하거나, strongEmotionKeywords.anger 목록을 직접 확인할 수 있습니다.
-        // 여기서는 strongEmotionKeywords.anger 목록을 통해 이미 욕설이 감지될 수 있도록 합니다.
-        if (isProfanity(text)) { // isProfanity 사용 또는 아래 로직으로 통합 가능
-             isImportant = true;
-        }
-
-        if (!isImportant) {
-          for (const emotionType in strongEmotionKeywords) {
-            if (strongEmotionKeywords[emotionType].some(keyword => text.includes(keyword.toLowerCase()))) {
-              isImportant = true;
-              break;
-            }
-          }
-        }
-        if (isImportant) importantUtterances.push(utterance);
-      }
-      if (importantUtterances.length === 0 && userUtterances.length > 0) {
-          return userUtterances.slice(-Math.min(maxUtterances, userUtterances.length));
-      }
-      if (importantUtterances.length < maxUtterances && importantUtterances.length < userUtterances.length) {
-          const existingContents = new Set(importantUtterances.map(u => u.content));
-          for (let i = userUtterances.length - 1; i >= 0; i--) {
-              if (importantUtterances.length >= maxUtterances) break;
-              if (!existingContents.has(userUtterances[i].content)) {
-                  importantUtterances.push(userUtterances[i]);
-                  existingContents.add(userUtterances[i].content);
-              }
-          }
-      }
-      return importantUtterances.slice(0, maxUtterances);
-    }
-
-    async function displayKeyUtteranceAnalysis(conversationHistory) {
-        const resultsContainerKeyEl = document.getElementById('analysis-results-key');
-        if (!conversationHistory || conversationHistory.length === 0) {
-            resultsContainerKeyEl.innerHTML = '<p class="loading-message">분석할 대화 기록이 없습니다.</p>';
-            return;
-        }
-        const importantUtterances = selectImportantUtterances(conversationHistory);
-        if (importantUtterances.length === 0) {
-            resultsContainerKeyEl.innerHTML = '<p class="loading-message">이번 대화에서는 특별히 분석할 만한 주요 발화가 발견되지 않았습니다.</p>';
-            return;
-        }
-        resultsContainerKeyEl.innerHTML = ''; 
-
-        for (let i = 0; i < importantUtterances.length; i++) {
-            const utterance = importantUtterances[i];
-            const card = document.createElement('div');
-            card.className = 'important-utterance-card';
-            
-            const utteranceHtml = `
-                <div class="utterance-text">
-                    <p><strong class="user-name-emphasis">${currentUserName}의 말 #${i + 1}:</strong></p>
-                    <p>${utterance.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
-                </div>
-                <div class="analysis-section">
-                    <h4>🤖 AI 감정 분석 (심층):</h4>
-                    <div id="gpt-emotion-analysis-key-${i}"><p class="placeholder-note">AI 감정 분석을 불러오는 중...</p></div>
-                </div>
-                <div class="analysis-section">
-                    <h4>📊 패턴 분석:</h4>
-                    <div id="gpt-pattern-analysis-key-${i}"><p class="placeholder-note">AI 패턴 분석을 불러오는 중...</p></div>
-                </div>`;
-            card.innerHTML = utteranceHtml;
-            resultsContainerKeyEl.appendChild(card);
-
-            try {
-                const emotionAnalysisResult = await getGptResponse(utterance.content, currentUserName, { analysisType: 'detailedUtteranceEmotion' });
-                const gptEmotionAnalysisEl = document.getElementById(`gpt-emotion-analysis-key-${i}`);
-                if (emotionAnalysisResult && emotionAnalysisResult.mainEmotion) {
-                    gptEmotionAnalysisEl.innerHTML = `
-                        <p><strong>주요 감정:</strong> ${emotionAnalysisResult.mainEmotion}</p>
-                        <p><strong>그렇게 생각하는 이유:</strong> ${emotionAnalysisResult.reasonForEmotion}</p>
-                        <p><strong>드러나는 생각/태도:</strong> ${emotionAnalysisResult.underlyingThoughts || '특별히 드러나는 점 없음'}</p>
-                        ${emotionAnalysisResult.profanityAnalysis ? `<p><strong>욕설/강한 표현 분석 (감정):</strong> ${emotionAnalysisResult.profanityAnalysis}</p>` : ''}`;
-                } else {
-                    gptEmotionAnalysisEl.innerHTML = `<p class="placeholder-note" style="color:orange;">AI 감정 분석 결과를 가져왔으나, 예상된 형식이 아닙니다. ${emotionAnalysisResult && emotionAnalysisResult.error ? emotionAnalysisResult.error : ''}</p>`;
-                }
-
-                const patternAnalysisResult = await getGptResponse(utterance.content, currentUserName, { analysisType: 'detailedPattern', fullConversation: conversationHistory });
-                const gptPatternAnalysisEl = document.getElementById(`gpt-pattern-analysis-key-${i}`);
-                if (patternAnalysisResult) {
-                    let patternHtml = '';
-                    if (patternAnalysisResult.profanityAnalysis && patternAnalysisResult.profanityAnalysis !== "해당 없음") {
-                        patternHtml += `<div class="analysis-item"><strong>욕설/부적절한 표현:</strong> <p>${patternAnalysisResult.profanityAnalysis.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>`;
-                    }
-                    if (patternAnalysisResult.keyExpressionAnalysis) {
-                        patternHtml += `<div class="analysis-item"><strong>주요 표현 및 의도:</strong> <p>${patternAnalysisResult.keyExpressionAnalysis.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>`;
-                    }
-                    if (patternAnalysisResult.associatedTargetAnalysis) {
-                        patternHtml += `<div class="analysis-item"><strong>연결된 대상:</strong> <p>${patternAnalysisResult.associatedTargetAnalysis.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>`;
-                    }
-                    if (patternAnalysisResult.recurringPatternComment) {
-                        patternHtml += `<div class="analysis-item"><strong>반복 패턴 가능성 (이번 대화 내):</strong> <p>${patternAnalysisResult.recurringPatternComment.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>`;
-                    }
-                    gptPatternAnalysisEl.innerHTML = patternHtml || '<p class="placeholder-note">분석된 패턴 정보가 없습니다.</p>';
-                } else {
-                     gptPatternAnalysisEl.innerHTML = `<p class="placeholder-note" style="color:orange;">AI 패턴 분석 결과를 가져왔으나, 예상된 형식이 아닙니다. ${patternAnalysisResult && patternAnalysisResult.error ? patternAnalysisResult.error : ''}</p>`;
-                }
-
-            } catch (error) {
-                console.error(`GPT 분석 실패 (문단 ${i + 1}):`, error);
-                const gptEmotionEl = document.getElementById(`gpt-emotion-analysis-key-${i}`);
-                if(gptEmotionEl) gptEmotionEl.innerHTML = `<p class="placeholder-note" style="color:red;">AI 감정 분석 중 오류: ${error.message}</p>`;
-                const gptPatternEl = document.getElementById(`gpt-pattern-analysis-key-${i}`);
-                if(gptPatternEl) gptPatternEl.innerHTML = `<p class="placeholder-note" style="color:red;">AI 패턴 분석 중 오류: ${error.message}</p>`;
-            }
-        }
-    }
-    
-    async function displayLiteracyAnalysis(conversationHistory) {
-        const literacyResultsContainerEl = document.getElementById('literacy-analysis-results');
-        if (!conversationHistory || conversationHistory.length === 0) {
-            renderLiteracyAnalysis(null, literacyResultsContainerEl); 
-            return;
-        }
-        
-        console.log("[displayLiteracyAnalysis] 문해력 분석을 위한 데이터 준비...");
-        try {
-            const userConversationText = conversationHistory
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content)
-                .join('\n');
-
-            if (!userConversationText.trim()) {
-                renderLiteracyAnalysis({ literacyFlags: ["분석할 사용자 발화 내용이 없습니다."], recommendations: [] }, literacyResultsContainerEl);
-                return;
-            }
-            
-            // --- 임시 목업 데이터 시작 ---
-            const mockLiteracyAnalysisResult = {
-                literacyFlags: [
-                    "일부 문장에서 반복적인 단어 사용이 관찰됩니다.", 
-                    "가끔 문장 구조가 다소 복잡하여 이해하는 데 시간이 걸릴 수 있습니다."
-                ],
-                recommendations: [
-                    "다양한 어휘를 사용해 보세요. 예를 들어, '정말' 대신 '매우', '아주', '상당히' 등을 활용할 수 있습니다.",
-                    "긴 문장은 두세 개의 짧은 문장으로 나누어 표현하면 전달력이 높아집니다."
-                ]
-            };
-            // --- 임시 목업 데이터 끝 ---
-
-            renderLiteracyAnalysis(mockLiteracyAnalysisResult, literacyResultsContainerEl); 
-            console.log("[displayLiteracyAnalysis] 문해력 분석 결과 표시 완료 (목업).");
-
-        } catch (error) {
-            console.error("문해력 분석 중 오류:", error);
-            renderLiteracyAnalysis({ error: "문해력 분석 중 오류가 발생했습니다." }, literacyResultsContainerEl);
-        }
-    }
-
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const tabs = document.querySelectorAll('.tab-button');
-      const tabContents = document.querySelectorAll('.tab-content');
-
-      const storedConversation = localStorage.getItem('fullConversation');
-      const storedTopAudioSentences = localStorage.getItem('lozee_top_audio_sentences'); 
-      let conversationHistory = [];
-      let topAudioSentencesData = [];
-
-      if (storedConversation) {
-          try { conversationHistory = JSON.parse(storedConversation); }
-          catch (e) { console.error("초기 대화 기록 파싱 오류:", e); }
-      }
-      if (storedTopAudioSentences) { 
-          try { topAudioSentencesData = JSON.parse(storedTopAudioSentences); }
-          catch (e) { console.error("Top 3 음성 문장 데이터 파싱 오류:", e); }
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1) 언어·나이 분석
+      const realAge = parseInt(localStorage.getItem('lozee_userage'), 10);
+      document.getElementById('realAge').textContent = realAge;
+      const predicted = await getPredictedLanguageAge(); // 학습 모델 호출
+      document.getElementById('predictedLangAge').textContent = predicted;
+      // 차이 계산 (개월 단위)
+      const diffMonths = (realAge - predicted) * 12;
+      if (Math.abs(diffMonths) >= 6) {
+        const fb = document.getElementById('ageFeedback');
+        fb.textContent = `언어연령과 실제 나이가 ${Math.abs(diffMonths)}개월 차이 납니다. 언어 발달 지원 활동을 권장합니다.`;
+        fb.style.display = 'block';
       }
 
-      const adminOverride = localStorage.getItem("adminOverride");
-      const adminModeIndicator = document.getElementById("admin-mode-indicator");
-      if (adminOverride === "true") {
-        document.querySelectorAll("button.btn-journal").forEach(btn => btn.disabled = false); 
-        if(adminModeIndicator) adminModeIndicator.style.display = 'block';
-        console.log("🟢 관리자 모드: 버튼 활성화됨");
-      }
+      // 2) 감정 어조 시각화
+      const emotionData = await import('./js/emotion-data.js');
+      renderEmotionChart('emotionChart', emotionData.getHistory());
+      renderTagCloud('tagCloud', emotionData.getTags());
 
-      displaySentimentAnalysis(conversationHistory, topAudioSentencesData); 
-      let keyUtteranceAnalysisLoaded = false; 
-      let literacyAnalysisLoaded = false; 
+      // 3) 감정·키워드 패턴
+      const patterns = getPatternData();
+      renderPatternDashboard('patternDashboard', patterns);
 
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          tabs.forEach(item => item.classList.remove('active'));
-          tab.classList.add('active');
-
-          const targetTabContentId = tab.getAttribute('data-tab');
-          tabContents.forEach(content => {
-            content.classList.remove('active');
-            if (content.id === targetTabContentId) {
-              content.classList.add('active');
-              if (targetTabContentId === 'keyUtteranceAnalysis') {
-                if (!keyUtteranceAnalysisLoaded) {
-                  displayKeyUtteranceAnalysis(conversationHistory);
-                  keyUtteranceAnalysisLoaded = true;
-                }
-                if (!literacyAnalysisLoaded) { 
-                    displayLiteracyAnalysis(conversationHistory); 
-                    literacyAnalysisLoaded = true;
-                }
-              }
-            }
-          });
-        });
-      });
-
-      const saveJournalBtn = document.getElementById('btn-save-journal');
-      if (saveJournalBtn) { 
-          saveJournalBtn.addEventListener('click', () => {
-              const emotionAnalysisResult = conversationHistory.length > 0 ? analyzeOverallEmotions(conversationHistory) : null;
-              const journalData = {
-                conversationHistory: conversationHistory,
-                emotions: emotionAnalysisResult ? { 
-                    joy: emotionAnalysisResult.joy.count,
-                    sadness: emotionAnalysisResult.sadness.count,
-                    anger: emotionAnalysisResult.anger.count,
-                    anxiety: emotionAnalysisResult.anxiety.count
-                } : null,
-                emotionDetails: emotionAnalysisResult ? { 
-                    joy: { keywords: emotionAnalysisResult.joy.keywords },
-                    sadness: { keywords: emotionAnalysisResult.sadness.keywords },
-                    anger: { keywords: emotionAnalysisResult.anger.keywords },
-                    anxiety: { keywords: emotionAnalysisResult.anxiety.keywords }
-                } : null,
-                topAudioSentences: topAudioSentencesData 
-              };
-              localStorage.setItem('journalEntryData', JSON.stringify(journalData));
-              console.log("감정일기 데이터 저장:", journalData);
-              window.location.href = 'loading.html'; 
-          });
-      }
+      // 4) 상황 분석
+      const situationData = getSituationData();
+      renderSituationChart('situationChart', situationData.history);
+      alertCognitiveDistortions('situationAlerts', situationData.distortions);
     });
   </script>
 </body>
