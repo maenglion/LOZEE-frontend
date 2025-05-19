@@ -44,18 +44,20 @@
         }
 
         h2 {
-            font-size: 1.8em;
+            font-size: 1.8em; /* 기본값 유지 또는 필요시 조정 */
             margin-bottom: 20px;
+            color: #fff; /* 제목 흰색 명시 */
         }
         p {
             font-size: 1.1em;
             line-height: 1.6;
             margin-bottom: 15px;
+            color: #f0f0f0; /* 기본 p 태그 글자색 */
         }
-        .info-text { 
+        .info-text, #topicStepDescription { /* 설명용 텍스트 */
             color:#e0e0e0; 
             font-size:0.9em; 
-            margin-bottom:10px;
+            margin-bottom:15px; /* 다른 p와 간격 일치 */
         }
         .intro-message { 
             color:#f5f5f5; 
@@ -80,12 +82,12 @@
             font-weight: bold;
             font-size: 0.9em;
             min-height: 1.2em;
-            margin-top: -5px;
-            margin-bottom: 5px;
+            margin-top: 5px; /* 입력 필드와 간격 */
+            margin-bottom: 10px; /* 다음 버튼과 간격 */
             line-height: 1.2;
-            padding: 5px 8px; /* 패딩 추가 */
+            padding: 5px 8px;
             color: #ffcdd2; 
-            background-color: rgba(0,0,0,0.1);
+            background-color: rgba(0,0,0,0.15); /* 배경 약간 더 진하게 */
             border-radius: 4px;
         }
         .error-message:empty {
@@ -106,7 +108,7 @@
         select {
             padding-right: 30px; 
         }
-        button { 
+        button { /* 기본 '다음' 버튼 */
             padding: 13px 28px;
             background: #fff;
             color: #6e8efb;
@@ -135,15 +137,15 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center; 
-            gap: 10px;
+            gap: 10px; /* 버튼 간 간격 */
             margin-bottom: 20px;
             width: 100%;
             max-width: 480px; 
         }
         .options-container button { 
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25); /* 배경 약간 더 진하게 */
             color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6); /* 테두리 약간 더 진하게 */
             padding: 10px 15px;
             border-radius: 20px;
             font-size: 0.9em; 
@@ -151,6 +153,7 @@
             margin-top: 5px; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: background-color 0.2s, color 0.2s, transform 0.1s, box-shadow 0.2s;
+            flex-shrink: 0; /* 버튼 크기 유지 */
         }
         .options-container button.selected,
         .options-container button:hover {
@@ -161,26 +164,30 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
+        /* 주제 카테고리 버튼 */
         #topicCategorySelection .options-container button {
             padding: 14px 18px; 
             font-size: 1em; 
-            width: calc(50% - 12px); 
+            width: calc(50% - 12px); /* 2열 레이아웃 (gap 고려) */
             min-height: 55px; 
             display: flex; 
             align-items: center; 
             justify-content: center;
         }
         
-        #subTopicButtons { /* 세부 주제 버튼 컨테이너 */
-            justify-content: center; /* 버튼들을 가운데로 정렬 */
-            width: 100%; /* 부모 너비만큼 차지 */
+        /* 세부 주제 버튼 컨테이너 */
+        #subTopicButtons { 
+            justify-content: center; 
+            width: 100%; 
+            max-width: 500px; /* 필요시 너비 조정 */
         }
+        /* 세부 주제 버튼 */
         .sub-topic-btn {
-            font-size: 0.9em !important; /* 카테고리 버튼과 유사한 크기로 조정 */
-            padding: 10px 15px !important; /* 패딩 조정 */
-            flex-grow: 1; /* 가능한 공간 채우도록 */
-            min-width: calc(33.33% - 10px); /* 3열 기반, 간격 고려 */
-            max-width: calc(50% - 10px); /* 최대 2열 */
+            font-size: 0.9em !important; 
+            padding: 10px 15px !important; 
+            /* flex-grow: 1; 삭제하여 내용에 따라 크기 조절 */
+            /* min-width, max-width 대신, 버튼 개수에 따라 자연스럽게 배치되도록 함 */
+            /* 필요시 width: calc(33.33% - 10px); 등으로 열 개수 고정 가능 */
         }
         
         .navigation-buttons {
@@ -193,8 +200,8 @@
             max-width: 480px;
         }
         .navigation-buttons button { 
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15); /* 배경 약간 더 진하게 */
+            border: 1px solid rgba(255, 255, 255, 0.4); /* 테두리 약간 더 진하게 */
             color: #f0f0f0;
             padding: 10px 20px;
             font-size: 0.95em; 
@@ -202,20 +209,20 @@
             box-shadow: none;
         }
         .navigation-buttons button:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25); /* 호버 시 더 밝게 */
             color: #fff;
             transform: translateY(-1px);
-            border-color: rgba(255,255,255,0.5);
+            border-color: rgba(255,255,255,0.6);
         }
-        .secondary-button { 
+        .secondary-button { /* "여긴 없어요", "로지야 골라줘" */
             background: transparent !important; 
-            border: 1px solid #d1c4e9 !important;
-            color: #d1c4e9 !important;
+            border: 1px solid #dcd0ff !important; /* 테두리 색상 변경 (연보라) */
+            color: #dcd0ff !important; /* 글자색 변경 (연보라) */
         }
         .secondary-button:hover {
             background: rgba(255, 255, 255, 0.1) !important;
             color: #fff !important;
-            border-color: #ede7f6 !important;
+            border-color: #f0eaff !important; /* 호버 시 테두리 밝게 */
         }
 
         @media (max-width: 600px) {
@@ -223,7 +230,11 @@
             p, .intro-message { font-size: 1em; }
             .options-container button, .navigation-buttons button { font-size: 0.85em; padding: 9px 13px;}
             #topicCategorySelection .options-container button {font-size: 0.95em; padding: 13px 15px; min-height: 50px;}
-            .sub-topic-btn { min-width: calc(50% - 10px); } /* 모바일에서는 2열 우선 */
+            .sub-topic-btn { 
+                min-width: calc(45% - 10px); /* 모바일에서는 최소 2열 */
+                font-size: 0.85em !important; 
+                padding: 9px 13px !important;
+            }
         }
 
     </style>
@@ -292,8 +303,7 @@
             </div>
 
         <div id="subTopicSelectionContainer" style="display:none; flex-direction:column; align-items:center; width:100%;">
-            <div id="subTopicButtons" class="options-container">
-                </div>
+            <div id="subTopicButtons" class="options-container"> </div>
             <div class="navigation-buttons">
                 <button id="moreTopicsBtn" style="display:none;">다른 이야기 더 보기</button>
                 <button id="backToCategoriesBtn">다른 종류 이야기 고를래</button>
@@ -338,7 +348,7 @@
         const topicUserAgeInfo = document.getElementById('topicUserAgeInfo');
         const topicCategorySelection = document.getElementById('topicCategorySelection');
         const subTopicSelectionContainer = document.getElementById('subTopicSelectionContainer');
-        const subTopicButtons = document.getElementById('subTopicButtons');
+        const subTopicButtons = document.getElementById('subTopicButtons'); // 이 ID를 가진 div가 세부 주제 버튼들을 직접 감싸야 함
         const moreTopicsBtn = document.getElementById('moreTopicsBtn');
         const backToCategoriesBtn = document.getElementById('backToCategoriesBtn');
         const noSpecificTopicBtn = document.getElementById('noSpecificTopicBtn');
@@ -483,7 +493,7 @@
             
             const userAgeForText = localStorage.getItem('lozee_userage');
             topicStepTitle.textContent = "어떤 종류의 이야기를 하고 싶니?";
-            if(topicUserAgeInfo) topicUserAgeInfo.textContent = userAgeForText ? `${userAgeForText}세` : ''; // topicUserAgeInfo가 null이 아닐 때만 접근
+            if(topicUserAgeInfo) topicUserAgeInfo.textContent = userAgeForText ? `${userAgeForText}세` : ''; 
             topicStepDescription.innerHTML = `친구야, 어떤 이야기가 네 마음을 당기니?<br>아래에서 골라봐!`;
 
 
@@ -501,6 +511,7 @@
 
             categories.forEach(categoryKey => {
                 const btn = document.createElement('button');
+                // .options-container button 스타일이 자동으로 적용됨
                 const representativeIcon = topicData[categoryKey][0]?.icon || '📁';
                 btn.innerHTML = `${representativeIcon} ${categoryKey}`;
                 btn.onclick = () => {
@@ -511,7 +522,7 @@
                     topicStepDescription.textContent = '마음에 드는 이야기를 선택하거나, 다른 종류를 골라도 좋아.';
                     renderSubTopics();
                     topicCategorySelection.style.display = 'none';
-                    subTopicSelectionContainer.style.display = 'block'; 
+                    subTopicSelectionContainer.style.display = 'flex'; // flex로 변경하여 내부 정렬 적용
                     playTTS(`"${categoryKey}" 이야기구나! 어떤 게 마음에 드니?`);
                 };
                 topicCategorySelection.appendChild(btn);
@@ -520,10 +531,10 @@
         
         function renderFlatTopics(age, topicsArray) {
             topicCategorySelection.style.display = 'none';
-            subTopicSelectionContainer.style.display = 'block'; 
-            subTopicButtons.innerHTML = '';
+            subTopicSelectionContainer.style.display = 'flex'; // flex로 변경
+            subTopicButtons.innerHTML = ''; // #subTopicButtons를 사용
             moreTopicsBtn.style.display = 'none';
-            // backToCategoriesBtn.style.display = 'none'; // 플랫 리스트에서는 카테고리 돌아가기 버튼 숨김
+            backToCategoriesBtn.style.display = 'block'; // 플랫 리스트에서도 카테고리(다른 연령대)로 돌아갈 수 있게 할 수 있음 (선택사항)
 
             const topicsToRender = Array.isArray(topicsArray) ? topicsArray : [];
 
@@ -547,7 +558,10 @@
         }
 
         function renderSubTopics() {
-            subTopicButtons.innerHTML = ''; 
+            // subTopicButtons가 options-container 클래스를 가지고 있으므로, justify-content:center가 적용됨
+            if (displayedSubTopicIndex === 0) { // 처음 렌더링 시에만 비움
+                subTopicButtons.innerHTML = ''; 
+            }
             const topicsToShow = currentCategoryTopics.slice(displayedSubTopicIndex, displayedSubTopicIndex + SUB_TOPICS_PER_PAGE);
             
             topicsToShow.forEach((t) => {
@@ -588,7 +602,7 @@
             }
 
             if (allTopics.length > 0) {
-                const pick = allTopics[Math.floor(Math.random() * all.length)];
+                const pick = allTopics[Math.floor(Math.random() * allTopics.length)];
                 localStorage.setItem('selectedTopic', JSON.stringify(pick));
                 playTTS(`좋아! 오늘은 "${pick.displayText}"에 대해 이야기해볼까?`);
                 proceedToDialog({ topic: pick });
