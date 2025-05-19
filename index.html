@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE 시작하기</title>
     <link
-        href="[https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap](https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap)"
+        href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap"
         rel="stylesheet"
     />
     <style>
@@ -14,7 +14,7 @@
             margin: 0;
             padding: 0;
             font-family: 'KoPub World Dotum', sans-serif;
-            color: #ffffff; /* 기본 글자색 흰색으로 통일 */
+            color: #ffffff; 
             height: 100%;
             overflow: hidden;
         }
@@ -37,11 +37,10 @@
         }
         .step-background-main {
             background: linear-gradient(135deg, #6078ea, #a777e3);
-            /* color: #fff; body에서 상속 */
         }
         .step-background-main input,
         .step-background-main select {
-            color: #333; /* 입력 필드 내 텍스트는 어둡게 */
+            color: #333; 
         }
 
         h2 {
@@ -53,12 +52,12 @@
             line-height: 1.6;
             margin-bottom: 15px;
         }
-        .info-text { /* p.info-text 스타일 명시 */
+        .info-text { 
             color:#e0e0e0; 
             font-size:0.9em; 
             margin-bottom:10px;
         }
-        .intro-message { /* p.intro-message 스타일 명시 */
+        .intro-message { 
             color:#f5f5f5; 
             line-height:1.9; 
             font-size:1.05em; 
@@ -66,12 +65,12 @@
             text-align:left;
             margin-bottom: 25px;
         }
-        .intro-message strong, /* 앱 이름 의미 강조 */
-        .intro-message .app-name-meaning { /* 클래스로도 제어 가능하도록 */
+        .intro-message strong, 
+        .intro-message .app-name-meaning { 
             font-weight: bold;
-            color: #fff; /* 더 밝게 */
+            color: #fff; 
         }
-        .developer-contact { /* 개발자 연락처 스타일 */
+        .developer-contact { 
             margin-top: 20px;
             font-size: 0.9em;
             color: #ddd;
@@ -84,8 +83,8 @@
             margin-top: -5px;
             margin-bottom: 5px;
             line-height: 1.2;
-            padding: 0 5px;
-            color: #ffcdd2; /* 에러 메시지 색상 */
+            padding: 5px 8px; /* 패딩 추가 */
+            color: #ffcdd2; 
             background-color: rgba(0,0,0,0.1);
             border-radius: 4px;
         }
@@ -102,12 +101,12 @@
             max-width: 350px;
             font-size: 1em;
             background: #fdfdfd;
-            box-sizing: border-box; /* 패딩, 테두리가 width에 포함되도록 */
+            box-sizing: border-box; 
         }
         select {
-            padding-right: 30px; /* 화살표 공간 */
+            padding-right: 30px; 
         }
-        button { /* 기본 '다음' 버튼 */
+        button { 
             padding: 13px 28px;
             background: #fff;
             color: #6e8efb;
@@ -132,54 +131,58 @@
             box-shadow: none;
         }
 
-        /* 옵션 버튼들 (진단, 주제 카테고리, 세부 주제) */
         .options-container {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: center; 
             gap: 10px;
             margin-bottom: 20px;
             width: 100%;
-            max-width: 480px; /* 화면 너비에 따라 조절 */
+            max-width: 480px; 
         }
-        .options-container button { /* 옵션 버튼 기본 스타일 */
+        .options-container button { 
             background: rgba(255, 255, 255, 0.2);
             color: #fff;
             border: 1px solid rgba(255, 255, 255, 0.5);
             padding: 10px 15px;
             border-radius: 20px;
-            font-size: 0.9em; /* 기본 버튼보다 약간 작게 */
-            font-weight: normal; /* 기본 버튼과 구분 */
-            margin-top: 5px; /* 상단 마진 추가 */
+            font-size: 0.9em; 
+            font-weight: normal; 
+            margin-top: 5px; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             transition: background-color 0.2s, color 0.2s, transform 0.1s, box-shadow 0.2s;
         }
         .options-container button.selected,
         .options-container button:hover {
             background: #fff;
-            color: #6078ea; /* 테마색 계열로 */
+            color: #6078ea; 
             border-color: #fff;
             transform: translateY(-1px) scale(1.03);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* 주제 카테고리 버튼 */
         #topicCategorySelection .options-container button {
             padding: 14px 18px; 
             font-size: 1em; 
-            width: calc(50% - 12px); /* 2열 레이아웃 */
+            width: calc(50% - 12px); 
             min-height: 55px; 
             display: flex; 
             align-items: center; 
             justify-content: center;
         }
-        /* 세부 주제 버튼 */
+        
+        #subTopicButtons { /* 세부 주제 버튼 컨테이너 */
+            justify-content: center; /* 버튼들을 가운데로 정렬 */
+            width: 100%; /* 부모 너비만큼 차지 */
+        }
         .sub-topic-btn {
-            font-size: 0.85em !important; /* options-container button보다 더 작게 */
-            padding: 9px 13px !important;
+            font-size: 0.9em !important; /* 카테고리 버튼과 유사한 크기로 조정 */
+            padding: 10px 15px !important; /* 패딩 조정 */
+            flex-grow: 1; /* 가능한 공간 채우도록 */
+            min-width: calc(33.33% - 10px); /* 3열 기반, 간격 고려 */
+            max-width: calc(50% - 10px); /* 최대 2열 */
         }
         
-        /* 하단 네비게이션 버튼들 ("더보기", "뒤로가기", "여긴없어요" 등) */
         .navigation-buttons {
             display: flex;
             flex-wrap: wrap;
@@ -189,12 +192,12 @@
             width: 100%;
             max-width: 480px;
         }
-        .navigation-buttons button { /* 네비게이션 버튼 기본 */
+        .navigation-buttons button { 
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #f0f0f0;
             padding: 10px 20px;
-            font-size: 0.95em; /* 일반 버튼보다 약간 작게 */
+            font-size: 0.95em; 
             font-weight: normal;
             box-shadow: none;
         }
@@ -204,8 +207,8 @@
             transform: translateY(-1px);
             border-color: rgba(255,255,255,0.5);
         }
-        .secondary-button { /* "여긴 없어요", "로지야 골라줘" */
-            background: transparent !important; /* options-container button 스타일 오버라이드 */
+        .secondary-button { 
+            background: transparent !important; 
             border: 1px solid #d1c4e9 !important;
             color: #d1c4e9 !important;
         }
@@ -220,6 +223,7 @@
             p, .intro-message { font-size: 1em; }
             .options-container button, .navigation-buttons button { font-size: 0.85em; padding: 9px 13px;}
             #topicCategorySelection .options-container button {font-size: 0.95em; padding: 13px 15px; min-height: 50px;}
+            .sub-topic-btn { min-width: calc(50% - 10px); } /* 모바일에서는 2열 우선 */
         }
 
     </style>
@@ -345,7 +349,7 @@
 
         // 스텝 관리
         const steps = [stepCBT, stepNameAge, stepDiagnosis, stepLozeeIntro, stepTopic];
-        let currentStepIndex = 0; // 현재 스텝 인덱스
+        let currentStepIndex = 0; 
 
         function showStep(idx) {
             steps.forEach((s, i) => {
@@ -354,14 +358,10 @@
             currentStepIndex = idx;
         }
 
-        // TTS 모킹 (실제 tts.js의 playTTSFromText 함수로 대체 필요)
         const playTTS = async (txt) => {
             console.log('[MOCK TTS]', txt);
-            // import { playTTSFromText } from './js/tts.js'; // 실제 사용시
-            // await playTTSFromText(txt);
         };
 
-        // 나이 옵션
         function populateAgeOptions() {
             for (let i = 5; i <= 90; i++) {
                 const opt = document.createElement('option');
@@ -371,7 +371,6 @@
             }
         }
 
-        // 진단 옵션
         const diagnosisOptions = [
             { id: 'adhd', text: 'ADHD' }, { id: 'asd', text: 'ASD' }, { id: 'asperger', text: 'ASD(아스퍼거증후군)' },
             { id: 'social_comm_disorder', text: '사회적의사소통장애' }, { id: '2e', text: 'Audhd' },
@@ -397,15 +396,12 @@
             });
         }
         
-        // 다음 스텝으로 이동하는 공통 함수
         function proceedToNextStep(currentErrorElement, successTTS, nextStepIndex) {
             if (currentErrorElement) currentErrorElement.textContent = '';
             playTTS(successTTS);
             showStep(nextStepIndex);
         }
 
-
-        // 이메일
         submitCbtCodeBtn.onclick = () => {
             const email = cbtCodeInput.value.trim();
             if (!validateCbtEmail(email)) {
@@ -418,7 +414,6 @@
             proceedToNextStep(cbtCodeError, "이메일이 확인되었어요. 만나서 반가워요! 로지가 당신을 어떻게 부르면 좋을까요?", steps.indexOf(stepNameAge));
         };
 
-        // 이름/나이
         submitNameAgeBtn.onclick = () => {
             const name = nameInput.value.trim();
             const age = ageSelectInput.value;
@@ -431,7 +426,6 @@
             proceedToNextStep(ageError, "좋아요. 혹시 가지고 있는 어려움이 있다면 알려주세요.", steps.indexOf(stepDiagnosis));
         };
 
-        // 진단
         submitDiagnosisBtn.onclick = () => {
             const selected = Array.from(diagnosisSelection.querySelectorAll('button.selected')).map((b) => b.dataset.id);
             localStorage.setItem('lozee_userdisease', JSON.stringify(selected));
@@ -440,7 +434,7 @@
             const targetDiagnoses = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e'];
             const hasSpecificDiagnosis = selected.some((id) => targetDiagnoses.includes(id.toLowerCase()));
 
-            if (hasSpecificDiagnosis /* && userAge <= 10 */) { // 나이 제한 임시 해제
+            if (hasSpecificDiagnosis /* && userAge <= 10 */) { 
                 if(topicUserAgeInfo) topicUserAgeInfo.textContent = userAge ? `${userAge}세` : '';
                 renderTopicCategories(userAge);
                 proceedToNextStep(diagnosisError, "네, 알겠습니다. 어떤 종류의 이야기를 하고 싶으세요? 마음이 가는 이야기를 골라보세요.", steps.indexOf(stepTopic));
@@ -452,21 +446,19 @@
             }
         };
 
-        // 앱 소개
         confirmLozeeIntroBtn.onclick = () => {
-            playTTS('이해해주셔서 감사합니다. 처음 단계로 돌아갑니다.'); // 또는 다른 적절한 안내
-            showStep(0); // CBT 입력으로 돌아가기
+            playTTS('이해해주셔서 감사합니다. 처음 단계로 돌아갑니다.'); 
+            showStep(0); 
         };
 
-        // 주제 선택 로직
         let currentTopicCategoryKey = null;
-        let currentCategoryTopics = []; // 현재 카테고리의 전체 주제 목록
-        let displayedSubTopicIndex = 0; // 현재 카테고리에서 보여준 주제의 시작 인덱스
+        let currentCategoryTopics = []; 
+        let displayedSubTopicIndex = 0; 
         const SUB_TOPICS_PER_PAGE = 6;
 
         function getTopicDataForAge(age) {
             const ageInt = parseInt(age, 10);
-            let key = '8-10'; // 기본적으로 '8-10' 주제 사용
+            let key = '8-10'; 
             const userDiseasesRaw = localStorage.getItem('lozee_userdisease') || '[]';
             let userDiseases = [];
             try { userDiseases = JSON.parse(userDiseasesRaw); if (!Array.isArray(userDiseases)) userDiseases = [userDiseasesRaw];}
@@ -476,7 +468,7 @@
             const hasSpecificDiagnosis = userDiseases.some(id => targetDiagnoses.includes(id.toLowerCase()));
 
             if (hasSpecificDiagnosis) {
-                key = '8-10'; // 특정 진단이 있으면 '8-10' (카테고리화된) 주제 사용
+                key = '8-10'; 
             } else {
                 if (ageInt >= 11 && ageInt <= 15) key = '11-15'; 
                 else if (ageInt > 15) key = '30+'; 
@@ -487,18 +479,18 @@
         function renderTopicCategories(age) {
             topicCategorySelection.innerHTML = '';
             subTopicSelectionContainer.style.display = 'none';
-            topicCategorySelection.style.display = 'flex'; // options-container가 flex이므로 부모도 flex
+            topicCategorySelection.style.display = 'flex'; 
             
             const userAgeForText = localStorage.getItem('lozee_userage');
             topicStepTitle.textContent = "어떤 종류의 이야기를 하고 싶니?";
-            topicStepDescription.innerHTML = `<span id="topicUserAgeInfo">${userAgeForText ? `${userAgeForText}세` : ''}</span> 친구야, 어떤 이야기가 네 마음을 당기니?<br>아래에서 골라봐!`;
+            if(topicUserAgeInfo) topicUserAgeInfo.textContent = userAgeForText ? `${userAgeForText}세` : ''; // topicUserAgeInfo가 null이 아닐 때만 접근
+            topicStepDescription.innerHTML = `친구야, 어떤 이야기가 네 마음을 당기니?<br>아래에서 골라봐!`;
 
 
             const topicData = getTopicDataForAge(age);
-            // '8-10' 데이터가 카테고리 객체인지 확인, 아니면 플랫하게 처리
             if (!topicData || typeof topicData !== 'object' || Array.isArray(topicData)) {
                 console.warn(`Age ${age}에 대한 카테고리화된 주제 데이터가 없거나 형식이 다릅니다. 플랫 리스트로 표시합니다.`);
-                renderFlatTopics(age, topicData); // topicsData가 배열일 수 있음
+                renderFlatTopics(age, topicData); 
                 return;
             }
 
@@ -509,8 +501,7 @@
 
             categories.forEach(categoryKey => {
                 const btn = document.createElement('button');
-                // btn.className = 'topic-category-btn'; // .options-container button 스타일 상속
-                const representativeIcon = topicData[categoryKey][0]?.icon || '�';
+                const representativeIcon = topicData[categoryKey][0]?.icon || '📁';
                 btn.innerHTML = `${representativeIcon} ${categoryKey}`;
                 btn.onclick = () => {
                     currentTopicCategoryKey = categoryKey;
@@ -520,7 +511,7 @@
                     topicStepDescription.textContent = '마음에 드는 이야기를 선택하거나, 다른 종류를 골라도 좋아.';
                     renderSubTopics();
                     topicCategorySelection.style.display = 'none';
-                    subTopicSelectionContainer.style.display = 'block'; // block 또는 flex
+                    subTopicSelectionContainer.style.display = 'block'; 
                     playTTS(`"${categoryKey}" 이야기구나! 어떤 게 마음에 드니?`);
                 };
                 topicCategorySelection.appendChild(btn);
@@ -529,10 +520,10 @@
         
         function renderFlatTopics(age, topicsArray) {
             topicCategorySelection.style.display = 'none';
-            subTopicSelectionContainer.style.display = 'block'; // block 또는 flex
+            subTopicSelectionContainer.style.display = 'block'; 
             subTopicButtons.innerHTML = '';
             moreTopicsBtn.style.display = 'none';
-            backToCategoriesBtn.style.display = 'none'; // 플랫 리스트에서는 카테고리 돌아가기 없음
+            // backToCategoriesBtn.style.display = 'none'; // 플랫 리스트에서는 카테고리 돌아가기 버튼 숨김
 
             const topicsToRender = Array.isArray(topicsArray) ? topicsArray : [];
 
@@ -541,7 +532,7 @@
             }
             topicsToRender.forEach(topic => {
                 const btn = document.createElement('button');
-                btn.className = 'sub-topic-btn'; // 스타일 일관성
+                btn.className = 'sub-topic-btn'; 
                 const icon = (typeof topic === 'object' && topic.icon) ? topic.icon : '💬';
                 const text = (typeof topic === 'object' && topic.displayText) ? topic.displayText : topic;
                 btn.innerHTML = `${icon} ${text}`;
@@ -556,12 +547,12 @@
         }
 
         function renderSubTopics() {
-            subTopicButtons.innerHTML = ''; // 이전 버튼 비우기
+            subTopicButtons.innerHTML = ''; 
             const topicsToShow = currentCategoryTopics.slice(displayedSubTopicIndex, displayedSubTopicIndex + SUB_TOPICS_PER_PAGE);
             
             topicsToShow.forEach((t) => {
                 const btn = document.createElement('button');
-                btn.className = 'sub-topic-btn'; // CSS 클래스 적용
+                btn.className = 'sub-topic-btn'; 
                 btn.innerHTML = `${t.icon} ${t.displayText}`;
                 btn.onclick = () => {
                     localStorage.setItem('selectedTopic', JSON.stringify(t));
@@ -590,14 +581,14 @@
             const age = localStorage.getItem('lozee_userage');
             const topicData = getTopicDataForAge(age);
             let allTopics = [];
-            if (topicData && typeof topicData === 'object' && !Array.isArray(topicData)) { // 카테고리화된 데이터
+            if (topicData && typeof topicData === 'object' && !Array.isArray(topicData)) { 
                 Object.values(topicData).forEach(categoryTopics => allTopics.push(...categoryTopics));
-            } else if (Array.isArray(topicData)) { // 플랫한 배열 데이터
+            } else if (Array.isArray(topicData)) { 
                  allTopics = topicData.map(t => typeof t === 'string' ? {displayText: t, icon: '💬', tags: [t]} : t);
             }
 
             if (allTopics.length > 0) {
-                const pick = allTopics[Math.floor(Math.random() * allTopics.length)];
+                const pick = allTopics[Math.floor(Math.random() * all.length)];
                 localStorage.setItem('selectedTopic', JSON.stringify(pick));
                 playTTS(`좋아! 오늘은 "${pick.displayText}"에 대해 이야기해볼까?`);
                 proceedToDialog({ topic: pick });
@@ -608,7 +599,6 @@
         };
 
         function proceedToDialog(data) {
-            // 온보딩 완료 후 localStorage의 내용 확인 (개발자용)
             console.log("온보딩 완료 데이터:", {
                 cbtUserEmail: localStorage.getItem('cbtUserEmail'),
                 cbtVerified: localStorage.getItem('cbtVerified'),
@@ -619,16 +609,15 @@
                 selectedTopic: localStorage.getItem('selectedTopic'),
             });
             alert(`좋아! 이제 ${data.topic && data.topic.displayText !== 'USER_WILL_DEFINE_IN_CHAT' ? `"${data.topic.displayText}"에 대해 ` : ""}이야기를 시작해보자! 😊`);
-            window.location.href = 'talk.html'; // talk.html로 페이지 이동
+            window.location.href = 'talk.html'; 
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             populateAgeOptions();
             populateDiagnosisOptions();
             playTTS('안녕하세요! CBT 이메일을 입력해주세요.');
-            showStep(0); // 첫 스텝(CBT)으로 시작
+            showStep(0); 
         });
     </script>
 </body>
 </html>
-�
