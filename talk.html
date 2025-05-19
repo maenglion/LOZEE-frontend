@@ -19,8 +19,6 @@
   </div>
 
   <script type="module">
-    // 경로 수정: js/counseling_topics.js
-    import { topicsByAge } from './js/counseling_topics.js';
     import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
     import { getGptResponse, getFirstQuestion } from './js/gpt-dialog.js';
     import { trackTime, trackEmotionTone, trackSituation } from './js/basic-features.js';
@@ -35,8 +33,9 @@
 
       const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
       const userAge       = localStorage.getItem('lozee_userage');
-      const userName      = localStorage.getItem('lozee_username') || '친구';
-      let selectedTopic   = JSON.parse(localStorage.getItem('selectedTopic') || '{}');
+      const userName      = localStorage.getItem('lozee_username')    || '친구';
+      const storedTopic   = localStorage.getItem('selectedTopic')     || '{}';
+      const selectedTopic = JSON.parse(storedTopic) || { displayText: '대화' };
 
       let recognitionActive = false;
       let stt;
@@ -56,32 +55,19 @@
         micButton.disabled  = show;
       }
 
-      function resolveTopicDetail() {
-        const a = parseInt(userAge, 10);
-        let ageKey;
-        if (a >= 8 && a <= 10) ageKey = '8-10';
-        else if (a >= 11 && a <= 15) ageKey = '11-15';
-        else ageKey = '30+';
-
-        const data = topicsByAge[ageKey] || {};
-        if (selectedTopic.category && data[selectedTopic.category]) return selectedTopic;
-        const firstCat = Object.keys(data)[0];
-        const firstTopic = data[firstCat]?.[0] || { displayText: '대화', icon: '💬' };
-        selectedTopic = firstTopic;
-        return selectedTopic;
-      }
-
+      // 초기 대화 시작: 인덱스에서 저장된 주제 그대로 사용
       async function initConversation() {
         console.log('initConversation');
-        const topic = resolveTopicDetail();
-        const firstQ = getFirstQuestion(userAge, topic);
-        appendBubble(firstQ, 'bot');
-        await playTTSFromText(firstQ, selectedVoice);
+        const prompt = getFirstQuestion(userAge, selectedTopic);
+        appendBubble(prompt, 'bot');
+        await playTTSFromText(prompt, selectedVoice);
+        // BASIC 기능 초기화
         trackTime();
         trackEmotionTone();
         trackSituation();
       }
 
+      // 사용자 입력 처리 및 스트리밍 GPT 호출
       async function handleUserText(text) {
         console.log('handleUserText:', text);
         if (!text.trim()) return;
@@ -110,7 +96,7 @@
           }
           await playTTSFromText(botBubble.textContent, selectedVoice);
         } catch (err) {
-          console.error('GPT error', err);
+          console.error('GPT streaming error', err);
           appendBubble('죄송해요, 오류가 발생했어요.', 'bot');
           await playTTSFromText('죄송해요, 오류가 발생했어요.', selectedVoice);
         } finally {
@@ -118,27 +104,33 @@
         }
       }
 
+      // 전송 버튼 및 엔터 키 이벤트
       sendButton.addEventListener('click', () => {
         const txt = chatInput.value.trim();
         if (txt) { chatInput.value = ''; handleUserText(txt); }
       });
       chatInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !sendButton.disabled) handleUserText(chatInput.value.trim());
+        if (e.key === 'Enter' && !sendButton.disabled) {
+          e.preventDefault();
+          const txt = chatInput.value.trim();
+          if (txt) { chatInput.value = ''; handleUserText(txt); }
+        }
       });
 
+      // STT 설정 (Web Speech API)
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
         const API = window.SpeechRecognition || window.webkitSpeechRecognition;
         stt = new API();
         stt.lang = 'ko-KR'; stt.interimResults = false;
         stt.onstart  = () => { recognitionActive = true; micButton.textContent = '🔴'; };
         stt.onend    = () => { recognitionActive = false; micButton.textContent = '🎤'; };
-        stt.onresult = e => { handleUserText(e.results[0][0].transcript); };
+        stt.onresult = e => { const speech = e.results[0][0].transcript; handleUserText(speech); };
         micButton.onclick = () => recognitionActive ? stt.stop() : stt.start();
       }
 
+      // 페이지 로드 시 초기 대화 실행
       initConversation();
     });
   </script>
 </body>
 </html>
-```
