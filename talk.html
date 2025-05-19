@@ -13,7 +13,7 @@
   <div id="chat-container"></div>
 
   <div id="chat-input-container">
-    <button id="mic-button" title="음성 인식 시작/중지">🎤</button>
+    <button id="mic-button" title="음성 인식 시작/중지" disabled>🎤</button>
     <input type="text" id="chat-input" placeholder="메시지를 입력하거나 마이크 버튼을 누르세요..." />
     <button id="send-button">전송</button>
   </div>
@@ -33,8 +33,8 @@
 
       const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
       const userAge       = localStorage.getItem('lozee_userage');
-      const userName      = localStorage.getItem('lozee_username')    || '친구';
-      const storedTopic   = localStorage.getItem('selectedTopic')     || '{}';
+      const userName      = localStorage.getItem('lozee_username') || '친구';
+      const storedTopic   = localStorage.getItem('selectedTopic') || '{}';
       const selectedTopic = JSON.parse(storedTopic) || { displayText: '대화' };
 
       let recognitionActive = false;
@@ -52,10 +52,10 @@
       function showAiLoading(show) {
         sendButton.disabled = show;
         chatInput.disabled  = show;
-        micButton.disabled  = show;
+        micButton.disabled  = show || micButton.disabled;
       }
 
-      // 초기 대화 시작: 인덱스에서 저장된 주제 그대로 사용
+      // 초기 대화 시작
       async function initConversation() {
         console.log('initConversation');
         const prompt = getFirstQuestion(userAge, selectedTopic);
@@ -67,7 +67,7 @@
         trackSituation();
       }
 
-      // 사용자 입력 처리 및 스트리밍 GPT 호출
+      // 사용자 입력 및 스트리밍 GPT 호출
       async function handleUserText(text) {
         console.log('handleUserText:', text);
         if (!text.trim()) return;
@@ -104,7 +104,7 @@
         }
       }
 
-      // 전송 버튼 및 엔터 키 이벤트
+      // 전송 버튼 및 엔터키 이벤트
       sendButton.addEventListener('click', () => {
         const txt = chatInput.value.trim();
         if (txt) { chatInput.value = ''; handleUserText(txt); }
@@ -117,11 +117,11 @@
         }
       });
 
-      // STT 설정 (Web Speech API)
+      // STT 설정 및 권한 요청
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-        // 마이크 권한 요청 후 STT 초기화
         navigator.mediaDevices.getUserMedia({ audio: true })
           .then(stream => {
+            console.log('Microphone access granted');
             const API = window.SpeechRecognition || window.webkitSpeechRecognition;
             stt = new API();
             stt.lang = 'ko-KR';
@@ -132,23 +132,21 @@
             stt.onresult = e => { const speech = e.results[0][0].transcript; handleUserText(speech); };
 
             micButton.disabled = false;
-            micButton.onclick = () => {
+            micButton.addEventListener('click', () => {
               if (recognitionActive) stt.stop();
               else stt.start();
-            };
+            });
           })
           .catch(err => {
-            console.error('마이크 권한 요청 실패', err);
+            console.error('Microphone permission denied', err);
             appendBubble('마이크 권한을 사용할 수 없어요. 설정을 확인해주세요.', 'bot');
-            micButton.disabled = true;
           });
       } else {
-        console.error('이 브라우저에서는 Web Speech API를 지원하지 않습니다.');
+        console.error('Web Speech API not supported');
         appendBubble('음성 인식 기능을 사용할 수 없어요.', 'bot');
-        micButton.disabled = true;
       }
 
-      // 페이지 로드 시 초기 대화 실행
+      // 초기 대화 시작
       initConversation();
     });
   </script>
