@@ -77,9 +77,12 @@
         <div class="error-message" id="nameError"></div>
         <p style="margin-top:20px;">나이를 알려주세요.</p>
         <p class="info-text">실제 나이를 선택해주세요.</p>
-        <select id="ageSelectInput">
-            <option value="">나이를 선택해주세요</option>
-        </select>
+        <input
+        type="number"
+        id="ageInput"
+        placeholder="나이를 입력해주세요"
+        min="6" max="90"
+/>
         <div class="error-message" id="ageError"></div>
         <button id="submitNameAgeBtn">다음</button>
     </div>
@@ -141,7 +144,7 @@
         ];
         const [
             cbtCodeInput, cbtCodeError, submitCbtCodeBtn,
-            nameInput, nameError, ageSelectInput, ageError, submitNameAgeBtn,
+            nameInput, nameError, ageInput, ageError, submitNameAgeBtn,
             diagnosisSelection, diagnosisError, submitDiagnosisBtn,
             confirmLozeeIntroBtn,
             topicUserAgeInfo, topicCategorySelection,
@@ -151,7 +154,7 @@
             topicStepTitle, topicStepDescription
         ] = [
             'cbtCodeInput','cbtCodeError','submitCbtCodeBtn',
-            'nameInput','nameError','ageSelectInput','ageError','submitNameAgeBtn',
+            'nameInput','nameError','ageInput','ageError','submitNameAgeBtn',
             'diagnosisSelection','diagnosisError','submitDiagnosisBtn',
             'confirmLozeeIntroBtn',
             'topicUserAgeInfo','topicCategorySelection',
@@ -185,15 +188,30 @@
             playTTS('이메일이 확인되었어요. 만나서 반가워요!');
         };
         submitNameAgeBtn.onclick = () => {
-            const n = nameInput.value.trim(), a = ageSelectInput.value;
-            if (!n) { nameError.textContent='이름을 입력해주세요.'; playTTS('이름을 입력해주세요.'); return; }
-            if (!a) { ageError.textContent='나이를 선택해주세요.'; playTTS('나이를 선택해주세요.'); return; }
+            const n = nameInput.value.trim(),
+                  a = ageInput.value.trim();
+            if (!n) { 
+              nameError.textContent='이름을 입력해주세요.';
+              playTTS('이름을 입력해주세요.'); 
+              return; 
+            }
+            if (!a) { 
+              ageError.textContent='나이를 입력해주세요.';
+              playTTS('나이를 입력해주세요.'); 
+              return; 
+            }
+            //에러메시지 초기화화 
             nameError.textContent = ageError.textContent = '';
+
+            //로컬 스토리지 저장장
             localStorage.setItem('lozee_username', n);
             localStorage.setItem('lozee_userage', a);
+            
+            
+            // ✅ 3단계 진단단
             showStep(2);
             playTTS('좋아요. 혹시 가지고 있는 어려움이 있다면 알려주세요.');
-        };
+        
 
         // ✅ 3단계 완료 시 항상 4단계(주제 선택) 로
         submitDiagnosisBtn.onclick = () => {
