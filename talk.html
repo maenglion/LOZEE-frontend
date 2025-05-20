@@ -24,7 +24,7 @@
     import { trackTime, trackEmotionTone, trackSituation } from './js/basic-features.js';
 
     document.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, initializing chat');
+      // --- 변수 및 요소 참조 ---
       const chatContainer = document.getElementById('chat-container');
       const chatInput     = document.getElementById('chat-input');
       const sendButton    = document.getElementById('send-button');
@@ -35,13 +35,13 @@
       const userAge       = localStorage.getItem('lozee_userage');
       const userName      = localStorage.getItem('lozee_username') || '친구';
       const storedTopic   = localStorage.getItem('selectedTopic') || '{}';
-      const selectedTopic = JSON.parse(storedTopic) || { displayText: '대화' };
+      const selectedTopic = JSON.parse(storedTopic);
 
       let recognitionActive = false;
       let stt;
 
+      // --- 헬퍼 함수들 ---
       function appendBubble(text, role) {
-        console.log('appendBubble', role, text);
         const el = document.createElement('div');
         el.className = `bubble ${role}`;
         el.textContent = text;
@@ -55,21 +55,18 @@
         micButton.disabled  = show || micButton.disabled;
       }
 
-      // 초기 대화 시작
       async function initConversation() {
-        console.log('initConversation');
+        console.log('▶️ selectedTopic:', selectedTopic);
+        console.log('▶️ initConversation 시작');
         const prompt = getFirstQuestion(userAge, selectedTopic);
         appendBubble(prompt, 'bot');
         await playTTSFromText(prompt, selectedVoice);
-        // BASIC 기능 초기화
         trackTime();
         trackEmotionTone();
         trackSituation();
       }
 
-      // 사용자 입력 및 스트리밍 GPT 호출
       async function handleUserText(text) {
-        console.log('handleUserText:', text);
         if (!text.trim()) return;
         appendBubble(text, 'user');
         showAiLoading(true);
@@ -77,14 +74,9 @@
         const botBubble = document.createElement('div');
         botBubble.className = 'bubble bot';
         chatContainer.appendChild(botBubble);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
 
         try {
-          const res = await fetch('/api/gpt-stream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userInput: text, context: { userAge, userName, selectedTopic } })
-          });
+          const res = await getGptResponse(text, { userAge, userName, selectedTopic });
           const reader = res.body.getReader();
           const dec = new TextDecoder();
           let done = false;
@@ -104,7 +96,7 @@
         }
       }
 
-      // 전송 버튼 및 엔터키 이벤트
+      // --- 이벤트 바인딩 ---
       sendButton.addEventListener('click', () => {
         const txt = chatInput.value.trim();
         if (txt) { chatInput.value = ''; handleUserText(txt); }
@@ -117,36 +109,29 @@
         }
       });
 
-      // STT 설정 및 권한 요청
+      // --- STT 설정 ---
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
         navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(stream => {
-            console.log('Microphone access granted');
+          .then(() => {
             const API = window.SpeechRecognition || window.webkitSpeechRecognition;
             stt = new API();
-            stt.lang = 'ko-KR';
-            stt.interimResults = false;
-
+            stt.lang = 'ko-KR'; stt.interimResults = false;
             stt.onstart = () => { recognitionActive = true; micButton.textContent = '🔴'; };
             stt.onend   = () => { recognitionActive = false; micButton.textContent = '🎤'; };
-            stt.onresult = e => { const speech = e.results[0][0].transcript; handleUserText(speech); };
-
+            stt.onresult = e => { handleUserText(e.results[0][0].transcript); };
             micButton.disabled = false;
-            micButton.addEventListener('click', () => {
-              if (recognitionActive) stt.stop();
-              else stt.start();
-            });
+            micButton.onclick = () => recognitionActive ? stt.stop() : stt.start();
           })
           .catch(err => {
             console.error('Microphone permission denied', err);
-            appendBubble('마이크 권한을 사용할 수 없어요. 설정을 확인해주세요.', 'bot');
+            appendBubble('마이크 권한을 사용할 수 없어요.', 'bot');
           });
       } else {
         console.error('Web Speech API not supported');
         appendBubble('음성 인식 기능을 사용할 수 없어요.', 'bot');
       }
 
-      // 초기 대화 시작
+      // --- 대화 시작 ---
       initConversation();
     });
   </script>
