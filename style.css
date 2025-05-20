@@ -8,16 +8,7 @@ body {
     height:100vh; 
     background:#2c3e50; /* 어두운 남색 계열 배경 */ 
     color:#ecf0f1; /* 기본 글자색 밝게 */
-}
-#main-header { 
-    background:#34495e; /* 헤더 배경색 (배경보다 약간 밝게) */
-    color:#ecf0f1; 
-    padding:1rem 1.25rem;
-    text-align:center; 
-    font-size:1.3rem; 
-    font-weight: bold;
-    flex-shrink:0; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+
 }
 #meter-container { 
     display:flex; 
@@ -27,6 +18,7 @@ body {
     background:#34495e; /* 헤더와 동일한 배경 */
     flex-shrink:0; 
     border-bottom: 1px solid #4a6572; /* 구분선 */
+
 }
 #volume-meter { 
     width:70%; 
@@ -36,6 +28,7 @@ body {
     border-radius:6px; 
     overflow:hidden; 
     background-color: #566573; /* 볼륨 미터 배경 */
+
 }
 #volume-level { 
     height:100%; 
@@ -44,6 +37,23 @@ body {
     transition:width 0.08s ease-out; 
     border-radius:4px; 
 }
+
+/* 마이크 버튼 */
+#mic-button {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: #3498db;
+  color: #fff;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+#mic-button.disabled {
+  opacity: 0.5;
+  cursor: default;
+}    
+
 #chat-container { 
     flex:1; 
     overflow-y:auto; 
@@ -62,18 +72,20 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
     word-break: keep-all; 
 }
-.user { 
-    background:#bdc3c7; /* 사용자 말풍선 (연한 회색) */
-    color: #2c3e50; /* 사용자 말풍선 글자색 (어둡게) */
-    align-self:flex-end; 
-    border-bottom-right-radius:0.4rem; 
+.bubble.user {
+  background: #bdc3c7;      /* 연한 회색 */
+  color: #2c3e50;
+  align-self: flex-end;
+  border-bottom-right-radius: 0.4rem;
 }
-.ai { 
-    background:#3498db; /* AI 말풍선 색 (파란색 계열) */
-    color:#ffffff; 
-    align-self:flex-start; 
-    border-bottom-left-radius:0.4rem; 
+/* 챗 버블: AI 쪽 말풍선 (talk.html 에서는 .bubble.bot 으로 붙음) */
+.bubble.bot {
+  background: #3498db;      /* 파란색 계열 */
+  color: #ffffff;
+  align-self: flex-start;
+  border-bottom-left-radius: 0.4rem;
 }
+
 .bubble.interim { 
     background: #7f8c8d; /* 중간 결과 (더 연한 회색) */
     color: #ecf0f1; 
