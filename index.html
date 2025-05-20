@@ -1,150 +1,157 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LOZEE 시작하기</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap"
-        rel="stylesheet"
-    />
-    <style>
-        /* (기존 스타일 전부 동일하게 유지) */
-        body, html { margin:0; padding:0; font-family:'KoPub World Dotum',sans-serif; color:#fff; height:100%; overflow:hidden; }
-        .step { display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;
-                 text-align:center; height:100vh; width:100vw; position:absolute; top:0; left:0; }
-        .step.active { display:flex; }
-        .step-background-main { background:linear-gradient(135deg,#6078ea,#a777e3); }
-        /* ── 여기에 붙여넣기 ── */
-        input,
-        select {
-        padding: 12px;
-        margin-bottom: 12px;
-        border: 1px solid #bdbdbd;
-        border-radius: 8px;
-        width: 85%;
-        max-width: 350px;
-        font-size: 1em;
-        background: #fdfdfd;
-        box-sizing: border-box;
-        appearance: auto;
-        }
-        /* ── ‘다음’ 버튼 원래 스타일 복구 ── */
-        button {
-        padding: 13px 28px;
-        background: #fff;
-        color: #6e8efb;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 1.05em;
-        margin-top: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        transition: background-color 0.2s, transform 0.2s;
-        }
-        button:hover {
-        background: #f5f5f5;
-        transform: translateY(-2px);
-        }
-        button:disabled {
-        background: #e0e0e0;
-        color: #9e9e9e;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LOZEE 시작하기</title>
+  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── 기본 레이아웃/폰트/색상 ── */
+    body, html {
+      margin: 0; padding: 0;
+      font-family: 'KoPub World Dotum', sans-serif;
+      color: #fff; height: 100%; overflow: hidden;
+    }
+    .step {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      text-align: center;
+      height: 100vh;
+      width: 100vw;
+      position: absolute;
+      top: 0; left: 0;
+    }
+    .step.active { display: flex; }
+    .step-background-main { background: linear-gradient(135deg, #6078ea, #a777e3); }
 
-        /* …이하 생략… */
-    </style>
+    /* ── 입력창 스타일 복원 ── */
+    input, select {
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #bdbdbd;
+      border-radius: 8px;
+      width: 85%; max-width: 350px;
+      font-size: 1em; background: #fdfdfd; box-sizing: border-box;
+      appearance: auto;
+    }
+
+    /* ── ‘다음’ 버튼 스타일 복원 ── */
+    button {
+      padding: 13px 28px;
+      background: #fff; color: #6e8efb;
+      border: none; border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold; font-size: 1.05em;
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: background-color .2s, transform .2s;
+    }
+    button:hover {
+      background: #f5f5f5; transform: translateY(-2px);
+    }
+    button:disabled {
+      background: #e0e0e0; color: #9e9e9e;
+      cursor: not-allowed; transform: none; box-shadow: none;
+    }
+
+    /* ── 옵션 버튼, 말풍선 등 기존 스타일 유지 ── */
+    .options-container { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:20px; width:100%; max-width:480px; }
+    .options-container button { background:rgba(255,255,255,0.25); color:#fff; border:1px solid rgba(255,255,255,0.6); padding:10px 15px; border-radius:20px; font-size:.9em; transition: all .2s; }
+    .options-container button.selected,
+    .options-container button:hover { background:#fff; color:#6078ea; border-color:#fff; transform:translateY(-1px) scale(1.03); }
+    .navigation-buttons { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px; }
+    .navigation-buttons button { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.4); color:#f0f0f0; padding:10px 20px; }
+    .navigation-buttons button:hover { background:rgba(255,255,255,0.25); color:#fff; transform:translateY(-1px); }
+    .secondary-button { background:transparent !important; border:1px solid #dcd0ff !important; color:#dcd0ff !important; }
+    .secondary-button:hover { background:rgba(255,255,255,0.1) !important; color:#fff !important; }
+  </style>
 </head>
 <body class="step-background-main">
 
-    <!-- 1: CBT 이메일 입력 -->
-    <div id="stepCBT" class="step active">
-        <h2>로지와 대화 시작하기</h2>
-        <p>CBT 참여자 이메일 주소를 입력해주세요.</p>
-        <input type="email" id="cbtCodeInput" placeholder="CBT 이메일 주소" />
-        <div class="error-message" id="cbtCodeError"></div>
-        <button id="submitCbtCodeBtn">다음</button>
+  <!-- 1. CBT 이메일 입력 -->
+  <div id="stepCBT" class="step active">
+    <h2>로지와 대화 시작하기</h2>
+    <p>CBT 참여자 이메일 주소를 입력해주세요.</p>
+    <input type="email" id="cbtCodeInput" placeholder="CBT 이메일 주소"/>
+    <div class="error-message" id="cbtCodeError"></div>
+    <button id="submitCbtCodeBtn">다음</button>
+  </div>
+
+  <!-- 2. 이름·나이 입력 -->
+  <div id="stepNameAge" class="step">
+    <h2>만나서 반가워요!</h2>
+    <p>로지가 당신을 어떻게 부르면 좋을까요?</p>
+    <input type="text" id="nameInput" placeholder="이름 또는 별명"/>
+    <div class="error-message" id="nameError"></div>
+    <p style="margin-top:20px;">나이를 알려주세요.</p>
+    <p class="info-text">실제 나이를 입력해주세요.</p>
+    <input type="number" id="ageInput" placeholder="나이를 입력해주세요" min="6" max="90"/>
+    <div class="error-message" id="ageError"></div>
+    <button id="submitNameAgeBtn">다음</button>
+  </div>
+
+  <!-- 3. 진단받은 병명 -->
+  <div id="stepDiagnosis" class="step">
+    <h2>가지고 있는 어려움이 있다면 알려주세요.</h2>
+    <p class="info-text">해당하는 것을 모두 선택해주세요.<br>(선택하지 않아도 괜찮아요)</p>
+    <div id="diagnosisSelection" class="options-container"></div>
+    <div class="error-message" id="diagnosisError"></div>
+    <button id="submitDiagnosisBtn">다음</button>
+  </div>
+
+  <!-- 3-1. LOZEE 소개 (병명 선택 없을 때) -->
+  <div id="stepLozeeIntro" class="step">
+    <h2>LOZEE 이야기</h2>
+    <p class="intro-message">
+      <!-- 소개 텍스트 유지 -->
+    </p>
+    <button id="confirmLozeeIntroBtn">확인</button>
+  </div>
+
+  <!-- 4. 주제 선택 -->
+  <div id="stepTopic" class="step">
+    <h2 id="topicStepTitle">어떤 종류의 이야기를 하고 싶니?</h2>
+    <p id="topicStepDescription"><span id="topicUserAgeInfo"></span> 친구야, 골라봐!</p>
+
+    <!-- 카테고리 -->
+    <div id="topicCategorySelection" class="options-container"></div>
+
+    <!-- 서브토픽 -->
+    <div id="subTopicSelectionContainer" class="step" style="display:none; flex-direction:column; align-items:center;">
+      <div id="subTopicButtons" class="options-container"></div>
+      <div class="navigation-buttons">
+        <button id="moreTopicsBtn" style="display:none;">다른 이야기 더 보기</button>
+        <button id="backToCategoriesBtn">다른 종류 이야기 고를래</button>
+      </div>
     </div>
 
-    <!-- 2: 이름·나이 -->
-    <div id="stepNameAge" class="step">
-        <h2>만나서 반가워요!</h2>
-        <p>로지가 당신을 어떻게 부르면 좋을까요?</p>
-        <input type="text" id="nameInput" placeholder="이름 또는 별명" />
-        <div class="error-message" id="nameError"></div>
-        <p style="margin-top:20px;">나이를 알려주세요.</p>
-        <p class="info-text">실제 나이를 입력해주세요.</p>
-        <input
-        type="number"
-        id="ageInput"
-        placeholder="나이를 입력해주세요"
-        min="6" max="90"
-/>
-        <div class="error-message" id="ageError"></div>
-        <button id="submitNameAgeBtn">다음</button>
+    <!-- 직접 입력 / 로지 추천 -->
+    <div class="navigation-buttons" style="margin-top:20px;">
+      <button id="noSpecificTopicBtn" class="secondary-button">여긴 없어요 (직접 말할래요)</button>
+      <button id="lozeePickBtn" class="secondary-button">로지야 골라줘!</button>
     </div>
+    <div class="error-message" id="topicOverallError"></div>
+  </div>
 
-    <!-- 3: 진단받은 병명 -->
-    <div id="stepDiagnosis" class="step">
-        <h2>가지고 있는 어려움이 있다면 알려주세요.</h2>
-        <p class="info-text">해당하는 것을 모두 선택해주세요.<br/>(선택하지 않아도 괜찮아요)</p>
-        <div id="diagnosisSelection" class="options-container"></div>
-        <div class="error-message" id="diagnosisError"></div>
-        <button id="submitDiagnosisBtn">다음</button>
-    </div>
+  <script type="module">
+    import { counselingTopicsByAge } from './js/counseling_topics.js';
+    import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js';
 
-    <!-- 3-1: LOZEE 소개 (병명이 없을 때만) -->
-    <div id="stepLozeeIntro" class="step">
-        <h2>LOZEE 이야기</h2>
-        <p class="intro-message">
-            <!-- …소개 텍스트… -->
-        </p>
-        <button id="confirmLozeeIntroBtn">확인</button>
-    </div>
-
-    <!-- 4: 주제 선택 -->
-    <div id="stepTopic" class="step">
-        <h2 id="topicStepTitle">어떤 종류의 이야기를 하고 싶니?</h2>
-        <p id="topicStepDescription"><span id="topicUserAgeInfo"></span> 친구야, 골라봐!</p>
-
-        <!-- 카테고리 버튼 -->
-        <div id="topicCategorySelection" class="options-container"></div>
-
-        <!-- 세부 주제 -->
-        <div id="subTopicSelectionContainer" class="step" style="display:none;flex-direction:column;align-items:center;">
-            <div id="subTopicButtons" class="options-container"></div>
-            <div class="navigation-buttons">
-                <button id="moreTopicsBtn" style="display:none;">다른 이야기 더 보기</button>
-                <button id="backToCategoriesBtn">다른 종류 이야기 고를래</button>
-            </div>
-        </div>
-
-        <!-- 직접 입력 / 로지 추천 -->
-        <div class="navigation-buttons common-topic-actions" style="margin-top:20px;">
-            <button id="noSpecificTopicBtn" class="secondary-button">여긴 없어요 (직접 말할래요)</button>
-            <button id="lozeePickBtn" class="secondary-button">로지야 골라줘!</button>
-        </div>
-        <div class="error-message" id="topicOverallError"></div>
-    </div>
-
-    <script type="module">
-        import { counselingTopicsByAge } from './js/counseling_topics.js';
-        import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js';
-
-        // ── DOM 요소
-        const steps = [
-            document.getElementById('stepCBT'),
-            document.getElementById('stepNameAge'),
-            document.getElementById('stepDiagnosis'),
-            document.getElementById('stepLozeeIntro'),
-            document.getElementById('stepTopic')
-        ];
+    // DOM 참조
+    const steps = [
+      document.getElementById('stepCBT'),
+      document.getElementById('stepNameAge'),
+      document.getElementById('stepDiagnosis'),
+      document.getElementById('stepLozeeIntro'),
+      document.getElementById('stepTopic')
+    ];
     const [
       cbtCodeInput, cbtCodeError, submitCbtCodeBtn,
-      nameInput, nameError, ageInput, ageError, submitNameAgeBtn,
+      nameInput,  nameError,   ageInput,      ageError,      submitNameAgeBtn,
       diagnosisSelection, diagnosisError, submitDiagnosisBtn,
       confirmLozeeIntroBtn,
       topicUserAgeInfo, topicCategorySelection,
@@ -164,16 +171,15 @@
       'topicStepTitle','topicStepDescription'
     ].map(id => document.getElementById(id));
 
-        function showStep(idx) {
-            steps.forEach((s,i)=>s.classList.toggle('active', i===idx));
-        }
+    function showStep(idx) {
+      steps.forEach((s,i)=>s.classList.toggle('active', i===idx));
+    }
+    const playTTS = async txt => console.log('[MOCK TTS]', txt);
 
-        const playTTS = async txt => console.log('[MOCK TTS]', txt);
+    function populateAgeOptions() { /* 기존 age 옵션 로직 */ }
+    function populateDiagnosisOptions() { /* 기존 진단 옵션 로직 */ }
 
-        function populateAgeOptions(){ /*…*/ }
-        function populateDiagnosisOptions(){ /*…*/ }
-
-    // 1단계 cbt 이메일 입력
+    // 1단계
     submitCbtCodeBtn.onclick = () => {
       const email = cbtCodeInput.value.trim();
       if (!validateCbtEmail(email)) {
@@ -187,127 +193,104 @@
       showStep(1);
       playTTS('이메일이 확인되었어요. 만나서 반가워요!');
     };
-        
-    
-    // 2단계 이름 나이
+
+    // 2단계
     submitNameAgeBtn.onclick = () => {
-      const n = nameInput.value.trim(),
-            a = ageInput.value.trim();
-      if (!n) {
-        nameError.textContent = '이름을 입력해주세요.';
-        playTTS('이름을 입력해주세요.');
-        return;
-      }
-      if (!a) {
-        ageError.textContent = '나이를 입력해주세요.';
-        playTTS('나이를 입력해주세요.');
-        return;
-      }
-      // 에러 초기화
+      const n = nameInput.value.trim(), a = ageInput.value.trim();
+      if (!n) { nameError.textContent='이름을 입력해주세요.'; playTTS('이름을 입력해주세요.'); return; }
+      if (!a) { ageError.textContent='나이를 입력해주세요.'; playTTS('나이를 입력해주세요.'); return; }
       nameError.textContent = ageError.textContent = '';
       localStorage.setItem('lozee_username', n);
       localStorage.setItem('lozee_userage', a);
-
       showStep(2);
       playTTS('좋아요. 혹시 가지고 있는 어려움이 있다면 알려주세요.');
-    };  // ← 여기서 반드시 닫아야 합니다.
-        
+    };
 
-     // 3단계 이름 나이
+    // 3단계
     submitDiagnosisBtn.onclick = () => {
-        const sel = Array.from(diagnosisSelection.querySelectorAll('button.selected'))
-                         .map(b=>b.dataset.id);
-        localStorage.setItem('lozee_userdisease', JSON.stringify(sel));
-        const userAge = parseInt(localStorage.getItem('lozee_userage'),10);
-        renderTopicCategories(userAge);
-        showStep(4);  // ← 여기 인덱스 4
-        playTTS('네, 알겠습니다. 어떤 종류의 이야기를 하고 싶으세요?');
+      const sel = Array.from(diagnosisSelection.querySelectorAll('button.selected')).map(b=>b.dataset.id);
+      localStorage.setItem('lozee_userdisease', JSON.stringify(sel));
+      const age = parseInt(localStorage.getItem('lozee_userage'),10);
+      renderTopicCategories(age);
+      showStep(4);
+      playTTS('네, 알겠습니다. 어떤 종류의 이야기를 하고 싶으세요?');
     };
 
-        confirmLozeeIntroBtn.onclick = () => {
-            showStep(0);
-            playTTS('처음 단계로 돌아갑니다.');
+    confirmLozeeIntroBtn.onclick = () => {
+      showStep(0);
+      playTTS('처음 단계로 돌아갑니다.');
     };
 
-        // ── 주제 선택 렌더링 (기존 코드 그대로) ─────────────────
-        function getTopicDataForAge(age){
-          // … 사용자 질병/나이 기반 키 선정 …
-          const key = '8-10';
-          return counselingTopicsByAge[key] || {};
-      }
-      let currentCategoryTopics = [], displayedSubTopicIndex = 0;
-      const SUB_TOPICS_PER_PAGE = 6;
-
-      function renderTopicCategories(age) {
-        topicCategorySelection.innerHTML = '';
-        subTopicSelectionContainer.style.display = 'none';
-        topicCategorySelection.style.display = 'flex';
-        topicStepTitle.textContent = '어떤 종류의 이야기를 하고 싶니?';
-        topicStepDescription.textContent = `${age}세 친구야, 골라봐!`;
-
-        const topicData = getTopicDataForAge(age);
-        Object.keys(topicData).forEach(cat => {
-          const btn = document.createElement('button');
-          btn.innerHTML = `${topicData[cat][0]?.icon||'📁'} ${cat}`;
-          btn.onclick = () => {
-            currentCategoryTopics = topicData[cat];
-            displayedSubTopicIndex = 0;
-            topicCategorySelection.style.display = 'none';
-            subTopicSelectionContainer.style.display = 'flex';
-            renderSubTopics();
-            playTTS(`"${cat}" 이야기구나! 어떤 게 마음에 드니?`);
-          };
-          topicCategorySelection.appendChild(btn);
-        });
-      }
-        
-        function renderSubTopics(){
-            if (displayedSubTopicIndex === 0) subTopicButtons.innerHTML = '';
-            const slice = currentCategoryTopics.slice(displayedSubTopicIndex, displayedSubTopicIndex + SUB_TOPICS_PER_PAGE);
-            slice.forEach(t => {
-              const b = document.createElement('button');
-              b.className = 'sub-topic-btn';
-              b.innerHTML = `${t.icon} ${t.displayText}`;
-              b.onclick = () => {
-                localStorage.setItem('selectedTopic', JSON.stringify(t));
-                playTTS(`${t.displayText} 주제로 선택했어요.`);
-                window.location.href = 'talk.html';
-           };
-           subTopicButtons.appendChild(b);
-         });
-         displayedSubTopicIndex += slice.length;
-        moreTopicsBtn.style.display = displayedSubTopicIndex < currentCategoryTopics.length
-          ? 'inline-block'
-          : 'none';
-        }
-
-        moreTopicsBtn.onclick = renderSubTopics;
-        backToCategoriesBtn.onclick = () => {
-            displayedSubTopicIndex = 0;
-            renderTopicCategories(localStorage.getItem('lozee_userage'));
-            playTTS('다른 종류 이야기로 돌아왔어요.');
+    // 4단계 렌더링
+    let currentCategoryTopics = [], displayedSubTopicIndex = 0;
+    const SUB_TOPICS_PER_PAGE = 6;
+    function getTopicDataForAge(age) {
+      const key = '8-10'; 
+      return counselingTopicsByAge[key]||{};
+    }
+    function renderTopicCategories(age) {
+      topicCategorySelection.innerHTML = '';
+      subTopicSelectionContainer.style.display = 'none';
+      topicCategorySelection.style.display = 'flex';
+      topicStepTitle.textContent = '어떤 종류의 이야기를 하고 싶니?';
+      topicStepDescription.textContent = `${age}세 친구야, 골라봐!`;
+      const data = getTopicDataForAge(age);
+      Object.keys(data).forEach(cat => {
+        const btn = document.createElement('button');
+        btn.innerHTML = `${data[cat][0]?.icon||'📁'} ${cat}`;
+        btn.onclick = () => {
+          currentCategoryTopics = data[cat]; displayedSubTopicIndex = 0;
+          topicCategorySelection.style.display = 'none';
+          subTopicSelectionContainer.style.display = 'flex';
+          renderSubTopics();
+          playTTS(`"${cat}" 이야기구나! 어떤 게 마음에 드니?`);
         };
-
-        // ✅ 직접 입력 / 랜덤픽 도 역시 바로 talk.html 로
-        noSpecificTopicBtn.onclick = () => {
-            localStorage.setItem('selectedTopic', JSON.stringify({ displayText:'직접 입력', icon:'💬', tags:['직접'] }));
-            playTTS('자, 직접 말씀해주세요.');
-            window.location.href='talk.html';
+        topicCategorySelection.appendChild(btn);
+      });
+    }
+    function renderSubTopics() {
+      if (displayedSubTopicIndex===0) subTopicButtons.innerHTML='';
+      const slice = currentCategoryTopics.slice(displayedSubTopicIndex, displayedSubTopicIndex+SUB_TOPICS_PER_PAGE);
+      slice.forEach(t => {
+        const b=document.createElement('button');
+        b.className='sub-topic-btn';
+        b.innerHTML=`${t.icon} ${t.displayText}`;
+        b.onclick = () => {
+          localStorage.setItem('selectedTopic', JSON.stringify(t));
+          playTTS(`${t.displayText} 주제로 선택했어요.`);
+          window.location.href='talk.html';
         };
-        lozeePickBtn.onclick = () => {
-            const all = Object.values(getTopicDataForAge(localStorage.getItem('lozee_userage'))).flat();
-            const pick = all[Math.floor(Math.random()*all.length)] || { displayText:'자유 주제', icon:'💬', tags:['자유'] };
-            localStorage.setItem('selectedTopic', JSON.stringify(pick));
-            playTTS(`오늘은 "${pick.displayText}"에 대해 이야기해볼까?`);
-            window.location.href='talk.html';
-        };
+        subTopicButtons.appendChild(b);
+      });
+      displayedSubTopicIndex += slice.length;
+      moreTopicsBtn.style.display = displayedSubTopicIndex < currentCategoryTopics.length ? 'inline-block' : 'none';
+    }
+    moreTopicsBtn.onclick = renderSubTopics;
+    backToCategoriesBtn.onclick = () => {
+      displayedSubTopicIndex=0;
+      renderTopicCategories(localStorage.getItem('lozee_userage'));
+      playTTS('다른 종류 이야기로 돌아왔어요.');
+    };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            populateAgeOptions();
-            populateDiagnosisOptions();
-            showStep(0);
-            playTTS('안녕하세요! CBT 이메일을 입력해주세요.');
-        });
-    </script>
+    noSpecificTopicBtn.onclick = () => {
+      localStorage.setItem('selectedTopic', JSON.stringify({displayText:'직접 입력', icon:'💬', tags:['직접']}));
+      playTTS('자, 직접 말씀해주세요.');
+      window.location.href='talk.html';
+    };
+    lozeePickBtn.onclick = () => {
+      const all = Object.values(getTopicDataForAge(localStorage.getItem('lozee_userage'))).flat();
+      const pick = all[Math.floor(Math.random()*all.length)]||{displayText:'자유 주제', icon:'💬', tags:['자유']};
+      localStorage.setItem('selectedTopic', JSON.stringify(pick));
+      playTTS(`오늘은 "${pick.displayText}"에 대해 이야기해볼까?`);
+      window.location.href='talk.html';
+    };
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      populateAgeOptions();
+      populateDiagnosisOptions();
+      showStep(0);
+      playTTS('안녕하세요! CBT 이메일을 입력해주세요.');
+    });
+  </script>
 </body>
 </html>
