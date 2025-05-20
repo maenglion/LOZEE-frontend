@@ -103,12 +103,17 @@
         sendButton.classList.toggle('loading', flag);
       }
 
-      // 초기 인사
+      // ── 초기 대화 시작 ─────────────────────────
       async function initConversation() {
-        const prompt = getFirstQuestion(userAge, selectedTopic);
-        appendBubble(prompt, 'bot');
-        await playTTSFromText(prompt, selectedVoice);
+        // 인덱스에서 넘어온 주제(selectedTopic)와 나이(userAge)를 반영한 첫 질문 생성
+       const prompt = getFirstQuestion(userAge, selectedTopic);
+       appendBubble(prompt, 'bot');
+       await playTTSFromText(prompt, selectedVoice);
       }
+
+       // 페이지 로드 직후 초기 대화 시작 호출
+       document.addEventListener('DOMContentLoaded', () => {
+       initConversation();
 
       // 사용자 텍스트 처리
       async function handleUserText(text) {
@@ -225,9 +230,10 @@
         if (e.key === 'Enter') { e.preventDefault(); sendButton.click(); }
       });
 
-      // 시작
-      initConversation();
-    });
-  </script>
+     // ── 9. 시작 ─────────────────────────────
+     document.addEventListener('DOMContentLoaded', async () => {
+     await initConversation();  // 페이지 로드 직후 첫 질문
+     });
+     </script>
 </body>
 </html>
