@@ -467,22 +467,6 @@
             proceedToNextStep(ageError, "좋아요. 혹시 가지고 있는 어려움이 있다면 알려주세요.", steps.indexOf(stepDiagnosis));
         };
 
-            
-            const userAge = parseInt(localStorage.getItem('lozee_userage'), 10);
-            const targetDiagnoses = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e'];
-            const hasSpecificDiagnosis = selected.some((id) => targetDiagnoses.includes(id.toLowerCase()));
-
-            if (hasSpecificDiagnosis /* && userAge <= 10 */) { 
-                if(topicUserAgeInfo) topicUserAgeInfo.textContent = userAge ? `${userAge}세` : '';
-                renderTopicCategories(userAge);
-                proceedToNextStep(diagnosisError, "네, 알겠습니다. 어떤 종류의 이야기를 하고 싶으세요? 마음이 가는 이야기를 골라보세요.", steps.indexOf(stepTopic));
-            } else {
-                const introP = stepLozeeIntro.querySelector('.intro-message'); 
-                let ttsIntroText = "로지에 대해 잠시 안내해 드릴게요. ";
-                if (introP) { const lines = introP.innerText.split('\n'); if (lines.length > 8) ttsIntroText += lines.slice(6, 9).join(' ').replace(/<br>/g, ' '); else ttsIntroText += "로지는 여러분의 마음을 이해하고 함께 성장하는 친구입니다."; }
-                proceedToNextStep(diagnosisError, ttsIntroText, steps.indexOf(stepLozeeIntro));
-            }
-        };
 
         confirmLozeeIntroBtn.onclick = () => {
             playTTS('이해해주셔서 감사합니다. 처음 단계로 돌아갑니다.'); 
