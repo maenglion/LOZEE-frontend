@@ -208,13 +208,52 @@
 
     // 3단계
     submitDiagnosisBtn.onclick = () => {
-      const sel = Array.from(diagnosisSelection.querySelectorAll('button.selected')).map(b=>b.dataset.id);
-      localStorage.setItem('lozee_userdisease', JSON.stringify(sel));
+        // 1) 선택된 버튼 아이디 배열로
+      const selected = Array.from(
+      diagnosisSelection.querySelectorAll('button.selected')
+      ).map(b => b.dataset.id);
+
+      localStorage.setItem(
+      'lozee_userdisease',
+      JSON.stringify(selected)
+    );
+
       const age = parseInt(localStorage.getItem('lozee_userage'),10);
       renderTopicCategories(age);
       showStep(4);
       playTTS('네, 알겠습니다. 어떤 종류의 이야기를 하고 싶으세요?');
     };
+
+    // 3) 특정 진단(ADHD, ASD 등)이 있으면 곧장 주제 선택 단계로
+     const targetDiagnoses = [
+     'adhd','asd','asperger','social_comm_disorder','2e'
+    ];
+     const hasSpecificDiagnosis = selected.some(id =>
+     targetDiagnoses.includes(id.toLowerCase())
+    );
+
+    if (hasSpecificDiagnosis) {
+    
+        // 카테고리 렌더
+       if (topicUserAgeInfo) {
+       topicUserAgeInfo.textContent = `${userAge}세`;
+    }
+    renderTopicCategories(userAge);
+    // 단계 4: 주제 선택(stepTopic)의 인덱스
+    proceedToNextStep(
+      diagnosisError,
+      "네, 알겠습니다. 어떤 종류의 이야기를 하고 싶으세요? 마음이 가는 이야기를 골라보세요.",
+      steps.indexOf(stepTopic)
+    );
+
+  } else {
+    // ❗️ 빠져있던 로지 소개 분기
+    proceedToNextStep(
+      diagnosisError,
+      "로지에 대해 안내할게요.",
+      steps.indexOf(stepLozeeIntro)
+    );
+  }
 
     confirmLozeeIntroBtn.onclick = () => {
       showStep(0);
