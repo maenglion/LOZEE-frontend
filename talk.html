@@ -133,6 +133,8 @@
       const text = chatInput.value.trim();
        if (text) {
          handleUserText(text);
+         console.log("🔥 GPT 요청 준비 시작");
+         console.log("요청 대상:", getGptResponse.toString());
          chatInput.value = ''; // 입력창 비우기기
        }
     });
