@@ -104,8 +104,10 @@
       const sendButton    = document.getElementById('send-button');
       const micButton     = document.getElementById('mic-button');
       const meterLevel    = document.getElementById('volume-level');
+      console.log("✅ talk.html 로드됨");
       await initConversation(); // ✨ 초기 GPT 질문과 TTS 실행
-      // ────────────────────────────────────────────────
+    });
+      
 
       // 사용자 정보
       const selectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
@@ -207,10 +209,13 @@
         setLoading(false);
       }
 
-      const res = await getGptResponse(text, { userAge, userName, selectedTopic });
+      const data = await res.json(); //
       console.log("응답 상태:", res.status);
       console.log("헤더:", res.headers);
 
       const text = await res.text();
       console.log("응답 텍스트:", text);
       console.log("GPT 응답 수신 결과:", data);
+</script>
+</body>
+</html>
