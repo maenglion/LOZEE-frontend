@@ -162,5 +162,20 @@
 
         try {
           const res = await getGptResponse(text, { userAge, userName, selectedTopic });
-          const reader = res.body.getReader();
-          const dec
+
+          if (!res.ok) {
+          appendBubble("서버 응답 실패: " + res.status, 'bot');
+          return;
+        }
+ 
+      const data = await res.json();
+      const botMessage = data?.rephrasing || "응답을 받을 수 없었어요.";
+      appendBubble(botMessage, 'bot');
+      await playTTSFromText(botMessage, selectedVoice);
+
+      const res = await getGptResponse(text, { userAge, userName, selectedTopic });
+      console.log("응답 상태:", res.status);
+      console.log("헤더:", res.headers);
+
+      const text = await res.text();
+      console.log("응답 텍스트:", text);
