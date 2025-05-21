@@ -104,6 +104,7 @@
       const sendButton    = document.getElementById('send-button');
       const micButton     = document.getElementById('mic-button');
       const meterLevel    = document.getElementById('volume-level');
+      await initConversation(); // ✨ 초기 GPT 질문과 TTS 실행
       // ────────────────────────────────────────────────
 
       // 사용자 정보
