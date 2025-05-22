@@ -98,6 +98,16 @@
   import { getGptResponse, getFirstQuestion } from './js/gpt-dialog.js';
 
   document.addEventListener('DOMContentLoaded', async () => {
+
+    async function startMic() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("🎤 마이크 권한 허용됨 (STT 시작 준비)");
+      // 🔧 여기에 STT 처리 로직 연결 가능
+    } catch (err) {
+      console.error("❌ 마이크 권한 요청 실패:", err);
+    }
+  }  
     // ── DOM 참조 ─────────────────────────────────
     const chatContainer = document.getElementById('chat-container');
     const chatInput     = document.getElementById('chat-input');
