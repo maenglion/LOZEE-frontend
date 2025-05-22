@@ -8,22 +8,90 @@
   <style>
     /* 기본 스타일 */
     :root {
-      --primary-color: #6e8efb;
-      --secondary-color: #354157;
-      --background-color: #2a3340;
-      --text-color: #fff;
-      --input-background: #f0f0f0;
-      --bot-bubble-bg: #f0f0f0;
-      --bot-bubble-text: #333;
-      --user-bubble-bg: #6e8efb;
-      --user-bubble-text: #fff;
-      --gnb-height: 56px;
-      --chat-input-height: 70px;
-      --gemini-purple: #7B68EE;
-      --volume-meter-default-bg: var(--primary-color);
-      --meter-top-margin: 8px;
-      --gnb-dropdown-border-color: #4a5568;
-    }
+  /* index.html의 주조색과 유사한 그라데이션 또는 밝은 단색으로 변경 */
+  /* 예시 1: index.html과 동일한 그라데이션 (body 태그에 직접 적용) */
+  /* --background-color 변수는 단색용으로 남겨두거나 다른 밝은 색으로 대체 */
+  --background-color-gradient-start: #6078ea; /* index.html 그라데이션 시작색 */
+  --background-color-gradient-end: #a777e3;   /* index.html 그라데이션 끝색 */
+  
+  --primary-color: #6e8efb; /* 기존 유지 또는 약간 조정 */
+  --secondary-color: #899bff; /* GNB 하단 그림자 등 좀 더 부드러운 색으로 */
+  --text-color: #ffffff; /* 밝은 배경에서는 어두운 색으로 변경 필요할 수 있음 */
+                         /* 만약 배경을 매우 밝게 한다면 #333333 등으로 변경 */
+
+  --input-background: #ffffff; /* 입력창 배경 흰색 */
+  --bot-bubble-bg: #ffffff;    /* 봇 말풍선 흰색 (텍스트 대비를 위해) */
+  --bot-bubble-text: #55576d;   /* 봇 말풍선 글씨색 (배경이 밝아지므로 어둡게) */
+  --user-bubble-bg: #6e8efb; /* 사용자 말풍선은 기존 유지 또는 파스텔톤으로 */
+  --user-bubble-text: #ffffff;
+
+  --gnb-height: 56px;
+  --chat-input-height: 70px;
+  --gemini-purple: #7B68EE; /* GNB 제목색 (새 배경과 어울리는지 확인) */
+  --volume-meter-default-bg: var(--primary-color);
+  --meter-top-margin: 8px;
+  --gnb-dropdown-border-color: #d1c4e9; /* 연한 보라색 계열로 변경 */
+}
+
+body {
+  margin: 0;
+  padding-top: var(--gnb-height);
+  font-family: 'KoPub World Dotum', sans-serif;
+  /* 그라데이션 배경 적용 */
+  background: linear-gradient(135deg, var(--background-color-gradient-start), var(--background-color-gradient-end));
+  color: var(--text-color); /* 주 텍스트 색상, 흰색 유지 또는 어두운색으로 변경 */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* GNB 및 채팅 입력창 배경은 그라데이션과 어울리도록 반투명 흰색 또는 단색으로 조정 가능 */
+#gnb {
+  /* ... 기존 스타일 ... */
+  background-color: rgba(255, 255, 255, 0.15); /* 예시: 약간 투명한 흰색 배경 */
+  backdrop-filter: blur(10px); /* (선택사항) 블러 효과로 고급스러움 추가 */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 그림자 약간 연하게 */
+}
+#gnb-title {
+  color: #ffffff; /* GNB 배경이 밝아지면 제목 색상 변경 가능 */
+}
+#menu-toggle {
+    color: #ffffff; /* GNB 배경이 밝아지면 메뉴 토글 색상 변경 가능 */
+}
+
+#chat-input-container {
+  /* ... 기존 스타일 ... */
+  background-color: rgba(255, 255, 255, 0.2); /* 예시: 약간 투명한 흰색 배경 */
+  backdrop-filter: blur(5px);
+}
+
+#chat-input {
+  /* ... 기존 스타일 ... */
+  background-color: var(--input-background); /* 이미 흰색 계열 */
+  color: #333; /* 입력 글씨는 어둡게 */
+  border: 1px solid #d0d0d0; /* 테두리 약간 연하게 */
+}
+
+/* 드롭다운 메뉴, 음량 바 등도 필요시 색상 조정 */
+#dropdown-menu {
+    background-color: rgba(40, 50, 65, 0.9); /* 약간 어두운 반투명 배경 유지 */
+    backdrop-filter: blur(5px);
+}
+#dropdown-menu a {
+    border-bottom: 1px solid var(--gnb-dropdown-border-color);
+}
+#dropdown-menu a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 시스템 오류 메시지 버블 배경색 변경 */
+.bubble.system-error {
+    background-color: #ffe0e0; /* 연한 핑크/빨강 */
+    color: #c0392b; /* 어두운 빨강 글씨 */
+    border: 1px solid #e74c3c;
+}
 
     body {
       margin: 0;
