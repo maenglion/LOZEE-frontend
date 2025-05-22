@@ -1,17 +1,19 @@
 // js/gpt-dialog.js
 // GPT 대화 로직: 선택된 주제 기반 질문 및 응답 처리
+// 전역 객체 LOZEE_DIALOG를 생성하거나 기존 객체 사용
+window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
 
-const GPT_BACKEND_URL = 'https://ggg-production.up.railway.app/api/gpt-chat'; // 실제 백엔드 API 주소
+const GPT_BACKEND_URL_GPT_DIALOG = 'https://ggg-production.up.railway.app/api/gpt-chat'; // 변수명 충돌 방지를 위해 _GPT_DIALOG 추가
 
 /**
  * 사용자 발화 감정/사실 의도 감지
  * @param {string} text 사용자 입력 텍스트
  * @returns {'emotion'|'fact'} intent
  */
-export function detectIntent(text) {
+window.LOZEE_DIALOG.detectIntent = function(text) {
   const emotionKeywords = ['슬펐', '우울', '화났', '기분', '행복', '짜증', '신나', '분노', '불안', '걱정', '스트레스', '힘들', '좋아', '싫어'];
   return emotionKeywords.some(k => text.includes(k)) ? 'emotion' : 'fact';
-}
+};
 
 /**
  * 시스템 프롬프트 생성: 컨텍스트(나이, 이름, 진단, 주제 등) 및 의도 기반으로 지침 수립
@@ -20,47 +22,41 @@ export function detectIntent(text) {
  * @param {'emotion'|'fact'} extraIntent 사용자 의도
  * @returns {string} 시스템 메시지
  */
-export function getSystemPrompt(context = {}, extraIntent = 'fact') {
+window.LOZEE_DIALOG.getSystemPrompt = function(context = {}, extraIntent = 'fact') {
   let { userAge = 0, userDisease = [], userName = '친구', currentStage = 'Stage 1' } = context;
 
   const isCbtUser = localStorage.getItem('isCbtUser') === 'true';
   const actualUserAge = parseInt(userAge, 10);
   let effectiveAge = actualUserAge;
 
-  // 대상 진단명 (소문자로 비교하기 위해 준비)
   const targetDiagnosesForCbtExperience = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e'];
   let parsedUserDisease = [];
 
-  // userDisease가 문자열일 경우 JSON 파싱 시도, 아니면 배열로 처리
   if (typeof userDisease === 'string') {
     try {
-      parsedUserDisease = JSON.parse(userDisease); // userDisease가 JSON 문자열 형태의 배열이라고 가정
-      if (!Array.isArray(parsedUserDisease)) parsedUserDisease = [userDisease]; // 파싱 결과가 배열이 아니면 단일 요소 배열로
+      parsedUserDisease = JSON.parse(userDisease);
+      if (!Array.isArray(parsedUserDisease)) parsedUserDisease = [userDisease];
     } catch {
-      parsedUserDisease = [userDisease]; // 파싱 실패 시 문자열 그대로 배열 요소로
+      parsedUserDisease = [userDisease];
     }
   } else if (Array.isArray(userDisease)) {
     parsedUserDisease = userDisease;
   }
-   // userDisease 배열 내 각 요소를 소문자로 변환하여 비교 준비
   const lowercasedUserDisease = parsedUserDisease.map(d => typeof d === 'string' ? d.toLowerCase() : '');
-
 
   const hasSpecificDiagnosisForCbt = lowercasedUserDisease.some(id =>
     targetDiagnosesForCbtExperience.includes(id)
   );
 
   if (isCbtUser && hasSpecificDiagnosisForCbt) {
-    effectiveAge = 9; // CBT 참여 및 특정 진단 시 10세 미만 대화 경험으로 조정
+    effectiveAge = 9;
     console.log(
       `CBT User (${userName}, 실제나이: ${actualUserAge}) - 특정 진단으로 10세 미만 대화 경험 적용 (effectiveAge: ${effectiveAge})`
     );
   }
 
-  // 기본 시스템 프롬프트
   let prompt = `당신은 'LOZEE'라는 이름의 감정 중심 심리 코치이자 따뜻한 상담 동반자입니다. 사용자와 친구처럼 편안하게 대화하며, 사용자의 감정을 깊이 이해하고 공감하는 데 중점을 둡니다. 현재 대화는 [${currentStage}] 단계입니다.`;
 
-  // 나이에 따른 말투 및 호칭 설정
   if (effectiveAge >= 56) {
     prompt += `
 [매우 중요] 사용자는 56세 이상입니다. 반드시, 어떤 상황에서도 예외 없이 항상 정중한 존댓말만 사용하세요. '${userName}님'이라고 호칭하며 사용자의 경험과 지혜를 존중하는 태도를 보여주세요.`;
@@ -72,7 +68,6 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
   prompt += `
 사용자의 발화를 주의 깊게 듣고, 그에 맞춰 섬세하고 적절하게 반응해주세요. LOZEE는 사용자의 감정을 판단하거나 비판하지 않으며, 섣부른 조언 대신 스스로 답을 찾도록 돕는 역할을 합니다. 항상 사용자의 편에서 지지하고 격려해주세요.`;
 
-  // 연령대별 응대 가이드라인
   if (effectiveAge < 10) {
     prompt += `
 [10세 미만 아동 응대 가이드라인] 아이의 눈높이에 맞춰 쉽고 짧은 단어를 사용하고, 길게 말하지 않을 것. (예: 1-2 문장 이내) 아이가 충분히 이야기할 수 있도록 격려하고, 아이의 말을 요약하거나 재진술하여 이해했음을 보여주는 것이 좋습니다. 질문은 명확하고 구체적으로 하며, 공감 표현보다는 사실 확인 중심의 질문을 사용하세요. (예: "그게 싫었어?", "그래서 기분이 안 좋았구나.")`;
@@ -85,12 +80,11 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
   } else if (effectiveAge >= 15 && effectiveAge < 56) {
     prompt += `
 [15-55세 성인 응대 가이드라인] 사용자의 복합적인 감정과 상황을 이해하려 노력하고, 상황을 다각도로 추론하여 통찰력 있는 질문을 던져주세요. 하지만 판단하거나 해결책을 직접 제시하기보다는 스스로 생각할 수 있도록 도와주세요.`;
-  } else { // 56세 이상은 위에서 이미 존댓말 처리
+  } else {
     prompt += `
 [56세 이상 성인 응대 가이드라인] 사용자의 풍부한 경험을 존중하며, 과거의 경험이나 현재의 생각에 대한 질문을 통해 삶의 지혜를 나눌 수 있도록 대화를 이끌어주세요.`;
   }
 
-  // 진단 정보 기반 상호작용 가이드라인 (ASD 특성 반영)
   const isAsdRelated = lowercasedUserDisease.some(d => ['asd', 'asperger', 'social_comm_disorder', '2e'].includes(d));
   if (isAsdRelated) {
     prompt += `
@@ -108,13 +102,10 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
 [ADHD 진단 사용자 특별 지침] 대화의 핵심을 명확하고 간결하게 전달하고, 필요시 짧게 정리해주세요. 한 번에 하나의 질문이나 주제에 집중하고, 주의 전환이 빠를 수 있으니 대화 주제가 너무 벗어나지 않도록 부드럽게 유도해주세요.`;
   }
 
-
-  // 발화 의도에 따른 추가 지침
   if (extraIntent === 'emotion') {
     prompt += `
 [발화 의도: 감정] 사용자가 감정을 표현하고 있습니다. 먼저 그 감정을 충분히 인정하고 공감해주세요. "왜 그렇게 느꼈는지", "그 감정이 어땠는지" 등 감정 자체에 초점을 맞춘 질문으로 시작하는 것이 좋습니다.`;
-  } else { // 'fact' 또는 기타
-    // ASD 아동이면서 사실/상황을 이야기할 때의 특별 지침
+  } else {
     if (isAsdRelated && effectiveAge < 15) {
       prompt += `
 [발화 의도: 사실/상황 - ASD 아동 특별 지침] 사용자가 특정 사실이나 상황을 자세히 설명하고 있습니다. 아이가 충분히 이야기할 수 있도록 사실 관계를 중심으로 더 자세히 물어봐 주세요. (예: "그래서 어떻게 됐어?", "그 다음에 무슨 일이 있었니?", "더 자세히 말해줄 수 있니?") 감정에 대한 질문은 아이가 먼저 감정을 명확히 표현할 때까지 기다려주세요.`;
@@ -124,16 +115,11 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
     }
   }
 
-  // 10세 미만 추가 제한 (문장 길이)
   if (effectiveAge <= 10) {
     prompt += `
 [10세 미만 추가 제한] 사용자가 어리기 때문에 대화 초기에는 한 번의 답변이 너무 길어지지 않도록 주의해주세요. 약 1-2 문장으로 짧게 답변하는 것이 좋습니다.`;
   }
 
-  // LLM에게 분석 데이터 반환 요청 (예시)
-  // 실제로는 백엔드에서 LLM 응답과 별개로 분석을 수행하거나,
-  // LLM이 특정 형식으로 분석 정보를 포함하여 응답하도록 유도할 수 있습니다.
-  // 아래는 LLM에게 직접 요청하는 예시이며, 실제 구현은 백엔드 전략에 따라 달라집니다.
   prompt += `
 [분석 데이터 요청] 사용자의 발화와 대화의 맥락을 기반으로 다음 분석 정보를 JSON 형식의 'analysis' 객체에 포함하여 응답의 일부로 제공해주세요:
 - sentiment: (사용자 발화의 감정: "positive", "negative", "neutral", "mixed")
@@ -144,8 +130,7 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
 이 'analysis' 객체는 실제 대화 답변 텍스트와는 별도로, 응답 JSON의 최상위 레벨에 'analysis' 키로 포함되어야 합니다.`;
 
   return prompt;
-}
-
+};
 
 /**
  * 첫 질문: 선택된 주제를 반영하여 간단한 시작 질문 생성
@@ -153,10 +138,10 @@ export function getSystemPrompt(context = {}, extraIntent = 'fact') {
  * @param {{displayText:string, id:string}} topic 선택된 주제 객체
  * @returns {string} 첫 질문 프롬프트
  */
-export function getFirstQuestion(age, topic) {
+window.LOZEE_DIALOG.getFirstQuestion = function(age, topic) {
   const userName = localStorage.getItem('lozee_username') || '친구';
-  const tk = topic?.displayText || '오늘 있었던 일'; // 기본 주제
-  const a = parseInt(age, 10) || 0; // 기본값 0으로 설정
+  const tk = topic?.displayText || '오늘 있었던 일';
+  const a = parseInt(age, 10) || 0;
   const isCbtUser = localStorage.getItem('isCbtUser') === 'true';
   let effectiveAgeForGreeting = a;
 
@@ -165,30 +150,29 @@ export function getFirstQuestion(age, topic) {
   if (userDiseaseString) {
     try {
       parsedUserDisease = JSON.parse(userDiseaseString);
-      if (!Array.isArray(parsedUserDisease)) parsedUserDisease = [parsedUserDisease];
+      if (!Array.isArray(parsedUserDisease)) parsedUserDisease = [userDiseaseString];
     } catch {
       parsedUserDisease = [userDiseaseString];
     }
   }
   const lowercasedUserDisease = parsedUserDisease.map(d => typeof d === 'string' ? d.toLowerCase() : '');
-  const targetDiagnosesForCbtExperience = ['asd', 'adhd', '2e', 'social_comm_disorder', 'asperger']; // 소문자로 통일
+  const targetDiagnosesForCbtExperience = ['asd', 'adhd', '2e', 'social_comm_disorder', 'asperger'];
   const hasSpecificDiagnosisForCbt = lowercasedUserDisease.some(d => targetDiagnosesForCbtExperience.includes(d));
 
   if (isCbtUser && hasSpecificDiagnosisForCbt) {
-    effectiveAgeForGreeting = 9; // 10세 미만 대화 경험으로 조정
+    effectiveAgeForGreeting = 9;
   }
 
-  if (tk === 'USER_WILL_DEFINE_IN_CHAT') { // 사용자가 직접 주제를 정하는 경우
+  if (tk === 'USER_WILL_DEFINE_IN_CHAT') {
     return effectiveAgeForGreeting >= 56
       ? `${userName}님, 반갑습니다. 오늘은 어떤 이야기를 나누고 싶으신가요?`
       : `${userName}아, 반가워! 오늘은 어떤 이야기를 하고 싶어?`;
   }
 
-  // 일반적인 주제 선택 시
   return effectiveAgeForGreeting >= 56
     ? `${userName}님, 안녕하세요. 오늘은 '${tk}'에 대해 이야기해 볼까요?`
     : `${userName}아, 안녕! 오늘은 '${tk}'에 대해 이야기해 볼까?`;
-}
+};
 
 /**
  * GPT 스트리밍 응답 호출 (또는 일반 JSON 응답)
@@ -196,16 +180,8 @@ export function getFirstQuestion(age, topic) {
  * @param {object} context 대화 컨텍스트 (userAge, userDisease, userName, chatHistory 등 포함)
  * @returns {Promise<Response>} fetch 응답
  */
-export async function getGptResponse(userText, context = {}) {
+window.LOZEE_DIALOG.getGptResponse = async function(userText, context = {}) {
   const text = userText.trim();
-
-  // isInitialGreeting과 같은 특별한 context 필드는 현재 사용되지 않으므로,
-  // 빈 텍스트 입력 시 기본 시스템 프롬프트만 보내는 로직은 제거하거나 수정 필요.
-  // 여기서는 빈 텍스트도 일반 대화로 처리하도록 가정.
-  // if (!text && !context.isInitialGreeting) {
-  //   // 초기 인사나 특별한 상황이 아니라면 빈 텍스트는 무시하거나 다른 처리 가능
-  //   // return Promise.resolve(new Response(JSON.stringify({ text: "..." }), { headers: { 'Content-Type': 'application/json' }}));
-  // }
 
   const parsedUserDiseaseForTemp = Array.isArray(context.userDisease)
     ? context.userDisease.map(id => typeof id === 'string' ? id.toLowerCase() : '')
@@ -213,25 +189,17 @@ export async function getGptResponse(userText, context = {}) {
     ? (()=>{ try { return JSON.parse(context.userDisease).map(id => typeof id === 'string' ? id.toLowerCase() : ''); } catch { return [context.userDisease.toLowerCase()]; }})()
     : [];
 
-  let temperature = 0.7; // 기본 온도
-  // ASD 관련 진단 시 온도 조절
+  let temperature = 0.7;
   if (parsedUserDiseaseForTemp.some(d => ['asd', 'asperger', 'social_comm_disorder', '2e'].includes(d))) {
     temperature = 0.65;
   }
-  // ADHD 진단 시 온도 (ASD와 중복될 수 있으나, ASD 우선 또는 다른 로직 적용 가능)
-  // 여기서는 ASD 설정 후 ADHD가 있다면 0.7로 덮어쓰지 않도록 주의 (혹은 별도 로직)
-  // if (parsedUserDiseaseForTemp.includes('adhd') && temperature !== 0.65) {
-  //   temperature = 0.7;
-  // }
 
-
-  const intent = detectIntent(text);
-  const systemPrompt = getSystemPrompt(context, intent);
+  const intent = window.LOZEE_DIALOG.detectIntent(text); // 전역 함수 호출로 변경
+  const systemPrompt = window.LOZEE_DIALOG.getSystemPrompt(context, intent); // 전역 함수 호출로 변경
 
   const messages = [{ role: 'system', content: systemPrompt }];
-  // chatHistory가 있다면 추가 (최근 N개만 전달하는 것이 좋음)
   if (context.chatHistory && Array.isArray(context.chatHistory)) {
-    messages.push(...context.chatHistory); // context.chatHistory는 {role, content} 객체들의 배열이어야 함
+    messages.push(...context.chatHistory);
   }
   if (text) {
     messages.push({ role: 'user', content: text });
@@ -239,31 +207,24 @@ export async function getGptResponse(userText, context = {}) {
 
   const payload = {
     messages,
-    model: 'gpt-4-turbo', // 사용 모델 지정 (필요시 변경)
+    model: 'gpt-4-turbo',
     temperature,
-    // 백엔드에서 stream을 지원하지 않는다면, stream: false 또는 해당 파라미터 제거
-    // stream: true, // 스트리밍 응답을 원할 경우 (백엔드 지원 필요)
   };
   console.log("GPT 요청 페이로드:", JSON.stringify(payload, null, 2));
 
-
-  // fetch API 호출
-  // 백엔드 API는 이 payload를 받아 LLM과 통신하고,
-  // 응답으로 { text: "...", analysis: { ... } } 형태의 JSON을 반환해야 합니다.
-  return fetch(GPT_BACKEND_URL, {
+  return fetch(GPT_BACKEND_URL_GPT_DIALOG, { // GPT_BACKEND_URL_GPT_DIALOG 사용
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // 필요시 API 키 등 추가 헤더
     },
     body: JSON.stringify(payload)
   });
-}
+};
 
 /**
  * 대화 종료 시 인사 프롬프트
  */
-export function getExitPrompt(userName = '친구', age) {
+window.LOZEE_DIALOG.getExitPrompt = function(userName = '친구', age) {
   const a = parseInt(age, 10) || 0;
   const isCbtUser = localStorage.getItem('isCbtUser') === 'true';
   let effectiveAgeForExit = a;
@@ -273,7 +234,7 @@ export function getExitPrompt(userName = '친구', age) {
   if (userDiseaseString2) {
     try {
       parsedUserDisease2 = JSON.parse(userDiseaseString2);
-      if (!Array.isArray(parsedUserDisease2)) parsedUserDisease2 = [parsedUserDisease2];
+      if (!Array.isArray(parsedUserDisease2)) parsedUserDisease2 = [userDiseaseString2];
     } catch {
       parsedUserDisease2 = [userDiseaseString2];
     }
@@ -282,12 +243,11 @@ export function getExitPrompt(userName = '친구', age) {
   const targetDiagnosesForCbtExperience = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e'];
   const hasSpecificDiagnosisForCbt2 = lowercasedUserDisease2.some(id => targetDiagnosesForCbtExperience.includes(id));
 
-
   if (isCbtUser && hasSpecificDiagnosisForCbt2) {
-    effectiveAgeForExit = 9; // 10세 미만 대화 경험으로 조정
+    effectiveAgeForExit = 9;
   }
 
   return effectiveAgeForExit >= 56
     ? `${userName}님, 오늘 대화 고맙습니다. 언제든 편하게 다시 찾아주세요.`
     : `${userName}아, 오늘 이야기 나눠줘서 고마워! 다음에 또 재미있는 이야기하자!`;
-}
+};
