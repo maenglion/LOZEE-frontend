@@ -15,7 +15,12 @@ window.LOZEE_TTS.AVAILABLE_VOICES = [
   "ko-KR-Chirp3-HD-Kore",
   "ko-KR-Chirp3-HD-Schedar"
 ];
-window.LOZEE_TTS.DEFAULT_VOICE = window.LOZEE_TTS.AVAILABLE_VOICES[0];
+window.LOZEE_TTS.DEFAULT_VOICE = "ko-KR-Chirp3-HD-Leda"
+ if (
+  !window.LOZEE_TTS.AVAILABLE_VOICES.includes(window.LOZEE_TTS.DEFAULT_VOICE)
+) {
+  window.LOZEE_TTS.DEFAULT_VOICE = "ko-KR-Chirp3-HD-Leda";
+}
 
 // 3) TTS 재생 함수
 window.LOZEE_TTS.playTTSFromText = async function(text, voiceId) {
