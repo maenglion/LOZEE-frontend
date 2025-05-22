@@ -3,7 +3,7 @@
 // 전역 객체 LOZEE_DIALOG를 생성하거나 기존 객체 사용
 window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
 
-const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'
+const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat';
 
 /**
  * 사용자 발화 감정/사실 의도 감지
@@ -106,7 +106,7 @@ window.LOZEE_DIALOG.getSystemPrompt = function(context = {}, extraIntent = 'fact
     * 사용자의 말을 짧게 요약하거나 그대로 반복하여 정확히 이해했음을 보여주세요.
     * 사용자가 같은 말을 반복하거나, 같은 질문을 여러 번 해도 절대로 지적하거나 이상하게 생각하지 말고, 항상 처음 듣는 것처럼 일관되고 인내심 있게 응답해주세요.
     * 복잡한 공감 표현보다는 구체적인 다음 질문으로 대화를 자연스럽게 이어가세요.
-    * ASD 사용자 특별 지침에 "사용자가 감정을 표현하기 어려워하거나 모호하게 표현할 경우, '지금 그 기분이 1점에서 10점까지 있다면 몇 점 정도야?' 또는 '가장 좋을 때가 10점이라면, 지금은 몇 점일까?'와 같이 숫자로 답할 수 있도록 질문하세요." 라는 내용을 명시적으로 추가합니다.
+    * - 사용자가 감정을 표현하기 어려워하거나 모호하게 표현할 경우에만, 그리고 사실 관계에 대한 이야기가 어느 정도 진행된 후에만, '지금 그 기분이 1점에서 10점까지 있다면 몇 점 정도일까?'와 같이 숫자로 답하도록 유도하세요. 감정을 직접적으로 묻는 것은 최소화하고, 사용자가 먼저 감정을 명확히 표현할 때까지 기다리는 것을 원칙으로 합니다.
     * 감정에 대한 질문은 사용자가 먼저 감정을 명확히 표현하거나, 사실 관계가 충분히 파악된 후 조심스럽게 접근하세요."라는 기존 지침 뒤에 이 숫자 질문 방식을 추가적인 도구로써 활용하도록 안내할 수 있습니다.
     `;
   } else { // ASD가 아니거나, 10세가 아닌 ASD 사용자의 경우 기존 ASD 지침 적용
@@ -180,6 +180,7 @@ window.LOZEE_DIALOG.getFirstQuestion = function(age, topic) {
   const a = parseInt(age, 10) || 0;
   const isCbtUser = localStorage.getItem('isCbtUser') === 'true';
   let effectiveAgeForGreeting = a;
+  
 
   const userDiseaseString = localStorage.getItem('lozee_userdisease');
   let parsedUserDisease = [];
@@ -197,6 +198,12 @@ window.LOZEE_DIALOG.getFirstQuestion = function(age, topic) {
 
   if (isCbtUser && hasSpecificDiagnosisForCbt) {
     effectiveAgeForGreeting = 9;
+  }
+
+ if (topic && topic.type === 'ranked_preference') {
+    let question = `${userName}${effectiveAgeForGreeting < 56 ? '아/야' : '님'}, 네가 ${topic.preference_type === 'likes' ? '좋아하는' : '싫어하는(또는 화나는)'} 것 ${topic.rank}위로 '${topic.item}'을(를) 선택했네! `;
+    question += `그걸 얼마나 ${topic.preference_type === 'likes' ? '좋아하는지' : '싫어하는지(또는 화나는지)'} 1점에서 10점 사이 숫자로 말해줄 수 있어?`;
+    return question;
   }
 
   if (tk === 'USER_WILL_DEFINE_IN_CHAT') {
