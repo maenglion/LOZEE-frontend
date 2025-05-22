@@ -4,7 +4,7 @@
 window.LOZEE_TTS = window.LOZEE_TTS || {};
 
 // 1) 백엔드 URL
-const TTS_BACKEND_URL_TTS = 'https://ggg-production.up.railway.app/api/tts'; // 변수명 명확화
+const TTS_BACKEND_URL_TTS_MODULE = 'https://ggg-production.up.railway.app/api/tts'; // 변수명 중복 피하기 위해 _MODULE 추가
 
 // 2) 사용할 수 있는 음성 리스트 및 기본값
 window.LOZEE_TTS.AVAILABLE_VOICES = [
@@ -18,22 +18,27 @@ window.LOZEE_TTS.AVAILABLE_VOICES = [
 window.LOZEE_TTS.DEFAULT_VOICE = window.LOZEE_TTS.AVAILABLE_VOICES[0];
 
 // 3) TTS 재생 함수
-window.LOZEE_TTS.playTTSFromText = async function(text, voiceId = window.LOZEE_TTS.DEFAULT_VOICE) {
+window.LOZEE_TTS.playTTSFromText = async function(text, voiceId) {
+  // voiceId가 제공되지 않으면 DEFAULT_VOICE 사용
+  const effectiveVoiceId = voiceId || window.LOZEE_TTS.DEFAULT_VOICE;
+
   // 빈 문자열 무시
   if (!text || !String(text).trim()) {
     console.log("TTS: 말할 내용 없음.");
     return;
   }
   // 잘못된 voiceId 교정
-  if (!window.LOZEE_TTS.AVAILABLE_VOICES.includes(voiceId)) {
-    console.warn(`[tts.js] 제공되지 않는 음성: ${voiceId}. 기본 음성 사용.`);
+  if (!window.LOZEE_TTS.AVAILABLE_VOICES.includes(effectiveVoiceId)) {
+    console.warn(`[tts.js] 제공되지 않는 음성: ${effectiveVoiceId}. 기본 음성 (${window.LOZEE_TTS.DEFAULT_VOICE}) 사용.`);
     voiceId = window.LOZEE_TTS.DEFAULT_VOICE;
+  } else {
+    voiceId = effectiveVoiceId; // 유효한 voiceId 사용
   }
   console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceId}"`);
 
   try {
     // 백엔드 호출
-    const response = await fetch(TTS_BACKEND_URL_TTS, { // 수정된 URL 변수 사용
+    const response = await fetch(TTS_BACKEND_URL_TTS_MODULE, { // 수정된 URL 변수 사용
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, voice: voiceId })
@@ -73,8 +78,6 @@ window.LOZEE_TTS.playTTSFromText = async function(text, voiceId = window.LOZEE_T
     });
   } catch (error) {
     console.error("TTS playTTSFromText 함수 내 오류:", error);
-    // 사용자에게 TTS 실패를 알리는 다른 방법을 고려할 수 있음 (예: UI 피드백)
-    throw error; // 오류를 다시 throw하여 호출한 곳에서 처리할 수 있도록 함
+    throw error;
   }
 };
-//전역객체방식으로 수정
