@@ -3,7 +3,7 @@
 // 전역 객체 LOZEE_DIALOG를 생성하거나 기존 객체 사용
 window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
 
-const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app'; // 변수명 충돌 방지를 위해 _GPT_DIALOG 추가
+const GPT_BACKEND_URL_GPT_DIALOG = const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat';tps://server-production-3e8f.up.railway.app'; // 변수명 충돌 방지를 위해 _GPT_DIALOG 추가
 
 /**
  * 사용자 발화 감정/사실 의도 감지
