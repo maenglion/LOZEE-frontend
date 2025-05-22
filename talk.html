@@ -160,6 +160,16 @@
       border-bottom-left-radius: 4px;
     }
     .bubble.user.interim { opacity:.7; }
+    .bubble.system-error { /* 오류 메시지 스타일 */
+        background-color: #ffdddd;
+        color: #d32f2f;
+        align-self: center;
+        max-width: 80%;
+        text-align: center;
+        font-size: 0.9em;
+        border: 1px solid #d32f2f;
+    }
+
 
     /* 입력 영역 */
     #chat-input-container {
@@ -249,271 +259,276 @@
     <button id="send-button" title="메시지 전송">⮞</button>
   </div>
 
-<script type="module">
-  // Module functions - will be populated by dynamic import or fallbacks
-  let playTTSFromText;
-  let DEFAULT_VOICE;
-  let getGptResponse;
-  let getFirstQuestion;
+  <script src="./js/gpt-dialog.js"></script>
+  <script src="./js/tts.js"></script>
 
-  async function loadModules() {
-    try {
-      const ttsModule = await import('./js/tts.js');
-      playTTSFromText = ttsModule.playTTSFromText;
-      DEFAULT_VOICE = ttsModule.DEFAULT_VOICE;
-      console.log("tts.js loaded successfully.");
-    } catch (error) {
-      console.error("Failed to load tts.js:", error);
-      // Fallback for TTS
-      playTTSFromText = async (text, voice) => {
-        console.warn(`TTS Fallback (음성: ${voice}): ${text}. Module tts.js failed to load.`);
-        // Optionally, use browser's built-in speech synthesis as a very basic fallback
-        // if (speechSynthesis && SpeechSynthesisUtterance) {
-        //   try {
-        //     const utterance = new SpeechSynthesisUtterance(text);
-        //     // utterance.voice = ... // select voice if needed
-        //     speechSynthesis.speak(utterance);
-        //   } catch (e) { console.error("Fallback speech synthesis error:", e); }
-        // }
-      };
-      DEFAULT_VOICE = 'default-fallback';
-    }
+  <script> // type="module" 제거하고 일반 스크립트로 변경
+    async function initializeApp() {
+      const chatContainer = document.getElementById('chat-container');
 
-    try {
-      const dialogModule = await import('./js/gpt-dialog.js');
-      getGptResponse = dialogModule.getGptResponse;
-      getFirstQuestion = dialogModule.getFirstQuestion;
-      console.log("gpt-dialog.js loaded successfully.");
-    } catch (error) {
-      console.error("Failed to load gpt-dialog.js:", error);
-      // Fallback for GPT/Dialog
-      getGptResponse = async (text, context) => {
-        console.warn("GPT Fallback:", text, context);
-        return {
-          status: 503, // Service Unavailable
-          json: async () => ({
-            text: "죄송합니다, 대화 기능을 불러오는 데 실패했습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.",
-            analysis: null
-          })
+      function appendBubble(text, role) {
+        const el = document.createElement('div');
+        el.className = `bubble ${role}`;
+        el.textContent = text;
+        if (role === 'system-error') {
+            el.classList.add('system-error');
+        }
+        if (chatContainer) {
+            chatContainer.appendChild(el);
+            requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
+        } else {
+            console.error("Chat container not found for appendBubble. Message:", text);
+            // Fallback: alert if chatContainer is not available for critical messages
+            if (role === 'system-error') {
+                alert("오류: " + text);
+            }
+        }
+      }
+
+      if (!chatContainer) {
+          console.error("CRITICAL: chatContainer element not found in the DOM. Chat cannot function.");
+          document.body.innerHTML = '<div style="color: red; font-size: 20px; text-align: center; padding: 50px; background-color: #fff; border: 2px solid red;">채팅 UI를 초기화할 수 없습니다. HTML 구조를 확인해주세요. (chat-container 누락)</div>';
+          return;
+      }
+
+      let playTTSFunction;
+      let currentDefaultVoice;
+
+      if (window.LOZEE_TTS && window.LOZEE_TTS.playTTSFromText && window.LOZEE_TTS.DEFAULT_VOICE) {
+        playTTSFunction = window.LOZEE_TTS.playTTSFromText;
+        currentDefaultVoice = window.LOZEE_TTS.DEFAULT_VOICE;
+        console.log("tts.js (전역) 로드 성공.");
+      } else {
+        console.error("tts.js가 올바르게 로드되지 않았거나, LOZEE_TTS 객체에 함수들이 정의되지 않았습니다.");
+        playTTSFunction = async (text, voice) => {
+          console.warn(`TTS Fallback (음성: ${voice}): ${text}. tts.js 로드 실패.`);
         };
-      };
-      getFirstQuestion = (userAge, selectedTopic) => {
-        console.warn("getFirstQuestion Fallback:", userAge, selectedTopic);
-        return "죄송합니다, 대화 시작 기능을 불러오는 데 실패했습니다.";
-      };
-    }
-  }
-
-  async function initializeApp() {
-    // Ensure modules are loaded (or fallbacks are set) before proceeding
-    if (typeof playTTSFromText === 'undefined' || typeof getGptResponse === 'undefined') {
-        await loadModules();
-    }
-
-    const chatContainer = document.getElementById('chat-container');
-    const chatInput     = document.getElementById('chat-input');
-    const sendButton    = document.getElementById('send-button');
-    const micButton     = document.getElementById('mic-button');
-    const meterLevel    = document.getElementById('volume-level');
-    const menuToggle    = document.getElementById('menu-toggle');
-    const dropdownMenu  = document.getElementById('dropdown-menu');
-    const gnb           = document.getElementById('gnb');
-
-    let audioContext;
-    let analyser;
-    let microphoneSource;
-    let dataArray;
-    let volumeMeterAnimationId;
-    let analyserStream;
-
-    const LOW_COLOR = { r: 0, g: 200, b: 0 };
-    const MID_COLOR = { r: 255, g: 200, b: 0 };
-    const HIGH_COLOR = { r: 255, g: 69, b: 0 };
-
-    function interpolateColor(color1, color2, factor) {
-      const r = Math.round(color1.r + factor * (color2.r - color1.r));
-      const g = Math.round(color1.g + factor * (color2.g - color1.g));
-      const b = Math.round(color1.b + factor * (color2.b - color1.b));
-      return `rgb(${r},${g},${b})`;
-    }
-
-    function setupAudioAnalysis(stream) {
-      if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close();
+        currentDefaultVoice = 'default-fallback-tts';
+        appendBubble("알림: 음성 출력(TTS) 기능을 불러오는 데 문제가 발생했습니다. 텍스트로만 대화가 진행됩니다.", "system-error");
       }
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.3;
-      microphoneSource = audioContext.createMediaStreamSource(stream);
-      microphoneSource.connect(analyser);
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      analyserStream = stream;
-      drawVolumeMeter();
-    }
 
-    function drawVolumeMeter() {
-      volumeMeterAnimationId = requestAnimationFrame(drawVolumeMeter);
-      if (!analyser || !dataArray || !meterLevel) return;
-      analyser.getByteFrequencyData(dataArray);
-      let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-      let averageVolume = dataArray.length > 0 ? sum / dataArray.length : 0;
-      let normalizedVolume = (averageVolume / 140) * 100;
-      normalizedVolume = Math.min(100, Math.max(0, normalizedVolume));
-      meterLevel.style.width = normalizedVolume + '%';
-      let activeColor;
-      if (normalizedVolume <= 50) {
-        activeColor = interpolateColor(LOW_COLOR, MID_COLOR, normalizedVolume / 50);
-      } else {
-        activeColor = interpolateColor(MID_COLOR, HIGH_COLOR, (normalizedVolume - 50) / 50);
+      if (!window.LOZEE_DIALOG || !window.LOZEE_DIALOG.getGptResponse || !window.LOZEE_DIALOG.getFirstQuestion) {
+        console.error("gpt-dialog.js가 올바르게 로드되지 않았거나, LOZEE_DIALOG 객체에 함수들이 정의되지 않았습니다.");
+        appendBubble("오류: 대화 기능을 초기화할 수 없습니다. 페이지를 새로고침하거나 관리자에게 문의하세요.", "system-error");
+        // 대화 기능 핵심 로드 실패 시, 추가 기능 초기화 중단 가능성 고려
+        // return; // 여기서 중단하면 음성인식 등 다른 기능도 초기화 안 됨. 일단은 진행.
       }
-      const baseGradientColor = getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim() || '#2a3340';
-      meterLevel.style.background = `linear-gradient(to right, ${baseGradientColor}, ${activeColor})`;
-    }
+      // getGptResponse와 getFirstQuestion은 LOZEE_DIALOG가 로드되지 않았더라도
+      // 오류 메시지를 표시한 후, 아래에서 사용 시 undefined 에러를 방지하기 위해
+      // 안전한 기본값(폴백 함수)을 할당할 수 있습니다.
+      const getGptResponse = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.getGptResponse) || (async (text) => {
+          console.error("getGptResponse is not available.");
+          appendBubble("오류: 메시지 전송 기능을 사용할 수 없습니다.", "system-error");
+          return { json: async () => ({ text: "오류: 응답을 받을 수 없습니다."}) };
+      });
+      const getFirstQuestion = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.getFirstQuestion) || ((userAge, topic) => {
+          console.error("getFirstQuestion is not available.");
+          appendBubble("오류: 초기 대화 질문을 생성할 수 없습니다.", "system-error");
+          return "오류: 대화를 시작할 수 없습니다.";
+      });
 
-    function stopAudioAnalysis() {
-      if (volumeMeterAnimationId) cancelAnimationFrame(volumeMeterAnimationId);
-      volumeMeterAnimationId = null;
-      if (microphoneSource) microphoneSource.disconnect();
-      microphoneSource = null;
-      if (analyserStream?.getTracks) analyserStream.getTracks().forEach(track => track.stop());
-      analyserStream = null;
-      if (audioContext?.state !== 'closed') audioContext.close().catch(e => console.error("AudioContext close error:", e));
-      audioContext = null;
-      if (meterLevel) {
-        meterLevel.style.width = '0%';
-        meterLevel.style.background = getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg').trim();
+
+      const chatInput     = document.getElementById('chat-input');
+      const sendButton    = document.getElementById('send-button');
+      const micButton     = document.getElementById('mic-button');
+      const meterLevel    = document.getElementById('volume-level');
+      const menuToggle    = document.getElementById('menu-toggle');
+      const dropdownMenu  = document.getElementById('dropdown-menu');
+      const gnb           = document.getElementById('gnb');
+
+      let audioContext;
+      let analyser;
+      let microphoneSource;
+      let dataArray;
+      let volumeMeterAnimationId;
+      let analyserStream;
+
+      const LOW_COLOR = { r: 0, g: 200, b: 0 };
+      const MID_COLOR = { r: 255, g: 200, b: 0 };
+      const HIGH_COLOR = { r: 255, g: 69, b: 0 };
+
+      function interpolateColor(color1, color2, factor) {
+        const r = Math.round(color1.r + factor * (color2.r - color1.r));
+        const g = Math.round(color1.g + factor * (color2.g - color1.g));
+        const b = Math.round(color1.b + factor * (color2.b - color1.b));
+        return `rgb(${r},${g},${b})`;
       }
-      analyser = null; dataArray = null;
-    }
 
-    menuToggle.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
-    document.addEventListener('click', (event) => {
-      if (gnb && !gnb.contains(event.target) && dropdownMenu.classList.contains('show')) {
-        dropdownMenu.classList.remove('show');
-      }
-    });
-
-    let recognition;
-    let isRecognizing = false;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (SpeechRecognition) {
-      recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'ko-KR';
-      micButton.classList.remove('disabled');
-      recognition.onstart = () => {
-        isRecognizing = true; micButton.textContent = '💬'; micButton.style.backgroundColor = '#e74c3c'; console.log("🎤 음성 인식 시작");
-      };
-      recognition.onend = () => {
-        isRecognizing = false; micButton.textContent = '🎤'; micButton.style.backgroundColor = 'var(--primary-color)'; console.log("🎤 음성 인식 종료"); setLoading(false); stopAudioAnalysis();
-      };
-      recognition.onresult = (event) => {
-        let interimTranscript = '', finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          event.results[i].isFinal ? finalTranscript += event.results[i][0].transcript : interimTranscript += event.results[i][0].transcript;
+      function setupAudioAnalysis(stream) {
+        if (audioContext && audioContext.state !== 'closed') {
+          audioContext.close();
         }
-        if (interimTranscript) showInterim(interimTranscript);
-        if (finalTranscript) { document.querySelector('.bubble.user.interim')?.remove(); handleUserText(finalTranscript); }
-      };
-      recognition.onerror = (event) => {
-        console.error("❌ 음성 인식 오류:", event.error);
-        appendBubble(event.error === 'not-allowed' || event.error === 'service-not-allowed' ? "마이크 사용 권한이 필요해요." : "음성 인식 중 오류.", "bot");
-        isRecognizing = false; micButton.textContent = '🎤'; micButton.style.backgroundColor = 'var(--primary-color)'; setLoading(false); stopAudioAnalysis();
-      };
-    } else {
-      console.warn("⚠️ 음성 인식 미지원 브라우저"); micButton.title = "음성 인식 미지원"; micButton.disabled = true;
-    }
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.3;
+        microphoneSource = audioContext.createMediaStreamSource(stream);
+        microphoneSource.connect(analyser);
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyserStream = stream;
+        drawVolumeMeter();
+      }
 
-    micButton.addEventListener('click', async () => {
-      if (!SpeechRecognition) return;
-      if (isRecognizing) {
-        recognition.stop();
+      function drawVolumeMeter() {
+        volumeMeterAnimationId = requestAnimationFrame(drawVolumeMeter);
+        if (!analyser || !dataArray || !meterLevel) return;
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        let averageVolume = dataArray.length > 0 ? sum / dataArray.length : 0;
+        let normalizedVolume = (averageVolume / 140) * 100;
+        normalizedVolume = Math.min(100, Math.max(0, normalizedVolume));
+        meterLevel.style.width = normalizedVolume + '%';
+        let activeColor;
+        if (normalizedVolume <= 50) {
+          activeColor = interpolateColor(LOW_COLOR, MID_COLOR, normalizedVolume / 50);
+        } else {
+          activeColor = interpolateColor(MID_COLOR, HIGH_COLOR, (normalizedVolume - 50) / 50);
+        }
+        const baseGradientColor = getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim() || '#2a3340';
+        meterLevel.style.background = `linear-gradient(to right, ${baseGradientColor}, ${activeColor})`;
+      }
+
+      function stopAudioAnalysis() {
+        if (volumeMeterAnimationId) cancelAnimationFrame(volumeMeterAnimationId);
+        volumeMeterAnimationId = null;
+        if (microphoneSource) microphoneSource.disconnect();
+        microphoneSource = null;
+        if (analyserStream?.getTracks) analyserStream.getTracks().forEach(track => track.stop());
+        analyserStream = null;
+        if (audioContext?.state !== 'closed') audioContext.close().catch(e => console.error("AudioContext close error:", e));
+        audioContext = null;
+        if (meterLevel) {
+          meterLevel.style.width = '0%';
+          meterLevel.style.background = getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg').trim();
+        }
+        analyser = null; dataArray = null;
+      }
+
+      menuToggle.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
+      document.addEventListener('click', (event) => {
+        if (gnb && !gnb.contains(event.target) && dropdownMenu.classList.contains('show')) {
+          dropdownMenu.classList.remove('show');
+        }
+      });
+
+      let recognition;
+      let isRecognizing = false;
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'ko-KR';
+        micButton.classList.remove('disabled');
+        recognition.onstart = () => {
+          isRecognizing = true; micButton.textContent = '💬'; micButton.style.backgroundColor = '#e74c3c'; console.log("🎤 음성 인식 시작");
+        };
+        recognition.onend = () => {
+          isRecognizing = false; micButton.textContent = '🎤'; micButton.style.backgroundColor = 'var(--primary-color)'; console.log("🎤 음성 인식 종료"); setLoading(false); stopAudioAnalysis();
+        };
+        recognition.onresult = (event) => {
+          let interimTranscript = '', finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            event.results[i].isFinal ? finalTranscript += event.results[i][0].transcript : interimTranscript += event.results[i][0].transcript;
+          }
+          if (interimTranscript) showInterim(interimTranscript);
+          if (finalTranscript) { document.querySelector('.bubble.user.interim')?.remove(); handleUserText(finalTranscript); }
+        };
+        recognition.onerror = (event) => {
+          console.error("❌ 음성 인식 오류:", event.error);
+          appendBubble(event.error === 'not-allowed' || event.error === 'service-not-allowed' ? "마이크 사용 권한이 필요해요." : "음성 인식 중 오류.", "bot");
+          isRecognizing = false; micButton.textContent = '🎤'; micButton.style.backgroundColor = 'var(--primary-color)'; setLoading(false); stopAudioAnalysis();
+        };
       } else {
+        console.warn("⚠️ 음성 인식 미지원 브라우저"); micButton.title = "음성 인식 미지원"; micButton.disabled = true;
+        appendBubble("알림: 사용 중인 브라우저에서는 음성 인식을 지원하지 않습니다.", "system-error");
+      }
+
+      micButton.addEventListener('click', async () => {
+        if (!SpeechRecognition) return;
+        if (isRecognizing) {
+          recognition.stop();
+        } else {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            setupAudioAnalysis(stream); recognition.start(); setLoading(true);
+          } catch (err) {
+            console.error("❌ 마이크 권한/시작 오류:", err); appendBubble("마이크 사용 불가. 권한 확인 필요.", "bot"); stopAudioAnalysis();
+          }
+        }
+      });
+
+      const lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || currentDefaultVoice;
+      const userAge = localStorage.getItem('lozee_userage');
+      const userName = localStorage.getItem('lozee_username') || '친구';
+      const userId = localStorage.getItem('lozee_userid') || 'anonymous';
+      const userDisease = localStorage.getItem('lozee_disease') || 'ASD';
+      const selectedTopic = JSON.parse(localStorage.getItem('selectedTopic') || '{}');
+      let chatHistory = JSON.parse(localStorage.getItem('lozee_conversation_history') || '[]');
+      chatHistory.forEach(msg => appendBubble(msg.content, msg.role));
+
+      if (Object.keys(selectedTopic).length > 0 && chatHistory.length === 0) {
+        await initConversation();
+      } else if (chatHistory.length === 0) {
+        appendBubble("안녕하세요! 먼저 홈에서 대화 주제를 선택해주세요.", "bot");
+      }
+
+      function showInterim(text) {
+        let el = document.querySelector('.bubble.user.interim');
+        if (!el) { el = document.createElement('div'); el.className = 'bubble user interim'; chatContainer.appendChild(el); }
+        el.textContent = text; requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
+      }
+      function setLoading(flag) {
+        sendButton.disabled = flag;
+        if (SpeechRecognition) micButton.disabled = flag && !isRecognizing; else micButton.disabled = true;
+        sendButton.classList.toggle('loading', flag);
+      }
+      async function initConversation() {
+        setLoading(true);
+        const prompt = getFirstQuestion(userAge, selectedTopic);
+        appendBubble(prompt, 'bot');
+        chatHistory.push({ role: 'bot', content: prompt, timestamp: new Date().toISOString() });
+        localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+        try { await playTTSFunction(prompt, lsSelectedVoice); }
+        catch (ttsError) { console.error("TTS 오류 (초기 대화):", ttsError); }
+        setLoading(false);
+      }
+      async function handleUserText(text) {
+        if (!text.trim()) return;
+        document.querySelector('.bubble.user.interim')?.remove();
+        appendBubble(text, 'user');
+        chatHistory.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
+        setLoading(true);
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          setupAudioAnalysis(stream); recognition.start(); setLoading(true);
+          const res = await getGptResponse(text, {
+            userId, userAge, userName, userDisease,
+            chatHistory: chatHistory.slice(-10), messages: [{ role: "user", content: text }]
+          });
+          const data = await res.json(); console.log("GPT API 응답:", data);
+          const botMessage = data?.rephrasing || data?.text || "응답을 받지 못했어요.";
+          appendBubble(botMessage, 'bot');
+          const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
+          if (data.analysis) { console.log("💡 분석 데이터:", data.analysis); botResponseEntry.analysis = data.analysis; }
+          chatHistory.push(botResponseEntry);
+          localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+          await playTTSFunction(botMessage, lsSelectedVoice);
         } catch (err) {
-          console.error("❌ 마이크 권한/시작 오류:", err); appendBubble("마이크 사용 불가. 권한 확인 필요.", "bot"); stopAudioAnalysis();
+          console.error("❌ 처리 중 오류:", err); appendBubble("죄송해요, 오류 발생.", 'bot');
+          chatHistory.push({ role: 'system', content: '봇 응답 실패', error: err.message, timestamp: new Date().toISOString() });
+          localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
         }
+        setLoading(false); chatInput.value = ''; chatInput.focus();
       }
+      sendButton.addEventListener('click', () => { const text = chatInput.value.trim(); if (text && !sendButton.disabled) handleUserText(text); });
+      chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const text = chatInput.value.trim(); if (text && !sendButton.disabled) handleUserText(text); } });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(initializeApp, 50); // 약간의 지연 후 initializeApp 호출
     });
 
-    const currentSelectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
-    const userAge = localStorage.getItem('lozee_userage');
-    const userName = localStorage.getItem('lozee_username') || '친구';
-    const userId = localStorage.getItem('lozee_userid') || 'anonymous';
-    const userDisease = localStorage.getItem('lozee_disease') || 'ASD';
-    const selectedTopic = JSON.parse(localStorage.getItem('selectedTopic') || '{}');
-    let chatHistory = JSON.parse(localStorage.getItem('lozee_conversation_history') || '[]');
-    chatHistory.forEach(msg => appendBubble(msg.content, msg.role));
-
-    if (Object.keys(selectedTopic).length > 0 && chatHistory.length === 0) {
-      await initConversation();
-    } else if (chatHistory.length === 0) {
-      appendBubble("안녕하세요! 먼저 홈에서 대화 주제를 선택해주세요.", "bot");
-    }
-
-    function appendBubble(text, role) {
-      const el = document.createElement('div'); el.className = `bubble ${role}`; el.textContent = text;
-      chatContainer.appendChild(el); requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
-    }
-    function showInterim(text) {
-      let el = document.querySelector('.bubble.user.interim');
-      if (!el) { el = document.createElement('div'); el.className = 'bubble user interim'; chatContainer.appendChild(el); }
-      el.textContent = text; requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
-    }
-    function setLoading(flag) {
-      sendButton.disabled = flag;
-      if (SpeechRecognition) micButton.disabled = flag && !isRecognizing; else micButton.disabled = true;
-      sendButton.classList.toggle('loading', flag);
-    }
-    async function initConversation() {
-      setLoading(true);
-      const prompt = getFirstQuestion(userAge, selectedTopic); // 실제 함수 사용
-      appendBubble(prompt, 'bot');
-      chatHistory.push({ role: 'bot', content: prompt, timestamp: new Date().toISOString() });
-      localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-      try { await playTTSFromText(prompt, currentSelectedVoice); } // 실제 함수 사용
-      catch (ttsError) { console.error("TTS 오류 (초기 대화):", ttsError); }
-      setLoading(false);
-    }
-    async function handleUserText(text) {
-      if (!text.trim()) return;
-      document.querySelector('.bubble.user.interim')?.remove();
-      appendBubble(text, 'user');
-      chatHistory.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
-      setLoading(true);
-      try {
-        const res = await getGptResponse(text, { // 실제 함수 사용
-          userId, userAge, userName, userDisease,
-          chatHistory: chatHistory.slice(-10), messages: [{ role: "user", content: text }]
-        });
-        const data = await res.json(); console.log("GPT API 응답:", data);
-        const botMessage = data?.rephrasing || data?.text || "응답을 받지 못했어요.";
-        appendBubble(botMessage, 'bot');
-        const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
-        if (data.analysis) { console.log("💡 분석 데이터:", data.analysis); botResponseEntry.analysis = data.analysis; }
-        chatHistory.push(botResponseEntry);
-        localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-        await playTTSFromText(botMessage, currentSelectedVoice); // 실제 함수 사용
-      } catch (err) {
-        console.error("❌ 처리 중 오류:", err); appendBubble("죄송해요, 오류 발생.", 'bot');
-        chatHistory.push({ role: 'system', content: '봇 응답 실패', error: err.message, timestamp: new Date().toISOString() });
-        localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-      }
-      setLoading(false); chatInput.value = ''; chatInput.focus();
-    }
-    sendButton.addEventListener('click', () => { const text = chatInput.value.trim(); if (text && !sendButton.disabled) handleUserText(text); });
-    chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const text = chatInput.value.trim(); if (text && !sendButton.disabled) handleUserText(text); } });
-  }
-
-  // Start the application after DOM is ready
-  document.addEventListener('DOMContentLoaded', initializeApp);
-
-</script>
+  </script>
 </body>
 </html>
