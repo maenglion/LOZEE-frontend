@@ -604,24 +604,18 @@ body {
             const getGptResponse = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.getGptResponse) || (async () => ({ json: async () => ({ text: "오류: 응답을 받을 수 없습니다."}) }));
             
             const res = await getGptResponse(trimmedText, contextForGpt);
-            console.log("GPT API 응답:", data);
- /**
- * GPT 스트리밍 응답 호출 (또는 일반 JSON 응답)
- * @param {string} userText 사용자 입력
- * @param {object} context 대화 컨텍스트 (userAge, userDisease, userName, chatHistory 등 포함)
- * @returns {Promise<Response>} fetch 응답
- */
+            console.log("GPT API 응답:", res);
+ 
             const botMessage = res?.content || "응답을 받지 못했어요.";
 
 if (res.analysis) {
   // 분석 결과 처리
 }
             const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
-            if (data.analysis) {
-                console.log("💡 분석 데이터:", data.analysis);
-                botResponseEntry.analysis = data.analysis;
-                // 여기에 분석 결과(예: 감정 강도)에 따른 추가 로직이나 숫자 질문 로직 추가 가능
-            }
+            if (res.analysis) {
+    console.log("💡 분석 데이터:", res.analysis);
+    botResponseEntry.analysis = res.analysis;
+}
             chatHistory.push(botResponseEntry);
             localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
             if (playTTSFunction) await playTTSFunction(botMessage, lsSelectedVoice);
