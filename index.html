@@ -420,6 +420,22 @@
 
             const userAge = parseInt(localStorage.getItem('lozee_userage'), 10);
             const targetDiagnoses = ['adhd','asd','asperger','social_comm_disorder','2e'];
+            const diagnosisMapping = {
+            asperger: 'ASD',
+            asd: 'ASD',
+            adhd: 'ADHD',
+            social_comm_disorder: 'ASD',
+            '2e': 'ASD',
+            audhd: 'ASD'
+        };
+        const rawUserDiseases = JSON.parse(localStorage.getItem('lozee_userdisease') || '[]');
+
+// 진단을 모두 대문자로 변환 후 매핑 적용
+const mappedDiagnoses = rawUserDiseases
+  .map(d => d.toLowerCase())
+  .map(d => diagnosisMapping[d])
+  .filter(Boolean); // 매핑 안 된 값 제거
+
             const hasSpecificDiagnosis = selected.some(id =>
                 targetDiagnoses.includes(id.toLowerCase())
             );
