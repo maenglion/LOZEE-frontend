@@ -4,7 +4,7 @@
 window.LOZEE_TTS = window.LOZEE_TTS || {};
 
 // 1) 백엔드 URL
-const TTS_BACKEND_URL_TTS_MODULE = 'https://server-production-3e8f.up.railway.app'; // 변수명 중복 피하기 위해 _MODULE 추가
+const TTS_BACKEND_URL_TTS_MODULE = 'https://server-production-3e8f.up.railway.app/api/tts'; // 변수명 중복 피하기 위해 _MODULE 추가
 
 // 2) 사용할 수 있는 음성 리스트 및 기본값
 window.LOZEE_TTS.AVAILABLE_VOICES = [
