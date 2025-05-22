@@ -153,11 +153,17 @@ export function getFirstQuestion(age, topic) {
       parsedUserDisease = [userDiseaseString];
     }
   }
-  const hasSpecificDiagnosisForCbt = parsedUserDisease.some(d =>
-    targetDiagnosesForCbtExperience.includes(d.toLowerCase())
-  );
-  if (isCbtUser && hasSpecificDiagnosisForCbt) effectiveAgeForGreeting = 9;
+ // targetDiagnosesForCbtExperience를 미리 선언합니다.
+const targetDiagnosesForCbtExperience = ['ASD', 'ADHD', '2E', '사회적 의사소통장애'];
+// targetDialoguesForThisExperience 변수도 필요하다면 여기에 선언하거나 올바르게 가져와야 합니다.
+// const targetDialoguesForThisExperience = ... ;
 
+const hasSpecificDiagnosisForCbt = parsedUserDisease.some(d =>
+    targetDiagnosesForCbtExperience.includes(d) // 각 질병이 target 배열에 포함되는지 확인
+);
+
+  if (isCbtUser && hasSpecificDiagnosisForCbt) effectiveAgeForGreeting = 9;
+}
   if (tk === 'USER_WILL_DEFINE_IN_CHAT') {
     return effectiveAgeForGreeting >= 56
       ? `${userName}님, 반갑습니다. 어떤 이야기를 하고 싶으신가요?`
