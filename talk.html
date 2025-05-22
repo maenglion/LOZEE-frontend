@@ -605,7 +605,12 @@ body {
             
             const res = await getGptResponse(trimmedText, contextForGpt);
             console.log("GPT API 응답:", data);
-
+ /**
+ * GPT 스트리밍 응답 호출 (또는 일반 JSON 응답)
+ * @param {string} userText 사용자 입력
+ * @param {object} context 대화 컨텍스트 (userAge, userDisease, userName, chatHistory 등 포함)
+ * @returns {Promise<Response>} fetch 응답
+ */
             const botMessage = res?.content || "응답을 받지 못했어요.";
 
 if (res.analysis) {
