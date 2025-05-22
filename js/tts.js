@@ -29,8 +29,7 @@ window.LOZEE_TTS.playTTSFromText = async function(text, voiceId) {
   }
   // 잘못된 voiceId 교정
   if (!window.LOZEE_TTS.AVAILABLE_VOICES.includes(effectiveVoiceId)) {
-    console.warn(`[tts.js] 제공되지 않는 음성: ${effectiveVoiceId}. 기본 음성 (${window.LOZEE_TTS.DEFAULT_VOICE}) 사용.`);
-    voiceId = window.LOZEE_TTS.DEFAULT_VOICE;
+      voiceId = window.LOZEE_TTS.DEFAULT_VOICE;
   } else {
     voiceId = effectiveVoiceId; // 유효한 voiceId 사용
   }
