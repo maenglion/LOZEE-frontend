@@ -217,19 +217,20 @@ window.LOZEE_DIALOG.getFirstQuestion = function(age, topic) {
     : `${userName}아, 안녕! 오늘은 '${tk}'에 대해 이야기해 볼까?`;
 };
 
-/**
- * GPT 스트리밍 응답 호출 (또는 일반 JSON 응답)
- * @param {string} userText 사용자 입력
- * @param {object} context 대화 컨텍스트 (userAge, userDisease, userName, chatHistory 등 포함)
- * @returns {Promise<Response>} fetch 응답
- */
+
 window.LOZEE_DIALOG.getGptResponse = async function(userText, context = {}) {
   const text = userText.trim();
 
   const parsedUserDiseaseForTemp = Array.isArray(context.userDisease)
     ? context.userDisease.map(id => typeof id === 'string' ? id.toLowerCase() : '')
     : typeof context.userDisease === 'string'
-    ? (()=>{ try { return JSON.parse(context.userDisease).map(id => typeof id === 'string' ? id.toLowerCase() : ''); } catch { return [context.userDisease.toLowerCase()]; }})()
+    ? (() => {
+        try {
+          return JSON.parse(context.userDisease).map(id => typeof id === 'string' ? id.toLowerCase() : '');
+        } catch {
+          return [context.userDisease.toLowerCase()];
+        }
+      })()
     : [];
 
   let temperature = 0.7;
@@ -237,8 +238,8 @@ window.LOZEE_DIALOG.getGptResponse = async function(userText, context = {}) {
     temperature = 0.65;
   }
 
-  const intent = window.LOZEE_DIALOG.detectIntent(text); // 전역 함수 호출로 변경
-  const systemPrompt = window.LOZEE_DIALOG.getSystemPrompt(context, intent); // 전역 함수 호출로 변경
+  const intent = window.LOZEE_DIALOG.detectIntent(text);
+  const systemPrompt = window.LOZEE_DIALOG.getSystemPrompt(context, intent);
 
   const messages = [{ role: 'system', content: systemPrompt }];
   if (context.chatHistory && Array.isArray(context.chatHistory)) {
@@ -253,44 +254,31 @@ window.LOZEE_DIALOG.getGptResponse = async function(userText, context = {}) {
     model: 'gpt-4-turbo',
     temperature,
   };
-  console.log("GPT 요청 페이로드:", JSON.stringify(payload, null, 2));
 
-  return fetch(GPT_BACKEND_URL_GPT_DIALOG, { // GPT_BACKEND_URL_GPT_DIALOG 사용
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload)
-  });
-};
+  console.log("📤 GPT 요청 페이로드:", JSON.stringify(payload, null, 2));
 
-/**
- * 대화 종료 시 인사 프롬프트
- */
-window.LOZEE_DIALOG.getExitPrompt = function(userName = '친구', age) {
-  const a = parseInt(age, 10) || 0;
-  const isCbtUser = localStorage.getItem('isCbtUser') === 'true';
-  let effectiveAgeForExit = a;
+  try {
+    const res = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  const userDiseaseString2 = localStorage.getItem('lozee_userdisease');
-  let parsedUserDisease2 = [];
-  if (userDiseaseString2) {
-    try {
-      parsedUserDisease2 = JSON.parse(userDiseaseString2);
-      if (!Array.isArray(parsedUserDisease2)) parsedUserDisease2 = [userDiseaseString2];
-    } catch {
-      parsedUserDisease2 = [userDiseaseString2];
+    if (!res.ok) {
+      console.error('❌ GPT 서버 오류:', res.status);
+      return { error: true };
     }
-  }
-  const lowercasedUserDisease2 = parsedUserDisease2.map(d => typeof d === 'string' ? d.toLowerCase() : '');
-  const targetDiagnosesForCbtExperience = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e'];
-  const hasSpecificDiagnosisForCbt2 = lowercasedUserDisease2.some(id => targetDiagnosesForCbtExperience.includes(id));
 
-  if (isCbtUser && hasSpecificDiagnosisForCbt2) {
-    effectiveAgeForExit = 9;
-  }
+    const data = await res.json();
+    console.log("✅ GPT 응답 데이터:", data);
 
-  return effectiveAgeForExit >= 56
-    ? `${userName}님, 오늘 대화 고맙습니다. 언제든 편하게 다시 찾아주세요.`
-    : `${userName}아, 오늘 이야기 나눠줘서 고마워! 다음에 또 재미있는 이야기하자!`;
+    return {
+      content: data.choices?.[0]?.message?.content || '',
+      analysis: data.analysis || null
+    };
+
+  } catch (err) {
+    console.error("❌ GPT 호출 예외:", err);
+    return { error: true };
+  }
 };
