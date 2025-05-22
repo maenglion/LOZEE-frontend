@@ -161,18 +161,18 @@ const targetDiagnosesForCbtExperience = ['ASD', 'ADHD', '2E', '사회적 의사�
 const hasSpecificDiagnosisForCbt = parsedUserDisease.some(d =>
     targetDiagnosesForCbtExperience.includes(d) // 각 질병이 target 배열에 포함되는지 확인
 );
+function getGreetingMessage(tk, userName, effectiveAgeForGreeting) {
+  if (tk === 'USER_WILL_DEFINE_IN_CHAT') {
 
-  if (isCbtUser && hasSpecificDiagnosisForCbt) effectiveAgeForGreeting = 9;
+  if (isCbtUser && hasSpecificDiagnosisForCbt) {
+  effectiveAgeForGreeting = 9;
 }
   if (tk === 'USER_WILL_DEFINE_IN_CHAT') {
     return effectiveAgeForGreeting >= 56
       ? `${userName}님, 반갑습니다. 어떤 이야기를 하고 싶으신가요?`
       : `${userName}아, 반가워! 어떤 이야기를 나눌까?`;
-  }
-
-  return effectiveAgeForGreeting >= 56
-    ? `${userName}님, 선택하신 '${tk}' 주제로 대화를 시작해 볼까요? 첫 번째로 어떤 질문부터 드릴까요?`
-    : `${userName}아, '${tk}' 주제를 골랐구나! 어떤 것부터 이야기해볼까?`;
+   }
+  return ''; // 기본값
 }
 
 /**
