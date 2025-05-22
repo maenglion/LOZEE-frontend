@@ -131,7 +131,11 @@ function getAgeGroup(age) {
  * @param {string|number} age 사용자 나이
  * @param {{displayText:string}} topic 선택된 주제 객체
  * @returns {string} 첫 질문 프롬프트
+ * 
  */
+const targetDiagnosesForCbtExperience = ['ASD', 'ADHD', '2E', '사회적의사소통장애'];
+const diseases = JSON.parse(localStorage.getItem('lozee_userdisease') || '[]');
+
 export function getFirstQuestion(age, topic) {
   const userName = localStorage.getItem('lozee_username') || '친구';
   const tk = topic?.displayText || '이야기';
