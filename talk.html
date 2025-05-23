@@ -12,7 +12,7 @@
     #gnb-title{flex:1;font-size:1.2em;color:#7B68EE;}
     #meter-container{position:fixed;top:64px;left:50%;transform:translateX(-50%);width:60%;max-width:300px;height:6px;background:var(--secondary-color);border-radius:3px;overflow:hidden;z-index:999;}
     #volume-level{width:0;height:100%;background:var(--primary-color);transition:width .05s linear;}
-    #chat-container{flex:1;margin-top:76px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+    #chat-container{flex:1;margin-top:76px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px; margin-bottom:70px;}
     #analysis-container{padding:16px;background:#1f2733;color:#fff;overflow-y:auto;max-height:200px;}
     .bubble{padding:12px 16px;border-radius:18px;max-width:75%;line-height:1.5;word-break:keep-all;}
     .bubble.user{background:var(--primary-color);color:#fff;align-self:flex-end;}
@@ -39,6 +39,8 @@
     // Topic 선택은 index.html에서 URL 파라미터로 넘어옴 (topicText로 전달)
     import { getGptResponse, LOZEE_DIALOG } from './js/gpt-dialog.js';
     import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
+    // 기본 목소리 설정
+    let lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || 'ko-KR-Chirp3-HD-Leda';
     import { trackTime, trackEmotionTone, trackSituation } from './js/basic-features.js';
     import { renderLiteracyAnalysis } from './js/literacyPatternCheckRenderer.js';
 
@@ -105,7 +107,7 @@
       appendBubble(msg, 'bot');
       chatHistory.push({ role: 'bot', content: msg });
       if (res.analysis) renderLiteracyAnalysis(res.analysis, document.getElementById('analysis-container'));
-      playTTSFromText(msg, DEFAULT_VOICE);
+      playTTSFromText(msg, lsSelectedVoice);
     }
 
     async function handleUserText(raw) {
@@ -150,11 +152,19 @@
 
       initSTT();
 
-      if (!incomingTopicId && chatHistory.length === 0) {
-        const first = LOZEE_DIALOG.getFirstQuestion(userAge, selectedTopic);
-        appendBubble(first, 'bot');
-        playTTSFromText(first, DEFAULT_VOICE);
-        chatHistory.push({ role: 'bot', content: first, timestamp: new Date().toISOString() });
+      // 첫 질문 처리
+      if (chatHistory.length === 0) {
+        if (incomingTopicId) {
+          const intro = `"${selectedTopic.displayText}" 주제로 이야기해볼게요.`;
+          appendBubble(intro, 'bot');
+          playTTSFromText(intro, lsSelectedVoice);
+          chatHistory.push({ role: 'bot', content: intro, timestamp: new Date().toISOString() });
+        } else {
+          const first = LOZEE_DIALOG.getFirstQuestion(userAge, selectedTopic);
+          appendBubble(first, 'bot');
+          playTTSFromText(first, lsSelectedVoice);
+          chatHistory.push({ role: 'bot', content: first, timestamp: new Date().toISOString() });
+        }
       }
     }
 
