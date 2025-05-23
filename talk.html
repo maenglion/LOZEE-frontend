@@ -608,12 +608,21 @@ body {
     micButton     = document.getElementById('mic-button');
     const manualBtn = document.getElementById('btn-manual-topic');
     const pickBtn   = document.getElementById('btn-let-lozee-pick');
+    if (manualBtn) {
     manualBtn.addEventListener('click', () => {
-       // “직접 말할게요” 흐름: 원하는 주제 직접 입력 유도
-        appendBubble("어떤 이야기를 하고 싶니?", "bot");
-       // 다음 입력이 “주제가 없어”일 경우 랭킹으로 분기
+      appendBubble("어떤 이야기를 하고 싶니?", "bot");
       awaitingManualTopic = true;
     });
+  }
+  if (pickBtn) {
+    pickBtn.addEventListener('click', () => {
+      appendBubble(
+        "나 LOZEE야! 네가 어떤 걸 좋아하는지, 싫어하는지 알려주면\n널 더 잘 도울 수 있어. 먼저 네가 좋아하는 것 5가지를 말해줄래?",
+        "bot"
+      );
+      startRankingProcess("likes");
+    });
+  }
 
     pickBtn.addEventListener('click', () => {
        // “로지야 골라줘!” 흐름: 로지 소개 + 좋아하는/싫어하는 것 묻기
@@ -669,8 +678,34 @@ body {
       localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
     }
   }
+   if (micButton) {
+    micButton.addEventListener('click', async () => {
+      // STT가 지원되지 않으면 리턴
+      if (!SpeechRecognition) return;
 
-  document.addEventListener('DOMContentLoaded', initializeApp);
+      if (isRecognizing) {
+        recognition.stop();
+      } else {
+        try {
+          // 재생 중인 TTS가 있으면 중지
+          if (window.LOZEE_TTS?.stopPlayback) {
+            await window.LOZEE_TTS.stopPlayback();
+          }
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          setupAudioAnalysis(stream);
+          recognition.start();
+          setLoading(true);
+        } catch (err) {
+          console.error("❌ 마이크 권한/시작 오류:", err);
+          appendBubble("마이크를 사용할 수 없어요. 권한을 확인해주세요.", "system-error");
+          stopAudioAnalysis();
+        }
+      }
+    });
+  }
+    // 6) 그다음에 initConversation() 호출하여 첫 질문 띄우기
+      await initConversation();
+   document.addEventListener('DOMContentLoaded', initializeApp);
 </script>
 </body>
 </html>
