@@ -792,6 +792,25 @@ if (SpeechRecognition) {
 } else {
 if (micButton) {
         micButton.addEventListener('click', async () => {
+        console.log("👂 mic-button 클릭 (isRecognizing:", isRecognizing, ")");
+        if (!SpeechRecognition) {
+          console.warn("SpeechRecognition 미지원");
+          return;
+        }
+        try {
+          if (isRecognizing) {
+           console.log("👂 recognition.stop() 호출");
+            recognition.stop();
+          } else {
+            console.log("👂 getUserMedia & recognition.start() 호출");
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            setupAudioAnalysis(stream);
+            recognition.start();
+          }
+        } catch (err) {
+          console.error("마이크 권한/시작 오류:", err);
+        }
+      });
           if (!SpeechRecognition) return;
           if (isRecognizing) {
             recognition.stop();
@@ -809,9 +828,8 @@ if (micButton) {
               stopAudioAnalysis();
             }
           }
-        });
+        };
       }
-
         // 대화 시작 로직 (localStorage에 저장된 상태에 따라 분기)
         const savedRankingState = JSON.parse(localStorage.getItem('lozee_ranking_progress')); // 이 부분은 아직 미구현
         const savedLastTopic = JSON.parse(localStorage.getItem('lozee_last_active_topic'));
@@ -889,7 +907,7 @@ if (micButton) {
 
         // 초기 로딩 시 약간의 지연을 두어 TTS.js 등이 로드될 시간을 확보 (선택적)
         // setTimeout(initializeApp, 50); // DOMContentLoaded 내부로 옮김
-    } // initializeApp 끝
+     // initializeApp 끝
      document.addEventListener('DOMContentLoaded', () => {
       setTimeout(initializeApp, 100); // 약간의 지연을 늘려서 외부 스크립트 로드 보장 시도
      
