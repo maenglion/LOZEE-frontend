@@ -792,14 +792,11 @@ try {
 if (SpeechRecognition) {
     // … 기존 코드 그대로 …
 } else {
--   // micButton.disabled = true;  // 기존에 이렇게만 처리돼 있었다면
--   // micButton.title = "음성 인식 미지원";
-+   // 음성 인식이 지원되지 않을 때 마이크 버튼을 숨깁니다
-+   if (micButton) {
-+     micButton.style.display = 'none';
-+   }
-+   // 필요하다면, 텍스트 안내라도 한 번 띄워 주세요
-+   appendBubble("알림: 모바일 크롬에서는 음성 인식을 지원하지 않습니다.", "system-error");
+if (micButton) {
+  micButton.addEventListener('click', async () => {
+    if (!SpeechRecognition) return;
+    // … 이하 이벤트 핸들러 로직 …
+  });
 }
 
         if(micButton) {
@@ -907,4 +904,3 @@ if (SpeechRecognition) {
   </script>
 </body>
 </html>
-
