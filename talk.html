@@ -743,8 +743,7 @@ try {
         } else {
             console.warn("메뉴 관련 DOM 요소 중 일부가 없습니다.");
         }
-
-
+// 대화시작
         // 음성 인식 설정 (SpeechRecognition API)
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
@@ -789,6 +788,19 @@ try {
             if(micButton) { micButton.title = "음성 인식 미지원"; micButton.disabled = true; }
             appendBubble("알림: 사용 중인 브라우저에서는 음성 인식을 지원하지 않습니다.", "system-error");
         }
+// --- 음성 인식 설정 (SpeechRecognition API) ---
+if (SpeechRecognition) {
+    // … 기존 코드 그대로 …
+} else {
+-   // micButton.disabled = true;  // 기존에 이렇게만 처리돼 있었다면
+-   // micButton.title = "음성 인식 미지원";
++   // 음성 인식이 지원되지 않을 때 마이크 버튼을 숨깁니다
++   if (micButton) {
++     micButton.style.display = 'none';
++   }
++   // 필요하다면, 텍스트 안내라도 한 번 띄워 주세요
++   appendBubble("알림: 모바일 크롬에서는 음성 인식을 지원하지 않습니다.", "system-error");
+}
 
         if(micButton) {
             micButton.addEventListener('click', async () => {
