@@ -791,31 +791,26 @@ if (SpeechRecognition) {
     // … 기존 코드 그대로 …
 } else {
 if (micButton) {
-  micButton.addEventListener('click', async () => {
-    if (!SpeechRecognition) return;
-    // … 이하 이벤트 핸들러 로직 …
-  });
-}
-
-        if(micButton) {
-            micButton.addEventListener('click', async () => {
-                if (!SpeechRecognition) return;
-                if (isRecognizing) {
-                    recognition.stop();
-                } else {
-                    try {
-                        // TTS가 재생 중이라면 먼저 중지 (사용자 경험 개선)
-                        if (window.LOZEE_TTS && typeof window.LOZEE_TTS.stopPlayback === 'function') {
-                           await window.LOZEE_TTS.stopPlayback(); // 비동기일 수 있으므로 await
-                        }
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        setupAudioAnalysis(stream); recognition.start(); setLoading(true); // STT 시작 시 로딩은 선택적
-                    } catch (err) {
-                        console.error("❌ 마이크 권한/시작 오류:", err); appendBubble("마이크를 사용할 수 없어요. 권한을 확인해주세요.", "system-error"); stopAudioAnalysis();
-                    }
-                }
-            });
-        }
+        micButton.addEventListener('click', async () => {
+          if (!SpeechRecognition) return;
+          if (isRecognizing) {
+            recognition.stop();
+          } else {
+            try {
+              if (window.LOZEE_TTS && typeof window.LOZEE_TTS.stopPlayback === 'function') {
+                await window.LOZEE_TTS.stopPlayback();
+              }
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              setupAudioAnalysis(stream);
+              recognition.start();
+            } catch (err) {
+              console.error("❌ 마이크 권한/시작 오류:", err);
+              appendBubble("마이크를 사용할 수 없어요. 권한을 확인해주세요.", "system-error");
+              stopAudioAnalysis();
+            }
+          }
+        });
+      }
 
         // 대화 시작 로직 (localStorage에 저장된 상태에 따라 분기)
         const savedRankingState = JSON.parse(localStorage.getItem('lozee_ranking_progress')); // 이 부분은 아직 미구현
