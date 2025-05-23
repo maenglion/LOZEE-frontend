@@ -10,7 +10,6 @@
     body{margin:0;padding-top:56px;font-family:'KoPub World Dotum',sans-serif;background:var(--background-color);color:var(--text-color);display:flex;flex-direction:column;height:100vh;overflow:hidden;}
     #gnb{position:fixed;top:0;left:0;width:100%;height:56px;background:var(--secondary-color);display:flex;align-items:center;padding:0 16px;z-index:1000;}
     #gnb-title{flex:1;font-size:1.2em;color:#7B68EE;}
-    #menu-toggle{background:none;border:none;color:#7B68EE;font-size:24px;cursor:pointer;}
     #meter-container{position:fixed;top:64px;left:50%;transform:translateX(-50%);width:60%;max-width:300px;height:6px;background:var(--secondary-color);border-radius:3px;overflow:hidden;z-index:999;}
     #volume-level{width:0;height:100%;background:var(--primary-color);transition:width .05s linear;}
     #chat-container{flex:1;margin-top:76px;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
@@ -26,7 +25,7 @@
   </style>
 </head>
 <body>
-  <nav id="gnb"><div id="gnb-title">LOZEE</div><button id="menu-toggle" aria-label="메뉴 토글">&#9776;</button></nav>
+  <nav id="gnb"><div id="gnb-title">LOZEE</div><button id="menu-toggle" aria-label="메뉴 토글">☰</button></nav>
   <div id="meter-container"><div id="volume-level"></div></div>
   <div id="chat-container"></div>
   <div id="analysis-container"></div>
@@ -37,26 +36,30 @@
   </div>
 
   <script type="module">
-    import { COUNSELING_TOPICS } from './js/counseling_topics.js';
-    import { getFirstQuestion, getGptResponse } from './js/gpt-dialog.js';
+    // Topic 선택은 index.html에서 URL 파라미터로 넘어옴 (topicText로 전달)
+    import { getGptResponse, LOZEE_DIALOG } from './js/gpt-dialog.js';
     import { playTTSFromText, DEFAULT_VOICE } from './js/tts.js';
     import { trackTime, trackEmotionTone, trackSituation } from './js/basic-features.js';
     import { renderLiteracyAnalysis } from './js/literacyPatternCheckRenderer.js';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const incomingTopicId = urlParams.get('topic');
-    const selectedTopic = COUNSELING_TOPICS.find(t => t.id === incomingTopicId) || { displayText: '' };
+    const params = new URLSearchParams(location.search);
+    const incomingTopicId   = params.get('topic');        // index.html에서 id 전달
+    const incomingTopicText = params.get('topicText');    // index.html에서 주제 텍스트 전달
+    const selectedTopic = { id: incomingTopicId, displayText: incomingTopicText || '' };
 
     let chatContainer, chatInput, sendButton, micButton;
-    let playTTS = playTTSFromText, lsVoice = DEFAULT_VOICE;
     let recognition, isRecognizing = false;
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     let chatHistory = [], userAge, userName, userId, userDisease;
-
+    
     function appendBubble(text, role) {
-      const el = document.createElement('div'); el.className = 'bubble ' + role; el.textContent = text;
-      chatContainer.appendChild(el); chatContainer.scrollTop = chatContainer.scrollHeight;
+      const el = document.createElement('div');
+      el.className = `bubble ${role}`;
+      el.textContent = text;
+      chatContainer.appendChild(el);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+
     function setLoading(flag) {
       sendButton.disabled = flag;
       micButton.disabled = flag && !isRecognizing;
@@ -64,8 +67,14 @@
     }
 
     function initSTT() {
-      if (!SpeechRec) { appendBubble('음성 인식 미지원 브라우저입니다.', 'system-error'); return; }
-      recognition = new SpeechRec(); recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'ko-KR';
+      if (!SpeechRec) {
+        appendBubble('음성 인식 미지원 브라우저입니다.', 'system-error');
+        return;
+      }
+      recognition = new SpeechRec();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'ko-KR';
       recognition.onstart = () => { isRecognizing = true; micButton.textContent = '💬'; };
       recognition.onend = () => { isRecognizing = false; micButton.textContent = '🎤'; setLoading(false); };
       recognition.onresult = e => {
@@ -76,44 +85,75 @@
         if (fin) handleUserText(fin);
       };
       micButton.onclick = async () => {
-        if (isRecognizing) recognition.stop(); else {
-          try { await navigator.mediaDevices.getUserMedia({ audio: true }); recognition.start(); setLoading(true); }
-          catch { appendBubble('마이크 권한이 필요해요.', 'system-error'); }
+        if (isRecognizing) recognition.stop();
+        else {
+          try {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            recognition.start();
+            setLoading(true);
+          } catch {
+            appendBubble('마이크 권한이 필요해요.', 'system-error');
+          }
         }
       };
     }
 
     async function sendToGptAndSpeak(text) {
-      const context = { userId, userAge, userName, userDisease, chatHistory, selectedTopic };
-      const res = await getGptResponse(text, context);
-      const msg = res.content || '응답이 없어요.';
-      appendBubble(msg, 'bot'); chatHistory.push({ role: 'bot', content: msg });
+      const context = { userAge, userName, userId, userDisease, chatHistory, selectedTopic };
+      const res = await LOZEE_DIALOG.getGptResponse(text, context);
+      const msg = res.text || res.content || '응답이 없어요.';
+      appendBubble(msg, 'bot');
+      chatHistory.push({ role: 'bot', content: msg });
       if (res.analysis) renderLiteracyAnalysis(res.analysis, document.getElementById('analysis-container'));
-      playTTS(msg, lsVoice);
+      playTTSFromText(msg, DEFAULT_VOICE);
     }
 
     async function handleUserText(raw) {
-      const txt = raw.trim(); if (!txt) return;
-      appendBubble(txt, 'user'); chatHistory.push({ role: 'user', content: txt }); setLoading(true);
+      const txt = raw.trim();
+      if (!txt) return;
+      appendBubble(txt, 'user');
+      chatHistory.push({ role: 'user', content: txt });
+      setLoading(true);
       try {
         if (incomingTopicId === 'likes') startRankingProcess('likes');
-        else if (incomingTopicId === 'manual') { appendBubble('어떤 이야기를 하고 싶으신가요?', 'bot'); }
+        else if (incomingTopicId === 'manual') appendBubble('어떤 이야기를 하고 싶으신가요?', 'bot');
         else await sendToGptAndSpeak(txt);
-      } catch (e) { console.error(e); appendBubble('죄송해요, 오류가 발생했어요.', 'system-error'); }
-      finally { setLoading(false); chatInput.value = ''; chatInput.focus(); }
+      } catch (e) {
+        console.error(e);
+        appendBubble('죄송해요, 오류가 발생했어요.', 'system-error');
+      } finally {
+        setLoading(false);
+        chatInput.value = '';
+        chatInput.focus();
+      }
     }
 
     async function initializeApp() {
-      chatContainer = document.getElementById('chat-container'); chatInput = document.getElementById('chat-input'); sendButton = document.getElementById('send-button'); micButton = document.getElementById('mic-button');
-      userAge = localStorage.getItem('lozee_userage'); userName = localStorage.getItem('lozee_username') || '친구'; userId = localStorage.getItem('lozee_userid') || `user_${Date.now()}`; userDisease = JSON.parse(localStorage.getItem('lozee_userdisease') || '[]');
+      chatContainer = document.getElementById('chat-container');
+      chatInput = document.getElementById('chat-input');
+      sendButton = document.getElementById('send-button');
+      micButton = document.getElementById('mic-button');
+      userAge = localStorage.getItem('lozee_userage');
+      userName = localStorage.getItem('lozee_username') || '친구';
+      userId = localStorage.getItem('lozee_userid') || `user_${Date.now()}`;
+      userDisease = JSON.parse(localStorage.getItem('lozee_userdisease') || '[]');
       chatHistory = JSON.parse(localStorage.getItem('lozee_conversation_history') || '[]');
-      initSTT(); trackTime(); trackEmotionTone(); trackSituation();
+
+      trackTime();
+      trackEmotionTone();
+      trackSituation();
+
       chatHistory.forEach(m => appendBubble(m.content, m.role));
+
       sendButton.onclick = () => handleUserText(chatInput.value);
-      chatInput.onkeydown = e => { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault(); handleUserText(chatInput.value);} };
+      chatInput.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUserText(chatInput.value); } };
+
+      initSTT();
+
       if (!incomingTopicId && chatHistory.length === 0) {
-        const first = getFirstQuestion(userAge, selectedTopic);
-        appendBubble(first, 'bot'); playTTS(first, lsVoice);
+        const first = LOZEE_DIALOG.getFirstQuestion(userAge, selectedTopic);
+        appendBubble(first, 'bot');
+        playTTSFromText(first, DEFAULT_VOICE);
         chatHistory.push({ role: 'bot', content: first, timestamp: new Date().toISOString() });
       }
     }
