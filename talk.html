@@ -704,8 +704,12 @@ body {
     });
   }
     // 6) 그다음에 initConversation() 호출하여 첫 질문 띄우기
-      await initConversation();
-   document.addEventListener('DOMContentLoaded', initializeApp);
+   document.addEventListener('DOMContentLoaded', async () => {
+   await initializeApp();
+   if (typeof initConversation === 'function') {
+      initConversation();
+    }
+  });
 </script>
 </body>
 </html>
