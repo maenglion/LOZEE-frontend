@@ -423,6 +423,7 @@ body {
     let text = `네 선호도 순위:\n` + sorted.map((it,i)=>`${i+1}. ${it}`).join('\n');
     appendBubble(text, 'bot');
     playTTSFunction?.(text, lsSelectedVoice);
+    
     // 대화로 연결할 선택지
     setTimeout(()=>{
       appendBubble(`이 중에서 더 이야기하고 싶은 것은?`, 'bot', sorted.slice(0,3).map((it,i)=>({
@@ -441,6 +442,50 @@ body {
     playTTSFunction?.(first, lsSelectedVoice);
     chatHistory.push({role:'bot', content:first, timestamp: new Date().toISOString()});
   }
+
+  async function handleUserText(rawText) {
+  const text = rawText.trim();
+  if (!text) return;
+
+  appendBubble(text, 'user');
+  setLoading(true);
+
+  // ── a) “여긴 없어(직접 말할래요)” 흐름 ──
+  if (awaitingManualTopic) {
+    // 사용자가 “특별한 주제 없음” 의사 표현
+    if (/없|모르겠/.test(text)) {
+      appendBubble(
+        "아직 딱히 말하고 싶은 주제가 없다면,\n네가 좋아하는 것들 순위를 매겨볼까?",
+        'bot',
+        [
+          { text: "좋아하는 것 순위 매겨볼래", action: () => startRankingProcess("likes") },
+          { text: "다른 이야기 할래",       action: () => { awaitingManualTopic = false; initConversation(); } }
+        ]
+      );
+    }
+    // 사용자가 직접 주제 입력
+    else {
+      selectedTopic = { displayText: text };
+      awaitingManualTopic = false;
+      initConversation();
+    }
+
+    setLoading(false);
+    return;
+  }
+
+  // ── b) 랭킹 모드 처리 ──
+  if (isInRankingMode) {
+    handleRankingFlow(text);
+    setLoading(false);
+    return;
+  }
+
+  // ── c) 일반 상담 대화 ──
+  await sendToGptAndRender(text);
+  setLoading(false);
+  }
+
 
   // ── 4. 대화 처리(handleUserText) ─────────────────────
   async function handleUserText(raw) {
@@ -473,6 +518,22 @@ body {
         throw new Error(`Status ${res.status}`);
       }
       const data = await res.json();
+      function handleRankingFlow(userInput) {
+       // a) 아이템 목록 입력 단계
+        if (!itemsToRank.length) {
+        handleRankingItemInput(userInput);
+        return;
+     }
+       // b) 비교 질문 단계
+        if (comparisonPairs.length) {
+         // … 기존 askNextComparison / handleComparisonChoice 로직 …
+         // handleComparisonChoice 내부에서 currentPairIndex++, askNextComparison() 호출
+        return;
+     }
+        // c) 순위 완료 후 후속 토론 선택지 보여주기
+        // … finishRanking() 로직 …
+     }
+
       // 분석 데이터 포함
       const msg = data.text || '응답이 없어요.';
       appendBubble(msg,'bot');
@@ -545,6 +606,20 @@ body {
     chatInput     = document.getElementById('chat-input');
     sendButton    = document.getElementById('send-button');
     micButton     = document.getElementById('mic-button');
+    const manualBtn = document.getElementById('btn-manual-topic');
+    const pickBtn   = document.getElementById('btn-let-lozee-pick');
+    manualBtn.addEventListener('click', () => {
+       // “직접 말할게요” 흐름: 원하는 주제 직접 입력 유도
+        appendBubble("어떤 이야기를 하고 싶니?", "bot");
+       // 다음 입력이 “주제가 없어”일 경우 랭킹으로 분기
+      awaitingManualTopic = true;
+    });
+
+    pickBtn.addEventListener('click', () => {
+       // “로지야 골라줘!” 흐름: 로지 소개 + 좋아하는/싫어하는 것 묻기
+       appendBubble("나 LOZEE야! 네가 어떤 걸 좋아하는지, 싫어하는지 알려주면\n널 더 잘 도울 수 있어. 먼저 네가 좋아하는 것 5가지를 말해줄래?", "bot");
+       startRankingProcess("likes");
+    });
     // GNB
     const menuToggle   = document.getElementById('menu-toggle');
     const dropdownMenu = document.getElementById('dropdown-menu');
