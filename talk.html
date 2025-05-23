@@ -597,14 +597,11 @@ body {
             if(playTTSFunction) playTTSFunction("이야기할 주제를 정하기 어렵구나. 어떤 걸 해볼까?", lsSelectedVoice);
             setLoading(false); chatInput.value = ''; chatInput.focus();
             return; 
-        }
-      
-// talk.html의 handleUserText 함수 내의 try 블록 (수정된 부분)
-
-try {
-  const contextForGpt = { userId, userAge, userName, userDisease, chatHistory: chatHistory.slice(-10) };
+            } // 일반 대화 로직 시작 
+            try {
+            const contextForGpt = { userId, userAge, userName, userDisease, chatHistory: chatHistory.slice(-10) };
   
-  const getGptResponseFunction = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.getGptResponse) || 
+            const getGptResponseFunction = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.getGptResponse) || 
                                (async () => { 
                                  console.error("getGptResponse 함수를 찾을 수 없습니다.");
                                  return { 
@@ -614,24 +611,24 @@ try {
                                  };
                                });
   
-  const res = await getGptResponseFunction(trimmedText, contextForGpt);
+            const res = await getGptResponseFunction(trimmedText, contextForGpt);
 
-  if (!res.ok) {
-    const errorText = await res.text(); 
-    console.error("GPT API 서버 응답 오류:", res.status, errorText);
-    const errorMessageToDisplay = `서버에서 오류가 발생했어요 (${res.status}). 잠시 후 다시 시도해주세요.`;
-    appendBubble(errorMessageToDisplay, 'system-error');
-    chatHistory.push({ role: 'system', content: errorMessageToDisplay, error: `Status: ${res.status}, Body: ${errorText}`, timestamp: new Date().toISOString() });
-    localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-    if (playTTSFunction) await playTTSFunction(errorMessageToDisplay, lsSelectedVoice);
-    setLoading(false);
-    return; 
-  }
-  const data = await res.json(); 
-  console.log("GPT API 응답 (data 객체):", data); 
+        if (!res.ok) {
+        const errorText = await res.text(); 
+        console.error("GPT API 서버 응답 오류:", res.status, errorText);
+        const errorMessageToDisplay = `서버에서 오류가 발생했어요 (${res.status}). 잠시 후 다시 시도해주세요.`;
+        appendBubble(errorMessageToDisplay, 'system-error');
+        chatHistory.push({ role: 'system', content: errorMessageToDisplay, error: `Status: ${res.status}, Body: ${errorText}`, timestamp: new Date().toISOString() });
+        localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+        if (playTTSFunction) await playTTSFunction(errorMessageToDisplay, lsSelectedVoice);
+        setLoading(false);
+        return; 
+     }
+        const data = await res.json(); 
+        console.log("GPT API 응답 (data 객체):", data); 
 
-  const botMessage = data?.text || "응답을 받지 못했어요."; 
-  appendBubble(botMessage, 'bot');
+        const botMessage = data?.text || "응답을 받지 못했어요."; 
+        appendBubble(botMessage, 'bot');
   
   // ▼▼▼ 사용자님께서 지적해주신, 빠졌던 부분입니다! ▼▼▼
   const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
@@ -665,6 +662,7 @@ try {
   if(chatInput) chatInput.value = ''; 
   if(chatInput) chatInput.focus();
 }
+    }
     // --- 초기화 및 이벤트 리스너 ---
     async function initConversation() {
         setLoading(true);
@@ -858,6 +856,7 @@ if (micButton) {
         } else if (chatHistory.length === 0) { // 저장된 주제도 없고, 대화 기록도 없을 때
             initConversationWithOptionalTopicPrompt();
         }
+    }
         // 이미 대화 기록이 있다면(새로고침 등), 별도의 초기 메시지 없이 사용자 입력을 기다림
 
         function initConversationWithOptionalTopicPrompt() {
@@ -896,9 +895,9 @@ if (micButton) {
         // 초기 로딩 시 약간의 지연을 두어 TTS.js 등이 로드될 시간을 확보 (선택적)
         // setTimeout(initializeApp, 50); // DOMContentLoaded 내부로 옮김
     } // initializeApp 끝
-
-    document.addEventListener('DOMContentLoaded', () => {
+     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(initializeApp, 100); // 약간의 지연을 늘려서 외부 스크립트 로드 보장 시도
+     
     });
 
   </script>
