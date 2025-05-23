@@ -1,715 +1,146 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LOZEE와 대화하기</title>
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
-    /* 기본 스타일 */
     :root {
-  --primary-color: #6e8efb;
-  --secondary-color: #354157;
-  --background-color: #2a3340;
-  --text-color: #fff;
-  --input-background: #f0f0f0;
-  --bot-bubble-bg: #f0f0f0;
-  --bot-bubble-text: #333;
-  --user-bubble-bg: #6e8efb; /* 사용자 말풍선은 원래 이 색이었습니다 */
-  --user-bubble-text: #fff;   /* 사용자 말풍선 글씨도 흰색 */
-  --gnb-height: 56px;
-  --chat-input-height: 70px;
-  --gemini-purple: #7B68EE; /* GNB 제목 및 메뉴 토글 원래 색상 */
-  --volume-meter-default-bg: var(--primary-color);
-  --meter-top-margin: 8px;
-  --gnb-dropdown-border-color: #4a5568;
-}
-
-body {
-  margin: 0;
-  padding-top: var(--gnb-height);
-  font-family: 'KoPub World Dotum', sans-serif;
-  /* 그라데이션 배경 적용 */
-  background: linear-gradient(135deg, var(--background-color-gradient-start), var(--background-color-gradient-end));
-  color: var(--text-color); /* 주 텍스트 색상, 흰색 유지 또는 어두운색으로 변경 */
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* GNB 및 채팅 입력창 배경은 그라데이션과 어울리도록 반투명 흰색 또는 단색으로 조정 가능 */
-#gnb {
-  /* ... 기존 스타일 ... */
-  background-color: rgba(255, 255, 255, 0.15); /* 예시: 약간 투명한 흰색 배경 */
-  backdrop-filter: blur(10px); /* (선택사항) 블러 효과로 고급스러움 추가 */
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 그림자 약간 연하게 */
-}
-#gnb-title {
-  color: #ffffff; /* GNB 배경이 밝아지면 제목 색상 변경 가능 */
-}
-#menu-toggle {
-    color: #ffffff; /* GNB 배경이 밝아지면 메뉴 토글 색상 변경 가능 */
-}
-
-#chat-input-container {
-  /* ... 기존 스타일 ... */
-  background-color: rgba(255, 255, 255, 0.2); /* 예시: 약간 투명한 흰색 배경 */
-  backdrop-filter: blur(5px);
-}
-
-#chat-input {
-  /* ... 기존 스타일 ... */
-  background-color: var(--input-background); /* 이미 흰색 계열 */
-  color: #333; /* 입력 글씨는 어둡게 */
-  border: 1px solid #d0d0d0; /* 테두리 약간 연하게 */
-}
-
-/* 드롭다운 메뉴, 음량 바 등도 필요시 색상 조정 */
-#dropdown-menu {
-    background-color: rgba(40, 50, 65, 0.9); /* 약간 어두운 반투명 배경 유지 */
-    backdrop-filter: blur(5px);
-}
-#dropdown-menu a {
-    border-bottom: 1px solid var(--gnb-dropdown-border-color);
-}
-#dropdown-menu a:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* 시스템 오류 메시지 버블 배경색 변경 */
-.bubble.system-error {
-    background-color: #ffe0e0; /* 연한 핑크/빨강 */
-    color: #c0392b; /* 어두운 빨강 글씨 */
-    border: 1px solid #e74c3c;
-}
-
+      --primary-color: #6e8efb;
+      --secondary-color: #354157;
+      --background-color: #2a3340;
+      --text-color: #fff;
+      --input-bg: #f0f0f0;
+    }
     body {
-      margin: 0;
-      padding-top: var(--gnb-height);
+      margin: 0; padding-top: 56px;
       font-family: 'KoPub World Dotum', sans-serif;
       background-color: var(--background-color);
       color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      box-sizing: border-box;
-      overflow: hidden;
+      display: flex; flex-direction: column; height: 100vh; overflow: hidden;
     }
-
-    /* GNB (햄버거 메뉴) */
-    #gnb {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: var(--gnb-height);
-      background-color: var(--background-color);
-      padding: 0 16px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      z-index: 1000;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-sizing: border-box;
-    }
-
-    #gnb-title {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: var(--gemini-purple);
-    }
-
-    #menu-toggle {
-      background: none;
-      border: none;
-      color: var(--gemini-purple);
-      font-size: 24px;
-      cursor: pointer;
-      padding: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #dropdown-menu {
-      position: fixed;
-      top: var(--gnb-height);
-      right: 0;
-      background-color: var(--background-color);
-      border-radius: 0 0 0 8px;
-      box-shadow: -3px 3px 6px rgba(0,0,0,0.25);
-      width: 200px;
-      z-index: 999;
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.3s ease-out;
-    }
-
-    #dropdown-menu.show {
-      max-height: 500px;
-    }
-
-    #dropdown-menu a {
-      display: block;
-      color: var(--text-color);
-      text-decoration: none;
-      padding: 12px 16px;
-      font-size: 0.95em;
-      border-bottom: 1px solid var(--gnb-dropdown-border-color);
-    }
-    #dropdown-menu a:last-child { border-bottom: none; }
-    #dropdown-menu a:hover {
-      background-color: var(--secondary-color);
-    }
-
-    /* 음량 바 */
-    #meter-container {
-      position: fixed;
-      top: calc(var(--gnb-height) + var(--meter-top-margin));
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      max-width: 300px;
-      height: 6px;
-      background-color: var(--secondary-color);
-      border-radius: 3px;
-      overflow: hidden;
-      z-index: 998;
-    }
-    #volume-meter { width:100%; height:100%; }
-    #volume-level {
-      width: 0%;
-      height: 100%;
-      background: var(--volume-meter-default-bg);
-      border-radius: 3px;
-      transition: width 0.05s linear;
-    }
-
-    /* 채팅 영역 */
-    #chat-container {
-      flex-grow: 1;
-      padding: 16px;
-      padding-top: calc(var(--meter-top-margin) + 6px + 16px);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: var(--chat-input-height);
-    }
-
-    .bubble {
-      padding: 12px 16px;
-      border-radius: 18px;
-      max-width: 75%;
-      line-height: 1.5;
-      word-break: keep-all;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    .bubble.user {
-      background-color: var(--user-bubble-bg);
-      color: var(--user-bubble-text);
-      align-self: flex-end;
-      border-bottom-right-radius: 4px;
-    }
-    .bubble.bot {
-      background-color: var(--bot-bubble-bg);
-      color: var(--bot-bubble-text);
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
-    }
-    .bubble.user.interim { opacity:.7; }
-    .bubble.system-error { /* 오류 메시지 스타일 */
-        background-color: #ffdddd;
-        color: #d32f2f;
-        align-self: center;
-        max-width: 80%;
-        text-align: center;
-        font-size: 0.9em;
-        border: 1px solid #d32f2f;
-    }
-
-
-    /* 입력 영역 */
-    #chat-input-container {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: var(--chat-input-height);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 12px;
-      background-color: var(--secondary-color);
-      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
-      box-sizing: border-box;
-    }
-
-    #chat-input {
-      flex: 1;
-      padding: 12px 16px;
-      border-radius: 22px;
-      border: 1px solid var(--gnb-dropdown-border-color);
-      font-size: 1em;
-      background-color: var(--input-background);
-      color: #333;
-      height: 44px;
-      box-sizing: border-box;
-    }
-    #chat-input::placeholder { color: #777; }
-
-    #mic-button,
-    #send-button {
-      width: 44px;
-      height: 44px;
-      border: none;
-      border-radius: 50%;
-      background-color: var(--primary-color);
-      color: var(--text-color);
-      font-size: 1.3em;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s ease;
-    }
-    #mic-button:hover,
-    #send-button:hover { background-color: #5a7edf; }
-    #mic-button.disabled,
-    #send-button.disabled {
-      opacity:.5;
-      cursor:default;
-      background-color: #999;
-    }
-    #send-button.loading { background:#999; cursor:default; }
-
-    /* 스크롤바 스타일 */
-    #chat-container::-webkit-scrollbar { width: 8px; }
-    #chat-container::-webkit-scrollbar-track { background: var(--background-color); }
-    #chat-container::-webkit-scrollbar-thumb { background: var(--gnb-dropdown-border-color); border-radius: 4px; }
-    #chat-container::-webkit-scrollbar-thumb:hover { background: #5a7edf; }
+    #gnb { position: fixed; top: 0; left: 0; width: 100%; height: 56px; background: var(--secondary-color); display: flex; align-items: center; padding: 0 16px; z-index: 1000; }
+    #gnb-title { flex: 1; font-size: 1.2em; color: #7B68EE; }
+    #menu-toggle { background: none; border: none; color: #7B68EE; font-size: 24px; cursor: pointer; }
+    #meter-container { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); width: 60%; max-width: 300px; height: 6px; background: var(--secondary-color); border-radius: 3px; overflow: hidden; }
+    #volume-level { width: 0%; height: 100%; background: var(--primary-color); transition: width 0.05s linear; }
+    #chat-container { flex: 1; margin-top: 76px; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    #analysis-container { padding: 16px; background: #1f2733; color: #fff; overflow-y: auto; max-height: 200px; }
+    .bubble { padding: 12px 16px; border-radius: 18px; max-width: 75%; line-height: 1.5; word-break: keep-all; }
+    .bubble.user { background: var(--primary-color); color: #fff; align-self: flex-end; }
+    .bubble.bot { background: var(--input-bg); color: #333; align-self: flex-start; }
+    .bubble.system-error { background: #ffe0e0; color: #c0392b; align-self: center; }
+    #chat-input-container { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: var(--secondary-color); display: flex; align-items: center; padding: 0 12px; }
+    #chat-input { flex: 1; height: 44px; padding: 12px; border-radius: 22px; border: 1px solid #4a5568; background: var(--input-bg); color: #333; }
+    #mic-button, #send-button { width: 44px; height: 44px; margin-left: 8px; border: none; border-radius: 50%; background: var(--primary-color); color: #fff; font-size: 1.3em; cursor: pointer; }
+    #send-button.loading { background: #999; }
   </style>
 </head>
 <body>
   <nav id="gnb">
     <div id="gnb-title">LOZEE</div>
-    <button id="menu-toggle" aria-label="메뉴 열기/닫기">&#9776;</button>
-    <div id="dropdown-menu">
-      <a href="#">MY PAGE (준비중)</a>
-      <a href="index.html">주제 변경</a>
-      <a href="analysis.html">최근 대화 분석</a>
-      <a href="journal-list.html">주제별 대화 목록</a>
-      <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank" rel="noopener noreferrer">LOZEE 소개</a>
-    </div>
+    <button id="menu-toggle" aria-label="메뉴 토글">&#9776;</button>
   </nav>
-
-  <div id="meter-container">
-    <div id="volume-meter">
-      <div id="volume-level"></div>
-    </div>
-  </div>
-
+  <div id="meter-container"><div id="volume-level"></div></div>
   <div id="chat-container"></div>
-
+  <div id="analysis-container"></div>
   <div id="chat-input-container">
-    <button id="mic-button" title="음성 인식 시작/중지">🎤</button>
-    <input type="text" id="chat-input" placeholder="메시지를 입력하세요..." autocomplete="off"/>
-    <button id="send-button" title="메시지 전송">⮞</button>
+    <button id="mic-button" title="음성 인식">🎤</button>
+    <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
+    <button id="send-button" title="전송">⮞</button>
   </div>
 
+  <script src="./js/counseling_topics.js"></script>
   <script src="./js/gpt-dialog.js"></script>
   <script src="./js/tts.js"></script>
+  <script src="./js/basic-features.js"></script>
+  <script src="./js/literacyPatternCheckRenderer.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const incomingTopicId = urlParams.get('topic');
+    const selectedTopic = window.COUNSELING_TOPICS?.find(t => t.id === incomingTopicId) || { displayText: '' };
 
-<script>
-// ── 1. 전역 변수 및 초기 상태 ─────────────────────
-  let chatContainer, chatInput, sendButton, micButton;
-  let playTTSFunction, currentDefaultVoice, lsSelectedVoice;
-  let recognition, isRecognizing = false;
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let chatContainer, chatInput, sendButton, micButton;
+    let playTTSFunction, lsSelectedVoice;
+    let recognition, isRecognizing = false;
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let chatHistory = [], userAge, userName, userId, userDisease;
+    let awaitingManualTopic = false, isInRankingMode = false;
 
-  // 대화 기록 및 사용자 정보
-  let chatHistory = [];
-  let userAge, userName, userId, userDisease, selectedTopic;
-
-  // 선호도 순위 매기기(AHP)용
-  let isInRankingMode = false, rankingType = null;
-  let itemsToRank = [], comparisonPairs = [], currentPairIndex = 0;
-  let comparisonScores = {}, MAX_ITEMS_TO_RANK = 5;
-
- // ── 2. 유틸 함수: 말풍선, 로딩, 중간 결과 ───────────────
-  function appendBubble(content, role, choices = null) {
-    const el = document.createElement('div');
-    el.className = `bubble ${role}`;
-    if (typeof content === 'string') el.textContent = content;
-    else el.appendChild(content);
-    if (role === 'system-error') el.classList.add('system-error');
-    if (choices) {
-      const box = document.createElement('div');
-      choices.forEach(ch => {
-        const btn = document.createElement('button');
-        btn.textContent = ch.text;
-        btn.onclick = () => {
-          box.querySelectorAll('button').forEach(b=>b.disabled=true);
-          ch.action(ch.value);
-        };
-        box.appendChild(btn);
-      });
-      el.appendChild(box);
-    }
-    chatContainer.appendChild(el);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  }
-
-  function setLoading(flag) {
-    sendButton.disabled = flag;
-    if (micButton) micButton.disabled = flag && !isRecognizing;
-    sendButton.classList.toggle('loading', flag);
-  }
-
-  function showInterim(text) {
-    let el = document.querySelector('.bubble.user.interim');
-    if (!el) {
-      el = document.createElement('div');
-      el.className = 'bubble user interim';
+    function appendBubble(text, role) {
+      const el = document.createElement('div');
+      el.className = 'bubble ' + role;
+      el.textContent = text;
       chatContainer.appendChild(el);
-    }
-    el.textContent = text;
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  }
-// ── 3. AHP 선호도 순위 매기기 로직 ────────────────────
-  function startRankingProcess(type) {
-    isInRankingMode = true; rankingType = type;
-    itemsToRank = []; comparisonPairs = []; currentPairIndex = 0;
-    comparisonScores = {};
-    appendBubble(`무엇을 ${type==='likes'?'제일 좋아':'제일 싫어'}하는지 ${MAX_ITEMS_TO_RANK}개 정도 쉼표로 알려줄래?`, 'bot');
-    playTTSFunction?.(`무엇을 ${type==='likes'?'제일 좋아':'제일 싫어'}하는지 ${MAX_ITEMS_TO_RANK}개 정도 쉼표로 알려줄래?`, lsSelectedVoice);
-  }
-
-  function handleRankingItemInput(text) {
-    itemsToRank = text.split(',').map(s=>s.trim()).filter(Boolean).slice(0,MAX_ITEMS_TO_RANK);
-    if (itemsToRank.length < 2) {
-      appendBubble(`최소 두 개 이상 말해줘야 순위를 정할 수 있어.`, 'bot');
-      return;
-    }
-    itemsToRank.forEach(item=>comparisonScores[item]=0);
-    for(let i=0;i<itemsToRank.length;i++){
-      for(let j=i+1;j<itemsToRank.length;j++){
-        comparisonPairs.push([itemsToRank[i], itemsToRank[j]]);
-      }
-    }
-    askNextComparison();
-  }
-
-  function askNextComparison() {
-    if (currentPairIndex >= comparisonPairs.length) return finishRanking();
-    const [a,b] = comparisonPairs[currentPairIndex];
-    appendBubble(`${a}과 ${b}, 어느 쪽이 더 ${rankingType==='likes'?'좋아':'싫어'}?`, 'bot', [
-      { text: a, value: a, action: choice=>recordChoice(choice,b) },
-      { text: b, value: b, action: choice=>recordChoice(choice,a) },
-    ]);
-  }
-
-  function recordChoice(chosen, other) {
-    appendBubble(chosen, 'user');
-    comparisonScores[chosen]++;
-    currentPairIndex++;
-    askNextComparison();
-  }
-
-  function finishRanking() {
-    const sorted = [...itemsToRank].sort((x,y)=>comparisonScores[y]-comparisonScores[x]);
-    let text = `네 선호도 순위:\n` + sorted.map((it,i)=>`${i+1}. ${it}`).join('\n');
-    appendBubble(text, 'bot');
-    playTTSFunction?.(text, lsSelectedVoice);
-    
-    // 대화로 연결할 선택지
-    setTimeout(()=>{
-      appendBubble(`이 중에서 더 이야기하고 싶은 것은?`, 'bot', sorted.slice(0,3).map((it,i)=>({
-        text: `${i+1}. ${it}`, value: it, action:item=>discussRankedItem(item,i+1)
-      })).concat([{ text:'다른 이야기', action:()=>{isInRankingMode=false;} }]));
-    },500);
-    isInRankingMode=false;
-  }
-
-  function discussRankedItem(item, rank) {
-    appendBubble(`${item} 이야기해볼게!`, 'user');
-    const topic = { type:'ranked_preference', preference_type: rankingType, item, rank };
-    localStorage.setItem('lozee_last_active_topic',JSON.stringify(topic));
-    const first = window.LOZEE_DIALOG.getFirstQuestion(userAge,topic);
-    appendBubble(first,'bot');
-    playTTSFunction?.(first, lsSelectedVoice);
-    chatHistory.push({role:'bot', content:first, timestamp: new Date().toISOString()});
-  }
-
-  async function handleUserText(rawText) {
-  const text = rawText.trim();
-  if (!text) return;
-
-  appendBubble(text, 'user');
-  setLoading(true);
-
-  // ── a) “여긴 없어(직접 말할래요)” 흐름 ──
-  if (awaitingManualTopic) {
-    // 사용자가 “특별한 주제 없음” 의사 표현
-    if (/없|모르겠/.test(text)) {
-      appendBubble(
-        "아직 딱히 말하고 싶은 주제가 없다면,\n네가 좋아하는 것들 순위를 매겨볼까?",
-        'bot',
-        [
-          { text: "좋아하는 것 순위 매겨볼래", action: () => startRankingProcess("likes") },
-          { text: "다른 이야기 할래",       action: () => { awaitingManualTopic = false; initConversation(); } }
-        ]
-      );
-    }
-    // 사용자가 직접 주제 입력
-    else {
-      selectedTopic = { displayText: text };
-      awaitingManualTopic = false;
-      initConversation();
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    setLoading(false);
-    return;
-  }
-
-  // ── b) 랭킹 모드 처리 ──
-  if (isInRankingMode) {
-    handleRankingFlow(text);
-    setLoading(false);
-    return;
-  }
-
-  // ── c) 일반 상담 대화 ──
-  await sendToGptAndRender(text);
-  setLoading(false);
-  }
-
-
-  // ── 4. 대화 처리(handleUserText) ─────────────────────
-  async function handleUserText(raw) {
-    const text = raw.trim();
-    if (!text) return;
-    // 랭킹 모드
-    if (isInRankingMode && comparisonPairs.length===0) {
-      appendBubble(text,'user');
-      return handleRankingItemInput(text);
-    }
-    // 일반 대화
-    document.querySelector('.bubble.user.interim')?.remove();
-    appendBubble(text,'user');
-    chatHistory.push({role:'user',content:text,timestamp:new Date().toISOString()});
-    setLoading(true);
-
-    // 랭킹 시작 키워드
-    if (text.includes('주제 없어')) {
-      appendBubble('좋아하는 거 순위 매겨볼까? 아니면 싫어하는 거?', 'bot', [
-        { text:'좋아하는 거', action:()=>startRankingProcess('likes') },
-        { text:'싫어하는 거', action:()=>startRankingProcess('dislikes') }
-      ]);
-      setLoading(false);
-      return;
+    function setLoading(flag) {
+      sendButton.disabled = flag;
+      micButton.disabled = flag && !isRecognizing;
+      sendButton.classList.toggle('loading', flag);
     }
 
-    try {
-      const res = await window.LOZEE_DIALOG.getGptResponse(text, { userId,userAge,userName,userDisease,chatHistory:chatHistory.slice(-10) });
-      if (!res.ok) {
-        throw new Error(`Status ${res.status}`);
-      }
-      const data = await res.json();
-      function handleRankingFlow(userInput) {
-       // a) 아이템 목록 입력 단계
-        if (!itemsToRank.length) {
-        handleRankingItemInput(userInput);
-        return;
-     }
-       // b) 비교 질문 단계
-        if (comparisonPairs.length) {
-         // … 기존 askNextComparison / handleComparisonChoice 로직 …
-         // handleComparisonChoice 내부에서 currentPairIndex++, askNextComparison() 호출
-        return;
-     }
-        // c) 순위 완료 후 후속 토론 선택지 보여주기
-        // … finishRanking() 로직 …
-     }
-
-      // 분석 데이터 포함
-      const msg = data.text || '응답이 없어요.';
-      appendBubble(msg,'bot');
-      const entry = { role:'bot', content:msg, timestamp:new Date().toISOString() };
-      if (data.analysis) entry.analysis = data.analysis;
-      chatHistory.push(entry);
-      localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-
-      // 감정 강도 숫자 스케일 질문
-      const intent = window.LOZEE_DIALOG.detectIntent(text);
-      if (intent==='emotion') {
-        const scaleQ = `${userName}아, 지금 기분을 1~10 숫자로 표현한다면 몇 점일까?`;
-        appendBubble(scaleQ,'bot');
-        playTTSFunction?.(scaleQ, lsSelectedVoice);
-      } else {
-        playTTSFunction?.(msg, lsSelectedVoice);
-      }
-    } catch (e) {
-      console.error(e);
-      appendBubble('죄송해요, 응답 처리 중 오류가 발생했어요.','system-error');
-    } finally {
-      setLoading(false);
-      chatInput.value = '';
-      chatInput.focus();
-    }
-  }
-
-  // ── 5. STT/TTS 초기화 및 이벤트 ─────────────────────
-  function initSTT() {
-    if (!SpeechRecognition) {
-      micButton.disabled=true;
-      appendBubble('음성 인식 미지원 브라우저입니다.','system-error');
-      return;
-    }
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'ko-KR';
-
-    recognition.onstart = ()=>{ isRecognizing=true; micButton.textContent='💬'; };
-    recognition.onend   = ()=>{ isRecognizing=false; micButton.textContent='🎤'; setLoading(false); };
-    recognition.onresult= e=>{
-      let interim='', fin='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        if(e.results[i].isFinal) fin+=e.results[i][0].transcript;
-        else interim+=e.results[i][0].transcript;
-      }
-      if (interim) showInterim(interim);
-      if (fin) { document.querySelector('.bubble.user.interim')?.remove(); handleUserText(fin); }
-    };
-    recognition.onerror = ()=>{ appendBubble('음성 인식 오류','system-error'); };
-
-    micButton.onclick = async ()=>{
-      if (isRecognizing) recognition.stop();
-      else {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-          recognition.start();
-        } catch {
-          appendBubble('마이크 권한이 필요해요.','system-error');
+    function initSTT() {
+      if (!SpeechRec) return appendBubble('음성 인식 미지원 브라우저입니다.', 'system-error');
+      recognition = new SpeechRec(); recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'ko-KR';
+      recognition.onstart = () => { isRecognizing = true; micButton.textContent = '💬'; };
+      recognition.onend = () => { isRecognizing = false; micButton.textContent = '🎤'; setLoading(false); };
+      recognition.onresult = e => {
+        let fin = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) fin += e.results[i][0].transcript;
         }
-      }
-    };
-  }
-
-    // ── 6. 초기화(INIT) ───────────────────────────────
-  async function initializeApp() {
-    // DOM
-    chatContainer = document.getElementById('chat-container');
-    chatInput     = document.getElementById('chat-input');
-    sendButton    = document.getElementById('send-button');
-    micButton     = document.getElementById('mic-button');
-    const manualBtn = document.getElementById('btn-manual-topic');
-    const pickBtn   = document.getElementById('btn-let-lozee-pick');
-    if (manualBtn) {
-    manualBtn.addEventListener('click', () => {
-      appendBubble("어떤 이야기를 하고 싶니?", "bot");
-      awaitingManualTopic = true;
-    });
-  }
-  if (pickBtn) {
-    pickBtn.addEventListener('click', () => {
-      appendBubble(
-        "나 LOZEE야! 네가 어떤 걸 좋아하는지, 싫어하는지 알려주면\n널 더 잘 도울 수 있어. 먼저 네가 좋아하는 것 5가지를 말해줄래?",
-        "bot"
-      );
-      startRankingProcess("likes");
-    });
-  }
-
-    pickBtn.addEventListener('click', () => {
-       // “로지야 골라줘!” 흐름: 로지 소개 + 좋아하는/싫어하는 것 묻기
-       appendBubble("나 LOZEE야! 네가 어떤 걸 좋아하는지, 싫어하는지 알려주면\n널 더 잘 도울 수 있어. 먼저 네가 좋아하는 것 5가지를 말해줄래?", "bot");
-       startRankingProcess("likes");
-    });
-    // GNB
-    const menuToggle   = document.getElementById('menu-toggle');
-    const dropdownMenu = document.getElementById('dropdown-menu');
-    const gnb          = document.getElementById('gnb');
-    if (menuToggle && dropdownMenu && gnb) {
-      menuToggle.addEventListener('click', () => {
-        dropdownMenu.classList.toggle('show');
-      });
-      document.addEventListener('click', (e) => {
-        if (!gnb.contains(e.target) && dropdownMenu.classList.contains('show')) {
-          dropdownMenu.classList.remove('show');
+        if (fin) handleUserText(fin);
+      };
+      micButton.onclick = async () => {
+        if (isRecognizing) recognition.stop();
+        else {
+          try { await navigator.mediaDevices.getUserMedia({ audio: true }); recognition.start(); setLoading(true); }
+          catch { appendBubble('마이크 권한이 필요해요.', 'system-error'); }
         }
-      });
+      };
     }
 
-    // TTS
-    if (window.LOZEE_TTS?.playTTSFromText) {
-      playTTSFunction = window.LOZEE_TTS.playTTSFromText;
-      currentDefaultVoice = window.LOZEE_TTS.DEFAULT_VOICE;
-    } else playTTSFunction = async()=>{};
-
-    lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || currentDefaultVoice;
-
-    // 사용자 정보
-    userAge   = localStorage.getItem('lozee_userage');
-    userName  = localStorage.getItem('lozee_username') || '친구';
-    userId    = localStorage.getItem('lozee_userid')   || `user_${Date.now()}`;
-    userDisease = JSON.parse(localStorage.getItem('lozee_userdisease')||'[]');
-    selectedTopic = JSON.parse(localStorage.getItem('selectedTopic')||'{}');
-    chatHistory   = JSON.parse(localStorage.getItem('lozee_conversation_history')||'[]');
-
-    // 화면 복원
-    chatHistory.forEach(msg=>appendBubble(msg.content,msg.role));
-
-    // 이벤트
-    sendButton.onclick = ()=>{ if (chatInput.value.trim()) handleUserText(chatInput.value); };
-    chatInput.onkeydown = e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault(); handleUserText(chatInput.value);}};
-
-    initSTT();
-
-    // 첫 질문
-    if (!chatHistory.length) {
-      const first = window.LOZEE_DIALOG.getFirstQuestion(userAge, selectedTopic);
-      appendBubble(first,'bot');
-      playTTSFunction?.(first, lsSelectedVoice);
-      chatHistory.push({role:'bot',content:first,timestamp:new Date().toISOString()});
-      localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+    async function sendToGptAndSpeak(text) {
+      const context = { userId, userAge, userName, userDisease, chatHistory, selectedTopic };
+      const res = await window.LOZEE_DIALOG.getGptResponse(text, context);
+      if (res.error) throw new Error('GPT error');
+      const msg = res.content || '응답이 없어요.';
+      appendBubble(msg, 'bot'); chatHistory.push({ role: 'bot', content: msg });
+      if (res.analysis) renderLiteracyAnalysis(res.analysis, document.getElementById('analysis-container'));
+      playTTSFunction?.(msg, lsSelectedVoice);
     }
-  }
-   if (micButton) {
-    micButton.addEventListener('click', async () => {
-      // STT가 지원되지 않으면 리턴
-      if (!SpeechRecognition) return;
 
-      if (isRecognizing) {
-        recognition.stop();
-      } else {
-        try {
-          // 재생 중인 TTS가 있으면 중지
-          if (window.LOZEE_TTS?.stopPlayback) {
-            await window.LOZEE_TTS.stopPlayback();
-          }
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          setupAudioAnalysis(stream);
-          recognition.start();
-          setLoading(true);
-        } catch (err) {
-          console.error("❌ 마이크 권한/시작 오류:", err);
-          appendBubble("마이크를 사용할 수 없어요. 권한을 확인해주세요.", "system-error");
-          stopAudioAnalysis();
-        }
+    async function handleUserText(raw) {
+      const txt = raw.trim(); if (!txt) return;
+      appendBubble(txt, 'user'); chatHistory.push({ role: 'user', content: txt }); setLoading(true);
+      try {
+        if (incomingTopicId === 'likes') startRankingProcess('likes');
+        else if (incomingTopicId === 'manual') { awaitingManualTopic = true; appendBubble('어떤 이야기를 하고 싶으신가요?', 'bot'); }
+        else await sendToGptAndSpeak(txt);
+      } catch (e) {
+        console.error(e); appendBubble('죄송해요, 오류가 발생했어요.', 'system-error');
+      } finally { setLoading(false); chatInput.value = ''; chatInput.focus(); }
+    }
+
+    async function initializeApp() {
+      chatContainer = document.getElementById('chat-container'); chatInput = document.getElementById('chat-input'); sendButton = document.getElementById('send-button'); micButton = document.getElementById('mic-button');
+      userAge = localStorage.getItem('lozee_userage'); userName = localStorage.getItem('lozee_username') || '친구'; userId = localStorage.getItem('lozee_userid') || `user_${Date.now()}`; userDisease = JSON.parse(localStorage.getItem('lozee_userdisease') || '[]'); chatHistory = JSON.parse(localStorage.getItem('lozee_conversation_history') || '[]');
+      initSTT(); playTTSFunction = window.LOZEE_TTS?.playTTSFromText || (async () => {}); lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || window.LOZEE_TTS?.DEFAULT_VOICE;
+      trackTime(); trackEmotionTone(); trackSituation();
+      chatHistory.forEach(m => appendBubble(m.content, m.role));
+      sendButton.onclick = () => handleUserText(chatInput.value);
+      chatInput.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUserText(chatInput.value); } };
+      if (!incomingTopicId && chatHistory.length === 0) {
+        const first = window.LOZEE_DIALOG.getFirstQuestion(userAge, selectedTopic);
+        appendBubble(first, 'bot'); playTTSFunction(first, lsSelectedVoice);
+        chatHistory.push({ role: 'bot', content: first, timestamp: new Date().toISOString() });
       }
-    });
-  }
-    // 6) 그다음에 initConversation() 호출하여 첫 질문 띄우기
-   document.addEventListener('DOMContentLoaded', async () => {
-   await initializeApp();
-   if (typeof initConversation === 'function') {
-      initConversation();
     }
-  });
-</script>
+
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
 </body>
 </html>
