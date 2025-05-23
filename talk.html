@@ -598,49 +598,73 @@ body {
             setLoading(false); chatInput.value = ''; chatInput.focus();
             return; 
         }
+      
+// talk.html의 handleUserText 함수 내의 try 블록 (수정된 부분)
 
-        try {
-            const contextForGpt = { userId, userAge, userName, userDisease, chatHistory: chatHistory.slice(-10) };
-            const getGptResponse = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.getGptResponse) || (async () => ({ json: async () => ({ text: "오류: 응답을 받을 수 없습니다."}) }));
-            
-            const res = await getGptResponse(trimmedText, contextForGpt);
-            console.log("GPT API 응답:", res);
- 
-            const botMessage = res?.content || "응답을 받지 못했어요.";
+try {
+  const contextForGpt = { userId, userAge, userName, userDisease, chatHistory: chatHistory.slice(-10) };
+  
+  const getGptResponseFunction = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.getGptResponse) || 
+                               (async () => { 
+                                 console.error("getGptResponse 함수를 찾을 수 없습니다.");
+                                 return { 
+                                   ok: false, 
+                                   status: 500, 
+                                   json: async () => ({ text: "오류: GPT 응답 함수를 찾을 수 없습니다." }) 
+                                 };
+                               });
+  
+  const res = await getGptResponseFunction(trimmedText, contextForGpt);
 
-if (res.analysis) {
-  // 분석 결과 처리
+  if (!res.ok) {
+    const errorText = await res.text(); 
+    console.error("GPT API 서버 응답 오류:", res.status, errorText);
+    const errorMessageToDisplay = `서버에서 오류가 발생했어요 (${res.status}). 잠시 후 다시 시도해주세요.`;
+    appendBubble(errorMessageToDisplay, 'system-error');
+    chatHistory.push({ role: 'system', content: errorMessageToDisplay, error: `Status: ${res.status}, Body: ${errorText}`, timestamp: new Date().toISOString() });
+    localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+    if (playTTSFunction) await playTTSFunction(errorMessageToDisplay, lsSelectedVoice);
+    setLoading(false);
+    return; 
+  }
+  const data = await res.json(); 
+  console.log("GPT API 응답 (data 객체):", data); 
+
+  const botMessage = data?.text || "응답을 받지 못했어요."; 
+  appendBubble(botMessage, 'bot');
+  
+  // ▼▼▼ 사용자님께서 지적해주신, 빠졌던 부분입니다! ▼▼▼
+  const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
+  if (data.analysis) { // 'res.analysis'가 아니라 'data.analysis'가 맞습니다.
+    console.log("💡 분석 데이터:", data.analysis);
+    botResponseEntry.analysis = data.analysis; // botResponseEntry에 분석 결과 추가
+  }
+  chatHistory.push(botResponseEntry); // 분석 결과가 포함된 botResponseEntry를 푸시
+  localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+  // ▲▲▲ 여기까지 입니다 ▲▲▲
+  
+  if (playTTSFunction) await playTTSFunction(botMessage, lsSelectedVoice);
+
+  // 숫자로 감정 강도 묻는 로직 (예시 조건)
+  const userIntent = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.detectIntent) ? window.LOZEE_DIALOG.detectIntent(trimmedText) : 'fact';
+  if (userIntent === 'emotion' && botMessage.includes("자세히 말해줄래")) { // 조건은 더 구체화 필요
+      const numericScaleQuestion = `${userName}아/야, 지금 그 기분이 1부터 10까지 중에 몇 점 정도일까? 숫자가 클수록 더 강한 거야.`;
+      appendBubble(numericScaleQuestion, 'bot');
+      if (playTTSFunction) await playTTSFunction(numericScaleQuestion, lsSelectedVoice);
+  }
+
+} catch (err) {
+  console.error("❌ GPT 응답 처리 중 예외 발생:", err);
+  const exceptionMessage = "죄송해요, 응답을 처리하는 중에 문제가 생겼어요.";
+  appendBubble(exceptionMessage, 'system-error');
+  chatHistory.push({ role: 'system', content: exceptionMessage, error: err.message, timestamp: new Date().toISOString() });
+  localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+  if (playTTSFunction) await playTTSFunction(exceptionMessage, lsSelectedVoice);
+} finally { 
+  setLoading(false);
+  if(chatInput) chatInput.value = ''; 
+  if(chatInput) chatInput.focus();
 }
-            const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
-            if (res.analysis) {
-    console.log("💡 분석 데이터:", res.analysis);
-    botResponseEntry.analysis = res.analysis;
-}
-            chatHistory.push(botResponseEntry);
-            localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-            if (playTTSFunction) await playTTSFunction(botMessage, lsSelectedVoice);
-
-            // 숫자로 감정 강도 묻는 로직 (예시 조건)
-            const userIntent = (window.LOZEE_DIALOG && window.LOZEE_DIALOG.detectIntent) ? window.LOZEE_DIALOG.detectIntent(trimmedText) : 'fact';
-            if (userIntent === 'emotion' && botMessage.includes("어떤 기분인지 자세히 말해줄래")) { // 조건은 더 구체화 필요
-                const numericScaleQuestion = `${userName}아/야, 지금 그 기분이 1부터 10까지 중에 몇 점 정도일까? 숫자가 클수록 더 강한 거야.`;
-                appendBubble(numericScaleQuestion, 'bot');
-                if (playTTSFunction) await playTTSFunction(numericScaleQuestion, lsSelectedVoice);
-            }
-
-        } catch (err) {
-            console.error("❌ 처리 중 오류:", err);
-            const errorMessage = "죄송해요, 내부 오류로 답변을 드릴 수 없어요.";
-            appendBubble(errorMessage, 'system-error');
-            chatHistory.push({ role: 'system', content: errorMessage, error: err.message, timestamp: new Date().toISOString() });
-            localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-            if (playTTSFunction) await playTTSFunction(errorMessage, lsSelectedVoice);
-        }
-        setLoading(false);
-        chatInput.value = '';
-        chatInput.focus();
-    }
-
     // --- 초기화 및 이벤트 리스너 ---
     async function initConversation() {
         setLoading(true);
