@@ -90,7 +90,7 @@ export const counselingTopicsByAge = {
       { icon: "⏰", displayText: "시간이 너무 부족해, 맨날 바빠", tags: ["시간 관리", "학업 부담", "과도한 스케줄"], type: "situation" }
     ],
     "친구와 관계": [ // 대부분 situation 또는 else
-      { icon: "😔", displayText: "친구들이랑 멀어진 것 같아", tags: ["친구 관계 소원", "소외감", "따돌림 우려"], "emotion_intensity" }, // 이건 불안감이야. 따돌림에 대한 그런 느낌이 얼마나 되냐고 물어봐줘야 해
+      { icon: "😔", displayText: "친구들이랑 멀어진 것 같아", tags: ["친구 관계 소원", "소외감", "따돌림 우려"], type: "emotion_intensity" }, // 이건 불안감이야. 따돌림에 대한 그런 느낌이 얼마나 되냐고 물어봐줘야 해
       { icon: "😠", displayText: "친구랑 크게 싸웠어, 어떡해?", tags: ["친구와 갈등", "화해의 어려움", "관계 회복"], type: "situation" },
       { icon: "🤫", displayText: "친구 비밀 때문에 고민이야", tags: ["비밀 유지", "친구 관계 윤리"], type: "situation" },
       { icon: "💔", displayText: "믿었던 친구한테 배신당했어", tags: ["배신감", "실망", "친구 관계 깨짐"], type: "situation" }, // 상황 후 감정 탐색
