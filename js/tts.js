@@ -8,7 +8,6 @@ const TTS_BACKEND_URL_TTS_MODULE = 'https://server-production-3e8f.up.railway.ap
 
 // 2) 사용할 수 있는 음성 리스트 및 기본값
 window.LOZEE_TTS.AVAILABLE_VOICES = [
-  "ko-KR-Chirp3-HD-Vindemiatrix",
   "ko-KR-Chirp3-HD-Rasalgethi",
   "ko-KR-Chirp3-HD-Leda",
   "ko-KR-Chirp3-HD-Sadachbia",
