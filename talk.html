@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>LOZEE와 대화하기</title>
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
@@ -17,8 +17,10 @@
       --user-bubble-bg: var(--primary-color);
       --user-bubble-text: #fff;
       --gnb-height: 56px;
-      --chat-input-height: 70px;
-      --chat-input-padding-bottom: 36px;
+      --chat-input-actual-height: 50px; /* 입력 필드와 버튼의 실제 높이 */
+      --chat-input-padding-vertical: 10px; /* 입력창 컨테이너의 상하 패딩 */
+      --chat-input-safe-area: env(safe-area-inset-bottom, 20px); /* iOS 하단 안전 영역, 기본 20px */
+      --chat-input-total-height: calc(var(--chat-input-actual-height) + (2 * var(--chat-input-padding-vertical)) + var(--chat-input-safe-area));
       --gemini-purple: #7B68EE;
       --volume-meter-default-bg: var(--primary-color);
       --meter-top-margin: 8px;
@@ -35,22 +37,22 @@
     #dropdown-menu a:hover{background-color:var(--secondary-color);}
     #meter-container{position:fixed;top:calc(var(--gnb-height) + var(--meter-top-margin));left:50%;transform:translateX(-50%);width:60%;max-width:300px;height:6px;background-color:var(--secondary-color);border-radius:3px;overflow:hidden;z-index:998;}
     #volume-level{width:0%;height:100%;background:var(--volume-meter-default-bg);border-radius:3px;transition:width 0.05s linear;}
-    #chat-container{flex-grow:1;padding:16px;padding-top:calc(var(--meter-top-margin) + 6px + 10px);overflow-y:auto;display:flex;flex-direction:column;gap:10px; margin-bottom: calc(var(--chat-input-height) + var(--chat-input-padding-bottom));}
+    #chat-container{flex-grow:1;padding:16px;padding-top:calc(var(--meter-top-margin) + 6px + 10px);overflow-y:auto;display:flex;flex-direction:column;gap:10px; margin-bottom: var(--chat-input-total-height); }
     #analysis-container{padding:10px;background:#1e2a38;color:#ccc;font-size:0.85em;max-height:150px;overflow-y:auto;border-top:1px solid var(--secondary-color); display:none;}
     .bubble{padding:12px 16px;border-radius:18px;max-width:75%;line-height:1.5;word-break:keep-all;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
     .bubble.user{background-color:var(--user-bubble-bg);color:var(--user-bubble-text);align-self:flex-end;border-bottom-right-radius:4px;}
     .bubble.bot{background-color:var(--bot-bubble-bg);color:var(--bot-bubble-text);align-self:flex-start;border-bottom-left-radius:4px;}
     .bubble.user.interim{opacity:.7;}
     .bubble.system-error{background-color:#ffe0e0;color:#c0392b;align-self:center;max-width:80%;text-align:center;font-size:0.9em;border:1px solid #c0392b; margin: 5px 0;}
-    #chat-input-container{position:fixed;bottom:0;left:0;width:100%;height:calc(var(--chat-input-height) + var(--chat-input-padding-bottom)); display:flex;flex-direction:column; background-color:var(--secondary-color);box-shadow:0 -2px 4px rgba(0,0,0,0.1);box-sizing:border-box; padding-top: 8px;}
-    .input-area { display: flex; align-items: center; width: 100%; padding: 0 12px; gap: 8px; height: var(--chat-input-height); }
-    #chat-input{flex:1;padding:12px 16px;border-radius:22px;border:1px solid #4a5568;font-size:1em;background-color:var(--input-background);color:#333;height:44px;box-sizing:border-box;}
+    #chat-input-container{position:fixed;bottom:0;left:0;width:100%; background-color:var(--secondary-color);box-shadow:0 -2px 4px rgba(0,0,0,0.1);box-sizing:border-box; padding-top: var(--chat-input-padding-vertical); padding-bottom: calc(var(--chat-input-padding-vertical) + var(--chat-input-safe-area)); /* 상하 패딩 + 하단 안전 영역 */}
+    .input-area { display: flex; align-items: center; width: 100%; padding: 0 12px; box-sizing: border-box; gap: 8px; height: var(--chat-input-actual-height); }
+    #chat-input{flex:1;padding:10px 16px;border-radius:22px;border:1px solid #4a5568;font-size:1em;background-color:var(--input-background);color:#333;height:100%;box-sizing:border-box;}
     #chat-input::placeholder{color:#777;}
     #mic-button, #send-button{width:44px;height:44px;border:none;border-radius:50%;background-color:var(--primary-color);color:var(--text-color);font-size:1.3em;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background-color 0.2s ease; flex-shrink: 0;}
-    #mic-button { margin-left: 0; margin-right: 8px;} /* 마이크 버튼 왼쪽 마진 제거, 오른쪽 간격 추가 */
-    #send-button { margin-left: 0; } /* 전송 버튼 왼쪽 마진 제거 */
+    #mic-button { margin-left: 0; margin-right: 8px;}
+    #send-button { margin-left: 0; }
     #mic-button:hover, #send-button:hover{background-color:#5a7edf;}
-    #mic-button.recording{background-color:#e74c3c;}
+    #mic-button.recording{background-color:#e74c3c;} /* 마이크 녹음 중 스타일 */
     #send-button.loading{background:#999;cursor:default;}
     #chat-container::-webkit-scrollbar{width:8px;}
     #chat-container::-webkit-scrollbar-track{background:var(--background-color);}
@@ -118,9 +120,8 @@
       }
 
       // --- TTS 및 STT 제어 변수 ---
-      let currentTTSUtterance = null; // Web Speech API 사용 시 Utterance 객체 저장
       let isTTSRunning = false;   // TTS 재생 상태 플래그
-      let currentTTSAudioElement = null; // tts.js가 Audio 객체를 반환하는 경우를 위한 변수
+      let currentWebSpeechUtterance = null; // Web Speech API Utterance 객체 (tts.js가 이를 사용한다고 가정)
 
       // --- 전역 객체에서 함수 가져오기 및 폴백 ---
       const playTTSFromText_original = window.LOZEE_TTS?.playTTSFromText;
@@ -128,53 +129,43 @@
 
       async function playTTSWithControl(text, voice) {
         stopCurrentTTS(); // 새 TTS 재생 전 기존 TTS 중지
-
         if (!text || !String(text).trim()) {
           console.log("TTS: 재생할 텍스트 없음.");
-          isTTSRunning = false; // 재생할 내용 없으면 플래그 해제
-          return;
+          isTTSRunning = false; return;
         }
-
         console.log("새로운 TTS 재생 시도:", text);
-        isTTSRunning = true;
-        setLoading(true); // TTS 시작 시 로딩 상태 (마이크 버튼 비활성화 등)
-
+        isTTSRunning = true; setLoading(true);
         try {
           if (typeof playTTSFromText_original === 'function') {
             // LOZEE_TTS.playTTSFromText가 Promise를 반환하고,
-            // 내부적으로 Web Speech API 또는 Audio 객체를 사용한다고 가정
-            await playTTSFromText_original(text, voice);
+            // Web Speech API를 사용하며, Utterance 객체를 반환하거나 내부적으로 관리한다고 가정.
+            // 또는, tts.js에서 직접 speechSynthesis.speak()를 호출하고,
+            // 여기서는 speechSynthesis.cancel()로 제어한다고 가정.
+            // 가장 간단한 방법은 tts.js가 Web Speech API를 직접 사용하는 것입니다.
+            await playTTSFromText_original(text, voice); // 이 함수가 완료될 때까지 기다림
             console.log("TTS 재생 완료 (Promise resolved):", text);
           } else {
-            console.warn(`TTS Fallback (음성: ${voice}): ${text}. tts.js 로드 실패.`);
-            appendBubble("알림: 음성 출력(TTS) 기능을 사용할 수 없습니다. (tts.js 확인 필요)", "system-error");
+            console.warn(`TTS Fallback: ${text}. tts.js 로드 실패.`);
+            appendBubble("알림: 음성 출력(TTS) 기능을 사용할 수 없습니다.", "system-error");
           }
         } catch (error) {
           console.error("TTS 재생 중 오류 발생:", error);
           appendBubble("음성 출력 중 오류가 발생했습니다.", "system-error");
         } finally {
-          isTTSRunning = false;
-          currentTTSUtterance = null; // Web Speech API 사용 시 초기화
-          currentTTSAudioElement = null; // Audio 객체 사용 시 초기화
-          setLoading(false); // TTS 종료 후 로딩 상태 해제
+          isTTSRunning = false; setLoading(false);
         }
       }
 
-
-      const getGptResponse = window.LOZEE_DIALOG?.getGptResponse || (async (text) => {
-        console.error("getGptResponse 사용 불가 (gpt-dialog.js 로드 실패).");
-        appendBubble("오류: 대화 응답을 받을 수 없습니다. (gpt-dialog.js 확인 필요)", "system-error");
+      const getGptResponse = window.LOZEE_DIALOG?.getGptResponse || (async (text) => { /* 폴백 */
+        console.error("getGptResponse 사용 불가."); appendBubble("오류: 대화 응답 불가.", "system-error");
         return Promise.resolve({ ok: false, status: 503, statusText: "Service Unavailable", json: async () => ({ text: "오류: 응답 처리 불가."}) });
       });
-      const getFirstQuestion = window.LOZEE_DIALOG?.getFirstQuestion || ((userAge, topic) => {
-        console.error("getFirstQuestion 사용 불가 (gpt-dialog.js 로드 실패).");
-        appendBubble("오류: 대화 시작 질문을 생성할 수 없습니다. (gpt-dialog.js 확인 필요)", "system-error");
+      const getFirstQuestion = window.LOZEE_DIALOG?.getFirstQuestion || ((userAge, topic) => { /* 폴백 */
+        console.error("getFirstQuestion 사용 불가."); appendBubble("오류: 대화 시작 불가.", "system-error");
         return "오류: 대화 시작 불가.";
       });
 
       const trackTime = window.LOZEE_ANALYSIS?.trackTime || (() => console.warn("trackTime 사용 불가."));
-      const trackEmotionTone = window.LOZEE_ANALYSIS?.trackEmotionTone || (() => console.warn("trackEmotionTone 사용 불가."));
-      const trackSituation = window.LOZEE_ANALYSIS?.trackSituation || (() => console.warn("trackSituation 사용 불가."));
       const renderLiteracyAnalysis = window.LOZEE_ANALYSIS?.renderLiteracyAnalysis || ((result, elId) => {
           console.warn("renderLiteracyAnalysis 사용 불가.");
           const el = document.getElementById(elId);
@@ -214,26 +205,16 @@
 
       function stopCurrentTTS() {
         if (isTTSRunning) {
-            console.log("명시적 TTS 중지 (stopCurrentTTS 호출됨)");
-            // 방법 1: tts.js가 Web Speech API를 직접 사용한다고 가정
+            console.log("명시적 TTS 중지 시도 (stopCurrentTTS)");
             if (speechSynthesis && typeof speechSynthesis.cancel === 'function') {
-                speechSynthesis.cancel();
+                speechSynthesis.cancel(); // Web Speech API의 모든 발화 중지
                 console.log("speechSynthesis.cancel() 호출됨.");
             }
-            // 방법 2: tts.js가 Audio 객체를 생성하고, talk.html에서 그 객체를 관리하는 경우 (현재는 currentTTSAudioElement 사용 안함)
-            if (currentTTSAudioElement && typeof currentTTSAudioElement.pause === 'function') {
-                currentTTSAudioElement.pause();
-                currentTTSAudioElement.src = ''; // 리소스 해제
-                console.log("currentTTSAudioElement.pause() 호출됨.");
-            }
-            // 방법 3: tts.js 내에 자체적인 중지 함수가 있고, LOZEE_TTS 객체를 통해 노출된 경우
-            // if (window.LOZEE_TTS && typeof window.LOZEE_TTS.stopPlayback === 'function') {
-            //   window.LOZEE_TTS.stopPlayback();
-            // }
+            // 만약 tts.js가 Audio 객체를 직접 생성하고 반환하여 currentTTSAudioElement에 할당했다면,
+            // currentTTSAudioElement.pause(); currentTTSAudioElement.src = ''; 등으로 중지.
+            // 현재는 tts.js가 내부적으로 처리하고 Promise만 반환한다고 가정.
             isTTSRunning = false;
-            currentTTSAudioElement = null; // 관련 객체 참조 초기화
-            currentTTSUtterance = null;    // 관련 객체 참조 초기화
-            setLoading(false); // TTS 중지 시 로딩 상태 해제
+            setLoading(false); // TTS가 중지되었으므로 로딩 상태 해제
         }
       }
 
@@ -246,7 +227,7 @@
           isRecognizing = true;
           stopCurrentTTS(); // 사용자가 말 시작 시, 현재 재생 중인 TTS 중지
           if(micButton) { micButton.textContent = '💬'; micButton.classList.add('recording'); }
-          console.log("🎤 STT 시작 - TTS 중지 시도됨");
+          console.log("🎤 STT 시작 - TTS 중지됨");
         };
         recognition.onend = () => {
           isRecognizing = false;
@@ -258,16 +239,22 @@
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
           }
-          if (finalTranscript) { handleUserText(finalTranscript); }
+          if (finalTranscript) {
+            if (isTTSRunning) { // STT 결과 처리 전, 혹시 아직 TTS가 돌고 있다면 다시 한번 중지
+                console.log("STT 결과 처리 전, TTS가 아직 실행 중이어서 중지합니다.");
+                stopCurrentTTS();
+            }
+            handleUserText(finalTranscript);
+          }
         };
-        recognition.onerror = (event) => {
+        recognition.onerror = (event) => { /* 이전과 동일, appendBubble 사용 */
           console.error("❌ STT 오류:", event.error);
-          appendBubble(event.error === 'not-allowed'||event.error === 'service-not-allowed' ? "마이크 사용 권한이 필요합니다." : "음성 인식 중 오류가 발생했습니다.", "system-error");
+          appendBubble(event.error === 'not-allowed'||event.error === 'service-not-allowed' ? "마이크 권한이 필요합니다." : "음성 인식 중 오류가 발생했습니다.", "system-error");
           isRecognizing = false;
           if(micButton) { micButton.textContent = '🎤'; micButton.classList.remove('recording'); }
           setLoading(false); stopAudioAnalysis();
         };
-      } else {
+      } else { /* 이전과 동일 */
         console.warn("⚠️ 음성 인식을 지원하지 않는 브라우저입니다.");
         if(micButton) { micButton.title = "음성 인식 미지원"; micButton.disabled = true; }
         appendBubble("알림: 사용 중인 브라우저에서는 음성 인식을 지원하지 않습니다.", "system-error");
@@ -276,13 +263,10 @@
       if(micButton) {
         micButton.onclick = async () => {
           if (!SpeechRec) return;
-          if (isTTSRunning) { // TTS가 재생 중이면
-            console.log("TTS 재생 중입니다. STT를 시작하기 전에 TTS를 중지합니다.");
-            stopCurrentTTS(); // TTS를 먼저 중지
-            // TTS 중지 후 바로 STT를 시작할 수도 있으나, 사용자 경험상 다시 클릭 유도
-            // 또는 약간의 딜레이 후 자동 시작 등 고려 가능
-            // 여기서는 TTS만 중지하고 사용자의 다음 행동(마이크 버튼 재클릭)을 기다립니다.
-            return;
+          if (isTTSRunning) { // TTS가 재생 중이면 STT를 시작하지 않음 (또는 TTS를 중지 후 시작)
+            console.log("TTS 재생 중이므로 STT를 시작하지 않습니다. TTS를 먼저 중지합니다.");
+            stopCurrentTTS();
+            return; // 사용자가 다시 버튼을 누르도록 유도
           }
           if (isRecognizing) {
             recognition.stop();
@@ -298,7 +282,7 @@
       }
 
       // --- 사용자 정보 및 대화 초기화 ---
-      localStorage.removeItem('lozee_conversation_history');
+      localStorage.removeItem('lozee_conversation_history'); // 새로고침 시 대화 기록 초기화
 
       const lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
       const userAge = localStorage.getItem('lozee_userage');
@@ -316,8 +300,6 @@
         type: JSON.parse(localStorage.getItem('selectedTopic'))?.type || 'else'
       };
 
-      // chatHistory.forEach(msg => appendBubble(msg.content, msg.role)); // 초기화로 인해 실행 안 됨
-
       if(typeof trackTime === 'function') trackTime();
 
       if (currentSelectedTopic.id && chatHistory.length === 0) {
@@ -334,14 +316,13 @@
                 if(typeof playTTSFromText === 'function') await playTTSWithControl(initialPrompt, lsSelectedVoice);
              }
         } else {
-            appendBubble("안녕하세요! 대화 기능을 초기화하는 데 문제가 있어 대화를 시작할 수 없습니다.", "system-error");
+            appendBubble("안녕하세요! 대화 기능을 불러오는 데 문제가 있어 대화를 시작할 수 없습니다.", "system-error");
         }
       }
 
       function setLoading(flag) {
         if(sendButton) sendButton.disabled = flag;
         if (SpeechRec && micButton) {
-            // 로딩 중이거나, TTS가 재생 중이거나, 이미 STT가 인식 중일 때 마이크 버튼 비활성화
             micButton.disabled = flag || isTTSRunning || isRecognizing;
         } else if(micButton) {
             micButton.disabled = true;
@@ -384,18 +365,19 @@
 
           if (!res.ok) { // API 응답 실패 처리 (400 오류 등)
             console.error(`API Error: ${res.status} ${res.statusText}.`);
-            let errorData = { text: `서버 응답 오류 (${res.status}). 잠시 후 다시 시도해주세요.`};
+            let errorData = { text: `서버 응답 오류 (${res.status}).`}; // 기본 오류 메시지
+            let responseText = "";
+            if (typeof res.text === 'function') { // res.text가 함수인지 확인
+                responseText = await res.text().catch(() => "오류 응답 본문을 읽을 수 없습니다.");
+            } else {
+                responseText = String(res.body) || "응답 본문 없음"; // text 함수가 없다면 body라도 문자열로
+            }
+            console.error("Raw API Error Text:", responseText);
             try { 
-                const resText = await res.text(); // 먼저 텍스트로 받고
-                console.error("Raw API Error Text:", resText); 
-                errorData = JSON.parse(resText); // 그 다음에 JSON 파싱 시도
+                errorData = JSON.parse(responseText); // JSON 파싱 시도
                 console.error("API Error Body (JSON Parsed):", errorData);
             } catch (e) { 
-                // JSON 파싱 실패 시 errorData.text는 이미 설정된 값을 사용하거나, resText를 일부 사용
-                if(typeof res.text === 'function') { // res.text()가 함수인지 확인 후 호출 (안전장치)
-                    const rawErrorText = await res.text().catch(() => "오류 응답 본문 읽기 실패.");
-                    errorData.text = rawErrorText.substring(0,150) || `서버 응답 오류 (${res.status})`;
-                }
+                errorData.text = responseText.substring(0,150) || `API 요청 실패 (${res.status})`;
             }
             appendBubble(errorData.text || `API 요청 실패: ${res.status}`, 'bot');
             chatHistory.push({ role: 'system', content: `API 오류: ${res.status}`, error: errorData, timestamp: new Date().toISOString() });
@@ -413,14 +395,10 @@
             if (typeof renderLiteracyAnalysis === 'function' && analysisContainer && data.analysis.literacy) {
                renderLiteracyAnalysis(data.analysis.literacy, 'analysis-container');
             } else if (analysisContainer) {
-                analysisContainer.innerHTML = '';
-                analysisContainer.style.display = 'none';
+                analysisContainer.innerHTML = ''; analysisContainer.style.display = 'none';
             }
           } else {
-             if (analysisContainer) {
-                analysisContainer.innerHTML = '';
-                analysisContainer.style.display = 'none';
-            }
+             if (analysisContainer) { analysisContainer.innerHTML = ''; analysisContainer.style.display = 'none'; }
           }
           chatHistory.push(botResponseEntry);
           localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
