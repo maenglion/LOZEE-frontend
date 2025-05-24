@@ -51,12 +51,15 @@ window.LOZEE_DIALOG.detectIntent = function(text) {
  * 시스템 프롬프트 생성
  */
 window.LOZEE_DIALOG.getSystemPrompt = function(context = {}, extraIntent = 'fact') {
+  // context에서 필요한 값들을 먼저 추출합니다. userText는 getGptResponse에서 요약 명령 여부 판단에 사용될 수 있습니다.
   let { userAge = 0, userDisease = [], userName = '친구', currentStage = 'Stage 1', topicType = 'general', selectedTopicText = '' } = context;
+  // userText는 이 함수로 직접 전달되지 않고, getGptResponse에서 사용되어 요약 프롬프트를 결정합니다.
+  // 따라서 getSystemPrompt는 항상 일반 대화용 프롬프트를 생성하거나, 요약용 프롬프트는 getGptResponse에서 직접 만듭니다.
+  // 여기서는 일반 대화용 프롬프트 생성 로직만 남깁니다. (이전 답변에서 getGptResponse에서 분기하도록 수정했음)
 
-  // 사용자 이름에 맞는 올바른 조사를 미리 준비합니다.
   const vocativeParticle = window.LOZEE_DIALOG.getKoreanVocativeParticle(userName);
   const namingParticle = window.LOZEE_DIALOG.getKoreanNamingParticle(userName);
-  const userNameWithVocative = `${userName}${vocativeParticle}`; // 예: "민후야", "난영아"
+  const userNameWithVocative = `${userName}${vocativeParticle}`;
 
   const isCbtUser = localStorage.getItem('isCbtUser') === 'true';
   const actualUserAge = parseInt(userAge, 10);
@@ -98,7 +101,7 @@ window.LOZEE_DIALOG.getSystemPrompt = function(context = {}, extraIntent = 'fact
 - 반복 및 확인: 사용자의 말을 반복하여 이해했음을 확인시켜주고, 사용자가 같은 질문을 반복하더라도 인내심을 가지고 답변합니다. 동일한 문장 사용을 지적하지 않습니다. '모르겠어'라는 답변도 중요한 답변임을 인정하고 존중해주세요. (예: "${userNameWithVocative}, '모르겠다'고 솔직하게 말해줘서 고마워. 그럴 수 있어.")
 - 상호작용적 대화 제안 (RPG 선택지 스타일):
   대화의 중요한 전환점, 사용자가 많은 정보를 제공했을 때, 또는 사용자가 다음 할 말을 망설이는 것처럼 보일 때, 내용을 함께 정리하거나 다음 단계를 선택할 수 있도록 RPG 게임에서 선택지를 고르듯 제안할 수 있습니다.
-  예시 1 (내용 정리): '지금까지 우리가 나눈 이야기들이 꽤 많은데, ${userNameWithVocative}, 어떻게 할까? 1. 같이 정리해보기 2. 다른 이야기 하기. 번호로 말해줄래?' 와 같이 물어보고, '1번'이나 '정리하기'처럼 짧게 대답해도 괜찮다고 알려줘.
+  예시 1 (내용 정리): '지금까지 우리가 나눈 이야기들이 꽤 많은데, ${userNameWithVocative}, 어떻게 할까? 1. 같이 정리해보기 2. 다른 이야기 하기. 번호로 말해줄래?' 와 같이 물어보고, '1번'이나 '정리하기'처럼 짧게 대답해도 괜찮다고 알려줘. (사용자가 '1번' 또는 '정리하기'를 선택하면, 클라이언트에서 "SYSTEM_COMMAND_SUMMARIZE_HISTORY"로 다음 요청을 보낼 수 있습니다.)
   예시 2 (감정 탐색): '네가 그 일에 대해 이야기할 때 목소리가 조금 가라앉는 것 같았어. 혹시 그 때 기분에 대해 좀 더 이야기해보고 싶니, 아니면 다른 주제로 넘어갈까? ${userNameWithVocative}, 골라줄 수 있어? (1. 그때 기분 좀 더 말해볼래 / 2. 다른 이야기 할래)'
   선택지는 항상 2-3개로 명확하고 간결하게 제시하고, 사용자의 선택을 존중하세요.
 - 구조화된 정보 요약 제안 (도표/리스트 스타일):
@@ -111,7 +114,7 @@ window.LOZEE_DIALOG.getSystemPrompt = function(context = {}, extraIntent = 'fact
   이렇게 정리하니까 한눈에 보기 쉽지? 여기서 더하고 싶은 말이나 바꾸고 싶은 부분이 있으면 알려줘. 함께 만들어가자! 😊'
   예시 2 (간단 목록): '만약 오늘 ${userNameWithVocative}의 '가장 좋았던 점 😊'과 '가장 아쉬웠던 점 😟'을 하나씩 꼽아본다면 뭘까? 이렇게 간단하게 목록으로 만들어보는 것도 생각을 정리하는 데 도움이 될 수 있어.'
   실제 표를 그리지는 못하더라도, 이런 식으로 항목을 나누거나 간단한 목록을 사용해서 내용을 명료하게 전달하고, 사용자가 내용을 쉽게 이해하고 추가할 수 있도록 도와줘.`;
-  } // if (isAsdRelated) 블록의 올바른 종료 지점
+  } // if (isAsdRelated) 블록의 올바른 종료
 
   if (effectiveAge < 10) {
     prompt += `\n[10세 미만 아동 응대 가이드라인] 아이의 눈높이에 맞춰 쉽고 짧은 단어를 사용하고, 한 번에 1-2 문장 이내로 짧게 말합니다. 아이가 충분히 이야기하도록 격려하고, 아이의 말을 요약하거나 재진술하여 이해했음을 보여줍니다. 질문은 명확하고 구체적으로 하며, 공감 표현보다는 사실 확인 중심의 질문을 사용합니다. (예: "그게 싫었어, ${userNameWithVocative}?", "그래서 기분이 안 좋았구나, ${userNameWithVocative}.")`;
@@ -127,10 +130,10 @@ window.LOZEE_DIALOG.getSystemPrompt = function(context = {}, extraIntent = 'fact
     prompt += `\n[선호도 질문 대화 방식] 사용자가 "좋아하는 사람 3명", "싫어하는 사람 3명", "공부 중 재미있는/없는 것 3가지" 중 하나의 질문으로 대화를 시작했습니다. 사용자의 답변에 대해 긍정적으로 반응하고, 그중 하나를 선택하여 "그것에 대해 좀 더 자세히 이야기해 줄 수 있어, ${userNameWithVocative}?"와 같이 구체적인 경험이나 이유를 묻는 질문으로 자연스럽게 대화를 이어가세요.`;
   } else if (topicType === 'else' && selectedTopicText) {
     prompt += `\n[기타 탐색적 주제 대화 시작] 사용자는 '${selectedTopicText}'라는 주제로 대화를 시작했습니다. 사용자가 자신의 생각이나 느낌을 자유롭게 탐색할 수 있도록 열린 질문을 하고, 공감하며 경청해주세요. 필요에 따라 구체적인 상황이나 생각을 묻는 질문을 할 수 있습니다. (필요시 위 'ASD 관련 진단 사용자 특별 지침'의 상호작용적 제안 및 구조화 요약 제안을 활용하세요.)`;
-  } else {
+  } else { // 주제가 명시되지 않았거나, 사용자가 직접 주제를 정하기로 한 경우 (extraIntent 사용)
     if (extraIntent === 'emotion') {
         prompt += `\n[발화 의도: 감정] 사용자가 감정을 표현하고 있습니다. 먼저 그 감정을 충분히 인정하고 공감해주세요. "왜 그렇게 느꼈는지", "그 감정이 어땠는지" 등 감정 자체에 초점을 맞춘 질문으로 시작하는 것이 좋습니다. (필요시 위 'ASD 관련 진단 사용자 특별 지침'의 '감정 이해 돕기 (업그레이드)'를 활용하세요.)`;
-    } else {
+    } else { // 'fact' 또는 기타
         prompt += `\n[발화 의도: 사실/상황] 사용자가 특정 사실이나 상황을 설명하고 있습니다. 먼저 그 내용을 명확히 이해하기 위해 "그때 상황이 어땠는지", "무슨 일이 있었는지" 등 구체적인 상황이나 맥락을 파악하는 질문으로 시작해주세요. (필요시 위 'ASD 관련 진단 사용자 특별 지침'의 '구조화된 정보 요약 제안'을 활용하세요.)`;
     }
   }
@@ -155,6 +158,7 @@ window.LOZEE_DIALOG.getFirstQuestion = function(age, topicContext = {}) {
   const lowercasedUserDisease = parsedUserDisease.map(d => typeof d === 'string' ? d.toLowerCase() : '');
   const targetDiagnosesForCbtExperience = ['adhd', 'asd', 'asperger', 'social_comm_disorder', '2e'];
   const hasSpecificDiagnosisForCbt = lowercasedUserDisease.some(id => targetDiagnosesForCbtExperience.includes(id));
+
   if (isCbtUser && hasSpecificDiagnosisForCbt && effectiveAgeForGreeting > 10) {
     effectiveAgeForGreeting = 9;
   }
@@ -163,31 +167,25 @@ window.LOZEE_DIALOG.getFirstQuestion = function(age, topicContext = {}) {
   const greetingName = effectiveAgeForGreeting >= 56 ? `${userName}님` : `${userName}${vocativeParticle}`;
 
   const topicDisplayText = topicContext?.displayText;
-  const topicType = topicContext?.type; }
+  const topicType = topicContext?.type;
 
-  if (topicType === 'emotion_intensity' && topicDisplayText) {
-    return `${greetingName}, '${topicDisplayText}' 이 감정에 대해 지금 얼마나 강하게 느끼는지 1점(전혀 그렇지 않음)부터 10점(매우 강하게 느낌) 사이의 숫자로 말해줄 수 있을까?`;
-  } else if (topicType === 'situation' && topicDisplayText) {
-    return `${greetingName}, '${topicDisplayText}'에 대해 이야기하고 싶구나. 그 일에 대해 좀 더 자세히 말해줄 수 있겠니?`;
-  } else if (topicType === 'else' && topicDisplayText) {
-    return `${greetingName}, '${topicDisplayText}'에 대해 좀 더 자세히 이야기해 줄 수 있을까? 어떤 생각이나 느낌이 드는지 궁금해.`;
-  } else if (topicType === 'preference_discovery') {
-    const preferenceQuestions = [
-    `${greetingName}, 네가 가장 좋아하는 사람 3명은 누구야? 1등부터 3등까지.`,
+  // 통합된 선호도 질문 목록 (여기에 다양한 질문을 추가하거나 수정하세요)
+  const preferenceQuestions = [
+    `${greetingName}, 네가 가장 좋아하는 사람 3명은 누구야? 1등부터 3등까지 말해줄 수 있어?`,
     `${greetingName}, 그럼 반대로 혹시 네가 별로 좋아하지 않거나 불편하게 느끼는 사람 3명이 있다면 알려줄 수 있을까?`,
-    `${greetingName}, 너는 누구와 새로운 것들을 배우고 즐겨? 3명까지 말해줘`,
-    `${greetingName}, 네가 좋아하는 것과 싫어하는 것 3개씩 말해봐`,
-    `${greetingName}, 네가 가장 자랑스러웠던 순간은?`,
+    `${greetingName}, 너는 누구와 새로운 것들을 배우고 즐기는 걸 좋아해? (최대 3명)`,
+    `${greetingName}, 네가 정말 좋아하는 것과 정말 싫어하는 것을 각각 3개씩 말해줄 수 있을까?`,
+    `${greetingName}, 네가 가장 자랑스러웠던 순간은 언제였어? 짧게라도 이야기해 줄래?`,
     `${greetingName}, 만약 하루 동안 무엇이든 될 수 있다면, 뭐가 되고 싶어? 왜 그런지도 궁금한데!`,
-    `${greetingName}, 요즘 너를 가장 신나게 하는 일은 뭐야?`,
-    `${greetingName}, 닮고 싶은 사람이 있어?`,
-    `${greetingName}, 가장 행복했던 순간은 언제야?`,
-    `${greetingName}, 당장 어디론가 갈 수 있다면 가보고 싶은 곳은?`,
-    `${greetingName}, 너에 대해 소개해줘`,
-    `${greetingName}, 이 사람이랑 있으면 되게 재밌다! 하는 사람 있어?`,
-    `${greetingName}, 너의 가족들을 소개해줘.`,
-    `${greetingName}, 친해지고 싶은 친구가 있다면? 그 애는 누구야?`, 
-    ];
+    `${greetingName}, 요즘 너를 가장 신나게 하거나 웃게 만드는 일은 뭐야?`,
+    `${greetingName}, 혹시 '이런 사람처럼 되고 싶다!' 하고 닮고 싶은 사람이 있어? 있다면 누구야?`,
+    `${greetingName}, 가장 행복했던 기억 하나만 살짝 들려줄 수 있을까?`,
+    `${greetingName}, 지금 당장 어디든 여행을 갈 수 있다면, 어디로 가고 싶어?`,
+    `${greetingName}, ${greetingName}, 너에 대해서 아직 내가 모르는 재미있는 사실 하나만 알려줄래?`,
+    `${greetingName}, '이 사람이랑 이야기하면 시간 가는 줄 모르겠다!' 하는 친구가 있다면 소개해 줄 수 있어?`,
+    `${greetingName}, 너의 소중한 가족들을 소개해 줄 수 있을까?`,
+    `${greetingName}, 혹시 요즘 '아, 이 친구랑 좀 더 친해지고 싶다!' 하는 사람이 있어? 있다면 누구인지, 왜 그런지 알려줄 수 있니?`
+  ];
 
   if (topicType === 'emotion_intensity' && topicDisplayText) {
     return `${greetingName}, '${topicDisplayText}' 이 감정에 대해 지금 얼마나 강하게 느끼는지 1점(전혀 그렇지 않음)부터 10점(매우 강하게 느낌) 사이의 숫자로 말해줄 수 있을까?`;
@@ -200,28 +198,15 @@ window.LOZEE_DIALOG.getFirstQuestion = function(age, topicContext = {}) {
     return preferenceQuestions[Math.floor(Math.random() * preferenceQuestions.length)];
   }
   
+  // 주제가 없거나, 사용자가 직접 주제를 정하기로 한 경우 (기본값으로 선호도 질문)
   if (!topicDisplayText || topicDisplayText === 'USER_WILL_DEFINE_IN_CHAT' || !topicType) {
       localStorage.setItem('selectedTopic', JSON.stringify({ type: 'preference_discovery', displayText: "좋아하거나 싫어하는 것" }));
       // 통합된 preferenceQuestions 목록 사용
       return preferenceQuestions[Math.floor(Math.random() * preferenceQuestions.length)];
   }
-  if (!topicDisplayText || topicDisplayText === 'USER_WILL_DEFINE_IN_CHAT' || !topicType) {
-      localStorage.setItem('selectedTopic', JSON.stringify({ type: 'preference_discovery', displayText: "좋아하거나 싫어하는 것" }));
-      const preferenceQuestions = [
-        `${greetingName}, 혹시 네가 가장 좋아하는 사람 3명은 누구인지 말해줄 수 있어?`,
-        `${greetingName}, 그럼 반대로 네가 싫어하거나 불편하게 느끼는 사람은 누구야? (3명까지 말해줄 수 있다면!)`,
-        `${greetingName}, 너한테 무 같이 해주는 사람은 누구야?`,
-        `${greetingName}, 혹시 공부하는 것들 중에서 가장 재미없거나 하기 싫은 거 3가지가 있다면 어떤 걸까?`
-      ];
-      return preferenceQuestions[Math.floor(Math.random() * preferenceQuestions.length)];
-  }
 
-  // 기본 첫 질문 (위 조건들에 해당하지 않을 경우)
-  // 여기서는 greetingName 대신 userName과 vocativeParticle을 직접 사용하여 호칭합니다.
-  // 또는 greetingName 정의를 이 부분에서도 동일하게 적용하도록 로직을 일관성 있게 가져갈 수 있습니다.
-  // 아래는 greetingName을 활용하는 대신, 명시적으로 vocativeParticle을 사용하는 예시입니다.
-  // 좀 더 일관성을 위해서는 이 부분도 greetingName 변수를 활용하는 것이 좋습니다.
-  // 하지만 현재 구조상 마지막 return문이므로, 명시적으로 particle을 붙여줍니다.
+  // 위의 모든 조건에 해당하지 않는 경우의 기본 첫 질문
+  // (이 경우는 topicDisplayText가 있지만 topicType이 명시적으로 위의 것들과 다른 경우인데, 거의 발생하지 않을 수 있음)
   if (effectiveAgeForGreeting >= 56) {
     return `${userName}님, 안녕하세요. 오늘은 '${topicDisplayText || '오늘 있었던 일'}'에 대해 이야기해 볼까요?`;
   } else {
@@ -234,28 +219,47 @@ window.LOZEE_DIALOG.getFirstQuestion = function(age, topicContext = {}) {
  */
 window.LOZEE_DIALOG.getGptResponse = async function(userText, context = {}) {
   const text = userText.trim();
-  const temperature = 0.7; // 사용자의 요청에 따라 0.7로 고정
+  const temperature = 0.7;
   
-  const intent = window.LOZEE_DIALOG.detectIntent(text);
-  const systemPrompt = window.LOZEE_DIALOG.getSystemPrompt({ 
-      userAge: context.userAge, 
-      userDisease: context.userDisease, 
-      userName: context.userName, 
-      currentStage: context.currentStage || 'Stage 1', 
-      topicType: context.selectedTopic?.type || 'general', 
-      selectedTopicText: context.selectedTopic?.displayText || ''
-  }, intent);
+  let systemPromptContent;
+  let messagesForGpt = [];
 
-  const messages = [{ role: 'system', content: systemPrompt }];
-  if (context.chatHistory && Array.isArray(context.chatHistory)) {
-    const validChatHistory = context.chatHistory.filter(msg => msg && typeof msg.role === 'string' && typeof msg.content === 'string');
-    messages.push(...validChatHistory);
-  }
-  if (text) {
-    messages.push({ role: 'user', content: text });
+  if (text === "SYSTEM_COMMAND_SUMMARIZE_HISTORY") {
+    const userNameForSummary = context.userName || '친구';
+    const vocativeForSummary = window.LOZEE_DIALOG.getKoreanVocativeParticle(userNameForSummary);
+    systemPromptContent = `당신은 대화 요약 전문 AI입니다. 제공된 이전 대화 내용을 바탕으로 사용자와의 주요 논의사항, 표현된 감정, 중요한 결론 등을 간결하고 공감적으로 요약해주세요, ${userNameForSummary}${vocativeForSummary}. 요약은 ${userNameForSummary}${vocativeForSummary}가 나중에 쉽게 이해할 수 있도록 명확해야 합니다. 다른 부가적인 말 없이 요약 내용만 생성해주세요.`;
+    
+    messagesForGpt.push({ role: 'system', content: systemPromptContent });
+
+    if (context.chatHistory && Array.isArray(context.chatHistory)) {
+        const validChatHistory = context.chatHistory.filter(msg => msg && typeof msg.role === 'string' && typeof msg.content === 'string');
+        messagesForGpt.push(...validChatHistory);
+    }
+  } else {
+    const intent = window.LOZEE_DIALOG.detectIntent(text);
+    const systemPromptContext = { 
+        userAge: context.userAge, 
+        userDisease: context.userDisease, 
+        userName: context.userName, 
+        currentStage: context.currentStage || 'Stage 1', 
+        topicType: context.selectedTopic?.type || 'general', 
+        selectedTopicText: context.selectedTopic?.displayText || ''
+        // userText는 getSystemPrompt에 직접 전달하지 않음 (요약 명령과의 혼동 방지)
+    };
+    systemPromptContent = window.LOZEE_DIALOG.getSystemPrompt(systemPromptContext, intent);
+
+    messagesForGpt.push({ role: 'system', content: systemPromptContent });
+
+    if (context.chatHistory && Array.isArray(context.chatHistory)) {
+        const validChatHistory = context.chatHistory.filter(msg => msg && typeof msg.role === 'string' && typeof msg.content === 'string');
+        messagesForGpt.push(...validChatHistory);
+    }
+    if (text) {
+        messagesForGpt.push({ role: 'user', content: text });
+    }
   }
 
-  const payload = { messages, model: 'gpt-4-turbo', temperature };
+  const payload = { messages: messagesForGpt, model: 'gpt-4-turbo', temperature };
   console.log("📤 GPT 요청 페이로드:", JSON.stringify(payload, null, 2));
 
   try {
@@ -264,7 +268,7 @@ window.LOZEE_DIALOG.getGptResponse = async function(userText, context = {}) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
       body: JSON.stringify(payload)
     });
-    return res;
+    return res; 
   } catch (err) {
     console.error("❌ GPT API 호출 중 네트워크 예외:", err);
     return Promise.resolve({ 
@@ -282,7 +286,6 @@ window.LOZEE_DIALOG.getExitPrompt = function(userName = '친구', age) {
     let effectiveAgeForExit = parseInt(rawAge, 10);
     if (isNaN(effectiveAgeForExit)) effectiveAgeForExit = 0;
 
-    // 종료 인사에도 이름 조사 적용
     const vocativeParticle = window.LOZEE_DIALOG.getKoreanVocativeParticle(userName);
 
     return effectiveAgeForExit >= 56
