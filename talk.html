@@ -334,6 +334,7 @@
   <script type="module">
     import './firebase-config.js';
     import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
+    import { playTTSFromText, stopCurrentTTS } from './js/tts.js';
     import LOZEE_ANALYSIS from './js/lozee-analysis.js';
     import { saveSessionLog } from './js/firebase-utils.js';
     import { counselingTopicsByAge } from './js/counseling_topics.js';
@@ -364,7 +365,9 @@
     // 메시지
     function appendMessage(text,role){ const b=document.createElement('div'); b.className='bubble '+role; b.textContent=text; chatWindow.appendChild(b); chatWindow.scrollTop=chatWindow.scrollHeight; }
     function showAnalysis(){ const n=document.createElement('div'); n.className='analysis-notification'; n.textContent='🟡분석 완료'; n.onclick=()=>location.href='analysis.html'; chatWindow.appendChild(n); chatWindow.scrollTop=chatWindow.scrollHeight; }
-    function playTTSWithControl(txt){ stopCurrentTTS(); if(skipTTS){ skipTTS=false;return;} return LOZEE_TTS?.playTTSFromText(txt,localStorage.getItem('lozee_voice')); }
+    function playTTSWithControl(txt) {stopCurrentTTS();               // ensure stopCurrentTTS is imported
+    if (skipTTS) { skipTTS = false; return; } return playTTSFromText(txt, localStorage.getItem('lozee_voice'));
+    }
 
     // 오디오 분석
     let audioContext,analyser,source,dataArray,animId,streamRef;
@@ -380,7 +383,9 @@
     if(Rec){ recog=new Rec();recog.continuous=true;recog.interimResults=false;recog.lang='ko-KR';
       recog.onstart=()=>{isRec=true;micButton.classList.add('recording');};
       recog.onend=()=>{isRec=false;micButton.classList.remove('recording');stopAudio();};
-      recog.onresult=e=>{let txt='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)txt+=e.results[i][0].transcript; if(txt)handleUserText(txt);};
+      recog.onresult = e => {let txt = ''; for (let i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) txt += e.results[i][0].transcript;}
+      if (txt) sendMessage(txt);       // <-- handleUserText → sendMessage
+      };
       recog.onerror=err=>{console.error(err);appendMessage('음성 인식 오류','ai_feedback');isRec=false;micButton.classList.remove('recording');stopAudio();};
       micButton.onclick=async()=>{ if(isRec){recog.stop();}else{try{const s=await navigator.mediaDevices.getUserMedia({audio:true});setupAudioAnalysis(s);recog.start();}catch(e){console.error(e);appendMessage('마이크 권한 오류','ai_feedback');}}};
     } else { micButton.disabled=true;appendMessage('브라우저에서 음성 인식 지원하지 않습니다.','ai_feedback'); }
