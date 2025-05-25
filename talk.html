@@ -11,18 +11,20 @@
     .bubble { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
     .user { align-self: flex-end; background-color: #ffffff; border: 1px solid #e0e0e0; border-bottom-right-radius: 0; }
     .ai { align-self: flex-start; background-color: #eaeaea; border-bottom-left-radius: 0; }
-    .ai_feedback { align-self: center; background-color: #e0f7fa; color: #00796b; font-size: 13px; max-width: 80%; text-align: center; border-radius: 10px; margin: 5px 0; }
     .analysis-notification { align-self: center; background-color: #fff9c4; color: #795548; font-size: 14px; padding: 10px 16px; border-radius: 12px; cursor: pointer; }
-    #input-area { display: flex; padding: 10px; background: #fff; }
+    #topic-area { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #ddd; }
+    .topic-btn, .subtopic-btn { background: #ffd400; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; }
+    #input-area { display: flex; padding: 10px; background: #fff; border-top: 1px solid #ddd; }
     #chat-input { flex: 1; padding: 12px 16px; border-radius: 20px; border: 1px solid #ccc; font-size: 15px; }
     #send-btn { margin-left: 8px; padding: 12px 16px; border: none; background: #4caf50; color: #fff; border-radius: 20px; cursor: pointer; }
-    #talk-btn { display: none; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <header>LOZEE와 대화하기</header>
   <div id="chat-window"></div>
-  <div id="input-area">
+  <div id="topic-area" class="hidden"></div>
+  <div id="input-area" class="hidden">
     <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
     <button id="send-btn">전송</button>
   </div>
@@ -31,24 +33,29 @@
     import './firebase-config.js';
     import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
     import { playTTSFromText, stopCurrentTTS } from './js/tts.js';
-    import { getSTTFromAudio } from './js/stt.js';
     import LOZEE_ANALYSIS from './js/lozee-analysis.js';
-    import { db, saveSessionLog } from './js/firebase-utils.js';
+    import { saveSessionLog } from './js/firebase-utils.js';
+    import { counselingTopicsByAge } from './js/counseling_topics.js';
 
+    // 상태
     let skipTTS = false;
     let hasGreeted = false;
     let isProcessing = false;
     let chatHistory = [];
-    let meta = {lastInputTimestamp: Date.now(), // 가장 마지막 입력 시각
-    fillerCount: 0,                 // 필러(“음…”, “…”) 누적 횟수
-    clickedOption: false,           // 선택지 클릭 여부
-    presentedIndices: []            // 이미 제시된 주제 인덱스 배열
-  };
+    let selectedMain = null;
+    let meta = { lastInputTimestamp: Date.now(), fillerCount: 0, clickedOption: false, presentedIndices: [] };
+    const userName = localStorage.getItem('lozee_username') || '친구';
+    const userAge = parseInt(localStorage.getItem('lozee_userage')||0, 10);
+    const voc = getKoreanVocativeParticle(userName);
 
+    // UI 요소
     const chatWindow = document.getElementById('chat-window');
-    const chatInput = document.getElementById('chat-input');
-    const sendBtn = document.getElementById('send-btn');
+    const topicArea  = document.getElementById('topic-area');
+    const inputArea  = document.getElementById('input-area');
+    const chatInput  = document.getElementById('chat-input');
+    const sendBtn    = document.getElementById('send-btn');
 
+    // 메시지 출력
     function appendMessage(text, role) {
       const bubble = document.createElement('div');
       bubble.className = 'bubble ' + role;
@@ -57,6 +64,7 @@
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
+    // 분석 알림
     function showAnalysisNotification() {
       const bubble = document.createElement('div');
       bubble.className = 'analysis-notification';
@@ -66,126 +74,145 @@
       chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
-    async function sendMessage(text) {
-      if (!text || isProcessing) return;
-      isProcessing = true;
-      appendMessage(text, 'user');
-      chatHistory.push({ role: 'user', content: text });
-      chatInput.value = '';
-
-      // GPT 호출
-      const res = await getGptResponse(text, { chatHistory });
-      const data = await res.json();
-      chatHistory.push({ role: 'assistant', content: cleanText });
-
-      // 필터링: text에서 JSON 부분 제거
-      const idx = data.text.indexOf('{');
-      const cleanText = idx >= 0 ? data.text.slice(0, idx).trim() : data.text;
-      const aiAnalysis = data.analysis || {};
-
-      appendMessage(cleanText, 'ai');
-      await playTTSWithControl(cleanText, localStorage.getItem('lozee_voice'));
-      chatHistory.push({ role: 'assistant', content: cleanText });
-
-      // 저장
-      await saveSessionLog(text, cleanText, aiAnalysis);
-
-      // 4) 막힘 감지
-      const stuck = window.LOZEE_DIALOG.detectStuck(cleanText, chatHistory, meta);
-      if (stuck) {
-      showPreferenceOptions();
-      }
-
-      // 분석 유추 & 알림
-      const fullText = chatHistory.map(m => `${m.role}:${m.content}`).join('\n');
-      const inference = await LOZEE_ANALYSIS.inferAgeAndLanguage(fullText);
-      await saveSessionLog('analysis', '', inference);
-      showAnalysisNotification();
-
-      isProcessing = false;
-    }
-
-    // 1)전송버튼
-    sendBtn.addEventListener('click', () => {
-    sendMessage(chatInput.value)
-    });
-    
-    // 2) 입력창 키다운
-    chatInput.addEventListener('keydown', e => { 
-      // - 먼저 메타 갱신
-      meta.lastInputTimestamp = Date.now();
-
-      const fillers = ['음','…','어','글쎄','모르겠어요','잘 모르겠어'];
-      if (fillers.some(f => chatInput.value.includes(f))) {
-      meta.fillerCount += 1;
-      } else {
-      meta.fillerCount = 0;
-      }
-
-      // — 선택지 클릭 예외 처리 —
-      meta.clickedOption = false;
-
-      // — TTS 중지 및 스킵 플래그 —
-      skipTTS = true;
-      stopCurrentTTS();
-
-      // — 실제 전송은 엔터일 때만 —
-      if (e.key === 'Enter') {
-      sendMessage(chatInput.value);
-      }
-      });
-
-    // 3) 입력창 포커스
-    chatInput.addEventListener('focus', () => {
-    meta.lastInputTimestamp = Date.now();
-    meta.clickedOption = false;
-    stopCurrentTTS();
-    });
-  
-    
-    chatInput.addEventListener('focus', () => { skipTTS = true; stopCurrentTTS(); });
-
-    function playTTSWithControl(text, voiceId) {
+    // TTS 제어
+    function playTTSWithControl(text) {
       stopCurrentTTS();
       if (skipTTS) { skipTTS = false; return; }
-      return playTTSFromText(text, voiceId);
+      return playTTSFromText(text, localStorage.getItem('lozee_voice'));
     }
 
-    async function init() {
-      const userName = localStorage.getItem('lozee_username') || '친구';
-      const voc = getKoreanVocativeParticle(userName);
-      const greet = getInitialGreeting(userName + voc, hasGreeted);
-      appendMessage(greet, 'ai');
-      await playTTSWithControl(greet, localStorage.getItem('lozee_voice'));
-      hasGreeted = true;
+    // 대화 막힘 감지
+    function detectStuck(userText, history, meta) {
+      const now = Date.now();
+      if (meta.lastInputTimestamp && (now - meta.lastInputTimestamp) > 300000) return true;
+      if (meta.fillerCount >= 3) return true;
+      const recent = history.filter(m => m.role==='user').slice(-5);
+      if (recent.length===5 && recent.every(m=>m.content.trim().length<5)) return true;
+      if (meta.clickedOption) return false;
+      return false;
     }
 
-    document.addEventListener('DOMContentLoaded', init);
-
+    // 선호 주제 버튼 생성
     function showPreferenceOptions() {
-  // 이미 제시된 인덱스를 제외한 나머지 중 랜덤 선택
-  const available = window.LOZEE_DIALOG.preferenceTopics
-    .map((fn,i) => i)
-    .filter(i => !meta.presentedIndices.includes(i));
-  if (available.length === 0) return;
-  const idx = available[Math.floor(Math.random() * available.length)];
-  meta.presentedIndices.push(idx);
+      const available = window.LOZEE_DIALOG.preferenceTopics
+        .map((fn,i) => i)
+        .filter(i => !meta.presentedIndices.includes(i));
+      if (!available.length) return;
+      const idx = available[Math.floor(Math.random()*available.length)];
+      meta.presentedIndices.push(idx);
+      const container = document.createElement('div');
+      container.className = 'analysis-notification';
+      const btn = document.createElement('button');
+      btn.textContent = window.LOZEE_DIALOG.preferenceTopics[idx](userName);
+      btn.className = 'topic-btn';
+      btn.onclick = () => { meta.clickedOption=true; startChat(btn.textContent); };
+      container.appendChild(btn);
+      chatWindow.appendChild(container);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
 
-  // 버튼 생성
-  const container = document.createElement('div');
-  container.className = 'analysis-notification';
-  const btn = document.createElement('button');
-  btn.textContent = window.LOZEE_DIALOG.preferenceTopics[idx](localStorage.getItem('lozee_username'));
-  btn.style = 'background:#fff8e1;border:1px solid #ffd54f;padding:8px 12px;border-radius:8px;cursor:pointer;';
-  btn.onclick = () => {
-    meta.clickedOption = true;
-    sendMessage(btn.textContent);
-  };
-  container.appendChild(btn);
-  chatWindow.appendChild(container);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-}
+    // 메인 토픽 표시
+    function showMainTopics() {
+      appendMessage('어떤 이야기를 나눠볼까? 골라줘!', 'ai');
+      topicArea.innerHTML = '';
+      const topics = Object.keys(counselingTopicsByAge[getAgeGroup(userAge)]);
+      topics.push('자유주제');
+      topics.forEach(topic => {
+        const btn = document.createElement('button');
+        btn.className = 'topic-btn';
+        btn.textContent = topic;
+        btn.onclick = () => selectMainTopic(topic);
+        topicArea.appendChild(btn);
+      });
+      topicArea.classList.remove('hidden');
+    }
 
+    // 메인 토픽 선택
+    function selectMainTopic(topic) {
+      selectedMain = topic;
+      topicArea.classList.add('hidden');
+      appendMessage(`${topic} 이야기를 선택했구나!`, 'ai');
+      setTimeout(showSubTopics, 300);
+    }
+
+    // 서브 토픽 표시
+    function showSubTopics() {
+      appendMessage('조금 더 구체적으로 어떤 이야기를 해볼까?', 'ai');
+      topicArea.innerHTML = '';
+      let subs = selectedMain==='자유주제'
+        ? ['자유롭게 이야기를 해볼래?']
+        : counselingTopicsByAge[getAgeGroup(userAge)][selectedMain].map(i=>i.displayText);
+      subs.forEach(sub=>{
+        const btn = document.createElement('button');
+        btn.className = 'subtopic-btn';
+        btn.textContent = sub;
+        btn.onclick = () => startChat(sub);
+        topicArea.appendChild(btn);
+      });
+      topicArea.classList.remove('hidden');
+    }
+
+    // 채팅 모드 전환
+    function startChat(initial) {
+      topicArea.classList.add('hidden');
+      inputArea.classList.remove('hidden');
+      sendMessage(initial);
+    }
+
+    // 나이 그룹 계산
+    function getAgeGroup(age) {
+      if (age<=10) return '8-10';
+      if (age<=15) return '11-15';
+      return '30+';
+    }
+
+    // 메시지 전송
+    async function sendMessage(text) {
+      if (!text||isProcessing) return;
+      isProcessing=true;
+      appendMessage(text,'user');
+      chatHistory.push({role:'user',content:text});
+      chatInput.value='';
+      // GPT 호출
+      const res = await getGptResponse(text,{chatHistory});
+      const data = await res.json();
+      const idxJson = data.text.indexOf('{');
+      const cleanText = idxJson>=0?data.text.slice(0,idxJson).trim():data.text;
+      appendMessage(cleanText,'ai');
+      await playTTSWithControl(cleanText);
+      chatHistory.push({role:'assistant',content:cleanText});
+      await saveSessionLog(text,cleanText,data.analysis||{});
+      // 막힘 감지
+      if (detectStuck(cleanText,chatHistory,meta)) showPreferenceOptions();
+      // 분석 저장·알림
+      const full = chatHistory.map(m=>`${m.role}:${m.content}`).join('\n');
+      const inf = await LOZEE_ANALYSIS.inferAgeAndLanguage(full);
+      await saveSessionLog('analysis','',inf);
+      showAnalysisNotification();
+      isProcessing=false;
+    }
+
+    // 이벤트 바인딩
+    sendBtn.addEventListener('click',()=>sendMessage(chatInput.value));
+    chatInput.addEventListener('keydown',e=>{
+      meta.lastInputTimestamp=Date.now();
+      const fillers=['음','…','어','글쎄','모르겠어요','잘 모르겠어'];
+      meta.fillerCount = fillers.some(f=>chatInput.value.includes(f))?meta.fillerCount+1:0;
+      meta.clickedOption=false;
+      skipTTS=true; stopCurrentTTS();
+      if(e.key==='Enter') sendMessage(chatInput.value);
+    });
+    chatInput.addEventListener('focus',()=>{meta.lastInputTimestamp=Date.now();meta.clickedOption=false;skipTTS=true;stopCurrentTTS();});
+
+    // 초기화
+    async function init() {
+      const greet = getInitialGreeting(userName+voc,hasGreeted);
+      appendMessage(greet,'ai');
+      await playTTSWithControl(greet);
+      hasGreeted=true;
+      showMainTopics();
+    }
+    document.addEventListener('DOMContentLoaded',init);
   </script>
 </body>
 </html>
