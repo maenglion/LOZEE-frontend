@@ -330,9 +330,8 @@
     <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
     <button id="send-btn">➤</button>
   </div>
-
   <script type="module">
-    import './firebase-config.js';
+    import './js/firebase-config.js';
     import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
     import { playTTSFromText, stopCurrentTTS } from './js/tts.js';
     import LOZEE_ANALYSIS from './js/lozee-analysis.js';
