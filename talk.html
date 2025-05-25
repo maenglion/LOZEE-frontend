@@ -291,7 +291,8 @@
     });
 
     function checkAndInit(retries = 20, delay = 250) { 
-        if (typeof getGptResponse === 'function' && 
+        // 수정: 외부 JS 파일의 함수들을 window.LOZEE_DIALOG 등을 통해 확인
+        if (window.LOZEE_DIALOG && typeof window.LOZEE_DIALOG.getGptResponse === 'function' &&
             window.LOZEE_TTS && typeof window.LOZEE_TTS.playTTSFromText === 'function' &&
             window.LOZEE_ANALYSIS && typeof window.LOZEE_ANALYSIS.trackTime === 'function' &&
             typeof initializeApp === 'function') {
@@ -324,20 +325,19 @@
 
       const userName = localStorage.getItem('lozee_username') || '친구';
       const hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
-      const voiceId = localStorage.getItem('lozee_voice') || (window.LOZEE_TTS ? window.LOZEE_TTS.DEFAULT_VOICE : 'default-fallback-voice');
+      // 수정: window.LOZEE_TTS가 로드된 후 DEFAULT_VOICE 접근
+      const voiceId = localStorage.getItem('lozee_selectedVoice') || (window.LOZEE_TTS ? window.LOZEE_TTS.DEFAULT_VOICE : 'default-fallback-voice');
       const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
       const topicFromUrl = new URLSearchParams(location.search).get('topic');
 
       let userNameWithVocative = userName;
-      if (typeof getKoreanVocativeParticle === 'function') { 
-          const vocativeParticle = getKoreanVocativeParticle(userName);
-          userNameWithVocative = `${userName}${vocativeParticle}`;
-      } else if (window.LOZEE_DIALOG && typeof window.LOZEE_DIALOG.getKoreanVocativeParticle === 'function') {
+      // 수정: window.LOZEE_DIALOG 통해 getKoreanVocativeParticle 접근
+      if (window.LOZEE_DIALOG && typeof window.LOZEE_DIALOG.getKoreanVocativeParticle === 'function') {
           const vocativeParticle = window.LOZEE_DIALOG.getKoreanVocativeParticle(userName);
           userNameWithVocative = `${userName}${vocativeParticle}`;
       } else {
           console.warn("getKoreanVocativeParticle 함수를 찾을 수 없습니다. (talk.html)");
-          userNameWithVocative = `${userName}야`;
+          userNameWithVocative = `${userName}야`; // 기본값
       }
       
       window.LOZEE_STATE = window.LOZEE_STATE || {};
@@ -368,20 +368,22 @@
 
       let isTTSRunning = false;
       const playTTSFromText_original = window.LOZEE_TTS?.playTTSFromText;
-      const DEFAULT_VOICE_FROM_TTS_JS = window.LOZEE_TTS?.DEFAULT_VOICE || 'default-fallback-voice';
-      const lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE_FROM_TTS_JS;
+      // 수정: lsSelectedVoice를 voiceId로 통일하거나, 여기서 다시 정의
+      const lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || (window.LOZEE_TTS ? window.LOZEE_TTS.DEFAULT_VOICE : 'default-fallback-voice');
 
-      async function playTTSWithControl(text, voice) {
+
+      async function playTTSWithControl(text, voiceParam) { // voiceId 대신 voiceParam 사용
         stopCurrentTTS();
         if (!text || !String(text).trim()) {
           console.log("TTS: 재생할 텍스트 없음.");
           isTTSRunning = false; return;
         }
-        console.log("새로운 TTS 재생 시도:", text, "Voice:", voice);
+        const effectiveVoice = voiceParam || lsSelectedVoice; // 전달된 voiceParam 우선 사용
+        console.log("새로운 TTS 재생 시도:", text, "Voice:", effectiveVoice);
         isTTSRunning = true; setLoading(true);
         try {
           if (typeof playTTSFromText_original === 'function') {
-            await playTTSFromText_original(text, voice || lsSelectedVoice); 
+            await playTTSFromText_original(text, effectiveVoice); 
             console.log("TTS 재생 완료 (Promise resolved):", text);
           } else {
             console.warn(`TTS Fallback: ${text}. tts.js 로드 실패 또는 playTTSFromText 함수 미정의.`);
@@ -395,8 +397,12 @@
         }
       }
       
+      // 수정: window.LOZEE_DIALOG 및 window.LOZEE_ANALYSIS 통해 함수 접근
+      const getGptResponseFromDialog = window.LOZEE_DIALOG?.getGptResponse;
+      const getFirstQuestionFromDialog = window.LOZEE_DIALOG?.getFirstQuestion;
       const trackTimeFromAnalysis = window.LOZEE_ANALYSIS?.trackTime;
       const renderLiteracyAnalysisFromAnalysis = window.LOZEE_ANALYSIS?.renderLiteracyAnalysis;
+
 
       menuToggle.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
       document.addEventListener('click', (event) => {
@@ -418,7 +424,7 @@
           microphoneSource=null;
           if(analyserStream?.getTracks)analyserStream.getTracks().forEach(t=>t.stop());
           analyserStream=null;
-          if(audioContext && audioContext.state !== 'closed') { // 수정된 부분
+          if(audioContext && audioContext.state !== 'closed') { 
             audioContext.close().catch(e=>console.warn("AudioContext close 중 오류:",e));
           }
           audioContext=null;
@@ -455,7 +461,7 @@
           isRecognizing = false;
           micButton.textContent = '🎤'; micButton.classList.remove('recording');
           setLoading(false); 
-          stopAudioAnalysis(); // STT 종료 시 오디오 분석도 확실히 중지
+          stopAudioAnalysis(); 
           console.log("🎤 STT 종료");
         };
         recognition.onresult = (event) => {
@@ -551,13 +557,14 @@
       if (typeof trackTimeFromAnalysis === 'function') trackTimeFromAnalysis();
 
       if (chatHistory.length === 0 && !hasGreeted) {
-        if (typeof getFirstQuestion === 'function') { 
+        // 수정: getFirstQuestionFromDialog 사용
+        if (typeof getFirstQuestionFromDialog === 'function') { 
             const initialTopicToUse = (currentSelectedTopic.id || currentSelectedTopic.displayText) ? currentSelectedTopic : {displayText: "오늘 있었던 일", type: "else"};
             if (!currentSelectedTopic.displayText && initialTopicToUse.displayText === "오늘 있었던 일") {
                  localStorage.setItem('selectedTopic', JSON.stringify(initialTopicToUse));
             }
             
-            const initialPrompt = getFirstQuestion(userAge, initialTopicToUse); 
+            const initialPrompt = getFirstQuestionFromDialog(userAge, initialTopicToUse); 
             if (initialPrompt && !initialPrompt.startsWith("오류:")) {
                 appendBubble(initialPrompt, 'ai'); 
                 chatHistory.push({ role: 'assistant', content: initialPrompt, timestamp: new Date().toISOString() }); 
@@ -592,7 +599,7 @@
         document.querySelector('.bubble.user.interim')?.remove();
         appendBubble(text, 'user');
         
-        const historyForGpt = chatHistory.slice(); // 현재 사용자 발화 추가 전의 히스토리 복사
+        const historyForGpt = chatHistory.slice(); 
         chatHistory.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
         localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
         
@@ -601,12 +608,19 @@
         try {
           const contextForGpt = {
             userId, userAge, userName, userDisease,
-            chatHistory: historyForGpt.slice(-10), // 이전 대화 기록만 전달 (현재 발화 제외)
+            chatHistory: historyForGpt.slice(-10), 
             selectedTopic: currentSelectedTopic,
             currentStage: localStorage.getItem('currentStage') || 'Stage 1'
           };
 
-          res = await getGptResponse(text, contextForGpt); // gpt-dialog.js에서 import된 함수 직접 사용
+          // 수정: getGptResponseFromDialog 사용
+          if (typeof getGptResponseFromDialog !== 'function') {
+            console.error("CRITICAL: getGptResponse 함수를 찾을 수 없습니다.");
+            appendBubble("죄송합니다, 응답을 처리할 수 없습니다.", "system-error");
+            setLoading(false);
+            return;
+          }
+          res = await getGptResponseFromDialog(text, contextForGpt); 
 
           if (!res.ok) {
             console.error(`API Error: ${res.status} ${res.statusText}.`);
@@ -639,12 +653,11 @@
             } else if (analysisContainer) {
                 analysisContainer.innerHTML = ''; analysisContainer.style.display = 'none';
             }
-            // saveSessionLog는 여기서 호출 (분석 데이터 있을 때)
             await saveSessionLog(text, botMessage, data.analysis);
           } else {
              if (analysisContainer) { analysisContainer.innerHTML = ''; analysisContainer.style.display = 'none'; }
              console.log("분석 데이터가 비어있거나 수신되지 않았습니다.");
-             await saveSessionLog(text, botMessage, {}); // 분석 데이터 없어도 로그는 남김
+             await saveSessionLog(text, botMessage, {}); 
           }
           chatHistory.push(botResponseEntry);
           localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
@@ -658,16 +671,15 @@
           }
 
           if (isSummarizationConfirmed) { 
-            appendMessage("알겠어, 우리가 나눈 이야기를 정리해볼게! 잠시만 기다려줘 😊", 'ai_feedback');
+            appendBubble("알겠어, 우리가 나눈 이야기를 정리해볼게! 잠시만 기다려줘 😊", 'ai_feedback');
             await playTTSWithControl("알겠어, 우리가 나눈 이야기를 정리해볼게! 잠시만 기다려줘", lsSelectedVoice);
 
-            // 요약 요청 시 chatHistory는 현재 사용자 발화(요약 동의)를 제외하고, 그 이전 AI의 요약 제안까지 포함해야 함.
-            // historyForGpt는 이미 현재 사용자 발화를 제외한 상태임.
             const summaryContext = {
                 ...contextForGpt,
-                chatHistory: historyForGpt.slice(-10) // 요약 동의 직전까지의 히스토리
+                chatHistory: historyForGpt.slice(-10) 
             };
-            const summaryResponse = await getGptResponse("SYSTEM_COMMAND_SUMMARIZE_HISTORY", summaryContext);
+            // 수정: getGptResponseFromDialog 사용
+            const summaryResponse = await getGptResponseFromDialog("SYSTEM_COMMAND_SUMMARIZE_HISTORY", summaryContext);
             
             if (!summaryResponse.ok) throw new Error(`요약 API 오류: ${summaryResponse.status}`);
             const summaryData = await summaryResponse.json();
@@ -675,15 +687,18 @@
             const summaryText = summaryData.text;
             const summaryAnalysis = summaryData.analysis; 
 
-            appendMessage(summaryText, 'ai');
+            appendBubble(summaryText, 'ai');
             await playTTSWithControl(summaryText, lsSelectedVoice);
-            // 요약 요청에 대한 로그는 별도로 남기거나, userText를 "대화 요약 동의" 등으로 변경
             await saveSessionLog(`대화 요약 요청 (사용자 응답: ${text})`, summaryText, summaryAnalysis); 
-            // saveConversationSummaryAsJournal 함수가 정의되어 있다면 호출
-            // await saveConversationSummaryAsJournal(summaryText, summaryAnalysis, contextForGpt);
+            
+            // saveConversationSummaryAsJournal 함수가 정의되어 있고 사용 가능하면 호출
+            if (typeof saveConversationSummaryAsJournal === 'function') {
+                // await saveConversationSummaryAsJournal(summaryText, summaryAnalysis, contextForGpt); // 주석 처리 (정의되지 않음)
+            }
+
 
             const saveConfirmMsg = `${userNameWithVocative}, 방금 정리한 내용은 일기에도 잘 남겨뒀어! 언제든 다시 펼쳐볼 수 있을 거야. ✨`;
-            appendMessage(saveConfirmMsg, 'ai');
+            appendBubble(saveConfirmMsg, 'ai');
 
             await playTTSWithControl(saveConfirmMsg, lsSelectedVoice);
             chatHistory.push({ role: 'assistant', content: summaryText, analysis: summaryAnalysis, timestamp: new Date().toISOString() });
@@ -709,7 +724,6 @@
         setLoading(false); 
         if(chatInput) {
             chatInput.value = ''; 
-            // chatInput.focus(); // 모바일에서 키보드가 자동으로 올라오는 것을 방지하려면 주석 처리 또는 조건부 실행
         }
       }
 
@@ -729,4 +743,3 @@
   </script>
 </body>
 </html>
-```
