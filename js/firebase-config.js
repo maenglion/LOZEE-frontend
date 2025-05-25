@@ -2,15 +2,17 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
+// 실제 LOZEE 프로젝트 설정값으로 교체한 firebaseConfig
 const firebaseConfig = {
-  apiKey: "AIzaSyAK9OUEclgxwHKf1rF5ha4L6Wy76q3xIGw",
-  authDomain: "emotion-diary-gpt4.firebaseapp.com",
-  projectId: "emotion-diary-gpt4",
-  storageBucket: "emotion-diary-gpt4.firebasestorage.app",
-  messagingSenderId: "794549082167",
-  appId: "1:794549082167:web:41950b8663e58174fa07b2",
-  measurementId: "G-B8T024Y3RE"
+  apiKey: "AIzaSyBnuL-CEvcU4NiIyG4yOe6mQjMnh9aArIY",
+  authDomain: "lozee-af4d3.firebaseapp.com",
+  projectId: "lozee-af4d3",
+  storageBucket: "lozee-af4d3.firebasestorage.app",
+  messagingSenderId: "838397276113",
+  appId: "1:838397276113:web:fc8cb3bdf59ecd52fabaf0",
+  measurementId: "G-C23DLE9GZ4"
 };
 
+// Firebase 앱 초기화 & Firestore 인스턴스 내보내기
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
