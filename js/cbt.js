@@ -4,7 +4,7 @@
 // CBT 참여자 이메일 목록 (모두 소문자로 저장하여 대소문자 구분 없이 비교)
 const VALID_CBT_EMAILS = [
     "maengnanyoung@gmail.com",
-    "primer0722@gmail.com"
+    "primer0722@gmail.com" ,
     "soul.minhoo.maeng@gmail.com"
     // 필요에 따라 여기에 더 많은 이메일 주소를 추가할 수 있습니다.
 ].map(email => email.toLowerCase()); // 비교를 위해 미리 소문자로 변환
