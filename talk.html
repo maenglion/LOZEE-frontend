@@ -39,6 +39,11 @@
     let hasGreeted = false;
     let isProcessing = false;
     let chatHistory = [];
+    let meta = {lastInputTimestamp: Date.now(), // 가장 마지막 입력 시각
+    fillerCount: 0,                 // 필러(“음…”, “…”) 누적 횟수
+    clickedOption: false,           // 선택지 클릭 여부
+    presentedIndices: []            // 이미 제시된 주제 인덱스 배열
+  };
 
     const chatWindow = document.getElementById('chat-window');
     const chatInput = document.getElementById('chat-input');
@@ -71,6 +76,8 @@
       // GPT 호출
       const res = await getGptResponse(text, { chatHistory });
       const data = await res.json();
+      chatHistory.push({ role: 'assistant', content: cleanText });
+
       // 필터링: text에서 JSON 부분 제거
       const idx = data.text.indexOf('{');
       const cleanText = idx >= 0 ? data.text.slice(0, idx).trim() : data.text;
@@ -83,6 +90,12 @@
       // 저장
       await saveSessionLog(text, cleanText, aiAnalysis);
 
+      // 4) 막힘 감지
+      const stuck = window.LOZEE_DIALOG.detectStuck(cleanText, chatHistory, meta);
+      if (stuck) {
+      showPreferenceOptions();
+      }
+
       // 분석 유추 & 알림
       const fullText = chatHistory.map(m => `${m.role}:${m.content}`).join('\n');
       const inference = await LOZEE_ANALYSIS.inferAgeAndLanguage(fullText);
@@ -92,11 +105,44 @@
       isProcessing = false;
     }
 
-    sendBtn.addEventListener('click', () => sendMessage(chatInput.value));
-    chatInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') sendMessage(chatInput.value);
-      skipTTS = true; stopCurrentTTS();
+    // 1)전송버튼
+    sendBtn.addEventListener('click', () => {
+    sendMessage(chatInput.value)
     });
+    
+    // 2) 입력창 키다운
+    chatInput.addEventListener('keydown', e => { 
+      // - 먼저 메타 갱신
+      meta.lastInputTimestamp = Date.now();
+
+      const fillers = ['음','…','어','글쎄','모르겠어요','잘 모르겠어'];
+      if (fillers.some(f => chatInput.value.includes(f))) {
+      meta.fillerCount += 1;
+      } else {
+      meta.fillerCount = 0;
+      }
+
+      // — 선택지 클릭 예외 처리 —
+      meta.clickedOption = false;
+
+      // — TTS 중지 및 스킵 플래그 —
+      skipTTS = true;
+      stopCurrentTTS();
+
+      // — 실제 전송은 엔터일 때만 —
+      if (e.key === 'Enter') {
+      sendMessage(chatInput.value);
+      }
+      });
+
+    // 3) 입력창 포커스
+    chatInput.addEventListener('focus', () => {
+    meta.lastInputTimestamp = Date.now();
+    meta.clickedOption = false;
+    stopCurrentTTS();
+    });
+  
+    
     chatInput.addEventListener('focus', () => { skipTTS = true; stopCurrentTTS(); });
 
     function playTTSWithControl(text, voiceId) {
@@ -115,6 +161,31 @@
     }
 
     document.addEventListener('DOMContentLoaded', init);
+
+    function showPreferenceOptions() {
+  // 이미 제시된 인덱스를 제외한 나머지 중 랜덤 선택
+  const available = window.LOZEE_DIALOG.preferenceTopics
+    .map((fn,i) => i)
+    .filter(i => !meta.presentedIndices.includes(i));
+  if (available.length === 0) return;
+  const idx = available[Math.floor(Math.random() * available.length)];
+  meta.presentedIndices.push(idx);
+
+  // 버튼 생성
+  const container = document.createElement('div');
+  container.className = 'analysis-notification';
+  const btn = document.createElement('button');
+  btn.textContent = window.LOZEE_DIALOG.preferenceTopics[idx](localStorage.getItem('lozee_username'));
+  btn.style = 'background:#fff8e1;border:1px solid #ffd54f;padding:8px 12px;border-radius:8px;cursor:pointer;';
+  btn.onclick = () => {
+    meta.clickedOption = true;
+    sendMessage(btn.textContent);
+  };
+  container.appendChild(btn);
+  chatWindow.appendChild(container);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
   </script>
 </body>
 </html>
