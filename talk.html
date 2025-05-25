@@ -361,6 +361,24 @@
     menuToggle.addEventListener('click',()=>dropdownMenu.classList.toggle('show'));
     document.addEventListener('click',e=>{ if(!document.getElementById('gnb').contains(e.target)) dropdownMenu.classList.remove('show'); });
 
+       // 사용자 정보
+    const userName = localStorage.getItem('lozee_username') || '친구';
+    const userAge = parseInt(localStorage.getItem('lozee_userage') || '0', 10);
+    const voc = getKoreanVocativeParticle(userName);
+
+    // 초기화 로직
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('✅ firebase-config.js 모듈 로드됨');
+      console.log('DOMContentLoaded 이벤트 발생');
+
+      // 첫 인사 및 토픽 표시
+      const greeting = getInitialGreeting(userName + voc, hasGreeted);
+      appendMessage(greeting, 'ai');
+      await playTTSFromText(greeting, localStorage.getItem('lozee_voice'));
+      hasGreeted = true;
+      showMainTopics();
+    });
+
     // 메시지
     function appendMessage(text,role){ const b=document.createElement('div'); b.className='bubble '+role; b.textContent=text; chatWindow.appendChild(b); chatWindow.scrollTop=chatWindow.scrollHeight; }
     function showAnalysis(){ const n=document.createElement('div'); n.className='analysis-notification'; n.textContent='🟡분석 완료'; n.onclick=()=>location.href='analysis.html'; chatWindow.appendChild(n); chatWindow.scrollTop=chatWindow.scrollHeight; }
