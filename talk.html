@@ -342,9 +342,6 @@
     let skipTTS=false, hasGreeted=false, isProcessing=false;
     let chatHistory=[], selectedMain=null;
     let meta={ lastInputTimestamp:Date.now(), fillerCount:0, clickedOption:false, presentedIndices:[] };
-    const userName=localStorage.getItem('lozee_username')||'친구';
-    const userAge=parseInt(localStorage.getItem('lozee_userage')||0,10);
-    const voc=getKoreanVocativeParticle(userName);
 
     // UI
     const chatWindow=document.getElementById('chat-window');
