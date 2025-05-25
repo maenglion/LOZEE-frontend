@@ -1,248 +1,259 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <script>
+    // 초기 설정 확인 및 리다이렉션 로직
+    const isConfigured = localStorage.getItem('lozee_username') &&
+                         localStorage.getItem('lozee_voice') &&
+                         localStorage.getItem('lozee_userage');
+
+    const topicForRedirect = localStorage.getItem('lozee_current_topic');
+
+    if (isConfigured) {
+      const targetUrl = topicForRedirect ? `talk.html?topic=${encodeURIComponent(topicForRedirect)}` : 'talk.html';
+      window.location.href = targetUrl;
+    }
+  </script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>LOZEE와 대화하기</title>
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
   <style>
-    /* 기본 스타일 복원 및 재정비 */
     :root {
-      --primary-color: #6e8efb;
-      --secondary-color: #354157;
-      --background-color: #2a3340;
-      --text-color: #fff;
-      --input-background: #f0f0f0;
-      --bot-bubble-bg: var(--input-background);
-      --bot-bubble-text: #333;
+      --primary-color: #6078ea; 
+      --secondary-color: #f0f2f5; 
+      --background-color: #FFFFFF; 
+      
+      --text-color-on-dark-bg: #FFFFFF; 
+      --text-color-on-light-bg: #333333; 
+      
+      --input-background: #FFFFFF; 
+      --input-border-color: #D1D5DB; 
+      
+      --bot-bubble-bg: #E9EBF8; 
+      --bot-bubble-text: #374151; 
+      
       --user-bubble-bg: var(--primary-color);
-      --user-bubble-text: #fff;
+      --user-bubble-text: #FFFFFF;
+      
       --gnb-height: 56px;
-      --chat-input-height: 70px;
-      --gemini-purple: #7B68EE;
+      --chat-input-actual-height: 50px;
+      --chat-input-padding-vertical: 10px;
+      --chat-input-safe-area: env(safe-area-inset-bottom, 20px);
+      --chat-input-total-height: calc(var(--chat-input-actual-height) + (2 * var(--chat-input-padding-vertical)) + var(--chat-input-safe-area));
+      
+      --gnb-title-color: var(--primary-color); 
+      --gnb-menu-icon-color: var(--primary-color); 
+
       --volume-meter-default-bg: var(--primary-color);
       --meter-top-margin: 8px;
-      --gnb-dropdown-border-color: #4a5568;
+      --gnb-dropdown-border-color: #E5E7EB; 
     }
-
     body {
-      margin: 0;
-      padding-top: var(--gnb-height);
-      font-family: 'KoPub World Dotum', sans-serif;
-      background-color: var(--background-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      box-sizing: border-box;
-      overflow: hidden;
+      margin:0;
+      padding-top:var(--gnb-height);
+      font-family:'KoPub World Dotum',sans-serif;
+      background-color:var(--background-color); 
+      color:var(--text-color-on-light-bg); 
+      display:flex;
+      flex-direction:column;
+      height:100vh;
+      box-sizing:border-box;
+      overflow:hidden;
     }
-
-    /* GNB (햄버거 메뉴 방식 복원) */
     #gnb {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: var(--gnb-height);
-      background-color: var(--background-color);
-      padding: 0 16px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      z-index: 1000;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-sizing: border-box;
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:var(--gnb-height);
+      background-color:var(--background-color); 
+      padding:0 16px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.07); 
+      z-index:1000;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      box-sizing:border-box;
+      border-bottom: 1px solid var(--input-border-color); 
     }
-
     #gnb-title {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: var(--gemini-purple);
+      font-size:1.2em;
+      font-weight:bold;
+      color:var(--gnb-title-color); 
     }
-
     #menu-toggle {
-      background: none;
-      border: none;
-      color: var(--gemini-purple);
-      font-size: 24px;
-      cursor: pointer;
-      padding: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background:none;
+      border:none;
+      color:var(--gnb-menu-icon-color); 
+      font-size:24px;
+      cursor:pointer;
+      padding:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
-
     #dropdown-menu {
-      position: fixed;
-      top: var(--gnb-height);
-      right: 0;
-      background-color: var(--background-color);
-      border-radius: 0 0 0 8px;
-      box-shadow: -3px 3px 6px rgba(0,0,0,0.25);
-      width: 200px;
-      z-index: 999;
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.3s ease-out;
+      position:fixed;
+      top:var(--gnb-height);
+      right:0;
+      background-color:var(--background-color); 
+      border-radius:0 0 0 8px;
+      box-shadow:-2px 2px 5px rgba(0,0,0,0.08);
+      width:200px;
+      z-index:999;
+      overflow:hidden;
+      max-height:0;
+      transition:max-height 0.3s ease-out;
+      border-left: 1px solid var(--input-border-color);
+      border-bottom: 1px solid var(--input-border-color);
     }
-
-    #dropdown-menu.show {
-      max-height: 500px;
-    }
-
+    #dropdown-menu.show{max-height:500px;}
     #dropdown-menu a {
-      display: block;
-      color: var(--text-color);
-      text-decoration: none;
-      padding: 12px 16px;
-      font-size: 0.95em;
-      border-bottom: 1px solid var(--gnb-dropdown-border-color);
+      display:block;
+      color:var(--text-color-on-light-bg); 
+      text-decoration:none;
+      padding:12px 16px;
+      font-size:0.95em;
+      border-bottom:1px solid var(--gnb-dropdown-border-color);
     }
-    #dropdown-menu a:last-child { border-bottom: none; }
-    #dropdown-menu a:hover {
-      background-color: var(--secondary-color);
-    }
-
-    /* 음량 바 */
+    #dropdown-menu a:last-child{border-bottom:none;}
+    #dropdown-menu a:hover{background-color:var(--secondary-color);} 
     #meter-container {
-      position: fixed;
-      top: calc(var(--gnb-height) + var(--meter-top-margin));
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      max-width: 300px;
-      height: 6px;
-      background-color: var(--secondary-color);
-      border-radius: 3px;
-      overflow: hidden;
-      z-index: 998;
+      position:fixed;
+      top:calc(var(--gnb-height) + var(--meter-top-margin));
+      left:50%;
+      transform:translateX(-50%);
+      width:60%;
+      max-width:300px;
+      height:6px;
+      background-color:#E5E7EB; 
+      border-radius:3px;
+      overflow:hidden;
+      z-index:998;
     }
     #volume-level {
-      width: 0%;
-      height: 100%;
-      background: var(--volume-meter-default-bg);
-      border-radius: 3px;
-      transition: width 0.05s linear;
+      width:0%;
+      height:100%;
+      background:var(--volume-meter-default-bg);
+      border-radius:3px;
+      transition:width 0.05s linear;
     }
-
-    /* 채팅 영역 */
     #chat-container {
-      flex-grow: 1;
-      padding: 16px;
-      padding-top: calc(var(--meter-top-margin) + 6px + 10px);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: var(--chat-input-height);
+      flex-grow:1;
+      padding:16px;
+      padding-top:calc(var(--meter-top-margin) + 6px + 10px);
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px; 
+      margin-bottom: var(--chat-input-total-height); 
     }
-    
-    #analysis-container { /* 분석 결과 표시 영역 */
-        padding: 10px;
-        background: #1e2a38; /* 어두운 배경 */
-        color: #ccc; /* 밝은 텍스트 */
-        font-size: 0.85em;
-        max-height: 150px; /* 필요시 조정 */
-        overflow-y: auto;
-        border-top: 1px solid var(--secondary-color);
-        margin-bottom: var(--chat-input-height); /* 입력창에 가려지지 않도록 */
-        display: none; /* 초기에는 숨김, 분석 결과 있을 때 JS로 보이게 처리 */
+    #analysis-container {
+      padding:10px;
+      background:#f3f4f6; 
+      color:#4b5563; 
+      font-size:0.85em;
+      max-height:150px;
+      overflow-y:auto;
+      border-top:1px solid #e5e7eb; 
+      display:none;
     }
-
     .bubble {
-      padding: 12px 16px;
-      border-radius: 18px;
-      max-width: 75%;
-      line-height: 1.5;
-      word-break: keep-all;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      padding:10px 15px; 
+      border-radius:16px; 
+      max-width:80%; 
+      line-height:1.6;
+      word-break:keep-all;
+      box-shadow:0 1px 2px rgba(0,0,0,0.06); 
     }
     .bubble.user {
-      background-color: var(--user-bubble-bg);
-      color: var(--user-bubble-text);
-      align-self: flex-end;
-      border-bottom-right-radius: 4px;
+      background-color:var(--user-bubble-bg);
+      color:var(--user-bubble-text);
+      align-self:flex-end;
+      border-bottom-right-radius:4px;
     }
     .bubble.bot {
-      background-color: var(--bot-bubble-bg);
-      color: var(--bot-bubble-text);
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
+      background-color:var(--bot-bubble-bg); 
+      color:var(--bot-bubble-text); 
+      align-self:flex-start;
+      border-bottom-left-radius:4px;
     }
-    .bubble.user.interim { opacity:.7; }
-    .bubble.system-error {
-        background-color: #ffe0e0;
-        color: #c0392b;
-        align-self: center;
-        max-width: 80%;
-        text-align: center;
-        font-size: 0.9em;
-        border: 1px solid #c0392b;
+    .bubble.user.interim{opacity:.7;}
+    .bubble.system-error, .bubble.ai_feedback { 
+      background-color:#FFFBEB; 
+      color:#92400E; 
+      align-self:center;
+      max-width:85%;
+      text-align:center;
+      font-size:0.9em;
+      border:1px solid #FDE68A; 
+      margin: 5px 0;
+      border-radius: 8px; 
     }
-
-    /* 입력 영역 스타일 복원 */
     #chat-input-container {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: var(--chat-input-height);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 12px;
-      background-color: var(--secondary-color);
-      box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
-      box-sizing: border-box;
+      position:fixed;
+      bottom:0;
+      left:0;
+      width:100%; 
+      background-color:var(--background-color); 
+      border-top: 1px solid var(--input-border-color); 
+      box-shadow:0 -1px 3px rgba(0,0,0,0.05);
+      box-sizing:border-box; 
+      padding-top: var(--chat-input-padding-vertical); 
+      padding-bottom: calc(var(--chat-input-padding-vertical) + var(--chat-input-safe-area));
     }
-
+    .input-area { 
+      display: flex; 
+      align-items: center; 
+      width: 100%; 
+      padding: 0 12px; 
+      box-sizing: border-box; 
+      gap: 8px; 
+      height: var(--chat-input-actual-height); 
+    }
     #chat-input {
-      flex: 1;
-      padding: 12px 16px;
-      border-radius: 22px;
-      border: 1px solid #4a5568;
-      font-size: 1em;
-      background-color: var(--input-background);
-      color: #333;
-      height: 44px;
-      box-sizing: border-box;
+      flex:1;
+      padding:10px 16px;
+      border-radius:22px;
+      border:1px solid var(--input-border-color); 
+      font-size:1em;
+      background-color:var(--input-background);
+      color:var(--text-color-on-light-bg); 
+      height:100%;
+      box-sizing:border-box;
     }
-    #chat-input::placeholder { color: #777; }
-
-    #mic-button,
-    #send-button {
-      width: 44px;
-      height: 44px;
-      border: none;
-      border-radius: 50%;
-      background-color: var(--primary-color);
-      color: var(--text-color);
-      font-size: 1.3em;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s ease;
-      margin-left: 8px;
+    #chat-input::placeholder{color:#9CA3AF;}
+    #mic-button, #send-button {
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:50%;
+      background-color:var(--primary-color);
+      color:var(--user-bubble-text); 
+      font-size:1.3em;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:background-color 0.2s ease, box-shadow 0.2s ease; 
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
-    #mic-button:hover,
-    #send-button:hover {
-      background-color: #5a7edf;
+    #mic-button:hover, #send-button:hover{
+        background-color:#4f65d1; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
-    #mic-button.recording {
-        background-color: #e74c3c; /* 빨간색 배경 */
-    }
-    #send-button.loading {
-        background:#999;
-        cursor:default;
-    }
-
-    /* 스크롤바 스타일 */
-    #chat-container::-webkit-scrollbar { width: 8px; }
-    #chat-container::-webkit-scrollbar-track { background: var(--background-color); }
-    #chat-container::-webkit-scrollbar-thumb { background: var(--gnb-dropdown-border-color); border-radius: 4px; }
-    #chat-container::-webkit-scrollbar-thumb:hover { background: #5a7edf; }
+    #mic-button.recording{background-color:#EF4444; box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);}
+    #send-button.loading{background:#D1D5DB;cursor:default; box-shadow: none;} 
+    
+    #chat-container::-webkit-scrollbar{width:6px;} 
+    #chat-container::-webkit-scrollbar-track{background:transparent;} 
+    #chat-container::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px;} 
+    #chat-container::-webkit-scrollbar-thumb:hover{background:#9CA3AF;}
   </style>
 </head>
 <body>
@@ -259,263 +270,116 @@
   </nav>
 
   <div id="meter-container"><div id="volume-level"></div></div>
-  <div id="chat-container"></div>
-  <div id="analysis-container"></div> <div id="chat-input-container">
-    <button id="mic-button" title="음성 인식 시작/중지">🎤</button>
-    <input type="text" id="chat-input" placeholder="메시지를 입력하세요..." autocomplete="off"/>
-    <button id="send-button" title="메시지 전송">⮞</button>
+  <div id="chat-container">
+    </div>
+  <div id="analysis-container">
+    </div>
+
+  <div id="chat-input-container">
+    <div class="input-area">
+        <button id="mic-button" title="음성 인식 시작/중지">🎤</button>
+        <input type="text" id="chat-input" placeholder="메시지를 입력하세요..." autocomplete="off"/>
+        <button id="send-button" title="메시지 전송">⮞</button>
+    </div>
   </div>
 
-  <script src="./js/gpt-dialog.js"></script>
-  <script src="./js/tts.js"></script>
-  <script src="./js/basic-features.js"></script>
-  <script src="./js/literacyPatternCheckRenderer.js"></script>
+  <script src="./js/gpt-dialog.js" defer></script>
+  <script src="./js/tts.js" defer></script>
+  <script src="./js/basic-features.js" defer></script>
+  <script src="./js/literacyPatternCheckRenderer.js" defer></script>
 
-  <script> // 일반 스크립트 블록으로 변경
+  <script>
+    // Firebase 설정 (실제 값으로 교체 필요)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    let app;
+    let db;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            // Firebase SDK가 로드되었는지 확인 후 초기화
+            if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
+                app = firebase.initializeApp(firebaseConfig);
+                if (typeof firebase.firestore === 'function') {
+                    db = firebase.firestore();
+                    console.log("Firebase initialized successfully.");
+                } else {
+                    console.error("Firebase Firestore SDK not found.");
+                    throw new Error("Firebase Firestore SDK not found.");
+                }
+            } else {
+                console.error("Firebase App SDK not found.");
+                throw new Error("Firebase App SDK not found.");
+            }
+        } catch (e) {
+            console.error("Firebase initialization error:", e);
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) {
+                 chatContainer.innerHTML = '<div class="bubble system-error" style="align-self:center; max-width: 80%; text-align:center;">데이터베이스 연결에 실패했습니다. 일부 기능이 작동하지 않을 수 있습니다.</div>';
+            }
+        }
+        checkAndInit();
+    });
+
+    function checkAndInit(retries = 20, delay = 250) { 
+        console.log("checkAndInit 시도:", retries);
+        console.log("window.LOZEE_DIALOG:", window.LOZEE_DIALOG, ", typeof getGptResponse:", typeof window.LOZEE_DIALOG?.getGptResponse);
+        console.log("window.LOZEE_TTS:", window.LOZEE_TTS, ", typeof playTTSFromText:", typeof window.LOZEE_TTS?.playTTSFromText);
+        console.log("window.LOZEE_ANALYSIS:", window.LOZEE_ANALYSIS, ", typeof trackTime:", typeof window.LOZEE_ANALYSIS?.trackTime);
+        console.log("typeof initializeApp:", typeof initializeApp);
+
+
+        if (window.LOZEE_DIALOG && typeof window.LOZEE_DIALOG.getGptResponse === 'function' &&
+            window.LOZEE_TTS && typeof window.LOZEE_TTS.playTTSFromText === 'function' &&
+            window.LOZEE_ANALYSIS && typeof window.LOZEE_ANALYSIS.trackTime === 'function' &&
+            typeof initializeApp === 'function') {
+            initializeApp();
+        } else if (retries > 0) {
+            console.log(`필수 객체/함수 로드 대기 중... (${retries}회 남음)`);
+            setTimeout(() => checkAndInit(retries - 1, delay), delay);
+        } else {
+            console.error("CRITICAL: 필수 JavaScript 객체/함수 로드 실패. 앱을 초기화할 수 없습니다.");
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) {
+                 chatContainer.innerHTML = '<div class="bubble system-error" style="align-self:center; max-width: 80%; text-align:center;">앱 초기화에 실패했습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.</div>';
+            } else {
+                document.body.innerHTML = '<div style="color:red;text-align:center;padding:50px;">채팅 UI 및 앱 초기화 실패!</div>';
+            }
+        }
+    }
+    
     async function initializeApp() {
+      console.log("initializeApp 호출됨. 필요한 객체들 로드 확인됨.");
       const chatContainer = document.getElementById('chat-container');
       const analysisContainer = document.getElementById('analysis-container');
 
-      function appendBubble(text, role) {
-        const el = document.createElement('div');
-        el.className = `bubble ${role}`;
-        el.textContent = text;
-        if (role === 'system-error') el.classList.add('system-error');
-        if (chatContainer) {
-            chatContainer.appendChild(el);
-            requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
-        } else {
-            console.error("Chat container not found. Message:", text);
-            if (role === 'system-error') alert("오류: " + text);
-        }
-      }
-
-      if (!chatContainer) {
-          console.error("CRITICAL: chatContainer not found.");
-          document.body.innerHTML = '<div style="color:red;text-align:center;padding:50px;">채팅 UI 로드 실패! (chat-container 누락)</div>';
-          return;
-      }
-
-      // --- 전역 객체에서 함수 가져오기 및 폴백 설정 ---
-      const playTTSFromText = window.LOZEE_TTS?.playTTSFromText || (async (text, voice) => {
-        console.warn(`TTS Fallback (음성: ${voice}): ${text}. tts.js 로드 실패 또는 함수 미정의.`);
-        appendBubble("알림: 음성 출력(TTS) 기능을 사용할 수 없습니다. (tts.js 확인 필요)", "system-error");
-      });
-      const DEFAULT_VOICE = window.LOZEE_TTS?.DEFAULT_VOICE || 'default-fallback-voice';
-
-      const getGptResponse = window.LOZEE_DIALOG?.getGptResponse || (async (text) => {
-        console.error("getGptResponse 사용 불가 (gpt-dialog.js 로드 실패 또는 함수 미정의).");
-        appendBubble("오류: 대화 응답을 받을 수 없습니다. (gpt-dialog.js 확인 필요)", "system-error");
-        return Promise.resolve({ ok: false, status: 503, json: async () => ({ text: "오류: 응답 처리 불가."}) });
-      });
-      const getFirstQuestion = window.LOZEE_DIALOG?.getFirstQuestion || ((userAge, topic) => {
-        console.error("getFirstQuestion 사용 불가 (gpt-dialog.js 로드 실패 또는 함수 미정의).");
-        appendBubble("오류: 대화 시작 질문을 생성할 수 없습니다. (gpt-dialog.js 확인 필요)", "system-error");
-        return "오류: 대화 시작 불가.";
-      });
-
-      const trackTime = window.LOZEE_BASIC_FEATURES?.trackTime || (() => console.warn("trackTime 사용 불가 (basic-features.js 로드 실패 또는 함수 미정의)."));
-      const trackEmotionTone = window.LOZEE_BASIC_FEATURES?.trackEmotionTone || (() => console.warn("trackEmotionTone 사용 불가 (basic-features.js 로드 실패 또는 함수 미정의)."));
-      const trackSituation = window.LOZEE_BASIC_FEATURES?.trackSituation || (() => console.warn("trackSituation 사용 불가 (basic-features.js 로드 실패 또는 함수 미정의)."));
-      const renderLiteracyAnalysis = window.LOZEE_LITERACY?.renderLiteracyAnalysis || ((result, el) => {
-          console.warn("renderLiteracyAnalysis 사용 불가 (literacyPatternCheckRenderer.js 로드 실패 또는 함수 미정의).");
-          if(el) el.innerHTML = "<p>문해력 분석 결과를 표시할 수 없습니다.</p>";
-      });
-
-      // --- DOM 요소 참조 ---
-      const chatInput     = document.getElementById('chat-input');
-      const sendButton    = document.getElementById('send-button');
-      const micButton     = document.getElementById('mic-button');
-      const meterLevel    = document.getElementById('volume-level');
-      const menuToggle    = document.getElementById('menu-toggle');
-      const dropdownMenu  = document.getElementById('dropdown-menu');
-
-      // --- GNB 메뉴 토글 ---
-      if (menuToggle && dropdownMenu) {
-        menuToggle.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
-        document.addEventListener('click', (event) => {
-          const gnb = document.getElementById('gnb');
-          if (gnb && !gnb.contains(event.target) && dropdownMenu.classList.contains('show')) {
-            dropdownMenu.classList.remove('show');
-          }
-        });
-      }
-
-      // --- 오디오 분석 및 시각화 (이전 코드 유지) ---
-      let audioContext, analyser, microphoneSource, dataArray, volumeMeterAnimationId, analyserStream;
-      const LOW_COLOR = { r: 0, g: 200, b: 0 }, MID_COLOR = { r: 255, g: 200, b: 0 }, HIGH_COLOR = { r: 255, g: 69, b: 0 };
-      function interpolateColor(c1,c2,f){const r=Math.round(c1.r+f*(c2.r-c1.r)),g=Math.round(c1.g+f*(c2.g-c1.g)),b=Math.round(c1.b+f*(c2.b-c1.b));return `rgb(${r},${g},${b})`}
-      function setupAudioAnalysis(stream){if(audioContext?.state!=='closed')audioContext?.close();audioContext=new(window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=256;analyser.smoothingTimeConstant=0.3;microphoneSource=audioContext.createMediaStreamSource(stream);microphoneSource.connect(analyser);dataArray=new Uint8Array(analyser.frequencyBinCount);analyserStream=stream;drawVolumeMeter()}
-      function drawVolumeMeter(){volumeMeterAnimationId=requestAnimationFrame(drawVolumeMeter);if(!analyser||!dataArray||!meterLevel)return;analyser.getByteFrequencyData(dataArray);let s=0;for(let i=0;i<dataArray.length;i++)s+=dataArray[i];let avgVol=dataArray.length>0?s/dataArray.length:0;let normVol=(avgVol/140)*100;normVol=Math.min(100,Math.max(0,normVol));meterLevel.style.width=normVol+'%';let activeCol;if(normVol<=50)activeCol=interpolateColor(LOW_COLOR,MID_COLOR,normVol/50);else activeCol=interpolateColor(MID_COLOR,HIGH_COLOR,(normVol-50)/50);const baseGradCol=getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim()||'#2a3340';meterLevel.style.background=`linear-gradient(to right, ${baseGradCol}, ${activeCol})`}
-      function stopAudioAnalysis(){if(volumeMeterAnimationId)cancelAnimationFrame(volumeMeterAnimationId);volumeMeterAnimationId=null;if(microphoneSource)microphoneSource.disconnect();microphoneSource=null;if(analyserStream?.getTracks)analyserStream.getTracks().forEach(t=>t.stop());analyserStream=null;if(audioContext?.state!=='closed')audioContext.close().catch(e=>console.error("AudioContext close error:",e));audioContext=null;if(meterLevel){meterLevel.style.width='0%';meterLevel.style.background=getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg').trim()}analyser=null;dataArray=null}
-
-
-      // --- STT (음성 인식) 설정 ---
-      let recognition, isRecognizing = false;
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      if (SpeechRec) {
-        recognition = new SpeechRec();
-        recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'ko-KR';
-        if(micButton) micButton.disabled = false; // STT 지원 시 버튼 활성화
-
-        recognition.onstart = () => {
-          isRecognizing = true;
-          if(micButton) { micButton.textContent = '💬'; micButton.classList.add('recording'); }
-          console.log("🎤 STT 시작");
-        };
-        recognition.onend = () => {
-          isRecognizing = false;
-          if(micButton) { micButton.textContent = '🎤'; micButton.classList.remove('recording'); }
-          setLoading(false); stopAudioAnalysis(); console.log("🎤 STT 종료");
-        };
-        recognition.onresult = (event) => {
-          let finalTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-          }
-          if (finalTranscript) { handleUserText(finalTranscript); }
-        };
-        recognition.onerror = (event) => {
-          console.error("❌ STT 오류:", event.error);
-          appendBubble(event.error === 'not-allowed'||event.error === 'service-not-allowed' ? "마이크 권한이 필요합니다." : "음성 인식 중 오류가 발생했습니다.", "system-error");
-          isRecognizing = false;
-          if(micButton) { micButton.textContent = '🎤'; micButton.classList.remove('recording'); }
-          setLoading(false); stopAudioAnalysis();
-        };
-      } else {
-        console.warn("⚠️ 음성 인식을 지원하지 않는 브라우저입니다.");
-        if(micButton) { micButton.title = "음성 인식 미지원"; micButton.disabled = true; }
-        appendBubble("알림: 사용 중인 브라우저에서는 음성 인식을 지원하지 않습니다.", "system-error");
-      }
-
-      if(micButton) {
-        micButton.onclick = async () => {
-          if (!SpeechRec) return;
-          if (isRecognizing) {
-            recognition.stop();
-          } else {
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-              setupAudioAnalysis(stream); recognition.start(); setLoading(true);
-            } catch (err) {
-              console.error("❌ 마이크 권한/시작 오류:", err); appendBubble("마이크를 사용할 수 없습니다. 권한을 확인해주세요.", "system-error"); stopAudioAnalysis(); setLoading(false);
-            }
-          }
-        };
-      }
-
-      // --- 사용자 정보 및 대화 초기화 ---
-      const lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
-      const userAge = localStorage.getItem('lozee_userage');
-      const userName = localStorage.getItem('lozee_username') || '친구';
-      const userId = localStorage.getItem('lozee_userid') || `user_${Date.now()}`;
-      const userDisease = JSON.parse(localStorage.getItem('lozee_userdisease') || '[]');
+      let hasGreeted = false;
+      let isRecording = false;
+      let mediaRecorder;
+      let mediaStream;
+      let audioChunks = [];
       let chatHistory = JSON.parse(localStorage.getItem('lozee_conversation_history') || '[]');
+
+      const userName = localStorage.getItem('lozee_username') || '친구';
+      const hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
+      const voiceId = localStorage.getItem('lozee_selectedVoice') || (window.LOZEE_TTS ? window.LOZEE_TTS.DEFAULT_VOICE : 'default-fallback-voice');
+      const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
+      const topicFromUrl = new URLSearchParams(location.search).get('topic');
+
+      let userNameWithVocative = userName;
+      if (window.LOZEE_DIALOG && typeof window.LOZEE_DIALOG.getKoreanVocativeParticle === 'function') {
+          const vocativeParticle = window.LOZEE_DIALOG.getKoreanVocativeParticle(userName);
+          userNameWithVocative = `${userName}${vocativeParticle}`;
+      } else {
+          console.warn("getKoreanVocativeParticle 함수를 찾을 수 없습니다. (talk.html)");
+          userNameWithVocative = `${userName}야`;
+      }
       
-      const params = new URLSearchParams(location.search);
-      const incomingTopicId   = params.get('topic');
-      const incomingTopicText = params.get('topicText');
-      const currentSelectedTopic = { id: incomingTopicId, displayText: incomingTopicText || JSON.parse(localStorage.getItem('selectedTopic'))?.displayText || '' };
-
-      chatHistory.forEach(msg => appendBubble(msg.content, msg.role));
-
-      // basic-features.js의 함수들 호출 (전역으로 로드되었다고 가정)
-      if(typeof trackTime === 'function') trackTime();
-      if(typeof trackEmotionTone === 'function') trackEmotionTone();
-      if(typeof trackSituation === 'function') trackSituation();
-
-
-      if (currentSelectedTopic.id && chatHistory.length === 0) {
-        await initConversation(currentSelectedTopic);
-      } else if (chatHistory.length === 0) {
-        if (typeof getFirstQuestion === 'function') {
-             const initialPrompt = getFirstQuestion(userAge, {displayText: "오늘 있었던 일"});
-             appendBubble(initialPrompt, 'bot');
-             chatHistory.push({ role: 'bot', content: initialPrompt, timestamp: new Date().toISOString() });
-             localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-             if(typeof playTTSFromText === 'function') await playTTSFromText(initialPrompt, lsSelectedVoice);
-        } else {
-            appendBubble("안녕하세요! 대화 기능을 불러오는 데 문제가 있어 대화를 시작할 수 없습니다.", "system-error");
-        }
-      }
-
-      function setLoading(flag) {
-        if(sendButton) sendButton.disabled = flag;
-        if (SpeechRec && micButton) micButton.disabled = flag && !isRecognizing; else if(micButton) micButton.disabled = true;
-        if(sendButton) sendButton.classList.toggle('loading', flag);
-      }
-
-      async function initConversation(topicForInit) {
-        setLoading(true);
-        const prompt = getFirstQuestion(userAge, topicForInit); // getFirstQuestionFunction 대신 getFirstQuestion 사용
-        appendBubble(prompt, 'bot');
-        chatHistory.push({ role: 'bot', content: prompt, timestamp: new Date().toISOString() });
-        localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-        try { if(typeof playTTSFromText === 'function') await playTTSFromText(prompt, lsSelectedVoice); }
-        catch (ttsError) { console.error("TTS 오류 (초기 대화):", ttsError); }
-        setLoading(false);
-      }
-
-      async function handleUserText(text) {
-        if (!text.trim()) return;
-        document.querySelector('.bubble.user.interim')?.remove();
-        appendBubble(text, 'user');
-        chatHistory.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
-        localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-        setLoading(true);
-        let res;
-        try {
-          res = await getGptResponse(text, { // getGptResponseFunction 대신 getGptResponse 사용
-            userId, userAge, userName, userDisease,
-            chatHistory: chatHistory.slice(-10),
-          });
-
-          if (!res.ok) {
-            console.error(`API Error: ${res.status} ${res.statusText}.`);
-            let errorData = { text: `서버 응답 오류 (${res.status}). 잠시 후 다시 시도해주세요.`};
-            try { errorData = await res.json(); console.error("API Error Body:", errorData); }
-            catch (e) { const rawErrorText = await res.text().catch(() => ""); console.error("Raw API Error Text:", rawErrorText); if(rawErrorText) errorData.text = rawErrorText.substring(0,150); }
-            appendBubble(errorData.text || `API 요청 실패: ${res.status}`, 'bot');
-            chatHistory.push({ role: 'system', content: `API 오류: ${res.status}`, error: errorData, timestamp: new Date().toISOString() });
-            setLoading(false); return;
-          }
-
-          const data = await res.json();
-          console.log("GPT API 응답:", data);
-          const botMessage = data?.rephrasing || data?.text || "응답을 받지 못했어요.";
-          appendBubble(botMessage, 'bot');
-          const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
-          if (data.analysis) {
-            console.log("💡 분석 데이터:", data.analysis);
-            botResponseEntry.analysis = data.analysis;
-            if (typeof renderLiteracyAnalysis === 'function' && analysisContainer) {
-               renderLiteracyAnalysis(data.analysis, analysisContainer);
-               analysisContainer.style.display = 'block';
-            }
-          }
-          chatHistory.push(botResponseEntry);
-          localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-          if(typeof playTTSFromText === 'function') await playTTSFromText(botMessage, lsSelectedVoice);
-        } catch (err) {
-          console.error("❌ 처리 중 오류:", err);
-          if(res) console.error("오류 시점 API 응답 객체 (res):", {status: res.status, ok: res.ok});
-          appendBubble("죄송해요, 메시지 처리 중 오류 발생.", 'bot');
-          chatHistory.push({ role: 'system', content: '클라이언트 처리 오류', error: err.message, timestamp: new Date().toISOString() });
-        }
-        setLoading(false); if(chatInput) chatInput.value = ''; if(chatInput) chatInput.focus();
-      }
-
-      if(sendButton) sendButton.onclick = () => handleUserText(chatInput.value);
-      if(chatInput) chatInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUserText(chatInput.value); } };
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(initializeApp, 100);
-    });
-  </script>
-</body>
-</html>
-```
-</immersive_code>
-
+      window.LOZEE_ST
