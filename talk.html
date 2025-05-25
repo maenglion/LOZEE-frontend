@@ -1,63 +1,256 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <script>
+    // 초기 설정 확인 및 리다이렉션 로직
+    const isConfigured = localStorage.getItem('lozee_username') &&
+                         localStorage.getItem('lozee_voice') &&
+                         localStorage.getItem('lozee_userage');
+
+    const topicForRedirect = localStorage.getItem('lozee_current_topic');
+
+    if (isConfigured) {
+      const targetUrl = topicForRedirect ? `talk.html?topic=${encodeURIComponent(topicForRedirect)}` : 'talk.html';
+      window.location.href = targetUrl;
+    }
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>LOZEE와 대화하기</title>
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --primary-color: #6e8efb;
-      --secondary-color: #354157;
-      --background-color: #2a3340;
-      --text-color: #fff;
-      --input-background: #f0f0f0;
-      --bot-bubble-bg: var(--input-background);
-      --bot-bubble-text: #333;
+      --primary-color: #6078ea; 
+      --secondary-color: #f0f2f5; 
+      --background-color: #FFFFFF; 
+      
+      --text-color-on-dark-bg: #FFFFFF; 
+      --text-color-on-light-bg: #333333; 
+      
+      --input-background: #FFFFFF; 
+      --input-border-color: #D1D5DB; 
+      
+      --bot-bubble-bg: #E9EBF8; 
+      --bot-bubble-text: #374151; 
+      
       --user-bubble-bg: var(--primary-color);
-      --user-bubble-text: #fff;
+      --user-bubble-text: #FFFFFF;
+      
       --gnb-height: 56px;
-      --chat-input-actual-height: 50px; /* 입력 필드와 버튼의 실제 높이 */
-      --chat-input-padding-vertical: 10px; /* 입력창 컨테이너의 상하 패딩 */
-      --chat-input-safe-area: env(safe-area-inset-bottom, 20px); /* iOS 하단 안전 영역, 기본 20px */
+      --chat-input-actual-height: 50px;
+      --chat-input-padding-vertical: 10px;
+      --chat-input-safe-area: env(safe-area-inset-bottom, 20px);
       --chat-input-total-height: calc(var(--chat-input-actual-height) + (2 * var(--chat-input-padding-vertical)) + var(--chat-input-safe-area));
-      --gemini-purple: #7B68EE;
+      
+      --gnb-title-color: var(--primary-color); 
+      --gnb-menu-icon-color: var(--primary-color); 
+
       --volume-meter-default-bg: var(--primary-color);
       --meter-top-margin: 8px;
-      --gnb-dropdown-border-color: #4a5568;
+      --gnb-dropdown-border-color: #E5E7EB; 
     }
-    body{margin:0;padding-top:var(--gnb-height);font-family:'KoPub World Dotum',sans-serif;background-color:var(--background-color);color:var(--text-color);display:flex;flex-direction:column;height:100vh;box-sizing:border-box;overflow:hidden;}
-    #gnb{position:fixed;top:0;left:0;width:100%;height:var(--gnb-height);background-color:var(--background-color);padding:0 16px;box-shadow:0 2px 5px rgba(0,0,0,0.3);z-index:1000;display:flex;justify-content:space-between;align-items:center;box-sizing:border-box;}
-    #gnb-title{font-size:1.2em;font-weight:bold;color:var(--gemini-purple);}
-    #menu-toggle{background:none;border:none;color:var(--gemini-purple);font-size:24px;cursor:pointer;padding:8px;display:flex;align-items:center;justify-content:center;}
-    #dropdown-menu{position:fixed;top:var(--gnb-height);right:0;background-color:var(--background-color);border-radius:0 0 0 8px;box-shadow:-3px 3px 6px rgba(0,0,0,0.25);width:200px;z-index:999;overflow:hidden;max-height:0;transition:max-height 0.3s ease-out;}
+    body {
+      margin:0;
+      padding-top:var(--gnb-height);
+      font-family:'KoPub World Dotum',sans-serif;
+      background-color:var(--background-color); 
+      color:var(--text-color-on-light-bg); 
+      display:flex;
+      flex-direction:column;
+      height:100vh;
+      box-sizing:border-box;
+      overflow:hidden;
+    }
+    #gnb {
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:var(--gnb-height);
+      background-color:var(--background-color); 
+      padding:0 16px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.07); 
+      z-index:1000;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      box-sizing:border-box;
+      border-bottom: 1px solid var(--input-border-color); 
+    }
+    #gnb-title {
+      font-size:1.2em;
+      font-weight:bold;
+      color:var(--gnb-title-color); 
+    }
+    #menu-toggle {
+      background:none;
+      border:none;
+      color:var(--gnb-menu-icon-color); 
+      font-size:24px;
+      cursor:pointer;
+      padding:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    #dropdown-menu {
+      position:fixed;
+      top:var(--gnb-height);
+      right:0;
+      background-color:var(--background-color); 
+      border-radius:0 0 0 8px;
+      box-shadow:-2px 2px 5px rgba(0,0,0,0.08);
+      width:200px;
+      z-index:999;
+      overflow:hidden;
+      max-height:0;
+      transition:max-height 0.3s ease-out;
+      border-left: 1px solid var(--input-border-color);
+      border-bottom: 1px solid var(--input-border-color);
+    }
     #dropdown-menu.show{max-height:500px;}
-    #dropdown-menu a{display:block;color:var(--text-color);text-decoration:none;padding:12px 16px;font-size:0.95em;border-bottom:1px solid var(--gnb-dropdown-border-color);}
+    #dropdown-menu a {
+      display:block;
+      color:var(--text-color-on-light-bg); 
+      text-decoration:none;
+      padding:12px 16px;
+      font-size:0.95em;
+      border-bottom:1px solid var(--gnb-dropdown-border-color);
+    }
     #dropdown-menu a:last-child{border-bottom:none;}
-    #dropdown-menu a:hover{background-color:var(--secondary-color);}
-    #meter-container{position:fixed;top:calc(var(--gnb-height) + var(--meter-top-margin));left:50%;transform:translateX(-50%);width:60%;max-width:300px;height:6px;background-color:var(--secondary-color);border-radius:3px;overflow:hidden;z-index:998;}
-    #volume-level{width:0%;height:100%;background:var(--volume-meter-default-bg);border-radius:3px;transition:width 0.05s linear;}
-    #chat-container{flex-grow:1;padding:16px;padding-top:calc(var(--meter-top-margin) + 6px + 10px);overflow-y:auto;display:flex;flex-direction:column;gap:10px; margin-bottom: var(--chat-input-total-height); }
-    #analysis-container{padding:10px;background:#1e2a38;color:#ccc;font-size:0.85em;max-height:150px;overflow-y:auto;border-top:1px solid var(--secondary-color); display:none;}
-    .bubble{padding:12px 16px;border-radius:18px;max-width:75%;line-height:1.5;word-break:keep-all;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
-    .bubble.user{background-color:var(--user-bubble-bg);color:var(--user-bubble-text);align-self:flex-end;border-bottom-right-radius:4px;}
-    .bubble.bot{background-color:var(--bot-bubble-bg);color:var(--bot-bubble-text);align-self:flex-start;border-bottom-left-radius:4px;}
+    #dropdown-menu a:hover{background-color:var(--secondary-color);} 
+    #meter-container {
+      position:fixed;
+      top:calc(var(--gnb-height) + var(--meter-top-margin));
+      left:50%;
+      transform:translateX(-50%);
+      width:60%;
+      max-width:300px;
+      height:6px;
+      background-color:#E5E7EB; 
+      border-radius:3px;
+      overflow:hidden;
+      z-index:998;
+    }
+    #volume-level {
+      width:0%;
+      height:100%;
+      background:var(--volume-meter-default-bg);
+      border-radius:3px;
+      transition:width 0.05s linear;
+    }
+    #chat-container {
+      flex-grow:1;
+      padding:16px;
+      padding-top:calc(var(--meter-top-margin) + 6px + 10px);
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px; 
+      margin-bottom: var(--chat-input-total-height); 
+    }
+    #analysis-container {
+      padding:10px;
+      background:#f3f4f6; 
+      color:#4b5563; 
+      font-size:0.85em;
+      max-height:150px;
+      overflow-y:auto;
+      border-top:1px solid #e5e7eb; 
+      display:none;
+    }
+    .bubble {
+      padding:10px 15px; 
+      border-radius:16px; 
+      max-width:80%; 
+      line-height:1.6;
+      word-break:keep-all;
+      box-shadow:0 1px 2px rgba(0,0,0,0.06); 
+    }
+    .bubble.user {
+      background-color:var(--user-bubble-bg);
+      color:var(--user-bubble-text);
+      align-self:flex-end;
+      border-bottom-right-radius:4px;
+    }
+    .bubble.bot {
+      background-color:var(--bot-bubble-bg); 
+      color:var(--bot-bubble-text); 
+      align-self:flex-start;
+      border-bottom-left-radius:4px;
+    }
     .bubble.user.interim{opacity:.7;}
-    .bubble.system-error{background-color:#ffe0e0;color:#c0392b;align-self:center;max-width:80%;text-align:center;font-size:0.9em;border:1px solid #c0392b; margin: 5px 0;}
-    #chat-input-container{position:fixed;bottom:0;left:0;width:100%; background-color:var(--secondary-color);box-shadow:0 -2px 4px rgba(0,0,0,0.1);box-sizing:border-box; padding-top: var(--chat-input-padding-vertical); padding-bottom: calc(var(--chat-input-padding-vertical) + var(--chat-input-safe-area)); /* 상하 패딩 + 하단 안전 영역 */}
-    .input-area { display: flex; align-items: center; width: 100%; padding: 0 12px; box-sizing: border-box; gap: 8px; height: var(--chat-input-actual-height); }
-    #chat-input{flex:1;padding:10px 16px;border-radius:22px;border:1px solid #4a5568;font-size:1em;background-color:var(--input-background);color:#333;height:100%;box-sizing:border-box;}
-    #chat-input::placeholder{color:#777;}
-    #mic-button, #send-button{width:44px;height:44px;border:none;border-radius:50%;background-color:var(--primary-color);color:var(--text-color);font-size:1.3em;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background-color 0.2s ease; flex-shrink: 0;}
-    #mic-button { margin-left: 0; margin-right: 8px;}
-    #send-button { margin-left: 0; }
-    #mic-button:hover, #send-button:hover{background-color:#5a7edf;}
-    #mic-button.recording{background-color:#e74c3c;} /* 마이크 녹음 중 스타일 */
-    #send-button.loading{background:#999;cursor:default;}
-    #chat-container::-webkit-scrollbar{width:8px;}
-    #chat-container::-webkit-scrollbar-track{background:var(--background-color);}
-    #chat-container::-webkit-scrollbar-thumb{background:var(--gnb-dropdown-border-color);border-radius:4px;}
-    #chat-container::-webkit-scrollbar-thumb:hover{background:#5a7edf;}
+    .bubble.system-error, .bubble.ai_feedback { 
+      background-color:#FFFBEB; 
+      color:#92400E; 
+      align-self:center;
+      max-width:85%;
+      text-align:center;
+      font-size:0.9em;
+      border:1px solid #FDE68A; 
+      margin: 5px 0;
+      border-radius: 8px; 
+    }
+    #chat-input-container {
+      position:fixed;
+      bottom:0;
+      left:0;
+      width:100%; 
+      background-color:var(--background-color); 
+      border-top: 1px solid var(--input-border-color); 
+      box-shadow:0 -1px 3px rgba(0,0,0,0.05);
+      box-sizing:border-box; 
+      padding-top: var(--chat-input-padding-vertical); 
+      padding-bottom: calc(var(--chat-input-padding-vertical) + var(--chat-input-safe-area));
+    }
+    .input-area { 
+      display: flex; 
+      align-items: center; 
+      width: 100%; 
+      padding: 0 12px; 
+      box-sizing: border-box; 
+      gap: 8px; 
+      height: var(--chat-input-actual-height); 
+    }
+    #chat-input {
+      flex:1;
+      padding:10px 16px;
+      border-radius:22px;
+      border:1px solid var(--input-border-color); 
+      font-size:1em;
+      background-color:var(--input-background);
+      color:var(--text-color-on-light-bg); 
+      height:100%;
+      box-sizing:border-box;
+    }
+    #chat-input::placeholder{color:#9CA3AF;}
+    #mic-button, #send-button {
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:50%;
+      background-color:var(--primary-color);
+      color:var(--user-bubble-text); 
+      font-size:1.3em;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:background-color 0.2s ease, box-shadow 0.2s ease; 
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    #mic-button:hover, #send-button:hover{
+        background-color:#4f65d1; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    #mic-button.recording{background-color:#EF4444; box-shadow: 0 0 5px rgba(239, 68, 68, 0.5);}
+    #send-button.loading{background:#D1D5DB;cursor:default; box-shadow: none;} 
+    
+    #chat-container::-webkit-scrollbar{width:6px;} 
+    #chat-container::-webkit-scrollbar-track{background:transparent;} 
+    #chat-container::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px;} 
+    #chat-container::-webkit-scrollbar-thumb:hover{background:#9CA3AF;}
   </style>
 </head>
 <body>
@@ -74,8 +267,10 @@
   </nav>
 
   <div id="meter-container"><div id="volume-level"></div></div>
-  <div id="chat-container"></div>
-  <div id="analysis-container"></div>
+  <div id="chat-container">
+    </div>
+  <div id="analysis-container">
+    </div>
 
   <div id="chat-input-container">
     <div class="input-area">
@@ -85,67 +280,111 @@
     </div>
   </div>
 
-  <script src="./js/gpt-dialog.js"></script>
-  <script src="./js/tts.js"></script>
-  <script src="./js/basic-features.js"></script>
-  <script src="./js/literacyPatternCheckRenderer.js"></script>
+  <script src="./js/gpt-dialog.js" defer></script>
+  <script src="./js/tts.js" defer></script>
+  <script src="./js/basic-features.js" defer></script>
+  <script src="./js/literacyPatternCheckRenderer.js" defer></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(initializeApp, 100);
+        checkAndInit();
     });
 
+    function checkAndInit(retries = 20, delay = 250) { 
+        if (typeof getGptResponse === 'function' && 
+            window.LOZEE_TTS && typeof window.LOZEE_TTS.playTTSFromText === 'function' &&
+            window.LOZEE_ANALYSIS && typeof window.LOZEE_ANALYSIS.trackTime === 'function' &&
+            typeof initializeApp === 'function') {
+            initializeApp();
+        } else if (retries > 0) {
+            console.log(`필수 객체/함수 로드 대기 중... (${retries}회 남음)`);
+            setTimeout(() => checkAndInit(retries - 1, delay), delay);
+        } else {
+            console.error("CRITICAL: 필수 JavaScript 객체/함수 로드 실패. 앱을 초기화할 수 없습니다.");
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) {
+                 chatContainer.innerHTML = '<div class="bubble system-error" style="align-self:center; max-width: 80%; text-align:center;">앱 초기화에 실패했습니다. 페이지를 새로고침하거나 나중에 다시 시도해주세요.</div>';
+            } else {
+                document.body.innerHTML = '<div style="color:red;text-align:center;padding:50px;">채팅 UI 및 앱 초기화 실패!</div>';
+            }
+        }
+    }
+    
     async function initializeApp() {
+      console.log("initializeApp 호출됨. 필요한 객체들 로드 확인됨.");
       const chatContainer = document.getElementById('chat-container');
       const analysisContainer = document.getElementById('analysis-container');
 
+      let hasGreeted = false;
+      let isRecording = false;
+      let mediaRecorder;
+      let mediaStream;
+      let audioChunks = [];
+      let chatHistory = JSON.parse(localStorage.getItem('lozee_conversation_history') || '[]');
+
+      const userName = localStorage.getItem('lozee_username') || '친구';
+      const hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
+      const voiceId = localStorage.getItem('lozee_voice') || (window.LOZEE_TTS ? window.LOZEE_TTS.DEFAULT_VOICE : 'default-fallback-voice');
+      const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
+      const topicFromUrl = new URLSearchParams(location.search).get('topic');
+
+      let userNameWithVocative = userName;
+      if (typeof getKoreanVocativeParticle === 'function') { 
+          const vocativeParticle = getKoreanVocativeParticle(userName);
+          userNameWithVocative = `${userName}${vocativeParticle}`;
+      } else if (window.LOZEE_DIALOG && typeof window.LOZEE_DIALOG.getKoreanVocativeParticle === 'function') {
+          const vocativeParticle = window.LOZEE_DIALOG.getKoreanVocativeParticle(userName);
+          userNameWithVocative = `${userName}${vocativeParticle}`;
+      } else {
+          console.warn("getKoreanVocativeParticle 함수를 찾을 수 없습니다. (talk.html)");
+          userNameWithVocative = `${userName}야`;
+      }
+      
+      window.LOZEE_STATE = window.LOZEE_STATE || {};
+
+      const chatInput     = document.getElementById('chat-input');
+      const sendButton    = document.getElementById('send-button');
+      const micButton     = document.getElementById('mic-button');
+      const meterLevel    = document.getElementById('volume-level');
+      const menuToggle    = document.getElementById('menu-toggle');
+      const dropdownMenu  = document.getElementById('dropdown-menu');
+
+      if (!chatContainer || !chatInput || !sendButton || !micButton || !meterLevel || !menuToggle || !dropdownMenu) {
+          console.error("CRITICAL: 필수 UI 요소를 찾을 수 없습니다. HTML 구조를 확인하세요.");
+          if(chatContainer) chatContainer.innerHTML = '<div class="bubble system-error" style="align-self:center;">UI 로드 오류 발생.</div>';
+          return;
+      }
+      
       function appendBubble(text, role) {
         const el = document.createElement('div');
         el.className = `bubble ${role}`;
         el.textContent = text;
-        if (role === 'system-error') el.classList.add('system-error');
-        if (chatContainer) {
-            chatContainer.appendChild(el);
-            requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
-        } else {
-            console.error("Chat container not found. Message:", text);
-            if (role === 'system-error') alert("오류: " + text);
+        if (role === 'system-error' || role === 'ai_feedback') {
+            el.classList.add(role === 'system-error' ? 'system-error' : 'ai_feedback');
         }
+        chatContainer.appendChild(el);
+        requestAnimationFrame(() => chatContainer.scrollTop = chatContainer.scrollHeight);
       }
 
-      if (!chatContainer) {
-          console.error("CRITICAL: chatContainer not found.");
-          document.body.innerHTML = '<div style="color:red;text-align:center;padding:50px;">채팅 UI 로드 실패!</div>';
-          return;
-      }
-
-      // --- TTS 및 STT 제어 변수 ---
-      let isTTSRunning = false;   // TTS 재생 상태 플래그
-      let currentWebSpeechUtterance = null; // Web Speech API Utterance 객체 (tts.js가 이를 사용한다고 가정)
-
-      // --- 전역 객체에서 함수 가져오기 및 폴백 ---
+      let isTTSRunning = false;
       const playTTSFromText_original = window.LOZEE_TTS?.playTTSFromText;
-      const DEFAULT_VOICE = window.LOZEE_TTS?.DEFAULT_VOICE || 'default-fallback-voice';
+      const DEFAULT_VOICE_FROM_TTS_JS = window.LOZEE_TTS?.DEFAULT_VOICE || 'default-fallback-voice';
+      const lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE_FROM_TTS_JS;
 
       async function playTTSWithControl(text, voice) {
-        stopCurrentTTS(); // 새 TTS 재생 전 기존 TTS 중지
+        stopCurrentTTS();
         if (!text || !String(text).trim()) {
           console.log("TTS: 재생할 텍스트 없음.");
           isTTSRunning = false; return;
         }
-        console.log("새로운 TTS 재생 시도:", text);
+        console.log("새로운 TTS 재생 시도:", text, "Voice:", voice);
         isTTSRunning = true; setLoading(true);
         try {
           if (typeof playTTSFromText_original === 'function') {
-            // LOZEE_TTS.playTTSFromText가 Promise를 반환하고,
-            // Web Speech API를 사용하며, Utterance 객체를 반환하거나 내부적으로 관리한다고 가정.
-            // 또는, tts.js에서 직접 speechSynthesis.speak()를 호출하고,
-            // 여기서는 speechSynthesis.cancel()로 제어한다고 가정.
-            // 가장 간단한 방법은 tts.js가 Web Speech API를 직접 사용하는 것입니다.
-            await playTTSFromText_original(text, voice); // 이 함수가 완료될 때까지 기다림
+            await playTTSFromText_original(text, voice || lsSelectedVoice); 
             console.log("TTS 재생 완료 (Promise resolved):", text);
           } else {
-            console.warn(`TTS Fallback: ${text}. tts.js 로드 실패.`);
+            console.warn(`TTS Fallback: ${text}. tts.js 로드 실패 또는 playTTSFromText 함수 미정의.`);
             appendBubble("알림: 음성 출력(TTS) 기능을 사용할 수 없습니다.", "system-error");
           }
         } catch (error) {
@@ -155,51 +394,37 @@
           isTTSRunning = false; setLoading(false);
         }
       }
+      
+      const trackTimeFromAnalysis = window.LOZEE_ANALYSIS?.trackTime;
+      const renderLiteracyAnalysisFromAnalysis = window.LOZEE_ANALYSIS?.renderLiteracyAnalysis;
 
-      const getGptResponse = window.LOZEE_DIALOG?.getGptResponse || (async (text) => { /* 폴백 */
-        console.error("getGptResponse 사용 불가."); appendBubble("오류: 대화 응답 불가.", "system-error");
-        return Promise.resolve({ ok: false, status: 503, statusText: "Service Unavailable", json: async () => ({ text: "오류: 응답 처리 불가."}) });
-      });
-      const getFirstQuestion = window.LOZEE_DIALOG?.getFirstQuestion || ((userAge, topic) => { /* 폴백 */
-        console.error("getFirstQuestion 사용 불가."); appendBubble("오류: 대화 시작 불가.", "system-error");
-        return "오류: 대화 시작 불가.";
-      });
-
-      const trackTime = window.LOZEE_ANALYSIS?.trackTime || (() => console.warn("trackTime 사용 불가."));
-      const renderLiteracyAnalysis = window.LOZEE_ANALYSIS?.renderLiteracyAnalysis || ((result, elId) => {
-          console.warn("renderLiteracyAnalysis 사용 불가.");
-          const el = document.getElementById(elId);
-          if(el) { el.innerHTML = ""; el.style.display = 'none'; }
+      menuToggle.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
+      document.addEventListener('click', (event) => {
+        const gnb = document.getElementById('gnb');
+        if (gnb && !gnb.contains(event.target) && dropdownMenu.classList.contains('show')) {
+          dropdownMenu.classList.remove('show');
+        }
       });
 
-      // --- DOM 요소 참조 ---
-      const chatInput     = document.getElementById('chat-input');
-      const sendButton    = document.getElementById('send-button');
-      const micButton     = document.getElementById('mic-button');
-      const meterLevel    = document.getElementById('volume-level');
-      const menuToggle    = document.getElementById('menu-toggle');
-      const dropdownMenu  = document.getElementById('dropdown-menu');
-
-      // --- GNB 메뉴 토글 ---
-      if (menuToggle && dropdownMenu) {
-        menuToggle.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
-        document.addEventListener('click', (event) => {
-          const gnb = document.getElementById('gnb');
-          if (gnb && !gnb.contains(event.target) && dropdownMenu.classList.contains('show')) {
-            dropdownMenu.classList.remove('show');
+      let audioContext, analyser, microphoneSource, dataArray, volumeMeterAnimationId, analyserStream;
+      const LOW_COLOR = { r: 0, g: 180, b: 0 }, MID_COLOR = { r: 255, g: 193, b: 7 }, HIGH_COLOR = { r: 211, g: 47, b: 47 };
+      function interpolateColor(c1,c2,f){const r=Math.round(c1.r+f*(c2.r-c1.r)),g=Math.round(c1.g+f*(c2.g-c1.g)),b=Math.round(c1.b+f*(c2.b-c1.b));return `rgb(${r},${g},${b})`}
+      function setupAudioAnalysis(stream){try{if(audioContext?.state!=='closed')audioContext?.close().catch(e=>console.warn("AudioContext close 중 오류:", e));audioContext=new(window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=256;analyser.smoothingTimeConstant=0.3;microphoneSource=audioContext.createMediaStreamSource(stream);microphoneSource.connect(analyser);dataArray=new Uint8Array(analyser.frequencyBinCount);analyserStream=stream;drawVolumeMeter()}catch(e){console.error("오디오 분석 설정 오류:",e);if(meterLevel)meterLevel.style.width='0%';}}
+      function drawVolumeMeter(){volumeMeterAnimationId=requestAnimationFrame(drawVolumeMeter);if(!analyser||!dataArray||!meterLevel)return;analyser.getByteFrequencyData(dataArray);let s=0;for(let i=0;i<dataArray.length;i++)s+=dataArray[i];let avgVol=dataArray.length>0?s/dataArray.length:0;let normVol=(avgVol/140)*100;normVol=Math.min(100,Math.max(0,normVol));meterLevel.style.width=normVol+'%';let activeCol;if(normVol<=50)activeCol=interpolateColor(LOW_COLOR,MID_COLOR,normVol/50);else activeCol=interpolateColor(MID_COLOR,HIGH_COLOR,(normVol-50)/50);const baseGradCol=getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim()||'#FFFFFF';meterLevel.style.background=`linear-gradient(to right, ${baseGradCol}, ${activeCol})`}
+      function stopAudioAnalysis(){
+          if(volumeMeterAnimationId)cancelAnimationFrame(volumeMeterAnimationId);
+          volumeMeterAnimationId=null;
+          if(microphoneSource)microphoneSource.disconnect();
+          microphoneSource=null;
+          if(analyserStream?.getTracks)analyserStream.getTracks().forEach(t=>t.stop());
+          analyserStream=null;
+          if(audioContext && audioContext.state !== 'closed') { // 수정된 부분
+            audioContext.close().catch(e=>console.warn("AudioContext close 중 오류:",e));
           }
-        });
+          audioContext=null;
+          if(meterLevel){meterLevel.style.width='0%';meterLevel.style.background=getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg').trim()}analyser=null;dataArray=null
       }
 
-      // --- 오디오 분석 및 시각화 ---
-      let audioContext, analyser, microphoneSource, dataArray, volumeMeterAnimationId, analyserStream;
-      const LOW_COLOR = { r: 0, g: 200, b: 0 }, MID_COLOR = { r: 255, g: 200, b: 0 }, HIGH_COLOR = { r: 255, g: 69, b: 0 };
-      function interpolateColor(c1,c2,f){const r=Math.round(c1.r+f*(c2.r-c1.r)),g=Math.round(c1.g+f*(c2.g-c1.g)),b=Math.round(c1.b+f*(c2.b-c1.b));return `rgb(${r},${g},${b})`}
-      function setupAudioAnalysis(stream){if(audioContext?.state!=='closed')audioContext?.close();audioContext=new(window.AudioContext||window.webkitAudioContext)();analyser=audioContext.createAnalyser();analyser.fftSize=256;analyser.smoothingTimeConstant=0.3;microphoneSource=audioContext.createMediaStreamSource(stream);microphoneSource.connect(analyser);dataArray=new Uint8Array(analyser.frequencyBinCount);analyserStream=stream;drawVolumeMeter()}
-      function drawVolumeMeter(){volumeMeterAnimationId=requestAnimationFrame(drawVolumeMeter);if(!analyser||!dataArray||!meterLevel)return;analyser.getByteFrequencyData(dataArray);let s=0;for(let i=0;i<dataArray.length;i++)s+=dataArray[i];let avgVol=dataArray.length>0?s/dataArray.length:0;let normVol=(avgVol/140)*100;normVol=Math.min(100,Math.max(0,normVol));meterLevel.style.width=normVol+'%';let activeCol;if(normVol<=50)activeCol=interpolateColor(LOW_COLOR,MID_COLOR,normVol/50);else activeCol=interpolateColor(MID_COLOR,HIGH_COLOR,(normVol-50)/50);const baseGradCol=getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim()||'#2a3340';meterLevel.style.background=`linear-gradient(to right, ${baseGradCol}, ${activeCol})`}
-      function stopAudioAnalysis(){if(volumeMeterAnimationId)cancelAnimationFrame(volumeMeterAnimationId);volumeMeterAnimationId=null;if(microphoneSource)microphoneSource.disconnect();microphoneSource=null;if(analyserStream?.getTracks)analyserStream.getTracks().forEach(t=>t.stop());analyserStream=null;if(audioContext?.state!=='closed')audioContext.close().catch(e=>console.error("AudioContext close error:",e));audioContext=null;if(meterLevel){meterLevel.style.width='0%';meterLevel.style.background=getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg').trim()}analyser=null;dataArray=null}
-
-      // --- STT (음성 인식) 설정 ---
       let recognition, isRecognizing = false;
       const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -207,216 +432,301 @@
         if (isTTSRunning) {
             console.log("명시적 TTS 중지 시도 (stopCurrentTTS)");
             if (speechSynthesis && typeof speechSynthesis.cancel === 'function') {
-                speechSynthesis.cancel(); // Web Speech API의 모든 발화 중지
+                speechSynthesis.cancel();
                 console.log("speechSynthesis.cancel() 호출됨.");
             }
-            // 만약 tts.js가 Audio 객체를 직접 생성하고 반환하여 currentTTSAudioElement에 할당했다면,
-            // currentTTSAudioElement.pause(); currentTTSAudioElement.src = ''; 등으로 중지.
-            // 현재는 tts.js가 내부적으로 처리하고 Promise만 반환한다고 가정.
             isTTSRunning = false;
-            setLoading(false); // TTS가 중지되었으므로 로딩 상태 해제
+            setLoading(false); 
         }
       }
 
       if (SpeechRec) {
         recognition = new SpeechRec();
         recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'ko-KR';
-        if(micButton) micButton.disabled = false;
+        micButton.disabled = false;
 
         recognition.onstart = () => {
           isRecognizing = true;
-          stopCurrentTTS(); // 사용자가 말 시작 시, 현재 재생 중인 TTS 중지
-          if(micButton) { micButton.textContent = '💬'; micButton.classList.add('recording'); }
+          stopCurrentTTS(); 
+          micButton.textContent = '💬'; micButton.classList.add('recording');
           console.log("🎤 STT 시작 - TTS 중지됨");
         };
         recognition.onend = () => {
           isRecognizing = false;
-          if(micButton) { micButton.textContent = '🎤'; micButton.classList.remove('recording'); }
-          setLoading(false); stopAudioAnalysis(); console.log("🎤 STT 종료");
+          micButton.textContent = '🎤'; micButton.classList.remove('recording');
+          setLoading(false); 
+          stopAudioAnalysis(); // STT 종료 시 오디오 분석도 확실히 중지
+          console.log("🎤 STT 종료");
         };
         recognition.onresult = (event) => {
           let finalTranscript = '';
+          let interimTranscript = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+            const transcriptPart = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcriptPart;
+            } else {
+                interimTranscript += transcriptPart;
+            }
           }
+          
+          let interimBubble = document.querySelector('.bubble.user.interim');
+          if (interimTranscript) {
+            if (!interimBubble) {
+                interimBubble = document.createElement('div');
+                interimBubble.className = 'bubble user interim';
+                chatContainer.appendChild(interimBubble);
+            }
+            interimBubble.textContent = interimTranscript;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+          
           if (finalTranscript) {
-            if (isTTSRunning) { // STT 결과 처리 전, 혹시 아직 TTS가 돌고 있다면 다시 한번 중지
-                console.log("STT 결과 처리 전, TTS가 아직 실행 중이어서 중지합니다.");
+            if (interimBubble) interimBubble.remove(); 
+            if (isTTSRunning) { 
+                console.log("STT 최종 결과 처리 전, TTS가 아직 실행 중이어서 중지합니다.");
                 stopCurrentTTS();
             }
-            handleUserText(finalTranscript);
+            handleUserText(finalTranscript); 
           }
         };
-        recognition.onerror = (event) => { /* 이전과 동일, appendBubble 사용 */
+        recognition.onerror = (event) => { 
           console.error("❌ STT 오류:", event.error);
-          appendBubble(event.error === 'not-allowed'||event.error === 'service-not-allowed' ? "마이크 권한이 필요합니다." : "음성 인식 중 오류가 발생했습니다.", "system-error");
+          let errorMsg = "음성 인식 중 오류가 발생했습니다.";
+          if (event.error === 'not-allowed'||event.error === 'service-not-allowed') {
+            errorMsg = "마이크 권한이 필요합니다. 브라우저 설정을 확인해주세요.";
+          } else if (event.error === 'no-speech') {
+            errorMsg = "음성이 감지되지 않았어요. 다시 말씀해주시겠어요?";
+          } else if (event.error === 'network') {
+            errorMsg = "네트워크 문제로 음성 인식을 할 수 없어요. 인터넷 연결을 확인해주세요.";
+          }
+          appendBubble(errorMsg, "system-error");
           isRecognizing = false;
-          if(micButton) { micButton.textContent = '🎤'; micButton.classList.remove('recording'); }
+          micButton.textContent = '🎤'; micButton.classList.remove('recording');
           setLoading(false); stopAudioAnalysis();
         };
-      } else { /* 이전과 동일 */
+      } else { 
         console.warn("⚠️ 음성 인식을 지원하지 않는 브라우저입니다.");
-        if(micButton) { micButton.title = "음성 인식 미지원"; micButton.disabled = true; }
+        micButton.title = "음성 인식 미지원"; micButton.disabled = true;
         appendBubble("알림: 사용 중인 브라우저에서는 음성 인식을 지원하지 않습니다.", "system-error");
       }
 
-      if(micButton) {
-        micButton.onclick = async () => {
-          if (!SpeechRec) return;
-          if (isTTSRunning) { // TTS가 재생 중이면 STT를 시작하지 않음 (또는 TTS를 중지 후 시작)
-            console.log("TTS 재생 중이므로 STT를 시작하지 않습니다. TTS를 먼저 중지합니다.");
-            stopCurrentTTS();
-            return; // 사용자가 다시 버튼을 누르도록 유도
+      micButton.onclick = async () => {
+        if (!SpeechRec) return;
+        if (isTTSRunning) {
+          console.log("TTS 재생 중이므로 STT를 시작하지 않습니다. TTS를 먼저 중지합니다.");
+          stopCurrentTTS();
+          return; 
+        }
+        if (isRecognizing) {
+          recognition.stop(); 
+        } else {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            setupAudioAnalysis(stream); 
+            recognition.start(); 
+          } catch (err) {
+            console.error("❌ 마이크 권한/시작 오류:", err); 
+            appendBubble("마이크를 사용할 수 없습니다. 권한을 확인해주세요.", "system-error"); 
+            stopAudioAnalysis(); 
+            setLoading(false);
           }
-          if (isRecognizing) {
-            recognition.stop();
-          } else {
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-              setupAudioAnalysis(stream); recognition.start(); setLoading(true);
-            } catch (err) {
-              console.error("❌ 마이크 권한/시작 오류:", err); appendBubble("마이크를 사용할 수 없습니다. 권한을 확인해주세요.", "system-error"); stopAudioAnalysis(); setLoading(false);
-            }
-          }
-        };
-      }
-
-      // --- 사용자 정보 및 대화 초기화 ---
-      localStorage.removeItem('lozee_conversation_history'); // 새로고침 시 대화 기록 초기화
-
-      const lsSelectedVoice = localStorage.getItem('lozee_selectedVoice') || DEFAULT_VOICE;
+        }
+      };
+      
       const userAge = localStorage.getItem('lozee_userage');
-      const userName = localStorage.getItem('lozee_username') || '친구';
-      const userId = localStorage.getItem('lozee_userid') || `user_${Date.now()}`;
+      const userId = localStorage.getItem('lozee_userid') || `user_${Date.now()}`; 
       const userDisease = JSON.parse(localStorage.getItem('lozee_userdisease') || '[]');
-      let chatHistory = JSON.parse(localStorage.getItem('lozee_conversation_history') || '[]');
       
       const params = new URLSearchParams(location.search);
-      const incomingTopicId   = params.get('topic');
+      const incomingTopicId   = params.get('topicId'); 
       const incomingTopicText = params.get('topicText');
-      const currentSelectedTopic = { 
+      
+      let currentSelectedTopic = { 
         id: incomingTopicId, 
         displayText: incomingTopicText || JSON.parse(localStorage.getItem('selectedTopic'))?.displayText || '',
         type: JSON.parse(localStorage.getItem('selectedTopic'))?.type || 'else'
       };
 
-      if(typeof trackTime === 'function') trackTime();
+      if (typeof trackTimeFromAnalysis === 'function') trackTimeFromAnalysis();
 
-      if (currentSelectedTopic.id && chatHistory.length === 0) {
-        await initConversation(currentSelectedTopic);
-      } else if (chatHistory.length === 0) {
-        if (typeof getFirstQuestion === 'function') {
-             const initialTopic = {displayText: "오늘 있었던 일", type: "else"};
-             localStorage.setItem('selectedTopic', JSON.stringify(initialTopic));
-             const initialPrompt = getFirstQuestion(userAge, initialTopic);
-             if (initialPrompt && !initialPrompt.startsWith("오류:")) {
-                appendBubble(initialPrompt, 'bot');
-                chatHistory.push({ role: 'bot', content: initialPrompt, timestamp: new Date().toISOString() });
+      if (chatHistory.length === 0 && !hasGreeted) {
+        if (typeof getFirstQuestion === 'function') { 
+            const initialTopicToUse = (currentSelectedTopic.id || currentSelectedTopic.displayText) ? currentSelectedTopic : {displayText: "오늘 있었던 일", type: "else"};
+            if (!currentSelectedTopic.displayText && initialTopicToUse.displayText === "오늘 있었던 일") {
+                 localStorage.setItem('selectedTopic', JSON.stringify(initialTopicToUse));
+            }
+            
+            const initialPrompt = getFirstQuestion(userAge, initialTopicToUse); 
+            if (initialPrompt && !initialPrompt.startsWith("오류:")) {
+                appendBubble(initialPrompt, 'ai'); 
+                chatHistory.push({ role: 'assistant', content: initialPrompt, timestamp: new Date().toISOString() }); 
                 localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-                if(typeof playTTSFromText === 'function') await playTTSWithControl(initialPrompt, lsSelectedVoice);
-             }
+                if(typeof playTTSFromText_original === 'function') await playTTSWithControl(initialPrompt, lsSelectedVoice);
+            } else {
+                 appendBubble("안녕하세요! 대화를 시작하는 데 문제가 있어요. 잠시 후 다시 시도해주세요.", "system-error");
+            }
         } else {
             appendBubble("안녕하세요! 대화 기능을 불러오는 데 문제가 있어 대화를 시작할 수 없습니다.", "system-error");
         }
+        hasGreeted = true;
+      } else if (chatHistory.length > 0) { 
+          chatHistory.forEach(msg => appendBubble(msg.content, msg.role === 'assistant' ? 'ai' : msg.role));
+          console.log("이전 대화 기록 복원 완료.");
+          hasGreeted = true; 
       }
 
       function setLoading(flag) {
-        if(sendButton) sendButton.disabled = flag;
-        if (SpeechRec && micButton) {
-            micButton.disabled = flag || isTTSRunning || isRecognizing;
-        } else if(micButton) {
+        sendButton.disabled = flag;
+        if (SpeechRec) {
+            micButton.disabled = flag || isTTSRunning; 
+        } else {
             micButton.disabled = true;
         }
-        if(sendButton) sendButton.classList.toggle('loading', flag);
+        sendButton.classList.toggle('loading', flag);
       }
-
-      async function initConversation(topicForInit) {
-        setLoading(true);
-        const prompt = getFirstQuestion(userAge, topicForInit);
-        if (prompt && !prompt.startsWith("오류:")) {
-            appendBubble(prompt, 'bot');
-            chatHistory.push({ role: 'bot', content: prompt, timestamp: new Date().toISOString() });
-            localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-            try { 
-              if(typeof playTTSFromText === 'function') {
-                await playTTSWithControl(prompt, lsSelectedVoice); 
-              }
-            }
-            catch (ttsError) { console.error("TTS 오류 (초기 대화):", ttsError); }
-        }
-        setLoading(false);
-      }
-
+      
       async function handleUserText(text) {
-        if (!text.trim()) return;
-        stopCurrentTTS(); // 사용자 입력 처리 전, 기존 TTS 중지
+        if (!text || !text.trim()) return;
+        stopCurrentTTS(); 
         document.querySelector('.bubble.user.interim')?.remove();
         appendBubble(text, 'user');
+        
+        const historyForGpt = chatHistory.slice(); // 현재 사용자 발화 추가 전의 히스토리 복사
         chatHistory.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
         localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+        
         setLoading(true);
         let res;
         try {
-          res = await getGptResponse(text, {
+          const contextForGpt = {
             userId, userAge, userName, userDisease,
-            chatHistory: chatHistory.slice(-10),
-            selectedTopic: currentSelectedTopic
-          });
+            chatHistory: historyForGpt.slice(-10), // 이전 대화 기록만 전달 (현재 발화 제외)
+            selectedTopic: currentSelectedTopic,
+            currentStage: localStorage.getItem('currentStage') || 'Stage 1'
+          };
 
-          if (!res.ok) { // API 응답 실패 처리 (400 오류 등)
+          res = await getGptResponse(text, contextForGpt); // gpt-dialog.js에서 import된 함수 직접 사용
+
+          if (!res.ok) {
             console.error(`API Error: ${res.status} ${res.statusText}.`);
-            let errorData = { text: `서버 응답 오류 (${res.status}).`}; // 기본 오류 메시지
-            let responseText = "";
-            if (typeof res.text === 'function') { // res.text가 함수인지 확인
-                responseText = await res.text().catch(() => "오류 응답 본문을 읽을 수 없습니다.");
-            } else {
-                responseText = String(res.body) || "응답 본문 없음"; // text 함수가 없다면 body라도 문자열로
-            }
-            console.error("Raw API Error Text:", responseText);
-            try { 
-                errorData = JSON.parse(responseText); // JSON 파싱 시도
+            let errorData;
+            try {
+                errorData = await res.json(); 
                 console.error("API Error Body (JSON Parsed):", errorData);
-            } catch (e) { 
-                errorData.text = responseText.substring(0,150) || `API 요청 실패 (${res.status})`;
+            } catch (e) {
+                const rawErrorText = await res.text().catch(() => "오류 응답 본문을 읽을 수 없습니다.");
+                console.error("Raw API Error Text:", rawErrorText);
+                errorData = { text: rawErrorText.substring(0,150) || `API 요청 실패 (${res.status})`};
             }
-            appendBubble(errorData.text || `API 요청 실패: ${res.status}`, 'bot');
+            appendBubble(errorData.text || `API 요청 실패: ${res.status}`, 'system-error');
             chatHistory.push({ role: 'system', content: `API 오류: ${res.status}`, error: errorData, timestamp: new Date().toISOString() });
             setLoading(false); return;
           }
 
           const data = await res.json();
           console.log("GPT API 응답:", data);
-          const botMessage = data?.rephrasing || data?.text || "응답을 받지 못했어요.";
-          appendBubble(botMessage, 'bot');
-          const botResponseEntry = { role: 'bot', content: botMessage, timestamp: new Date().toISOString() };
-          if (data.analysis) {
-            console.log("💡 분석 데이터:", data.analysis);
+          const botMessage = data?.text || "응답을 받지 못했어요.";
+          appendBubble(botMessage, 'ai'); 
+          
+          const botResponseEntry = { role: 'assistant', content: botMessage, timestamp: new Date().toISOString() }; 
+          if (data.analysis && Object.keys(data.analysis).length > 0) {
+            console.log("💡 수신된 분석 데이터:", data.analysis);
             botResponseEntry.analysis = data.analysis;
-            if (typeof renderLiteracyAnalysis === 'function' && analysisContainer && data.analysis.literacy) {
-               renderLiteracyAnalysis(data.analysis.literacy, 'analysis-container');
+            if (typeof renderLiteracyAnalysisFromAnalysis === 'function' && analysisContainer && data.analysis.literacy_markers) { 
+               renderLiteracyAnalysisFromAnalysis(data.analysis.literacy_markers, 'analysis-container');
+               if(analysisContainer) analysisContainer.style.display = 'block';
             } else if (analysisContainer) {
                 analysisContainer.innerHTML = ''; analysisContainer.style.display = 'none';
             }
+            // saveSessionLog는 여기서 호출 (분석 데이터 있을 때)
+            await saveSessionLog(text, botMessage, data.analysis);
           } else {
              if (analysisContainer) { analysisContainer.innerHTML = ''; analysisContainer.style.display = 'none'; }
+             console.log("분석 데이터가 비어있거나 수신되지 않았습니다.");
+             await saveSessionLog(text, botMessage, {}); // 분석 데이터 없어도 로그는 남김
           }
           chatHistory.push(botResponseEntry);
           localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
-          if(typeof playTTSFromText === 'function') {
-             await playTTSWithControl(botMessage, lsSelectedVoice);
+          
+          let isSummarizationConfirmed = false;
+          if (window.LOZEE_STATE && window.LOZEE_STATE.awaitingSummaryConfirmation) {
+            if (text.includes("1") || text.toLowerCase().includes("응") || text.includes("정리") || text.includes("요약") || text.toLowerCase().includes("그래") || text.toLowerCase().includes("예")) {
+                isSummarizationConfirmed = true;
+            }
+            window.LOZEE_STATE.awaitingSummaryConfirmation = false;
           }
+
+          if (isSummarizationConfirmed) { 
+            appendMessage("알겠어, 우리가 나눈 이야기를 정리해볼게! 잠시만 기다려줘 😊", 'ai_feedback');
+            await playTTSWithControl("알겠어, 우리가 나눈 이야기를 정리해볼게! 잠시만 기다려줘", lsSelectedVoice);
+
+            // 요약 요청 시 chatHistory는 현재 사용자 발화(요약 동의)를 제외하고, 그 이전 AI의 요약 제안까지 포함해야 함.
+            // historyForGpt는 이미 현재 사용자 발화를 제외한 상태임.
+            const summaryContext = {
+                ...contextForGpt,
+                chatHistory: historyForGpt.slice(-10) // 요약 동의 직전까지의 히스토리
+            };
+            const summaryResponse = await getGptResponse("SYSTEM_COMMAND_SUMMARIZE_HISTORY", summaryContext);
+            
+            if (!summaryResponse.ok) throw new Error(`요약 API 오류: ${summaryResponse.status}`);
+            const summaryData = await summaryResponse.json();
+
+            const summaryText = summaryData.text;
+            const summaryAnalysis = summaryData.analysis; 
+
+            appendMessage(summaryText, 'ai');
+            await playTTSWithControl(summaryText, lsSelectedVoice);
+            // 요약 요청에 대한 로그는 별도로 남기거나, userText를 "대화 요약 동의" 등으로 변경
+            await saveSessionLog(`대화 요약 요청 (사용자 응답: ${text})`, summaryText, summaryAnalysis); 
+            // saveConversationSummaryAsJournal 함수가 정의되어 있다면 호출
+            // await saveConversationSummaryAsJournal(summaryText, summaryAnalysis, contextForGpt);
+
+            const saveConfirmMsg = `${userNameWithVocative}, 방금 정리한 내용은 일기에도 잘 남겨뒀어! 언제든 다시 펼쳐볼 수 있을 거야. ✨`;
+            appendMessage(saveConfirmMsg, 'ai');
+
+            await playTTSWithControl(saveConfirmMsg, lsSelectedVoice);
+            chatHistory.push({ role: 'assistant', content: summaryText, analysis: summaryAnalysis, timestamp: new Date().toISOString() });
+            chatHistory.push({ role: 'assistant', content: saveConfirmMsg, timestamp: new Date().toISOString() });
+            localStorage.setItem('lozee_conversation_history', JSON.stringify(chatHistory));
+
+          } else { 
+            if(typeof playTTSFromText_original === 'function') {
+               await playTTSWithControl(botMessage, lsSelectedVoice);
+            }
+            if (botMessage.includes("정리해볼까?") && (botMessage.includes("1.") || botMessage.includes("첫 번째")) && (botMessage.includes("2.") || botMessage.includes("두 번째"))) {
+                window.LOZEE_STATE.awaitingSummaryConfirmation = true;
+            }
+          }
+
         } catch (err) {
-          console.error("❌ 처리 중 오류:", err);
+          console.error("❌ 메시지 처리 중 전체 오류:", err);
           if(res) console.error("오류 시점 API 응답 객체 (res):", {status: res.status, ok: res.ok});
-          appendBubble("죄송해요, 메시지 처리 중 오류 발생.", 'bot');
+          const errorDisplayMsg = "죄송해요, 메시지 처리 중 예상치 못한 오류가 발생했어요. 잠시 후 다시 시도해주세요.";
+          appendBubble(errorDisplayMsg, 'system-error');
           chatHistory.push({ role: 'system', content: '클라이언트 처리 오류', error: err.message, timestamp: new Date().toISOString() });
         }
-        setLoading(false); if(chatInput) chatInput.value = ''; if(chatInput) chatInput.focus();
+        setLoading(false); 
+        if(chatInput) {
+            chatInput.value = ''; 
+            // chatInput.focus(); // 모바일에서 키보드가 자동으로 올라오는 것을 방지하려면 주석 처리 또는 조건부 실행
+        }
       }
 
-      if(sendButton) sendButton.onclick = () => { if(chatInput) handleUserText(chatInput.value); };
-      if(chatInput) chatInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUserText(chatInput.value); } };
-    }
+      sendButton.onclick = () => { if(chatInput) handleUserText(chatInput.value); };
+      chatInput.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUserText(chatInput.value); } };
+      
+      if (!hasGreeted && chatHistory.length === 0) { 
+          await initGreeting();
+          hasGreeted = true;
+      } else if (chatHistory.length > 0) { 
+          chatHistory.forEach(msg => appendBubble(msg.content, msg.role === 'assistant' ? 'ai' : msg.role));
+          console.log("이전 대화 기록 복원 완료.");
+          hasGreeted = true; 
+      }
+
+    } // initializeApp 함수의 끝
   </script>
 </body>
 </html>
+```
