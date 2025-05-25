@@ -255,7 +255,6 @@
     #chat-container::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px;} 
     #chat-container::-webkit-scrollbar-thumb:hover{background:#9CA3AF;}
   </style>
-</head>
 <body>
   <nav id="gnb">
     <div id="gnb-title">LOZEE</div>
@@ -283,20 +282,27 @@
     </div>
   </div>
 
-  <script src="./js/gpt-dialog.js" defer></script>
-  <script src="./js/tts.js" defer></script>
-  <script src="./js/basic-features.js" defer></script>
-  <script src="./js/literacyPatternCheckRenderer.js" defer></script>
+  <!-- 1) Firebase SDK (v8) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>               :contentReference[oaicite:0]{index=0}
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>         :contentReference[oaicite:1]{index=1}
 
-  <script>
-    // Firebase 설정 (실제 값으로 교체 필요)
+  <!-- 2) 커스텀 기능 모듈 -->
+  <script src="./js/gpt-dialog.js" defer></script>                                                      :contentReference[oaicite:2]{index=2}
+  <script src="./js/tts.js" defer></script>                                                             :contentReference[oaicite:3]{index=3}
+  <script src="./js/basic-features.js" defer></script>                                                  :contentReference[oaicite:4]{index=4}
+  <script src="./js/literacyPatternCheckRenderer.js" defer></script>   
+
+  <script defer>
+    
+    // Firebase 설정 (실제 값으로 교체 완료)
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBnuL-CEvcU4NiIyG4yOe6mQjMnh9aArIY",
+      authDomain: "lozee-af4d3.firebaseapp.com",
+      projectId: "lozee-af4d3",
+      storageBucket: "lozee-af4d3.appspot.com",
+      messagingSenderId: "838397276113",
+      appId: "1:838397276113:web:fc8cb3bdf59ecd52fabaf0",
+      measurementId: "G-C23DLE9GZ4"
     };
 
     let app;
@@ -304,28 +310,23 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         try {
-            if (typeof firebase !== 'undefined' && typeof firebase.initializeApp === 'function') {
-                app = firebase.initializeApp(firebaseConfig); // Firebase v8
-                if (typeof firebase.firestore === 'function') {
-                    db = firebase.firestore(); // Firebase v8
-                    console.log("Firebase initialized successfully (v8).");
-                } else {
-                    console.error("Firebase Firestore SDK (v8) not found or not loaded correctly.");
-                    throw new Error("Firebase Firestore SDK (v8) not found.");
-                }
-            } else {
-                console.error("Firebase App SDK (v8) not found or not loaded correctly.");
-                throw new Error("Firebase App SDK (v8) not found.");
-            }
-        } catch (e) {
-            console.error("Firebase initialization error:", e);
-            const chatContainer = document.getElementById('chat-container');
-            if (chatContainer) {
-                 chatContainer.innerHTML = '<div class="bubble system-error" style="align-self:center; max-width: 80%; text-align:center;">데이터베이스 연결에 실패했습니다. 일부 기능이 작동하지 않을 수 있습니다. 오류: ' + e.message + '</div>';
-            }
-        }
-        checkAndInit();
+        // v8 초기화
+        app = firebase.initializeApp(firebaseConfig); :contentReference[oaicite:0]{index=0}
+        db  = firebase.firestore();                   :contentReference[oaicite:1]{index=1}
+        console.log("Firebase initialized successfully (v8).");
+      } catch (e) {
+        console.error("Firebase initialization error:", e);
+        document.getElementById('chat-container').innerHTML =
+          `<div class="bubble system-error" style="align-self:center;">
+             데이터베이스 연결에 실패했습니다. 오류: ${e.message}
+           </div>`;
+      }
+      checkAndInit();
     });
+    </script>
+    </head>
+
+    <script>
 
     function checkAndInit(retries = 20, delay = 300) { // 딜레이 약간 증가
         console.log(`checkAndInit 시도: ${20 - retries + 1}번째`);
