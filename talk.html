@@ -5,214 +5,255 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LOZEE와 대화하기</title>
   <style>
-    body { font-family: 'Arial', sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
-    header { background-color: #222; color: white; padding: 1rem; text-align: center; font-size: 1.3rem; }
-    #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-    .bubble { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
-    .user { align-self: flex-end; background-color: #ffffff; border: 1px solid #e0e0e0; border-bottom-right-radius: 0; }
-    .ai { align-self: flex-start; background-color: #eaeaea; border-bottom-left-radius: 0; }
-    .analysis-notification { align-self: center; background-color: #fff9c4; color: #795548; font-size: 14px; padding: 10px 16px; border-radius: 12px; cursor: pointer; }
-    #topic-area { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: #fff; border-top: 1px solid #ddd; }
-    .topic-btn, .subtopic-btn { background: #ffd400; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; }
-    #input-area { display: flex; padding: 10px; background: #fff; border-top: 1px solid #ddd; }
-    #chat-input { flex: 1; padding: 12px 16px; border-radius: 20px; border: 1px solid #ccc; font-size: 15px; }
-    #send-btn { margin-left: 8px; padding: 12px 16px; border: none; background: #4caf50; color: #fff; border-radius: 20px; cursor: pointer; }
-    .hidden { display: none; }
+    :root {
+      --primary-color: #ffd400;
+      --secondary-color: #4caf50;
+      --background-color: #f9f9f9;
+      --user-bubble-bg: #ffffff;
+      --user-bubble-text: #333;
+      --ai-bubble-bg: #eaeaea;
+      --ai-bubble-text: #000;
+      --gnb-height: 56px;
+      --meter-height: 6px;
+      --volume-meter-default-bg: var(--primary-color);
+    }
+    body {
+      margin: 0;
+      padding-top: var(--gnb-height);
+      font-family: 'Arial', sans-serif;
+      background: var(--background-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* GNB */
+    #gnb {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: var(--gnb-height);
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    #gnb-title { color: #fff; font-size: 1.2em; font-weight: bold; }
+    #menu-toggle { background:none; border:none; color:#ffd400; font-size:1.5em; cursor:pointer; }
+    #dropdown-menu {
+      position: fixed;
+      top: var(--gnb-height);
+      right: 0;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      border-radius: 0 0 0 8px;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease-out;
+      z-index: 999;
+    }
+    #dropdown-menu.show { max-height: 300px; }
+    #dropdown-menu a {
+      display: block;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: #333;
+      border-bottom: 1px solid #ddd;
+      font-size: 0.95em;
+    }
+    #dropdown-menu a:last-child { border-bottom: none; }
+    #dropdown-menu a:hover { background: #f0f0f0; }
+    /* Volume Meter */
+    #meter-container {
+      position: fixed;
+      top: calc(var(--gnb-height) + 8px);
+      left: 50%; transform: translateX(-50%);
+      width: 60%; max-width: 300px;
+      height: var(--meter-height);
+      background: #ccc;
+      border-radius: 3px;
+      overflow: hidden;
+      z-index: 998;
+    }
+    #volume-level {
+      width: 0%; height: 100%;
+      background: var(--volume-meter-default-bg);
+      transition: width 0.05s linear;
+    }
+    /* Chat Window */
+    #chat-window {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .bubble {
+      max-width: 75%; padding: 12px 16px;
+      border-radius: 18px; line-height:1.5;
+      word-break: keep-all;
+    }
+    .bubble.user {
+      background: var(--user-bubble-bg);
+      color: var(--user-bubble-text);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble.ai {
+      background: var(--ai-bubble-bg);
+      color: var(--ai-bubble-text);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .analysis-notification {
+      align-self: center;
+      background: #fff3cd;
+      color: #856404;
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    /* Topic Area */
+    #topic-area {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+    }
+    .topic-btn, .subtopic-btn {
+      background: var(--primary-color);
+      border: none;
+      color: #000;
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+    /* Input Area */
+    #input-area {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+    }
+    #input-area button, #input-area input { font-size: 1em; }
+    #mic-button, #send-btn {
+      width: 36px; height: 36px;
+      border: none; border-radius: 50%;
+      background: var(--primary-color);
+      color: #000; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #mic-button.recording { background: #e74c3c; }
+    #chat-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
   </style>
 </head>
 <body>
-  <header>LOZEE와 대화하기</header>
+  <nav id="gnb">
+    <div id="gnb-title">LOZEE</div>
+    <button id="menu-toggle">☰</button>
+    <div id="dropdown-menu">
+      <a href="mypage.html">My Page</a>
+      <a href="index.html">주제 변경</a>
+      <a href="analysis.html">대화 분석</a>
+      <a href="journal-list.html">대화 목록</a>
+    </div>
+  </nav>
+  <div id="meter-container"><div id="volume-level"></div></div>
   <div id="chat-window"></div>
-  <div id="topic-area" class="hidden"></div>
-  <div id="input-area" class="hidden">
+  <div id="topic-area"></div>
+  <div id="input-area">
+    <button id="mic-button">🎤</button>
     <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-    <button id="send-btn">전송</button>
+    <button id="send-btn">➤</button>
   </div>
 
   <script type="module">
     import './firebase-config.js';
     import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
-    import { playTTSFromText, stopCurrentTTS } from './js/tts.js';
     import LOZEE_ANALYSIS from './js/lozee-analysis.js';
     import { saveSessionLog } from './js/firebase-utils.js';
     import { counselingTopicsByAge } from './js/counseling_topics.js';
 
     // 상태
-    let skipTTS = false;
-    let hasGreeted = false;
-    let isProcessing = false;
-    let chatHistory = [];
-    let selectedMain = null;
-    let meta = { lastInputTimestamp: Date.now(), fillerCount: 0, clickedOption: false, presentedIndices: [] };
-    const userName = localStorage.getItem('lozee_username') || '친구';
-    const userAge = parseInt(localStorage.getItem('lozee_userage')||0, 10);
-    const voc = getKoreanVocativeParticle(userName);
+    let skipTTS=false, hasGreeted=false, isProcessing=false;
+    let chatHistory=[], selectedMain=null;
+    let meta={ lastInputTimestamp:Date.now(), fillerCount:0, clickedOption:false, presentedIndices:[] };
+    const userName=localStorage.getItem('lozee_username')||'친구';
+    const userAge=parseInt(localStorage.getItem('lozee_userage')||0,10);
+    const voc=getKoreanVocativeParticle(userName);
 
-    // UI 요소
-    const chatWindow = document.getElementById('chat-window');
-    const topicArea  = document.getElementById('topic-area');
-    const inputArea  = document.getElementById('input-area');
-    const chatInput  = document.getElementById('chat-input');
-    const sendBtn    = document.getElementById('send-btn');
+    // UI
+    const chatWindow=document.getElementById('chat-window');
+    const topicArea=document.getElementById('topic-area');
+    const inputArea=document.getElementById('input-area');
+    const chatInput=document.getElementById('chat-input');
+    const sendBtn=document.getElementById('send-btn');
+    const micButton=document.getElementById('mic-button');
+    const menuToggle=document.getElementById('menu-toggle');
+    const dropdownMenu=document.getElementById('dropdown-menu');
+    const meterLevel=document.getElementById('volume-level');
 
-    // 메시지 출력
-    function appendMessage(text, role) {
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble ' + role;
-      bubble.textContent = text;
-      chatWindow.appendChild(bubble);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+    // GNB
+    menuToggle.addEventListener('click',()=>dropdownMenu.classList.toggle('show'));
+    document.addEventListener('click',e=>{ if(!document.getElementById('gnb').contains(e.target)) dropdownMenu.classList.remove('show'); });
 
-    // 분석 알림
-    function showAnalysisNotification() {
-      const bubble = document.createElement('div');
-      bubble.className = 'analysis-notification';
-      bubble.textContent = '🟡 분석이 생성되었습니다. 클릭하여 결과 보기';
-      bubble.addEventListener('click', () => window.location.href = 'analysis.html');
-      chatWindow.appendChild(bubble);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+    // 메시지
+    function appendMessage(text,role){ const b=document.createElement('div'); b.className='bubble '+role; b.textContent=text; chatWindow.appendChild(b); chatWindow.scrollTop=chatWindow.scrollHeight; }
+    function showAnalysis(){ const n=document.createElement('div'); n.className='analysis-notification'; n.textContent='🟡분석 완료'; n.onclick=()=>location.href='analysis.html'; chatWindow.appendChild(n); chatWindow.scrollTop=chatWindow.scrollHeight; }
+    function playTTSWithControl(txt){ stopCurrentTTS(); if(skipTTS){ skipTTS=false;return;} return LOZEE_TTS?.playTTSFromText(txt,localStorage.getItem('lozee_voice')); }
 
-    // TTS 제어
-    function playTTSWithControl(text) {
-      stopCurrentTTS();
-      if (skipTTS) { skipTTS = false; return; }
-      return playTTSFromText(text, localStorage.getItem('lozee_voice'));
-    }
+    // 오디오 분석
+    let audioContext,analyser,source,dataArray,animId,streamRef;
+    const LOW={r:0,g:200,b:0},MID={r:255,g:200,b:0},HIGH={r:255,g:69,b:0};
+    function interp(c1,c2,f){return`rgb(${Math.round(c1.r+f*(c2.r-c1.r))},${Math.round(c1.g+f*(c2.g-c1.g))},${Math.round(c1.b+f*(c2.b-c1.b))})`;}
+    function setupAudioAnalysis(s){ if(audioContext)audioContext.close();audioContext=new AudioContext();analyser=audioContext.createAnalyser();analyser.fftSize=256;source=audioContext.createMediaStreamSource(s);source.connect(analyser);dataArray=new Uint8Array(analyser.frequencyBinCount);streamRef=s;draw();}
+    function draw(){animId=requestAnimationFrame(draw);if(!analyser||!dataArray)return;analyser.getByteFrequencyData(dataArray);let sum=dataArray.reduce((a,v)=>a+v,0);let avg=sum/dataArray.length;let norm=Math.min(100,Math.max(0,(avg/140)*100));meterLevel.style.width=norm+'%';let col=norm<=50?interp(LOW,MID,norm/50):interp(MID,HIGH,(norm-50)/50);meterLevel.style.background=`linear-gradient(to right, var(--background-color), ${col})`;}
+    function stopAudio(){ cancelAnimationFrame(animId); if(source)source.disconnect();streamRef.getTracks().forEach(t=>t.stop()); if(audioContext)audioContext.close();meterLevel.style.width='0%';meterLevel.style.background=getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg');}
 
-    // 대화 막힘 감지
-    function detectStuck(userText, history, meta) {
-      const now = Date.now();
-      if (meta.lastInputTimestamp && (now - meta.lastInputTimestamp) > 300000) return true;
-      if (meta.fillerCount >= 3) return true;
-      const recent = history.filter(m => m.role==='user').slice(-5);
-      if (recent.length===5 && recent.every(m=>m.content.trim().length<5)) return true;
-      if (meta.clickedOption) return false;
-      return false;
-    }
+    // STT
+    const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+    let recog,isRec=false;
+    if(Rec){ recog=new Rec();recog.continuous=true;recog.interimResults=false;recog.lang='ko-KR';
+      recog.onstart=()=>{isRec=true;micButton.classList.add('recording');};
+      recog.onend=()=>{isRec=false;micButton.classList.remove('recording');stopAudio();};
+      recog.onresult=e=>{let txt='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)txt+=e.results[i][0].transcript; if(txt)handleUserText(txt);};
+      recog.onerror=err=>{console.error(err);appendMessage('음성 인식 오류','ai_feedback');isRec=false;micButton.classList.remove('recording');stopAudio();};
+      micButton.onclick=async()=>{ if(isRec){recog.stop();}else{try{const s=await navigator.mediaDevices.getUserMedia({audio:true});setupAudioAnalysis(s);recog.start();}catch(e){console.error(e);appendMessage('마이크 권한 오류','ai_feedback');}}};
+    } else { micButton.disabled=true;appendMessage('브라우저에서 음성 인식 지원하지 않습니다.','ai_feedback'); }
 
-    // 선호 주제 버튼 생성
-    function showPreferenceOptions() {
-      const available = window.LOZEE_DIALOG.preferenceTopics
-        .map((fn,i) => i)
-        .filter(i => !meta.presentedIndices.includes(i));
-      if (!available.length) return;
-      const idx = available[Math.floor(Math.random()*available.length)];
-      meta.presentedIndices.push(idx);
-      const container = document.createElement('div');
-      container.className = 'analysis-notification';
-      const btn = document.createElement('button');
-      btn.textContent = window.LOZEE_DIALOG.preferenceTopics[idx](userName);
-      btn.className = 'topic-btn';
-      btn.onclick = () => { meta.clickedOption=true; startChat(btn.textContent); };
-      container.appendChild(btn);
-      chatWindow.appendChild(container);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+    // 토픽 플로우
+    function showMainTopics(){appendMessage('어떤 이야기를 나눠볼까?','ai');topicArea.innerHTML='';const t=Object.keys(counselingTopicsByAge[getAgeGroup()]);t.push('자유주제');t.forEach(topic=>{const b=document.createElement('button');b.className='topic-btn';b.textContent=topic;b.onclick=()=>selectMainTopic(topic);topicArea.appendChild(b);});topicArea.style.display='flex';}
+    function selectMainTopic(topic){selectedMain=topic;topicArea.style.display='none';appendMessage(topic+' 이야기를 선택했어!','ai');setTimeout(showSubTopics,300);}    
+    function showSubTopics(){appendMessage('조금 더 구체적으로?','ai');topicArea.innerHTML='';let subs=selectedMain==='자유주제'?['자유롭게 이야기해봐']:(counselingTopicsByAge[getAgeGroup()][selectedMain]||[]).map(i=>i.displayText);subs.forEach(sub=>{const b=document.createElement('button');b.className='subtopic-btn';b.textContent=sub;b.onclick=()=>startChat(sub);topicArea.appendChild(b);});topicArea.style.display='flex';}
+    function startChat(init){topicArea.style.display='none';inputArea.style.display='flex';sendMessage(init);}   
+    function getAgeGroup(){if(userAge<=10)return'8-10';if(userAge<=15)return'11-15';return'30+';}
 
-    // 메인 토픽 표시
-    function showMainTopics() {
-      appendMessage('어떤 이야기를 나눠볼까? 골라줘!', 'ai');
-      topicArea.innerHTML = '';
-      const topics = Object.keys(counselingTopicsByAge[getAgeGroup(userAge)]);
-      topics.push('자유주제');
-      topics.forEach(topic => {
-        const btn = document.createElement('button');
-        btn.className = 'topic-btn';
-        btn.textContent = topic;
-        btn.onclick = () => selectMainTopic(topic);
-        topicArea.appendChild(btn);
-      });
-      topicArea.classList.remove('hidden');
-    }
+    // stuck detection
+    function detectStuck(txt,his,meta){const now=Date.now();if(meta.lastInputTimestamp&&now-meta.lastInputTimestamp>300000)return true; if(meta.fillerCount>=3)return true;const recent=his.filter(m=>m.role==='user').slice(-5);if(recent.length===5&&recent.every(m=>m.content.trim().length<5))return true; if(meta.clickedOption)return false;return false;}
+    function showPreferenceOptions(){const avail=window.LOZEE_DIALOG.preferenceTopics.map((_,i)=>i).filter(i=>!meta.presentedIndices.includes(i));if(!avail.length)return;const idx=avail[Math.floor(Math.random()*avail.length)];meta.presentedIndices.push(idx);const n=document.createElement('div');n.className='analysis-notification';const b=document.createElement('button');b.className='topic-btn';b.textContent=window.LOZEE_DIALOG.preferenceTopics[idx](userName);b.onclick=()=>{meta.clickedOption=true;startChat(b.textContent);};n.appendChild(b);chatWindow.appendChild(n);chatWindow.scrollTop=chatWindow.scrollHeight;}
 
-    // 메인 토픽 선택
-    function selectMainTopic(topic) {
-      selectedMain = topic;
-      topicArea.classList.add('hidden');
-      appendMessage(`${topic} 이야기를 선택했구나!`, 'ai');
-      setTimeout(showSubTopics, 300);
-    }
-
-    // 서브 토픽 표시
-    function showSubTopics() {
-      appendMessage('조금 더 구체적으로 어떤 이야기를 해볼까?', 'ai');
-      topicArea.innerHTML = '';
-      let subs = selectedMain==='자유주제'
-        ? ['자유롭게 이야기를 해볼래?']
-        : counselingTopicsByAge[getAgeGroup(userAge)][selectedMain].map(i=>i.displayText);
-      subs.forEach(sub=>{
-        const btn = document.createElement('button');
-        btn.className = 'subtopic-btn';
-        btn.textContent = sub;
-        btn.onclick = () => startChat(sub);
-        topicArea.appendChild(btn);
-      });
-      topicArea.classList.remove('hidden');
-    }
-
-    // 채팅 모드 전환
-    function startChat(initial) {
-      topicArea.classList.add('hidden');
-      inputArea.classList.remove('hidden');
-      sendMessage(initial);
-    }
-
-    // 나이 그룹 계산
-    function getAgeGroup(age) {
-      if (age<=10) return '8-10';
-      if (age<=15) return '11-15';
-      return '30+';
-    }
-
-    // 메시지 전송
-    async function sendMessage(text) {
-      if (!text||isProcessing) return;
-      isProcessing=true;
-      appendMessage(text,'user');
-      chatHistory.push({role:'user',content:text});
-      chatInput.value='';
-      // GPT 호출
-      const res = await getGptResponse(text,{chatHistory});
-      const data = await res.json();
-      const idxJson = data.text.indexOf('{');
-      const cleanText = idxJson>=0?data.text.slice(0,idxJson).trim():data.text;
-      appendMessage(cleanText,'ai');
-      await playTTSWithControl(cleanText);
-      chatHistory.push({role:'assistant',content:cleanText});
-      await saveSessionLog(text,cleanText,data.analysis||{});
-      // 막힘 감지
-      if (detectStuck(cleanText,chatHistory,meta)) showPreferenceOptions();
-      // 분석 저장·알림
-      const full = chatHistory.map(m=>`${m.role}:${m.content}`).join('\n');
-      const inf = await LOZEE_ANALYSIS.inferAgeAndLanguage(full);
-      await saveSessionLog('analysis','',inf);
-      showAnalysisNotification();
-      isProcessing=false;
-    }
-
-    // 이벤트 바인딩
+    async function sendMessage(text){if(!text||isProcessing)return;isProcessing=true;appendMessage(text,'user');chatHistory.push({role:'user',content:text});chatInput.value='';const res=await getGptResponse(text,{chatHistory});const d=await res.json();const cut=d.text.indexOf('{');const clean=cut>=0?d.text.slice(0,cut).trim():d.text;appendMessage(clean,'ai');await playTTSWithControl(clean);chatHistory.push({role:'ai',content:clean});await saveSessionLog(text,clean,d.analysis||{});if(d.analysis){LOZEE_ANALYSIS?.inferAgeAndLanguage&&await LOZEE_ANALYSIS. inferAgeAndLanguage(chatHistory.map(m=>m.role+':'+m.content).join('\n'));}if(d.analysis)showAnalysis();if(d.analysis){}if(d.analysis){}if(d.analysis){}if(d.analysis){}if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis);if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis);}   
+    // event binding
     sendBtn.addEventListener('click',()=>sendMessage(chatInput.value));
-    chatInput.addEventListener('keydown',e=>{
-      meta.lastInputTimestamp=Date.now();
-      const fillers=['음','…','어','글쎄','모르겠어요','잘 모르겠어'];
-      meta.fillerCount = fillers.some(f=>chatInput.value.includes(f))?meta.fillerCount+1:0;
-      meta.clickedOption=false;
-      skipTTS=true; stopCurrentTTS();
-      if(e.key==='Enter') sendMessage(chatInput.value);
-    });
-    chatInput.addEventListener('focus',()=>{meta.lastInputTimestamp=Date.now();meta.clickedOption=false;skipTTS=true;stopCurrentTTS();});
+    chatInput.addEventListener('keydown',e=>{meta.lastInputTimestamp=Date.now();const fillers=['음','…','어','글쎄','모르겠어요','잘 모르겠어'];meta.fillerCount=fillers.some(f=>chatInput.value.includes(f))?meta.fillerCount+1:0;meta.clickedOption=false;skipTTS=true;stopCurrentTTS();if(e.key==='Enter')sendMessage(chatInput.value);});
 
-    // 초기화
-    async function init() {
-      const greet = getInitialGreeting(userName+voc,hasGreeted);
-      appendMessage(greet,'ai');
-      await playTTSWithControl(greet);
-      hasGreeted=true;
-      showMainTopics();
-    }
-    document.addEventListener('DOMContentLoaded',init);
+    // init
+    document.addEventListener('DOMContentLoaded',async()=>{const greet=getInitialGreeting(userName+voc,hasGreeted);appendMessage(greet,'ai');await playTTSWithControl(greet);hasGreeted=true;showMainTopics();});
   </script>
 </body>
 </html>
