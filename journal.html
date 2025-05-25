@@ -103,21 +103,23 @@
     import { playTTSFromText } from './js/tts.js';
     import { getSTTFromAudio } from './js/stt.js';
     // Firebase 관련 import
-    import { initializeApp } from 'firebase/app';
-    import { getFirestore, collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
 
     // Firebase 설정 (실제 값으로 교체 필요)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+  const firebaseConfig = {
+  apiKey: "AIzaSyBnuL-CEvcU4NiIyG4yOe6mQjMnh9aArIY",                // Web API key
+  authDomain: "lozee-af4d3.firebaseapp.com",                        // Auth 도메인
+  projectId: "lozee-af4d3",                                        // 프로젝트 ID
+  storageBucket: "lozee-af4d3.firebasestorage.app",                // 스토리지 버킷
+  messagingSenderId: "838397276113",                               // 메시징 발신자 ID
+  appId: "1:838397276113:web:fc8cb3bdf59ecd52fabaf0",               // 앱 ID
+  measurementId: "G-C23DLE9GZ4"                                    // Analytics 측정 ID (선택)
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
 
     // --- 전역 변수 및 상태 관리 ---
     const chatWindow = document.getElementById('chat-window');
@@ -153,6 +155,26 @@
 
     // 대화 상태 관리 객체 (요약 제안 확인 등)
     window.LOZEE_STATE = window.LOZEE_STATE || {};
+
+    // journals 컬렉션 읽어오기
+    async function renderJournals() {
+    const listContainer = document.getElementById("journal-list");
+    const snapshot = await getDocs(collection(db, "journals"));
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const card = document.createElement("div");
+      card.className = "journal-card";
+      card.innerHTML = `
+        <h3>${data.title}</h3>
+        <p>${data.summary}</p>
+        <small>${data.createdAt?.toDate().toLocaleString()}</small>
+      `;
+      listContainer.append(card);
+    });
+  }
+
+   // 페이지 로드 시 렌더 호출
+   document.addEventListener("DOMContentLoaded", renderJournals);
 
 
     // --- Firestore 저장 함수들 ---
