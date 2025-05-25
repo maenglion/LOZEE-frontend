@@ -4,97 +4,184 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LOZEE와 대화하기</title>
-  <style>
-    :root {
-      --primary-color: #ffd400;
-      --secondary-color: #4caf50;
-      --background-color: #f9f9f9;
-      --user-bubble-bg: #ffffff;
-      --user-bubble-text: #333;
-      --ai-bubble-bg: #eaeaea;
-      --ai-bubble-text: #000;
-      --gnb-height: 56px;
-      --meter-height: 6px;
-      --volume-meter-default-bg: var(--primary-color);
+  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> {/* 이 폰트 링크가 있는지 확인 */}
+<style>
+  :root {
+      --primary-color: #6e8efb; /* index.html 버튼 및 old talk.html 주요색 참고 */
+      --secondary-color: #5a7edf; /* primary-color의 유사색 또는 보조색 */
+      --background-color: #ffffff; /* 요청된 흰색 배경 */
+      --text-color: #333333; /* 흰색 배경 위의 기본 텍스트 색상 */
+      
+      --gnb-bg: #354157; /* old talk.html 참고한 GNB 배경색 (어두운 계열) */
+      --gnb-text-color: #ffffff;
+      --gnb-title-color: var(--primary-color); /* GNB 타이틀에 주조색 적용 */
+      --gnb-menu-toggle-color: var(--primary-color);
+      --gnb-dropdown-bg: var(--gnb-bg);
+      --gnb-dropdown-text-color: var(--gnb-text-color);
+      --gnb-dropdown-border-color: #4a5568; /* old talk.html 참고 */
+      --gnb-dropdown-hover-bg: var(--secondary-color);
+
+      --user-bubble-bg: var(--primary-color);
+      --user-bubble-text: #ffffff;
+      --ai-bubble-bg: #f0f0f0; /* 밝은 회색 배경의 AI 말풍선 */
+      --ai-bubble-text: #333333;
+
+      --input-area-bg: #f8f9fa; /* 입력 영역 배경 (매우 밝은 회색) */
+      --chat-input-bg: #ffffff;
+      --chat-input-text-color: #333333;
+      --chat-input-border-color: #ced4da;
+      --chat-input-placeholder-color: #777777;
+
+      --button-bg: var(--primary-color);
+      --button-text-color: #ffffff;
+      --button-hover-bg: var(--secondary-color);
+
+      --volume-meter-container-bg: #e9ecef; /* 음량 바 배경 */
+      --volume-meter-level-bg: var(--primary-color);
+      --meter-height: 6px; /* talk.html 기존 값 유지 */
+      --meter-top-margin: 8px; /* old talk.html 참고 */
+
+      --topic-button-bg: var(--primary-color);
+      --topic-button-text: #ffffff;
+      --topic-button-hover-bg: var(--secondary-color);
+
+      --analysis-notification-bg: #fff3cd; /* talk.html 기존 값 참고 */
+      --analysis-notification-text: #856404; /* talk.html 기존 값 참고 */
+
+      --gnb-height: 56px; /* talk.html 및 old talk.html 공통 */
+      --chat-input-area-height: 70px; /* old talk.html 참고 (패딩 포함 높이) */
     }
+
     body {
       margin: 0;
-      padding-top: var(--gnb-height);
-      font-family: 'Arial', sans-serif;
+      padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
+      font-family: 'KoPub World Dotum', sans-serif; /* old talk.html 및 index.html 폰트 적용 */
       background: var(--background-color);
+      color: var(--text-color);
       display: flex;
       flex-direction: column;
       height: 100vh;
+      box-sizing: border-box;
       overflow: hidden;
     }
-    /* GNB */
+
+    /* GNB (old talk.html 스타일 기반) */
     #gnb {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: var(--gnb-height);
-      background: #222;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: var(--gnb-height);
+      background-color: var(--gnb-bg);
+      padding: 0 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    #gnb-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--gnb-title-color);
+    }
+
+    #menu-toggle {
+      background: none;
+      border: none;
+      color: var(--gnb-menu-toggle-color);
+      font-size: 24px; /* old talk.html 아이콘 크기 느낌 */
+      cursor: pointer;
+      padding: 8px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      z-index: 1000;
+      justify-content: center;
     }
-    #gnb-title { color: #fff; font-size: 1.2em; font-weight: bold; }
-    #menu-toggle { background:none; border:none; color:#ffd400; font-size:1.5em; cursor:pointer; }
+
     #dropdown-menu {
       position: fixed;
       top: var(--gnb-height);
       right: 0;
-      background: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      background-color: var(--gnb-dropdown-bg);
       border-radius: 0 0 0 8px;
+      box-shadow: -3px 3px 6px rgba(0,0,0,0.2);
+      width: 200px;
+      z-index: 999;
       overflow: hidden;
       max-height: 0;
       transition: max-height 0.3s ease-out;
-      z-index: 999;
     }
-    #dropdown-menu.show { max-height: 300px; }
+
+    #dropdown-menu.show {
+      max-height: 300px; /* talk.html 기존 값 또는 필요시 조정 */
+    }
+
     #dropdown-menu a {
       display: block;
       padding: 12px 16px;
       text-decoration: none;
-      color: #333;
-      border-bottom: 1px solid #ddd;
+      color: var(--gnb-dropdown-text-color);
+      border-bottom: 1px solid var(--gnb-dropdown-border-color);
       font-size: 0.95em;
     }
-    #dropdown-menu a:last-child { border-bottom: none; }
-    #dropdown-menu a:hover { background: #f0f0f0; }
-    /* Volume Meter */
+    #dropdown-menu a:last-child {
+      border-bottom: none;
+    }
+    #dropdown-menu a:hover {
+      background-color: var(--gnb-dropdown-hover-bg);
+    }
+
+    /* Volume Meter (old talk.html 스타일 및 talk.html 구조 기반) */
     #meter-container {
       position: fixed;
-      top: calc(var(--gnb-height) + 8px);
-      left: 50%; transform: translateX(-50%);
-      width: 60%; max-width: 300px;
+      top: calc(var(--gnb-height) + var(--meter-top-margin));
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      max-width: 300px;
       height: var(--meter-height);
-      background: #ccc;
+      background: var(--volume-meter-container-bg);
       border-radius: 3px;
       overflow: hidden;
       z-index: 998;
     }
     #volume-level {
-      width: 0%; height: 100%;
-      background: var(--volume-meter-default-bg);
-      transition: width 0.05s linear;
+      width: 0%;
+      height: 100%;
+      background: var(--volume-meter-level-bg);
+      border-radius: 3px; /* talk.html에 이미 있었지만, 일관성 위해 명시 */
+      transition: width 0.05s linear, background-color 0.05s linear; /* talk.html에 background-color transition 추가 */
     }
-    /* Chat Window */
+    
+    /* Chat Window (old talk.html 스타일 참고, talk.html ID 사용) */
     #chat-window {
-      flex: 1;
+      flex: 1; /* 남은 공간을 모두 차지 */
       padding: 16px;
+      padding-top: calc(var(--meter-top-margin) + var(--meter-height) + 10px); /* GNB 밑, 음량 바 밑 */
+      padding-bottom: calc(var(--chat-input-area-height) + 10px); /* 하단 입력창 높이만큼 여백 */
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px; /* 말풍선 간격 */
+      box-sizing: border-box;
     }
+    
+    /* 스크롤바 스타일 (old talk.html 참고) */
+    #chat-window::-webkit-scrollbar { width: 8px; }
+    #chat-window::-webkit-scrollbar-track { background: var(--background-color); } /* 페이지 배경색과 동일하게 */
+    #chat-window::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; }
+    #chat-window::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
+
+    /* Bubbles (talk.html 클래스명 사용, old talk.html 스타일 적용) */
     .bubble {
-      max-width: 75%; padding: 12px 16px;
-      border-radius: 18px; line-height:1.5;
-      word-break: keep-all;
+      max-width: 75%;
+      padding: 10px 15px; /* 약간 줄임 */
+      border-radius: 18px;
+      line-height: 1.6;
+      word-break: keep-all; /* 한국어 고려 */
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     .bubble.user {
       background: var(--user-bubble-bg);
@@ -102,64 +189,126 @@
       align-self: flex-end;
       border-bottom-right-radius: 4px;
     }
-    .bubble.ai {
+    .bubble.ai { /* talk.html의 .ai 클래스 */
       background: var(--ai-bubble-bg);
       color: var(--ai-bubble-text);
       align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
+
+    /* Analysis Notification (talk.html 기존 스타일 유지하되 색상 변수 사용) */
     .analysis-notification {
       align-self: center;
-      background: #fff3cd;
-      color: #856404;
+      background: var(--analysis-notification-bg);
+      color: var(--analysis-notification-text);
       padding: 10px 16px;
       border-radius: 12px;
       cursor: pointer;
       font-size: 0.9em;
+      margin: 5px 0;
     }
-    /* Topic Area */
+
+    /* Topic Area (talk.html 구조 기반, old talk.html 버튼 스타일 참고) */
     #topic-area {
-      display: none;
+      display: none; /* 초기 숨김 */
       flex-wrap: wrap;
       gap: 8px;
-      padding: 8px;
-      background: #fff;
-      border-top: 1px solid #ddd;
+      padding: 10px 16px; /* 내부 여백 */
+      background: var(--background-color); /* 페이지 배경과 동일하게 또는 밝은 회색 */
+      border-top: 1px solid #e0e0e0;
+      /* 하단 고정 입력창 위에 위치하도록 조정 필요시 */
+      position: fixed;
+      bottom: var(--chat-input-area-height);
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+      box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
     }
     .topic-btn, .subtopic-btn {
-      background: var(--primary-color);
+      background: var(--topic-button-bg);
       border: none;
-      color: #000;
-      padding: 8px 12px;
+      color: var(--topic-button-text);
+      padding: 8px 14px;
       border-radius: 20px;
       cursor: pointer;
       font-size: 0.9em;
+      transition: background-color 0.2s;
     }
-    /* Input Area */
+    .topic-btn:hover, .subtopic-btn:hover {
+      background: var(--topic-button-hover-bg);
+    }
+
+    /* Input Area (old talk.html 스타일 기반, talk.html ID 사용, 하단 고정) */
     #input-area {
-      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: var(--chat-input-area-height);
+      display: none; /* 초기 숨김, startChat()에서 flex로 변경 */
       align-items: center;
       gap: 8px;
-      padding: 8px;
-      background: #fff;
-      border-top: 1px solid #ddd;
+      padding: 0 12px; /* 내부 여백 old talk.html 참고 */
+      background: var(--input-area-bg);
+      border-top: 1px solid #e0e0e0; /* old talk.html 그림자 대신 경계선 */
+      box-sizing: border-box;
     }
-    #input-area button, #input-area input { font-size: 1em; }
-    #mic-button, #send-btn {
-      width: 36px; height: 36px;
-      border: none; border-radius: 50%;
-      background: var(--primary-color);
-      color: #000; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
+    #input-area button, #input-area input {
+      font-size: 1em;
+      height: 44px; /* old talk.html 버튼/입력창 높이 통일 */
+      box-sizing: border-box;
     }
-    #mic-button.recording { background: #e74c3c; }
+
     #chat-input {
       flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 20px;
+      padding: 10px 16px; /* 내부 여백 */
+      border: 1px solid var(--chat-input-border-color);
+      border-radius: 22px; /* old talk.html 참고 */
       outline: none;
+      background-color: var(--chat-input-bg);
+      color: var(--chat-input-text-color);
     }
+    #chat-input::placeholder {
+      color: var(--chat-input-placeholder-color);
+    }
+
+    #mic-button, #send-btn { /* talk.html ID 사용 */
+      width: 44px;
+      min-width: 44px; /* 너비 고정 */
+      height: 44px;
+      border: none;
+      border-radius: 50%;
+      background: var(--button-bg);
+      color: var(--button-text-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3em; /* 아이콘 크기 느낌 */
+      transition: background-color 0.2s ease;
+    }
+    #mic-button:hover, #send-btn:hover {
+      background: var(--button-hover-bg);
+    }
+    #mic-button.recording { /* talk.html 기존 클래스 유지 */
+      background: #e74c3c; /* 녹음 중 빨간색 */
+    }
+    #send-btn.loading { /* old talk.html 참고 (필요시 JS에서 클래스 추가) */
+        background:#cccccc;
+        cursor:default;
+    }
+    
+    /* 반응형 (필요시 추가) */
+    @media (max-width: 600px) {
+      #gnb-title { font-size: 1.1em; }
+      .bubble { padding: 9px 13px; max-width: 85%; }
+      #chat-input { padding: 9px 14px; }
+      #mic-button, #send-btn { width: 40px; height: 40px; font-size: 1.2em;}
+      #input-area { height: 65px; }
+      #chat-window { padding-bottom: calc(65px + 10px); }
+      #topic-area { bottom: 65px; }
+    }
+
   </style>
 </head>
 <body>
