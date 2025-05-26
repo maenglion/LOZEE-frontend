@@ -1,9 +1,13 @@
 <!-- 감정일기 분석 차트 영역 -->
 <canvas id="emotionChart" width="320" height="200"></canvas>
 
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js ESM 모듈 불러오기 -->
 <script type="module">
+  // Chart.js ESM 빌드 경로
+  import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
+  // 필요한 컴포넌트 등록
+  Chart.register(...registerables);
+
   // 예시: 감정 키워드 → 카테고리 매핑 결과
   const emotionCounts = {
     '기쁨': 3,
@@ -28,9 +32,7 @@
       scales: {
         y: {
           beginAtZero: true,
-          ticks: {
-            precision: 0
-          }
+          ticks: { precision: 0 }
         }
       }
     }

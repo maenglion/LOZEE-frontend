@@ -1,11 +1,11 @@
 // js/lozee-analysis.js
 // 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
 
-import OpenAI from 'openai';
-const openai = new OpenAI();
 
 // 전역 분석 객체
 window.LOZEE_ANALYSIS = window.LOZEE_ANALYSIS || {};
+// 분석 백엔드 url 정의
+const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis'; 
 
 // --- 1) 대화 시간별 언어·나이 분석 ---
 window.LOZEE_ANALYSIS.timeTracking = {
