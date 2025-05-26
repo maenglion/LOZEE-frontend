@@ -1,6 +1,6 @@
 // js/gpt-dialog.js
 // 0) GPT 백엔드 URL 정의 (Railway 프로덕션 서버)
-const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'; [gpt-dialog.js]
+const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app'; [gpt-dialog.js]
 
 export function getInitialGreeting(fullUserNameWithVocative, greetedYet) {
   if (greetedYet) {
