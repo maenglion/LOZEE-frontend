@@ -1,7 +1,7 @@
 // js/firebase-utils.js
 // Firestore 유틸리티 모듈: db 인스턴스와 저장 함수 모아두기
 
-import { db } from '../firebase-config.js';
+import { db } from './js/firebase-config.js';
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
 
