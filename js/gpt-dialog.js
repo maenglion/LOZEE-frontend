@@ -89,7 +89,7 @@ export const preferenceTopics = [
 /**
  * 5) 시스템 프롬프트 생성 (간결, 핵심 지시 및 상호작용 가이드)
  */
-export function getSystemPrompt({ userName='친구', userAge=0 }={}, intent='fact') { [gpt-dialog.js]
+export function getSystemPrompt({ userName='친구', userAge=0 }={}, intent='fact') { 
   const voc = getKoreanVocativeParticle(userName); // 같은 모듈 내 함수 호출
   const naming = getKoreanNamingParticle(userName); // 같은 모듈 내 함수 호출
   const nameVoc = `${userName}${voc}`;
