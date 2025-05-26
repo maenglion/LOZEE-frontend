@@ -23,7 +23,7 @@
 
       --user-bubble-bg: var(--primary-color);
       --user-bubble-text: #ffffff;
-      --ai-bubble-bg: #f0f0f0;
+      --ai-bubble-bg: #F5E7A1;;
       --ai-bubble-text: #333333;
 
       --input-area-bg: #f8f9fa;
@@ -293,9 +293,9 @@
 
     /* 채팅창 내 선택 버튼 */
     .chat-option-btn {
-      background-color: #f0f0f0;
+      background-color: #f1f1f1;
       color: #333333;
-      border: 1px solid #e0e0e0;
+      border: 1px solid #dcdcdc;;
       border-radius: 12px;
       padding: 10px 15px;
       width: 100%;
@@ -312,9 +312,9 @@
     }
 
     .chat-option-btn.selected {
-      background-color: #fff9c4;
-      color: #5c563a;
-      border-color: #f5e7a1; /* 오타 수정 */
+      background-color: #E4D2FD;
+      color: #333;
+      border-color: #c3b2e0; /* 오타 수정 */
       font-weight: bold;
     }
 
@@ -555,36 +555,44 @@
 
     // 토픽 플로우 - 선택창 (채팅창 내 버튼 표시)
     function displayOptionsInChat(optionsArray, onSelectCallback, context = null) {
-      console.log("displayOptionsInChat 함수 시작됨, 옵션:", optionsArray);
+      console.log("displayOptionsInChat 함수 시작됨, 옵션 배열:", optionsArray); // 옵션 배열의 실제 내용 확인
       const optionsContainer = document.createElement('div');
       optionsContainer.className = 'chat-options-container';
-      const buttons = [];
 
-      optionsArray.forEach(optionText => {
-        console.log("옵션 버튼 생성 중:", optionText);
+      const buttons = []; 
+
+  // optionsArray가 { icon: "😊", displayText: "이야기" } 형태의 객체 배열이라고 가정
+  optionsArray.forEach(optionObject => { // optionText 대신 optionObject로 변경
+    // optionObject가 실제로 객체인지, 필요한 속성(icon, displayText)을 가지고 있는지 확인
+    if (optionObject && typeof optionObject.displayText !== 'undefined') {
+        console.log("옵션 버튼 생성 중:", optionObject.displayText);
         const button = document.createElement('button');
         button.className = 'chat-option-btn';
-        button.textContent = optionText;
         
+        // 이모지가 있다면 함께 표시, 없다면 displayText만 표시
+        button.textContent = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : optionObject.displayText;
+
         button.onclick = () => {
           buttons.forEach(btn => {
-            btn.disabled = true;
+            btn.disabled = true; 
             if (btn === button) {
-              btn.classList.add('selected');
+              btn.classList.add('selected'); 
             }
           });
-          // 선택된 옵션을 사용자 메시지처럼 채팅창에 추가 (선택 사항)
-          // appendMessage(optionText, 'user'); 
-          onSelectCallback(optionText, context); 
+          onSelectCallback(optionObject.displayText, context); 
         };
         optionsContainer.appendChild(button);
         buttons.push(button);
-      });
-
-      chatWindow.appendChild(optionsContainer);
-      console.log("옵션 컨테이너가 chatWindow에 추가됨");
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+    } else {
+        // optionsArray의 요소가 예상한 객체 형태가 아닐 경우 로그를 남기거나 오류 처리
+        console.warn("displayOptionsInChat: 잘못된 형식의 옵션 객체입니다.", optionObject);
     }
+  });
+
+  chatWindow.appendChild(optionsContainer);
+  console.log("옵션 컨테이너가 chatWindow에 추가됨");
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
 
     // 토픽 플로우 - 주제 (수정된 로직)
     function showMainTopics() {
@@ -593,35 +601,46 @@
       const topics = Object.keys(counselingTopicsByAge[getAgeGroup()]);
       topics.push('자유주제');
       
-      displayOptionsInChat(topics, (selectedTopic) => {
-        selectedMain = selectedTopic;
-        appendMessage(selectedTopic + ' 이야기를 선택했구나!', 'ai'); // AI 응답 변경
-        setTimeout(showSubTopics, 300);
-      });
-      if (topicArea) topicArea.style.display = 'none !important'; // 기존 topicArea 확실히 숨기기
-    }
-
-    function showSubTopics() {
-      console.log("showSubTopics 함수 시작됨, 선택된 메인 주제:", selectedMain);
-      appendMessage('조금 더 구체적으로 이야기해 줄래?', 'ai');
-      
-      let subtopics;
-      if (selectedMain === '자유주제') {
-        subtopics = ['응, 자유롭게 이야기 시작해줘!'];
-      } else {
-        const ageGroupTopics = counselingTopicsByAge[getAgeGroup()];
-        const mainTopicDetails = ageGroupTopics && ageGroupTopics[selectedMain];
-        subtopics = mainTopicDetails ? mainTopicDetails.map(item => item.displayText) : ['대화를 시작할 준비가 됐어.'];
-        if (!subtopics.length) {
-            subtopics = ['바로 대화 시작할까?'];
-        }
-      }
-
-      displayOptionsInChat(subtopics, (selectedSubtopic) => {
-        startChat(selectedSubtopic);
+      // displayOptionsInChat의 콜백은 사용자가 버튼을 "클릭"했을 때만 실행되어야 합니다.
+      displayOptionsInChat(topics, (selectedTopicByUser) => { // 콜백 파라미터명 변경 (명확성 위해)
+      console.log("메인 주제 선택됨:", selectedTopicByUser); // 디버깅 로그
+      selectedMain = selectedTopicByUser; // 사용자가 선택한 주제를 selectedMain에 저장
+    
+      // 사용자가 선택한 내용을 AI가 되풀이하는 메시지 (또는 사용자 메시지로 표시)
+      appendMessage(selectedMain + ' 이야기를 선택했구나!', 'ai'); 
+      setTimeout(showSubTopics, 300); // 사용자가 선택 후 하위 주제 표시
       });
       if (topicArea) topicArea.style.display = 'none !important';
     }
+
+    function showSubTopics() {
+      // selectedMain이 null이거나 유효하지 않으면 실행되지 않도록 방어 코드 추가
+     if (!selectedMain) {
+    console.warn("showSubTopics 호출되었으나, selectedMain이 설정되지 않았습니다.");
+    return; 
+    }
+    console.log("showSubTopics 함수 시작됨, 선택된 메인 주제:", selectedMain);
+    appendMessage('조금 더 구체적으로 이야기해 줄래?', 'ai');
+  
+    let subtopics;
+    if (selectedMain === '자유주제') {
+    subtopics = ['응, 자유롭게 이야기 시작해줘!'];
+    } else {
+    const ageGroupTopics = counselingTopicsByAge[getAgeGroup()];
+    const mainTopicDetails = ageGroupTopics && ageGroupTopics[selectedMain];
+    subtopics = mainTopicDetails ? mainTopicDetails.map(item => item.displayText) : ['대화를 시작할 준비가 됐어.'];
+    if (!subtopics.length) {
+        subtopics = ['바로 대화 시작할까?'];
+    }
+  }
+
+  // displayOptionsInChat의 콜백은 사용자가 버튼을 "클릭"했을 때만 실행되어야 합니다.
+  displayOptionsInChat(subtopics, (selectedSubtopicByUser) => { // 콜백 파라미터명 변경
+    console.log("하위 주제 선택됨:", selectedSubtopicByUser); // 디버깅 로그
+    startChat(selectedSubtopicByUser); // 선택된 하위 주제로 대화 시작
+  });
+  if (topicArea) topicArea.style.display = 'none !important';
+}
 
     function startChat(initText) {
       console.log("startChat 함수 시작됨, 초기 메시지:", initText);
