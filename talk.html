@@ -555,38 +555,48 @@
 
     // 토픽 플로우 - 선택창 (채팅창 내 버튼 표시)
     function displayOptionsInChat(optionsArray, onSelectCallback, context = null) {
-      console.log("displayOptionsInChat 함수 시작됨, 옵션 배열:", optionsArray); // 옵션 배열의 실제 내용 확인
-      const optionsContainer = document.createElement('div');
-      optionsContainer.className = 'chat-options-container';
+    console.log("displayOptionsInChat 함수 시작됨, 옵션 배열:", optionsArray);
+    const optionsContainer = document.createElement('div');
+    optionsContainer.className = 'chat-options-container';
 
-      const buttons = []; 
+    const buttons = []; 
 
-  // optionsArray가 { icon: "😊", displayText: "이야기" } 형태의 객체 배열이라고 가정
-  optionsArray.forEach(optionObject => { // optionText 대신 optionObject로 변경
-    // optionObject가 실제로 객체인지, 필요한 속성(icon, displayText)을 가지고 있는지 확인
-    if (optionObject && typeof optionObject.displayText !== 'undefined') {
-        console.log("옵션 버튼 생성 중:", optionObject.displayText);
-        const button = document.createElement('button');
-        button.className = 'chat-option-btn';
-        
-        // 이모지가 있다면 함께 표시, 없다면 displayText만 표시
-        button.textContent = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : optionObject.displayText;
+   optionsArray.forEach(optionObject => {
+    // optionObject가 문자열일 수도 있고, {icon, displayText} 객체일 수도 있도록 처리
+    let buttonText;
+    let displayTextForCallback;
 
-        button.onclick = () => {
-          buttons.forEach(btn => {
-            btn.disabled = true; 
-            if (btn === button) {
-              btn.classList.add('selected'); 
-            }
-          });
-          onSelectCallback(optionObject.displayText, context); 
-        };
-        optionsContainer.appendChild(button);
-        buttons.push(button);
+    if (typeof optionObject === 'string') {
+      // 옵션이 단순 문자열인 경우 (예: 아이콘 없는 일반 선택지)
+      buttonText = optionObject;
+      displayTextForCallback = optionObject;
+      console.log("옵션 버튼 생성 중 (문자열):", optionObject);
+    } else if (optionObject && typeof optionObject.displayText !== 'undefined') {
+      // 옵션이 {icon, displayText} 객체인 경우
+      buttonText = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : optionObject.displayText;
+      displayTextForCallback = optionObject.displayText;
+      console.log("옵션 버튼 생성 중 (객체):", optionObject.displayText);
     } else {
-        // optionsArray의 요소가 예상한 객체 형태가 아닐 경우 로그를 남기거나 오류 처리
-        console.warn("displayOptionsInChat: 잘못된 형식의 옵션 객체입니다.", optionObject);
+      // 예상치 못한 형식의 옵션
+      console.warn("displayOptionsInChat: 잘못된 형식의 옵션입니다.", optionObject);
+      return; // 이 옵션은 건너뜀
     }
+    
+    const button = document.createElement('button');
+    button.className = 'chat-option-btn';
+    button.textContent = buttonText;
+    
+    button.onclick = () => {
+      buttons.forEach(btn => {
+        btn.disabled = true; 
+        if (btn === button) {
+          btn.classList.add('selected'); 
+        }
+      });
+      onSelectCallback(displayTextForCallback, context); // 항상 displayText를 콜백에 전달
+    };
+    optionsContainer.appendChild(button);
+    buttons.push(button);
   });
 
   chatWindow.appendChild(optionsContainer);
