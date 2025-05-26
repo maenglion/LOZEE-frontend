@@ -539,9 +539,9 @@
         await saveSessionLog(text, clean, d.analysis || {}); 
 
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
-        // 테스트를 위해 0.2분(12초)으로 설정, 실제로는 15분(elapsedTimeInMinutes >= 15)으로 변경
-        if (elapsedTimeInMinutes >= 0.2 && !analysisNotificationShown) { 
-            console.log(`${elapsedTimeInMinutes.toFixed(1)}분 경과, 상세 분석 시도`);
+        // 테스트를 위해 15분(elapsedTimeInMinutes >= 10)으로 변경
+        if (elapsedTimeInMinutes >= 15 && !analysisNotificationShown) { 
+            console.log(`${elapsedTimeInMinutes.toFixed(5)}분 경과, 상세 분석 시도`);
             // 분석 결과 저장 및 알림 로직 (analysis.html에서 사용)
             let detailedAnalysisData = {};
             if (LOZEE_ANALYSIS && LOZEE_ANALYSIS.inferAgeAndLanguage) {
@@ -559,7 +559,7 @@
                     analysisTime: Date.now(),
                     results: detailedAnalysisData
                 }));
-                showAnalysis();
+                showAnalysis(); //"분석 완료" 알림 표시 및 analysisNotificationShown = true; 로 설정됨
             }
         }
 
