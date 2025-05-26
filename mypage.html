@@ -37,9 +37,9 @@
   </section>
 
   <script type="module">
-    import './firebase-config.js';
+    import './js/firebase-config.js';
     import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-    import { db } from './firebase-config.js';
+    import { db } from './js/firebase-config.js';
 
     async function loadProfile() {
       const userId = localStorage.getItem('cbtUserEmail') || '';
