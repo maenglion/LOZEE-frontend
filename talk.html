@@ -598,21 +598,37 @@
     function showMainTopics() {
       console.log("showMainTopics 함수 시작됨");
       appendMessage('어떤 이야기를 나눠볼까?', 'ai');
-      const topics = Object.keys(counselingTopicsByAge[getAgeGroup()]);
-      topics.push('자유주제');
-      
-      // displayOptionsInChat의 콜백은 사용자가 버튼을 "클릭"했을 때만 실행되어야 합니다.
-      displayOptionsInChat(topics, (selectedTopicByUser) => { // 콜백 파라미터명 변경 (명확성 위해)
-      console.log("메인 주제 선택됨:", selectedTopicByUser); // 디버깅 로그
-      selectedMain = selectedTopicByUser; // 사용자가 선택한 주제를 selectedMain에 저장
-    
-      // 사용자가 선택한 내용을 AI가 되풀이하는 메시지 (또는 사용자 메시지로 표시)
-      appendMessage(selectedMain + ' 이야기를 선택했구나!', 'ai'); 
-      setTimeout(showSubTopics, 300); // 사용자가 선택 후 하위 주제 표시
-      });
-      if (topicArea) topicArea.style.display = 'none !important';
-    }
+  
+        const currentAgeGroup = getAgeGroup();
+        const ageGroupData = counselingTopicsByAge[currentAgeGroup];
+        let topicsWithOptions = []
 
+        if (ageGroupData) {
+        topicsWithOptions = Object.keys(ageGroupData).map(categoryName => {
+           // 각 카테고리의 첫 번째 주제 항목에서 아이콘을 가져오거나,
+           // 카테고리 자체에 대표 아이콘을 지정하는 방식이 필요합니다.
+           // 여기서는 임시로 기본 아이콘을 사용하거나, 첫 번째 항목의 아이콘을 사용합니다.
+           let icon = '💬'; // 기본 아이콘
+           if (ageGroupData[categoryName] && ageGroupData[categoryName].length > 0 && ageGroupData[categoryName][0].icon) {
+             icon = ageGroupData[categoryName][0].icon;
+           }
+           return { icon: icon, displayText: categoryName };
+        });
+     } else {
+       console.warn(`counselingTopicsByAge에 '${currentAgeGroup}'에 대한 데이터가 없습니다.`);
+     }
+
+     topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제' });
+  
+     console.log("displayOptionsInChat에 전달될 배열:", topicsWithOptions); // 수정된 배열 확인
+     displayOptionsInChat(topicsWithOptions, (selectedTopicText) => {
+     selectedMain = selectedTopicText;
+     appendMessage(selectedMain + ' 이야기를 선택했구나!', 'ai'); 
+     setTimeout(showSubTopics, 300);
+    });
+  if (topicArea) topicArea.style.display = 'none !important';
+  }
+   
     function showSubTopics() {
       // selectedMain이 null이거나 유효하지 않으면 실행되지 않도록 방어 코드 추가
      if (!selectedMain) {
