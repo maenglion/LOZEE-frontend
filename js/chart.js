@@ -1,7 +1,5 @@
-<!-- 감정일기 분석 차트 영역 -->
 <canvas id="emotionChart" width="320" height="200"></canvas>
 
-<!-- Chart.js ESM 모듈 불러오기 -->
 <script type="module">
   // Chart.js ESM 빌드 경로
   import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
@@ -24,15 +22,15 @@
       datasets: [{
         label: '감정 빈도',
         data: Object.values(emotionCounts),
-        backgroundColor: ['#FFD700', '#87CEEB', '#FF6B6B', '#A9A9A9']
+        backgroundColor: ['#FFD700', '#87CEEB', '#FF6B6B', '#A9A9A9'] // 색상 배열
       }]
     },
     options: {
-      responsive: false,
+      responsive: false, // 반응형 비활성화
       scales: {
         y: {
           beginAtZero: true,
-          ticks: { precision: 0 }
+          ticks: { precision: 0 } // y축 눈금 정밀도
         }
       }
     }
