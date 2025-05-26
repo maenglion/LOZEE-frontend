@@ -78,7 +78,7 @@ body {
   align-self: flex-end;
   border-bottom-right-radius: 0.4rem;
 }
-/* 챗 버블: AI 쪽 말풍선 (talk.html 에서는 .bubble.bot 으로 붙음) */
+/* 챗 버블: assistant 쪽 말풍선 (talk.html 에서는 .bubble.bot 으로 붙음) */
 .bubble.bot {
   background: #3498db;      /* 파란색 계열 */
   color: #ffffff;

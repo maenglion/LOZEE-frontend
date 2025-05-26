@@ -23,8 +23,8 @@
 
       --user-bubble-bg: var(--primary-color);
       --user-bubble-text: #ffffff;
-      --ai-bubble-bg: #F5E7A1;;
-      --ai-bubble-text: #333333;
+      --assistant-bubble-bg: #F5E7A1;;
+      --assistant-bubble-text: #333333;
 
       --input-area-bg: #f8f9fa;
       --chat-input-bg: #ffffff;
@@ -185,9 +185,9 @@
       align-self: flex-end;
       border-bottom-right-radius: 4px;
     }
-    .bubble.ai {
-      background: var(--ai-bubble-bg);
-      color: var(--ai-bubble-text);
+    .bubble.assistant {
+      background: var(--assistant-bubble-bg);
+      color: var(--assistant-bubble-text);
       align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
@@ -392,7 +392,7 @@
       console.log('DOMContentLoaded 이벤트 발생');
 
       const greeting = getInitialGreeting(userName + voc, hasGreeted); // gpt-dialog.js에서 export 필요
-      appendMessage(greeting, 'ai');
+      appendMessage(greeting, 'assistant');
       
       try {
         await playTTSWithControl(greeting);
@@ -525,7 +525,7 @@
       };
       recog.onerror = event => {
         console.error('Speech recognition error:', event.error);
-        appendMessage('음성 인식 오류: ' + event.error, 'ai_feedback');
+        appendMessage('음성 인식 오류: ' + event.error, 'assistant_feedback');
         isRec = false;
         micButton.classList.remove('recording');
         stopAudio();
@@ -536,7 +536,7 @@
           recog.stop();
         } else {
           stopCurrentTTS(); // 현재 TTS 중지
-          skipTTS = true;   // 다음 AI 응답 TTS 건너뛰기
+          skipTTS = true;   // 다음 assistant 응답 TTS 건너뛰기
 
           try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -544,13 +544,13 @@
             recog.start();
           } catch (e) {
             console.error('마이크 접근 오류:', e);
-            appendMessage('마이크 사용 권한이 필요합니다.', 'ai_feedback');
+            appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback');
           }
         }
       };
     } else {
       micButton.disabled = true;
-      appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'ai_feedback');
+      appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'assistant_feedback');
     }
 
     // 토픽 플로우 - 선택창 (채팅창 내 버튼 표시)
@@ -607,7 +607,7 @@
     // 토픽 플로우 - 주제 (수정된 로직)
     function showMainTopics() {
       console.log("showMainTopics 함수 시작됨");
-      appendMessage('어떤 이야기를 나눠볼까?', 'ai');
+      appendMessage('어떤 이야기를 나눠볼까?', 'assistant');
   
         const currentAgeGroup = getAgeGroup();
         const ageGroupData = counselingTopicsByAge[currentAgeGroup];
@@ -633,7 +633,7 @@
      console.log("displayOptionsInChat에 전달될 배열:", topicsWithOptions); // 수정된 배열 확인
      displayOptionsInChat(topicsWithOptions, (selectedTopicText) => {
      selectedMain = selectedTopicText;
-     appendMessage(selectedMain + ' 이야기를 선택했구나!', 'ai'); 
+     appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
      setTimeout(showSubTopics, 300);
     });
   if (topicArea) topicArea.style.display = 'none !important';
@@ -646,7 +646,7 @@
     return; 
     }
     console.log("showSubTopics 함수 시작됨, 선택된 메인 주제:", selectedMain);
-    appendMessage('조금 더 구체적으로 이야기해 줄래?', 'ai');
+    appendMessage('조금 더 구체적으로 이야기해 줄래?', 'assistant');
   
     let subtopics;
     if (selectedMain === '자유주제') {
@@ -713,10 +713,10 @@
         const cut = d.text.indexOf('{'); // 분석 JSON이 함께 올 경우 잘라내기
         const clean = cut >= 0 ? d.text.slice(0, cut).trim() : d.text.trim();
         
-        appendMessage(clean, 'ai');
+        appendMessage(clean, 'assistant');
         await playTTSWithControl(clean);
         
-        chatHistory.push({ role: 'ai', content: clean });
+        chatHistory.push({ role: 'assistant', content: clean });
         await saveSessionLog(text, clean, d.analysis || {}); // firebase-utils.js에서 export 필요
 
         if (d.analysis) {
@@ -729,7 +729,7 @@
         }
       } catch (error) {
         console.error("sendMessage 내 오류:", error);
-        appendMessage("미안, 지금은 답변하기 조금 어려워. 잠시 후 다시 시도해 줄래?", "ai_feedback");
+        appendMessage("미안, 지금은 답변하기 조금 어려워. 잠시 후 다시 시도해 줄래?", "assistant_feedback");
       } finally {
         isProcessing = false;
         sendBtn.classList.remove('loading');
