@@ -66,8 +66,8 @@ export function detectStuck(userText, chatHistory, meta) { [gpt-dialog.js]
   return false;
 }
 
-// 4) 추천 주제 목록 (추가 가능)
-export const preferenceTopics = [ [gpt-dialog.js]
+// 4) 추천 주제 목록
+export const preferenceTopics = [ 
   name => `${name}, 네가 가장 좋아하는 사람 3명은 누구야? 1등부터 3등까지 말해줄 수 있어?`,
   name => `${name}, 그럼 반대로 혹시 네가 별로 좋아하지 않거나 불편하게 느끼는 사람 3명이 있다면 알려줄 수 있을까?`,
   name => `${name}, 너는 누구와 새로운 것들을 배우고 즐기는 걸 좋아해? (최대 3명)`,
