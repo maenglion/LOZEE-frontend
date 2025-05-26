@@ -67,6 +67,7 @@
 
     /* GNB (old talk.html 스타일 기반) */
     #gnb {
+      padding: 0 36px; /* 기존 padding: 0 16px; 에서 변경 */
       position: fixed;
       top: 0;
       left: 0;
@@ -240,6 +241,7 @@
 
     /* Input Area (old talk.html 스타일 기반, talk.html ID 사용, 하단 고정) */
     #input-area {
+      padding: 0 36px; /* 기존 padding: 0 12px; 에서 변경 */
       position: fixed;
       bottom: 0;
       left: 0;
@@ -308,6 +310,50 @@
       #chat-window { padding-bottom: calc(65px + 10px); }
       #topic-area { bottom: 65px; }
     }
+     /* 채팅창 내 선택지 컨테이너 */
+.chat-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* 버튼 간 간격 */
+  margin: 10px 0; /* 위아래 메시지와의 간격 */
+  align-items: flex-start; /* AI가 제시하는 옵션이므로 왼쪽 정렬 */
+  max-width: 80%; /* 일반 말풍선과 유사한 너비 */
+  align-self: flex-start; /* AI 말풍선처럼 왼쪽에 위치 */
+}
+
+/* 채팅창 내 선택 버튼 (이미지 기반 스타일) */
+.chat-option-btn {
+  background-color: #f0f0f0; /* AI 말풍선 배경색과 유사하게 */
+  color: #333333; /* AI 말풍선 텍스트 색상과 유사하게 */
+  border: 1px solid #e0e0e0; /* 약간의 테두리 */
+  border-radius: 12px; /* 둥근 모서리 */
+  padding: 10px 15px;
+  width: 100%; /* 컨테이너 너비에 맞춤 */
+  text-align: left; /* 텍스트 왼쪽 정렬 */
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background-color 0.2s, transform 0.1s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.chat-option-btn:hover {
+  background-color: #e9e9e9;
+  transform: translateY(-1px);
+}
+
+.chat-option-btn.selected { /* 선택된 버튼 스타일 (이미지 참고) */
+  background-color: #fff9c4; /* 연한 노란색 계열 */
+  color: #5c563a;
+  border-color: #f5e7a1;
+  font-weight: bold;
+}
+
+.chat-option-btn:disabled { /* 이미 선택되어 비활성화된 버튼 */
+  background-color: #f8f8f8;
+  color: #aaaaaa;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
 
   </style>
 </head>
@@ -422,6 +468,8 @@
 
     // init
     document.addEventListener('DOMContentLoaded',async()=>{const greet=getInitialGreeting(userName+voc,hasGreeted);appendMessage(greet,'ai');await playTTSWithControl(greet);hasGreeted=true;showMainTopics();});
+
+   
   </script>
 </body>
 </html>

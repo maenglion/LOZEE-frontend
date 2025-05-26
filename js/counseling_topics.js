@@ -2,7 +2,7 @@
 
 // 상담실 주제: 나이별 관리용 데이터
 export const counselingTopicsByAge = {
-  '8-10': { // 10세 이하 특정 필요 아동 대상 주제 (카테고리별 그룹화)
+  '7-10': { // 10세 이하 특정 필요 아동 대상 주제 (카테고리별 그룹화)
     "감정 이야기": [
       { icon: "😡", displayText: "나 엄청 화나가!", tags: ["분노 폭발", "감정 조절 어려움"], type: "emotion_intensity" },
       { icon: "😭", displayText: "이유 없이 화가 막 나", tags: ["갑작스러운 분노", "이유 모를 화"], type: "emotion_intensity" },
