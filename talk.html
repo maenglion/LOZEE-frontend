@@ -4,311 +4,151 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LOZEE와 대화하기</title>
-  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-<style>
-  :root {
-      --primary-color: #6e8efb; /* index.html 버튼 및 old talk.html 주요색 참고 */
-      --secondary-color: #5a7edf; /* primary-color의 유사색 또는 보조색 */
-      --background-color: #ffffff; /* 요청된 흰색 배경 */
-      --text-color: #333333; /* 흰색 배경 위의 기본 텍스트 색상 */
-      
-      --gnb-bg: #354157; /* old talk.html 참고한 GNB 배경색 (어두운 계열) */
-      --gnb-text-color: #ffffff;
-      --gnb-title-color: var(--primary-color); /* GNB 타이틀에 주조색 적용 */
-      --gnb-menu-toggle-color: var(--primary-color);
-      --gnb-dropdown-bg: var(--gnb-bg);
-      --gnb-dropdown-text-color: var(--gnb-text-color);
-      --gnb-dropdown-border-color: #4a5568; /* old talk.html 참고 */
-      --gnb-dropdown-hover-bg: var(--secondary-color);
-
-      --user-bubble-bg: var(--primary-color);
-      --user-bubble-text: #ffffff;
-      --ai-bubble-bg: #f0f0f0; /* 밝은 회색 배경의 AI 말풍선 */
-      --ai-bubble-text: #333333;
-
-      --input-area-bg: #f8f9fa; /* 입력 영역 배경 (매우 밝은 회색) */
-      --chat-input-bg: #ffffff;
-      --chat-input-text-color: #333333;
-      --chat-input-border-color: #ced4da;
-      --chat-input-placeholder-color: #777777;
-
-      --button-bg: var(--primary-color);
-      --button-text-color: #ffffff;
-      --button-hover-bg: var(--secondary-color);
-
-      --volume-meter-container-bg: #e9ecef; /* 음량 바 배경 */
-      --volume-meter-level-bg: var(--primary-color);
-      --meter-height: 6px; /* talk.html 기존 값 유지 */
-      --meter-top-margin: 8px; /* old talk.html 참고 */
-
-      --topic-button-bg: var(--primary-color);
-      --topic-button-text: #ffffff;
-      --topic-button-hover-bg: var(--secondary-color);
-
-      --analysis-notification-bg: #fff3cd; /* talk.html 기존 값 참고 */
-      --analysis-notification-text: #856404; /* talk.html 기존 값 참고 */
-
-      --gnb-height: 56px; /* talk.html 및 old talk.html 공통 */
-      --chat-input-area-height: 70px; /* old talk.html 참고 (패딩 포함 높이) */
+  <style>
+    :root {
+      --primary-color: #ffd400;
+      --background-color: #2a3340;
+      --user-bubble-bg: #3a3f51;
+      --ai-bubble-bg: #4f5666;
+      --gnb-height: 56px;
+      --meter-height: 6px;
     }
-
     body {
       margin: 0;
-      padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
-      font-family: 'KoPub World Dotum', sans-serif; /* old talk.html 및 index.html 폰트 적용 */
+      padding-top: var(--gnb-height);
+      font-family: Arial, sans-serif;
       background: var(--background-color);
-      color: var(--text-color);
+      color: #fff;
       display: flex;
       flex-direction: column;
       height: 100vh;
-      box-sizing: border-box;
       overflow: hidden;
     }
-
-    /* GNB (old talk.html 스타일 기반) */
+    /* GNB */
     #gnb {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: var(--gnb-height);
-      background-color: var(--gnb-bg);
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: var(--gnb-height);
+      background: #1b1f2a;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 16px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
       z-index: 1000;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-sizing: border-box;
     }
-
-    #gnb-title {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: var(--gnb-title-color);
-    }
-
-    #menu-toggle {
-      background: none;
-      border: none;
-      color: var(--gnb-menu-toggle-color);
-      font-size: 24px; /* old talk.html 아이콘 크기 느낌 */
-      cursor: pointer;
-      padding: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
+    #gnb-title { font-size: 1.2em; font-weight: bold; }
+    #menu-toggle { background: none; border: none; color: var(--primary-color); font-size: 1.5em; cursor: pointer; }
     #dropdown-menu {
-      position: fixed;
-      top: var(--gnb-height);
-      right: 0;
-      background-color: var(--gnb-dropdown-bg);
-      border-radius: 0 0 0 8px;
-      box-shadow: -3px 3px 6px rgba(0,0,0,0.2);
-      width: 200px;
-      z-index: 999;
-      overflow: hidden;
-      max-height: 0;
+      position: fixed; top: var(--gnb-height); right: 0;
+      background: #2a3340;
+      max-height: 0; overflow: hidden;
       transition: max-height 0.3s ease-out;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      border-radius: 0 0 0 8px;
+      z-index: 999;
     }
-
-    #dropdown-menu.show {
-      max-height: 300px; /* talk.html 기존 값 또는 필요시 조정 */
-    }
-
+    #dropdown-menu.show { max-height: 200px; }
     #dropdown-menu a {
       display: block;
       padding: 12px 16px;
+      color: #fff;
       text-decoration: none;
-      color: var(--gnb-dropdown-text-color);
-      border-bottom: 1px solid var(--gnb-dropdown-border-color);
-      font-size: 0.95em;
+      border-bottom: 1px solid #444;
     }
-    #dropdown-menu a:last-child {
-      border-bottom: none;
-    }
-    #dropdown-menu a:hover {
-      background-color: var(--gnb-dropdown-hover-bg);
-    }
-
-    /* Volume Meter (old talk.html 스타일 및 talk.html 구조 기반) */
+    #dropdown-menu a:last-child { border-bottom: none; }
+    #dropdown-menu a:hover { background: #3a3f51; }
+    /* Volume Meter */
     #meter-container {
-      position: fixed;
-      top: calc(var(--gnb-height) + var(--meter-top-margin));
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      max-width: 300px;
-      height: var(--meter-height);
-      background: var(--volume-meter-container-bg);
+      position: fixed; top: calc(var(--gnb-height)+8px);
+      left: 50%; transform: translateX(-50%);
+      width: 60%; max-width: 300px; height: var(--meter-height);
+      background: #444;
       border-radius: 3px;
       overflow: hidden;
       z-index: 998;
     }
     #volume-level {
-      width: 0%;
-      height: 100%;
-      background: var(--volume-meter-level-bg);
-      border-radius: 3px; /* talk.html에 이미 있었지만, 일관성 위해 명시 */
-      transition: width 0.05s linear, background-color 0.05s linear; /* talk.html에 background-color transition 추가 */
+      width: 0%; height: 100%;
+      background: var(--primary-color);
+      transition: width 0.05s linear;
     }
-    
-    /* Chat Window (old talk.html 스타일 참고, talk.html ID 사용) */
+    /* Chat Window */
     #chat-window {
-      flex: 1; /* 남은 공간을 모두 차지 */
+      flex: 1;
       padding: 16px;
-      padding-top: calc(var(--meter-top-margin) + var(--meter-height) + 10px); /* GNB 밑, 음량 바 밑 */
-      padding-bottom: calc(var(--chat-input-area-height) + 10px); /* 하단 입력창 높이만큼 여백 */
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px; /* 말풍선 간격 */
-      box-sizing: border-box;
+      gap: 10px;
     }
-    
-    /* 스크롤바 스타일 (old talk.html 참고) */
-    #chat-window::-webkit-scrollbar { width: 8px; }
-    #chat-window::-webkit-scrollbar-track { background: var(--background-color); } /* 페이지 배경색과 동일하게 */
-    #chat-window::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; }
-    #chat-window::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
-
-    /* Bubbles (talk.html 클래스명 사용, old talk.html 스타일 적용) */
     .bubble {
-      max-width: 75%;
-      padding: 10px 15px; /* 약간 줄임 */
-      border-radius: 18px;
-      line-height: 1.6;
-      word-break: keep-all; /* 한국어 고려 */
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      max-width: 75%; padding: 12px 16px;
+      border-radius: 18px; line-height: 1.5; white-space: pre-wrap;
     }
     .bubble.user {
-      background: var(--user-bubble-bg);
-      color: var(--user-bubble-text);
       align-self: flex-end;
+      background: var(--user-bubble-bg);
+      color: #fff;
       border-bottom-right-radius: 4px;
     }
-    .bubble.ai { /* talk.html의 .ai 클래스 */
-      background: var(--ai-bubble-bg);
-      color: var(--ai-bubble-text);
+    .bubble.ai {
       align-self: flex-start;
+      background: var(--ai-bubble-bg);
+      color: #fff;
       border-bottom-left-radius: 4px;
     }
-
-    /* Analysis Notification (talk.html 기존 스타일 유지하되 색상 변수 사용) */
     .analysis-notification {
       align-self: center;
-      background: var(--analysis-notification-bg);
-      color: var(--analysis-notification-text);
+      background: #fff3cd;
+      color: #856404;
       padding: 10px 16px;
       border-radius: 12px;
       cursor: pointer;
       font-size: 0.9em;
-      margin: 5px 0;
     }
-
-    /* Topic Area (talk.html 구조 기반, old talk.html 버튼 스타일 참고) */
+    /* Topic Area */
     #topic-area {
-      display: none; /* 초기 숨김 */
+      display: none;
       flex-wrap: wrap;
       gap: 8px;
-      padding: 10px 16px; /* 내부 여백 */
-      background: var(--background-color); /* 페이지 배경과 동일하게 또는 밝은 회색 */
-      border-top: 1px solid #e0e0e0;
-      /* 하단 고정 입력창 위에 위치하도록 조정 필요시 */
-      position: fixed;
-      bottom: var(--chat-input-area-height);
-      left: 0;
-      width: 100%;
-      box-sizing: border-box;
-      box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+      padding: 8px;
+      background: #1b1f2a;
+      border-top: 1px solid #444;
     }
     .topic-btn, .subtopic-btn {
-      background: var(--topic-button-bg);
+      background: var(--primary-color);
       border: none;
-      color: var(--topic-button-text);
-      padding: 8px 14px;
+      color: #000;
+      padding: 8px 12px;
       border-radius: 20px;
       cursor: pointer;
       font-size: 0.9em;
-      transition: background-color 0.2s;
     }
-    .topic-btn:hover, .subtopic-btn:hover {
-      background: var(--topic-button-hover-bg);
-    }
-
-    /* Input Area (old talk.html 스타일 기반, talk.html ID 사용, 하단 고정) */
+    /* Input Area */
     #input-area {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: var(--chat-input-area-height);
-      display: none; /* 초기 숨김, startChat()에서 flex로 변경 */
+      display: none;
       align-items: center;
       gap: 8px;
-      padding: 0 12px; /* 내부 여백 old talk.html 참고 */
-      background: var(--input-area-bg);
-      border-top: 1px solid #e0e0e0; /* old talk.html 그림자 대신 경계선 */
-      box-sizing: border-box;
+      padding: 8px;
+      background: #1b1f2a;
+      border-top: 1px solid #444;
     }
-    #input-area button, #input-area input {
-      font-size: 1em;
-      height: 44px; /* old talk.html 버튼/입력창 높이 통일 */
-      box-sizing: border-box;
-    }
-
     #chat-input {
       flex: 1;
-      padding: 10px 16px; /* 내부 여백 */
-      border: 1px solid var(--chat-input-border-color);
-      border-radius: 22px; /* old talk.html 참고 */
+      padding: 8px 12px;
+      border: 1px solid #555;
+      border-radius: 20px;
+      background: #2a3340;
+      color: #fff;
       outline: none;
-      background-color: var(--chat-input-bg);
-      color: var(--chat-input-text-color);
     }
-    #chat-input::placeholder {
-      color: var(--chat-input-placeholder-color);
-    }
-
-    #mic-button, #send-btn { /* talk.html ID 사용 */
-      width: 44px;
-      min-width: 44px; /* 너비 고정 */
-      height: 44px;
-      border: none;
-      border-radius: 50%;
-      background: var(--button-bg);
-      color: var(--button-text-color);
+    #mic-button, #send-btn {
+      width: 36px; height: 36px;
+      border: none; border-radius: 50%;
+      background: var(--primary-color);
+      color: #000;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3em; /* 아이콘 크기 느낌 */
-      transition: background-color 0.2s ease;
+      display: flex; align-items: center; justify-content: center;
     }
-    #mic-button:hover, #send-btn:hover {
-      background: var(--button-hover-bg);
-    }
-    #mic-button.recording { /* talk.html 기존 클래스 유지 */
-      background: #e74c3c; /* 녹음 중 빨간색 */
-    }
-    #send-btn.loading { /* old talk.html 참고 (필요시 JS에서 클래스 추가) */
-        background:#cccccc;
-        cursor:default;
-    }
-    
-    /* 반응형 (필요시 추가) */
-    @media (max-width: 600px) {
-      #gnb-title { font-size: 1.1em; }
-      .bubble { padding: 9px 13px; max-width: 85%; }
-      #chat-input { padding: 9px 14px; }
-      #mic-button, #send-btn { width: 40px; height: 40px; font-size: 1.2em;}
-      #input-area { height: 65px; }
-      #chat-window { padding-bottom: calc(65px + 10px); }
-      #topic-area { bottom: 65px; }
-    }
-
+    #mic-button.recording { background: #e74c3c; }
   </style>
 </head>
 <body>
@@ -322,6 +162,7 @@
       <a href="journal-list.html">대화 목록</a>
     </div>
   </nav>
+
   <div id="meter-container"><div id="volume-level"></div></div>
   <div id="chat-window"></div>
   <div id="topic-area"></div>
@@ -330,6 +171,7 @@
     <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
     <button id="send-btn">➤</button>
   </div>
+
   <script type="module">
     import './js/firebase-config.js';
     import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
@@ -339,89 +181,214 @@
     import { counselingTopicsByAge } from './js/counseling_topics.js';
 
     // 상태
-    let skipTTS=false, hasGreeted=false, isProcessing=false;
-    let chatHistory=[], selectedMain=null;
-    let meta={ lastInputTimestamp:Date.now(), fillerCount:0, clickedOption:false, presentedIndices:[] };
+    let skipTTS = false;
+    let hasGreeted = false;
+    let isProcessing = false;
+    let chatHistory = [];
+    let selectedMain = null;
+    let meta = { lastInputTimestamp: Date.now(), fillerCount: 0, clickedOption: false, presentedIndices: [] };
 
-    // UI
-    const chatWindow=document.getElementById('chat-window');
-    const topicArea=document.getElementById('topic-area');
-    const inputArea=document.getElementById('input-area');
-    const chatInput=document.getElementById('chat-input');
-    const sendBtn=document.getElementById('send-btn');
-    const micButton=document.getElementById('mic-button');
-    const menuToggle=document.getElementById('menu-toggle');
-    const dropdownMenu=document.getElementById('dropdown-menu');
-    const meterLevel=document.getElementById('volume-level');
-
-    // GNB
-    menuToggle.addEventListener('click',()=>dropdownMenu.classList.toggle('show'));
-    document.addEventListener('click',e=>{ if(!document.getElementById('gnb').contains(e.target)) dropdownMenu.classList.remove('show'); });
-
-       // 사용자 정보
+    // 사용자 정보
     const userName = localStorage.getItem('lozee_username') || '친구';
     const userAge = parseInt(localStorage.getItem('lozee_userage') || '0', 10);
     const voc = getKoreanVocativeParticle(userName);
 
-    // 초기화 로직
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('✅ firebase-config.js 모듈 로드됨');
-      console.log('DOMContentLoaded 이벤트 발생');
+    // DOM 요소
+    const chatWindow = document.getElementById('chat-window');
+    const topicArea  = document.getElementById('topic-area');
+    const inputArea  = document.getElementById('input-area');
+    const chatInput  = document.getElementById('chat-input');
+    const sendBtn    = document.getElementById('send-btn');
+    const micButton  = document.getElementById('mic-button');
+    const menuToggle = document.getElementById('menu-toggle');
+    const dropdown   = document.getElementById('dropdown-menu');
+    const meterLevel = document.getElementById('volume-level');
 
-      // 첫 인사 및 토픽 표시
-      const greeting = getInitialGreeting(userName + voc, hasGreeted);
-      appendMessage(greeting, 'ai');
-      await playTTSFromText(greeting, localStorage.getItem('lozee_voice'));
-      hasGreeted = true;
-      showMainTopics();
+    // GNB 토글
+    menuToggle.addEventListener('click', () => dropdown.classList.toggle('show'));
+    document.addEventListener('click', e => {
+      if (!document.getElementById('gnb').contains(e.target)) {
+        dropdown.classList.remove('show');
+      }
     });
 
-    // 메시지
-    function appendMessage(text,role){ const b=document.createElement('div'); b.className='bubble '+role; b.textContent=text; chatWindow.appendChild(b); chatWindow.scrollTop=chatWindow.scrollHeight; }
-    function showAnalysis(){ const n=document.createElement('div'); n.className='analysis-notification'; n.textContent='🟡분석 완료'; n.onclick=()=>location.href='analysis.html'; chatWindow.appendChild(n); chatWindow.scrollTop=chatWindow.scrollHeight; }
-    function playTTSWithControl(txt) {stopCurrentTTS();               // ensure stopCurrentTTS is imported
-    if (skipTTS) { skipTTS = false; return; } return playTTSFromText(txt, localStorage.getItem('lozee_voice'));
+    // 메시지 출력
+    function appendMessage(text, role) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = text;
+      chatWindow.appendChild(bubble);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // 분석 알림
+    function showAnalysisNotification() {
+      const notif = document.createElement('div');
+      notif.className = 'analysis-notification';
+      notif.textContent = '🟡 분석 완료';
+      notif.onclick = () => location.href = 'analysis.html';
+      chatWindow.appendChild(notif);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // TTS 제어
+    function playTTSWithControl(text) {
+      stopCurrentTTS();
+      if (skipTTS) { skipTTS = false; return; }
+      return playTTSFromText(text, localStorage.getItem('lozee_voice'));
+    }
+
+    // 토픽 플로우
+    function showMainTopics() {
+      appendMessage('어떤 이야기를 나눠볼까?', 'ai');
+      topicArea.innerHTML = '';
+      const keys = Object.keys(counselingTopicsByAge[getAgeGroup(userAge)]);
+      keys.push('자유주제');
+      keys.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'topic-btn';
+        btn.textContent = t;
+        btn.onclick = () => selectMainTopic(t);
+        topicArea.appendChild(btn);
+      });
+      topicArea.style.display = 'flex';
+    }
+    function selectMainTopic(topic) {
+      selectedMain = topic;
+      topicArea.style.display = 'none';
+      appendMessage(`${topic} 이야기를 선택했어!`, 'ai');
+      setTimeout(showSubTopics, 300);
+    }
+    function showSubTopics() {
+      appendMessage('조금 더 구체적으로?', 'ai');
+      topicArea.innerHTML = '';
+      const subs = selectedMain === '자유주제'
+        ? ['자유롭게 이야기해봐']
+        : counselingTopicsByAge[getAgeGroup(userAge)][selectedMain].map(i => i.displayText);
+      subs.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'subtopic-btn';
+        btn.textContent = s;
+        btn.onclick = () => startChat(s);
+        topicArea.appendChild(btn);
+      });
+      topicArea.style.display = 'flex';
+    }
+    function startChat(init) {
+      topicArea.style.display = 'none';
+      inputArea.style.display = 'flex';
+      sendMessage(init);
+    }
+    function getAgeGroup(age) {
+      if (age <= 10) return '8-10';
+      if (age <= 15) return '11-15';
+      return '30+';
+    }
+
+    // STT (SpeechRecognition)
+    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition, isRec = false;
+    if (Rec) {
+      recognition = new Rec();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'ko-KR';
+      recognition.onstart = () => { isRec = true; micButton.classList.add('recording'); };
+      recognition.onend   = () => { isRec = false; micButton.classList.remove('recording'); stopAudioAnalysis(); };
+      recognition.onresult = e => {
+        let txt = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) txt += e.results[i][0].transcript;
+        }
+        if (txt) sendMessage(txt);
+      };
+      recognition.onerror = err => { console.error(err); appendMessage('음성 인식 오류', 'ai'); isRec = false; micButton.classList.remove('recording'); stopAudioAnalysis(); };
+      micButton.onclick = async () => {
+        if (isRec) recognition.stop();
+        else {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            setupAudioAnalysis(stream);
+            recognition.start();
+          } catch (e) {
+            console.error(e);
+            appendMessage('마이크 권한 오류', 'ai');
+          }
+        }
+      };
+    } else {
+      micButton.disabled = true;
+      appendMessage('음성 인식 지원 안됨', 'ai');
     }
 
     // 오디오 분석
-    let audioContext,analyser,source,dataArray,animId,streamRef;
-    const LOW={r:0,g:200,b:0},MID={r:255,g:200,b:0},HIGH={r:255,g:69,b:0};
-    function interp(c1,c2,f){return`rgb(${Math.round(c1.r+f*(c2.r-c1.r))},${Math.round(c1.g+f*(c2.g-c1.g))},${Math.round(c1.b+f*(c2.b-c1.b))})`;}
-    function setupAudioAnalysis(s){ if(audioContext)audioContext.close();audioContext=new AudioContext();analyser=audioContext.createAnalyser();analyser.fftSize=256;source=audioContext.createMediaStreamSource(s);source.connect(analyser);dataArray=new Uint8Array(analyser.frequencyBinCount);streamRef=s;draw();}
-    function draw(){animId=requestAnimationFrame(draw);if(!analyser||!dataArray)return;analyser.getByteFrequencyData(dataArray);let sum=dataArray.reduce((a,v)=>a+v,0);let avg=sum/dataArray.length;let norm=Math.min(100,Math.max(0,(avg/140)*100));meterLevel.style.width=norm+'%';let col=norm<=50?interp(LOW,MID,norm/50):interp(MID,HIGH,(norm-50)/50);meterLevel.style.background=`linear-gradient(to right, var(--background-color), ${col})`;}
-    function stopAudio(){ cancelAnimationFrame(animId); if(source)source.disconnect();streamRef.getTracks().forEach(t=>t.stop()); if(audioContext)audioContext.close();meterLevel.style.width='0%';meterLevel.style.background=getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg');}
+    let audioContext, analyser, sourceNode, dataArray, animId, micStream;
+    const LOW = { r: 0, g: 200, b: 0 }, MID = { r: 255, g: 200, b: 0 }, HIGH = { r: 255, g: 69, b: 0 };
+    function interp(c1, c2, f) { return `rgb(${Math.round(c1.r + f*(c2.r-c1.r))},${Math.round(c1.g + f*(c2.g-c1.g))},${Math.round(c1.b + f*(c2.b-c1.b))})`; }
+    function setupAudioAnalysis(stream) {
+      micStream = stream;
+      audioContext = new (window.AudioContext||window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser(); analyser.fftSize=256; analyser.smoothingTimeConstant=0.3;
+      sourceNode = audioContext.createMediaStreamSource(stream);
+      sourceNode.connect(analyser);
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      drawVolume();
+    }
+    function drawVolume() {
+      animId = requestAnimationFrame(drawVolume);
+      analyser.getByteFrequencyData(dataArray);
+      const avg = dataArray.reduce((a,v)=>a+v,0)/dataArray.length;
+      const norm = Math.min(100, Math.max(0, (avg/140)*100));
+      meterLevel.style.width = `${norm}%`;
+      const col = norm<=50 ? interp(LOW, MID, norm/50) : interp(MID, HIGH, (norm-50)/50);
+      meterLevel.style.background = `linear-gradient(to right, var(--background-color), ${col})`;
+    }
+    function stopAudioAnalysis() {
+      cancelAnimationFrame(animId);
+      sourceNode.disconnect();
+      micStream.getTracks().forEach(t=>t.stop());
+      audioContext.close();
+      meterLevel.style.width='0%';
+    }
 
-    // STT
-    const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
-    let recog,isRec=false;
-    if(Rec){ recog=new Rec();recog.continuous=true;recog.interimResults=false;recog.lang='ko-KR';
-      recog.onstart=()=>{isRec=true;micButton.classList.add('recording');};
-      recog.onend=()=>{isRec=false;micButton.classList.remove('recording');stopAudio();};
-      recog.onresult = e => {let txt = ''; for (let i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) txt += e.results[i][0].transcript;}
-      if (txt) sendMessage(txt);       // <-- handleUserText → sendMessage
-      };
-      recog.onerror=err=>{console.error(err);appendMessage('음성 인식 오류','ai_feedback');isRec=false;micButton.classList.remove('recording');stopAudio();};
-      micButton.onclick=async()=>{ if(isRec){recog.stop();}else{try{const s=await navigator.mediaDevices.getUserMedia({audio:true});setupAudioAnalysis(s);recog.start();}catch(e){console.error(e);appendMessage('마이크 권한 오류','ai_feedback');}}};
-    } else { micButton.disabled=true;appendMessage('브라우저에서 음성 인식 지원하지 않습니다.','ai_feedback'); }
+    // 메시지 전송
+    async function sendMessage(text) {
+      if (!text || isProcessing) return;
+      isProcessing = true;
+      appendMessage(text, 'user'); chatHistory.push({role:'user',content:text});
+      chatInput.value='';
+      const res = await getGptResponse(text, { chatHistory });
+      const data = await res.json();
+      const cut = data.text.indexOf('{');
+      const msg = cut>=0 ? data.text.slice(0,cut).trim() : data.text;
+      appendMessage(msg,'ai'); await playTTSWithControl(msg);
+      chatHistory.push({role:'assistant',content:msg});
+      await saveSessionLog(text, msg, data.analysis||{});
+      showAnalysisNotification();
+      isProcessing = false;
+    }
 
-    // 토픽 플로우
-    function showMainTopics(){appendMessage('어떤 이야기를 나눠볼까?','ai');topicArea.innerHTML='';const t=Object.keys(counselingTopicsByAge[getAgeGroup()]);t.push('자유주제');t.forEach(topic=>{const b=document.createElement('button');b.className='topic-btn';b.textContent=topic;b.onclick=()=>selectMainTopic(topic);topicArea.appendChild(b);});topicArea.style.display='flex';}
-    function selectMainTopic(topic){selectedMain=topic;topicArea.style.display='none';appendMessage(topic+' 이야기를 선택했어!','ai');setTimeout(showSubTopics,300);}    
-    function showSubTopics(){appendMessage('조금 더 구체적으로?','ai');topicArea.innerHTML='';let subs=selectedMain==='자유주제'?['자유롭게 이야기해봐']:(counselingTopicsByAge[getAgeGroup()][selectedMain]||[]).map(i=>i.displayText);subs.forEach(sub=>{const b=document.createElement('button');b.className='subtopic-btn';b.textContent=sub;b.onclick=()=>startChat(sub);topicArea.appendChild(b);});topicArea.style.display='flex';}
-    function startChat(init){topicArea.style.display='none';inputArea.style.display='flex';sendMessage(init);}   
-    function getAgeGroup(){if(userAge<=10)return'8-10';if(userAge<=15)return'11-15';return'30+';}
+    // 입력 이벤트
+    sendBtn.addEventListener('click', ()=> sendMessage(chatInput.value));
+    chatInput.addEventListener('keydown', e => {
+      meta.lastInputTimestamp = Date.now();
+      const fillers = ['음','…','어','글쎄','모르겠어요','잘 모르겠어'];
+      meta.fillerCount = fillers.some(f=>chatInput.value.includes(f))? meta.fillerCount+1 : 0;
+      meta.clickedOption = false;
+      skipTTS = true;
+      stopCurrentTTS();
+      if (e.key==='Enter') sendMessage(chatInput.value);
+    });
 
-    // stuck detection
-    function detectStuck(txt,his,meta){const now=Date.now();if(meta.lastInputTimestamp&&now-meta.lastInputTimestamp>300000)return true; if(meta.fillerCount>=3)return true;const recent=his.filter(m=>m.role==='user').slice(-5);if(recent.length===5&&recent.every(m=>m.content.trim().length<5))return true; if(meta.clickedOption)return false;return false;}
-    function showPreferenceOptions(){const avail=window.LOZEE_DIALOG.preferenceTopics.map((_,i)=>i).filter(i=>!meta.presentedIndices.includes(i));if(!avail.length)return;const idx=avail[Math.floor(Math.random()*avail.length)];meta.presentedIndices.push(idx);const n=document.createElement('div');n.className='analysis-notification';const b=document.createElement('button');b.className='topic-btn';b.textContent=window.LOZEE_DIALOG.preferenceTopics[idx](userName);b.onclick=()=>{meta.clickedOption=true;startChat(b.textContent);};n.appendChild(b);chatWindow.appendChild(n);chatWindow.scrollTop=chatWindow.scrollHeight;}
-
-    async function sendMessage(text){if(!text||isProcessing)return;isProcessing=true;appendMessage(text,'user');chatHistory.push({role:'user',content:text});chatInput.value='';const res=await getGptResponse(text,{chatHistory});const d=await res.json();const cut=d.text.indexOf('{');const clean=cut>=0?d.text.slice(0,cut).trim():d.text;appendMessage(clean,'ai');await playTTSWithControl(clean);chatHistory.push({role:'ai',content:clean});await saveSessionLog(text,clean,d.analysis||{});if(d.analysis){LOZEE_ANALYSIS?.inferAgeAndLanguage&&await LOZEE_ANALYSIS. inferAgeAndLanguage(chatHistory.map(m=>m.role+':'+m.content).join('\n'));}if(d.analysis)showAnalysis();if(d.analysis){}if(d.analysis){}if(d.analysis){}if(d.analysis){}if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis);if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis);}   
-    // event binding
-    sendBtn.addEventListener('click',()=>sendMessage(chatInput.value));
-    chatInput.addEventListener('keydown',e=>{meta.lastInputTimestamp=Date.now();const fillers=['음','…','어','글쎄','모르겠어요','잘 모르겠어'];meta.fillerCount=fillers.some(f=>chatInput.value.includes(f))?meta.fillerCount+1:0;meta.clickedOption=false;skipTTS=true;stopCurrentTTS();if(e.key==='Enter')sendMessage(chatInput.value);});
-
-    // init
-    document.addEventListener('DOMContentLoaded',async()=>{const greet=getInitialGreeting(userName+voc,hasGreeted);appendMessage(greet,'ai');await playTTSWithControl(greet);hasGreeted=true;showMainTopics();});
+    // 초기화
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('초기화 시작');
+      const greeting = getInitialGreeting(userName + voc, hasGreeted);
+      appendMessage(greeting,'ai');
+      await playTTSWithControl(greeting);
+      hasGreeted = true;
+      showMainTopics();
+    });
   </script>
 </body>
 </html>
