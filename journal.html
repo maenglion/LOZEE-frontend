@@ -83,6 +83,7 @@
   <button id="talk-btn">🎤 말하기</button>
 
   <script type="module">
+    import './js/firebase-config.js';
     import { getInitialGreeting } from './js/gpt-dialog.js';
     import { playTTSFromText } from './js/tts.js';
     import { getSTTFromAudio } from './js/stt.js';
@@ -90,16 +91,7 @@
     import { initializeApp } from 'firebase/app';
     import { getFirestore, collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
+     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
     async function saveUserProfile() {
