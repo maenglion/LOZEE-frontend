@@ -49,8 +49,12 @@
     </div>
 
     <script type="module">
+        // 1. 필요한 모듈 import
         import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js';
+        import { db } from './js/firebase-config.js'; 
+        import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
+        // 2. DOM 요소 가져오기
         const stepCBT = document.getElementById('stepCBT');
         const stepNameBirth = document.getElementById('stepNameBirth');
         const cbtCodeInput = document.getElementById('cbtCodeInput');
@@ -64,7 +68,12 @@
         const birthError = document.getElementById('birthError');
         const submitNameBirthBtn = document.getElementById('submitNameBirthBtn');
 
-        function showStep(el) { stepCBT.classList.remove('active'); stepNameBirth.classList.remove('active'); el.classList.add('active'); }
+        // 3. 헬퍼 함수 정의
+        function showStep(el) {
+            stepCBT.classList.remove('active');
+            stepNameBirth.classList.remove('active');
+            el.classList.add('active');
+        }
 
         function populateBirthSelects() {
             const now = new Date();
@@ -76,35 +85,100 @@
             for (let d = 1; d <= 31; d++) { const opt = document.createElement('option'); opt.value = d; opt.textContent = d + '일'; birthDay.appendChild(opt); }
         }
 
+        // 4. CBT 사용자 확인 함수
+        async function checkForExistingCbtUser() {
+            const existingEmail = localStorage.getItem('cbtUserEmail');
+            const isCbt = localStorage.getItem('isCbtUser') === 'true'; // CBT 참여자 플래그 확인
+
+            if (existingEmail && isCbt) {
+                console.log(`기존 CBT 사용자 이메일 발견: ${existingEmail}`);
+                try {
+                    // Firestore에서 사용자 정보 가져오기 (users 컬렉션, 문서 ID는 이메일로 가정)
+                    const userDocRef = doc(db, "users", existingEmail); // 'users'는 Firestore 컬렉션 이름
+                    const userSnap = await getDoc(userDocRef);
+
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        const userName = userData.name; // Firestore에 저장된 이름 필드명
+                        const userAge = userData.age;   // Firestore에 저장된 나이 필드명
+
+                        if (userName && typeof userAge === 'number') {
+                            localStorage.setItem('lozee_username', userName);
+                            localStorage.setItem('lozee_userage', userAge.toString()); // 나이는 문자열로 저장
+                            console.log(`사용자 정보 로드 완료: ${userName}, ${userAge}세. talk.html로 이동합니다.`);
+                            window.location.href = 'talk.html'; // 바로 talk.html로 이동
+                            return true; // 기존 사용자 처리 완료
+                        } else {
+                            console.log("Firestore에 사용자 이름 또는 나이 정보가 완전하지 않습니다. 새로 입력받습니다.");
+                        }
+                    } else {
+                        console.log("Firestore에 해당 이메일의 사용자 정보가 없습니다. 새로 입력받습니다.");
+                    }
+                } catch (error) {
+                    console.error("Firestore에서 사용자 정보 로드 중 오류:", error);
+                }
+            }
+            return false; // 기존 사용자 처리 안 함 (새로 입력)
+        }
+
+        // 5. 이벤트 핸들러 정의 (중복 제거된 버전)
         submitCbtCodeBtn.onclick = () => {
             const email = cbtCodeInput.value.trim();
             if (!validateCbtEmail(email)) {
                 cbtCodeError.textContent = getCbtErrorMessage(); return;
             }
+            cbtCodeError.textContent = ''; // 오류 메시지 초기화
             localStorage.setItem('cbtUserEmail', email.toLowerCase());
-            localStorage.setItem('isCbtUser', 'true');
+            localStorage.setItem('isCbtUser', 'true'); // CBT 사용자 플래그 설정
             showStep(stepNameBirth);
         };
 
-        submitNameBirthBtn.onclick = () => {
+        submitNameBirthBtn.onclick = async () => {
             const name = nameInput.value.trim();
             const y = birthYear.value, m = birthMonth.value, d = birthDay.value;
+            
             if (!name) { nameError.textContent = '이름을 입력해주세요.'; return; }
             nameError.textContent = '';
             if (!y || !m || !d) { birthError.textContent = '생년월일을 모두 선택해주세요.'; return; }
             birthError.textContent = '';
+            
             const dob = new Date(y, m - 1, d);
             const today = new Date();
             let age = today.getFullYear() - dob.getFullYear();
-            if (today < new Date(dob.getFullYear() + age, dob.getMonth(), dob.getDate())) age--;
+            if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            
             localStorage.setItem('lozee_username', name);
-            localStorage.setItem('lozee_userage', age);
+            localStorage.setItem('lozee_userage', age.toString()); // 나이는 문자열로 저장
+
+            // Firestore에 사용자 정보 저장 (이름, 나이 등)
+            const cbtUserEmail = localStorage.getItem('cbtUserEmail');
+            if (cbtUserEmail && name && typeof age === 'number') {
+                try {
+                    const userDocRef = doc(db, "users", cbtUserEmail); // 'users' 컬렉션, 문서 ID는 이메일
+                    await setDoc(userDocRef, { 
+                        name: name, 
+                        age: age,
+                        email: cbtUserEmail, // 이메일도 함께 저장
+                    }, { merge: true }); // merge: true 옵션으로 기존 문서가 있으면 병합, 없으면 생성
+                    console.log("Firestore에 사용자 정보 저장/업데이트 완료.");
+                } catch (error) {
+                    console.error("Firestore에 사용자 정보 저장 중 오류:", error);
+                }
+            }
+            
             window.location.href = 'talk.html';
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // 6. DOMContentLoaded 이벤트 리스너 (메인 실행 로직)
+        document.addEventListener('DOMContentLoaded', async () => {
             populateBirthSelects();
-            showStep(stepCBT);
+            const existingUserProcessed = await checkForExistingCbtUser();
+            if (!existingUserProcessed) {
+                // 기존 CBT 사용자 정보로 바로 넘어가지 않은 경우에만 초기 스텝 보여주기
+                showStep(stepCBT);
+            }
         });
     </script>
 </body>
