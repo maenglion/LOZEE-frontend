@@ -410,17 +410,23 @@
     const voc = getKoreanVocativeParticle(userName);
 
     // 초기화 로직
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('✅ js/firebase-config.js 모듈 로드됨');
-      console.log('DOMContentLoaded 이벤트 발생');
+  document.addEventListener('DOMContentLoaded', async () => {
+  console.log('✅ js/firebase-config.js 모듈 로드됨');
+  console.log('DOMContentLoaded 이벤트 발생');
 
-      // 첫 인사 및 토픽 표시
-      const greeting = getInitialGreeting(userName + voc, hasGreeted);
-      appendMessage(greeting, 'ai');
-      await playTTSFromText(greeting, localStorage.getItem('lozee_voice'));
-      hasGreeted = true;
-      showMainTopics();
-    });
+  const greeting = getInitialGreeting(userName + voc, hasGreeted);
+  appendMessage(greeting, 'ai');
+  
+  // 첫 인사 및 로직 playTTSFromText 대신 playTTSWithControl 사용
+  try {
+    await playTTSWithControl(greeting); 
+  } catch (error) {
+    console.warn("첫 TTS 자동 재생 실패 (사용자 상호작용 필요할 수 있음):", error);
+  }
+  
+  hasGreeted = true;
+  showMainTopics();
+});
 
     // 메시지
     function appendMessage(text,role){ const b=document.createElement('div'); b.className='bubble '+role; b.textContent=text; chatWindow.appendChild(b); chatWindow.scrollTop=chatWindow.scrollHeight; }
@@ -466,10 +472,7 @@
     sendBtn.addEventListener('click',()=>sendMessage(chatInput.value));
     chatInput.addEventListener('keydown',e=>{meta.lastInputTimestamp=Date.now();const fillers=['음','…','어','글쎄','모르겠어요','잘 모르겠어'];meta.fillerCount=fillers.some(f=>chatInput.value.includes(f))?meta.fillerCount+1:0;meta.clickedOption=false;skipTTS=true;stopCurrentTTS();if(e.key==='Enter')sendMessage(chatInput.value);});
 
-    // init
-    document.addEventListener('DOMContentLoaded',async()=>{const greet=getInitialGreeting(userName+voc,hasGreeted);appendMessage(greet,'ai');await playTTSWithControl(greet);hasGreeted=true;showMainTopics();});
-
-   
+       
   </script>
 </body>
 </html>
