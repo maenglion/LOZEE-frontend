@@ -7,26 +7,26 @@
   <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
 <style>
   :root {
-      --primary-color: #6e8efb; /* index.html 버튼 및 old talk.html 주요색 참고 */
-      --secondary-color: #5a7edf; /* primary-color의 유사색 또는 보조색 */
-      --background-color: #ffffff; /* 요청된 흰색 배경 */
-      --text-color: #333333; /* 흰색 배경 위의 기본 텍스트 색상 */
+      --primary-color: #6e8efb;
+      --secondary-color: #5a7edf;
+      --background-color: #ffffff;
+      --text-color: #333333;
       
-      --gnb-bg: #354157; /* old talk.html 참고한 GNB 배경색 (어두운 계열) */
+      --gnb-bg: #354157;
       --gnb-text-color: #ffffff;
-      --gnb-title-color: var(--primary-color); /* GNB 타이틀에 주조색 적용 */
+      --gnb-title-color: var(--primary-color);
       --gnb-menu-toggle-color: var(--primary-color);
       --gnb-dropdown-bg: var(--gnb-bg);
       --gnb-dropdown-text-color: var(--gnb-text-color);
-      --gnb-dropdown-border-color: #4a5568; /* old talk.html 참고 */
+      --gnb-dropdown-border-color: #4a5568;
       --gnb-dropdown-hover-bg: var(--secondary-color);
 
       --user-bubble-bg: var(--primary-color);
       --user-bubble-text: #ffffff;
-      --ai-bubble-bg: #f0f0f0; /* 밝은 회색 배경의 AI 말풍선 */
+      --ai-bubble-bg: #f0f0f0;
       --ai-bubble-text: #333333;
 
-      --input-area-bg: #f8f9fa; /* 입력 영역 배경 (매우 밝은 회색) */
+      --input-area-bg: #f8f9fa;
       --chat-input-bg: #ffffff;
       --chat-input-text-color: #333333;
       --chat-input-border-color: #ced4da;
@@ -36,26 +36,27 @@
       --button-text-color: #ffffff;
       --button-hover-bg: var(--secondary-color);
 
-      --volume-meter-container-bg: #e9ecef; /* 음량 바 배경 */
+      --volume-meter-container-bg: #e9ecef;
       --volume-meter-level-bg: var(--primary-color);
-      --meter-height: 6px; /* talk.html 기존 값 유지 */
-      --meter-top-margin: 8px; /* old talk.html 참고 */
+      --meter-height: 6px;
+      --meter-top-margin: 8px;
 
-      --topic-button-bg: var(--primary-color);
-      --topic-button-text: #ffffff;
-      --topic-button-hover-bg: var(--secondary-color);
+      /* #topic-area 관련 변수는 더 이상 사용되지 않을 수 있음 */
+      /* --topic-button-bg: var(--primary-color); */
+      /* --topic-button-text: #ffffff; */
+      /* --topic-button-hover-bg: var(--secondary-color); */
 
-      --analysis-notification-bg: #fff3cd; /* talk.html 기존 값 참고 */
-      --analysis-notification-text: #856404; /* talk.html 기존 값 참고 */
+      --analysis-notification-bg: #fff3cd;
+      --analysis-notification-text: #856404;
 
-      --gnb-height: 56px; /* talk.html 및 old talk.html 공통 */
-      --chat-input-area-height: 70px; /* old talk.html 참고 (패딩 포함 높이) */
+      --gnb-height: 56px;
+      --chat-input-area-height: 70px;
     }
 
     body {
       margin: 0;
-      padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
-      font-family: 'KoPub World Dotum', sans-serif; /* old talk.html 및 index.html 폰트 적용 */
+      padding-top: var(--gnb-height);
+      font-family: 'KoPub World Dotum', sans-serif;
       background: var(--background-color);
       color: var(--text-color);
       display: flex;
@@ -65,16 +66,14 @@
       overflow: hidden;
     }
 
-    /* GNB (old talk.html 스타일 기반) */
     #gnb {
-      padding: 0 36px; /* 기존 padding: 0 16px; 에서 변경 */
+      padding: 0 30px; /* 안전지대 30px 적용 */
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: var(--gnb-height);
       background-color: var(--gnb-bg);
-      padding: 0 16px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       z-index: 1000;
       display: flex;
@@ -93,7 +92,7 @@
       background: none;
       border: none;
       color: var(--gnb-menu-toggle-color);
-      font-size: 24px; /* old talk.html 아이콘 크기 느낌 */
+      font-size: 24px;
       cursor: pointer;
       padding: 8px;
       display: flex;
@@ -116,7 +115,7 @@
     }
 
     #dropdown-menu.show {
-      max-height: 300px; /* talk.html 기존 값 또는 필요시 조정 */
+      max-height: 300px;
     }
 
     #dropdown-menu a {
@@ -134,7 +133,6 @@
       background-color: var(--gnb-dropdown-hover-bg);
     }
 
-    /* Volume Meter (old talk.html 스타일 및 talk.html 구조 기반) */
     #meter-container {
       position: fixed;
       top: calc(var(--gnb-height) + var(--meter-top-margin));
@@ -152,36 +150,33 @@
       width: 0%;
       height: 100%;
       background: var(--volume-meter-level-bg);
-      border-radius: 3px; /* talk.html에 이미 있었지만, 일관성 위해 명시 */
-      transition: width 0.05s linear, background-color 0.05s linear; /* talk.html에 background-color transition 추가 */
+      border-radius: 3px;
+      transition: width 0.05s linear, background-color 0.05s linear;
     }
     
-    /* Chat Window (old talk.html 스타일 참고, talk.html ID 사용) */
     #chat-window {
-      flex: 1; /* 남은 공간을 모두 차지 */
+      flex: 1;
       padding: 16px;
-      padding-top: calc(var(--meter-top-margin) + var(--meter-height) + 10px); /* GNB 밑, 음량 바 밑 */
-      padding-bottom: calc(var(--chat-input-area-height) + 10px); /* 하단 입력창 높이만큼 여백 */
+      padding-top: calc(var(--meter-top-margin) + var(--meter-height) + 10px);
+      padding-bottom: calc(var(--chat-input-area-height) + 10px);
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px; /* 말풍선 간격 */
+      gap: 12px;
       box-sizing: border-box;
     }
     
-    /* 스크롤바 스타일 (old talk.html 참고) */
     #chat-window::-webkit-scrollbar { width: 8px; }
-    #chat-window::-webkit-scrollbar-track { background: var(--background-color); } /* 페이지 배경색과 동일하게 */
+    #chat-window::-webkit-scrollbar-track { background: var(--background-color); }
     #chat-window::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; }
     #chat-window::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
 
-    /* Bubbles (talk.html 클래스명 사용, old talk.html 스타일 적용) */
     .bubble {
       max-width: 75%;
-      padding: 10px 15px; /* 약간 줄임 */
+      padding: 10px 15px;
       border-radius: 18px;
       line-height: 1.6;
-      word-break: keep-all; /* 한국어 고려 */
+      word-break: keep-all;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     .bubble.user {
@@ -190,14 +185,13 @@
       align-self: flex-end;
       border-bottom-right-radius: 4px;
     }
-    .bubble.ai { /* talk.html의 .ai 클래스 */
+    .bubble.ai {
       background: var(--ai-bubble-bg);
       color: var(--ai-bubble-text);
       align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
 
-    /* Analysis Notification (talk.html 기존 스타일 유지하되 색상 변수 사용) */
     .analysis-notification {
       align-self: center;
       background: var(--analysis-notification-bg);
@@ -209,39 +203,14 @@
       margin: 5px 0;
     }
 
-    /* Topic Area (talk.html 구조 기반, old talk.html 버튼 스타일 참고) */
+    /* 기존 #topic-area는 새로운 UI 방식으로 대체되므로 숨김 처리 */
     #topic-area {
-      display: none; /* 초기 숨김 */
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 10px 16px; /* 내부 여백 */
-      background: var(--background-color); /* 페이지 배경과 동일하게 또는 밝은 회색 */
-      border-top: 1px solid #e0e0e0;
-      /* 하단 고정 입력창 위에 위치하도록 조정 필요시 */
-      position: fixed;
-      bottom: var(--chat-input-area-height);
-      left: 0;
-      width: 100%;
-      box-sizing: border-box;
-      box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+      display: none !important; 
     }
-    .topic-btn, .subtopic-btn {
-      background: var(--topic-button-bg);
-      border: none;
-      color: var(--topic-button-text);
-      padding: 8px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.9em;
-      transition: background-color 0.2s;
-    }
-    .topic-btn:hover, .subtopic-btn:hover {
-      background: var(--topic-button-hover-bg);
-    }
+    /* .topic-btn, .subtopic-btn 관련 스타일도 #topic-area를 사용하지 않으면 불필요 */
 
-    /* Input Area (old talk.html 스타일 기반, talk.html ID 사용, 하단 고정) */
     #input-area {
-      padding: 0 36px; /* 기존 padding: 0 12px; 에서 변경 */
+      padding: 0 30px; /* 안전지대 30px 적용 */
       position: fixed;
       bottom: 0;
       left: 0;
@@ -250,22 +219,21 @@
       display: none; /* 초기 숨김, startChat()에서 flex로 변경 */
       align-items: center;
       gap: 8px;
-      padding: 0 12px; /* 내부 여백 old talk.html 참고 */
       background: var(--input-area-bg);
-      border-top: 1px solid #e0e0e0; /* old talk.html 그림자 대신 경계선 */
+      border-top: 1px solid #e0e0e0;
       box-sizing: border-box;
     }
     #input-area button, #input-area input {
       font-size: 1em;
-      height: 44px; /* old talk.html 버튼/입력창 높이 통일 */
+      height: 44px;
       box-sizing: border-box;
     }
 
     #chat-input {
       flex: 1;
-      padding: 10px 16px; /* 내부 여백 */
+      padding: 10px 16px;
       border: 1px solid var(--chat-input-border-color);
-      border-radius: 22px; /* old talk.html 참고 */
+      border-radius: 22px;
       outline: none;
       background-color: var(--chat-input-bg);
       color: var(--chat-input-text-color);
@@ -274,9 +242,9 @@
       color: var(--chat-input-placeholder-color);
     }
 
-    #mic-button, #send-btn { /* talk.html ID 사용 */
+    #mic-button, #send-btn {
       width: 44px;
-      min-width: 44px; /* 너비 고정 */
+      min-width: 44px;
       height: 44px;
       border: none;
       border-radius: 50%;
@@ -286,75 +254,76 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.3em; /* 아이콘 크기 느낌 */
+      font-size: 1.3em;
       transition: background-color 0.2s ease;
     }
     #mic-button:hover, #send-btn:hover {
       background: var(--button-hover-bg);
     }
-    #mic-button.recording { /* talk.html 기존 클래스 유지 */
-      background: #e74c3c; /* 녹음 중 빨간색 */
+    #mic-button.recording {
+      background: #e74c3c;
     }
-    #send-btn.loading { /* old talk.html 참고 (필요시 JS에서 클래스 추가) */
+    #send-btn.loading {
         background:#cccccc;
         cursor:default;
     }
     
-    /* 반응형 (필요시 추가) */
     @media (max-width: 600px) {
+      #gnb { padding: 0 20px; } /* 모바일에서는 GNB 패딩 약간 줄임 */
+      #input-area { padding: 0 20px; } /* 모바일에서는 입력창 패딩 약간 줄임 */
       #gnb-title { font-size: 1.1em; }
       .bubble { padding: 9px 13px; max-width: 85%; }
       #chat-input { padding: 9px 14px; }
       #mic-button, #send-btn { width: 40px; height: 40px; font-size: 1.2em;}
       #input-area { height: 65px; }
       #chat-window { padding-bottom: calc(65px + 10px); }
-      #topic-area { bottom: 65px; }
+      /* #topic-area 관련 반응형 규칙은 더 이상 필요 없을 수 있음 */
     }
-     /* 채팅창 내 선택지 컨테이너 */
-.chat-options-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px; /* 버튼 간 간격 */
-  margin: 10px 0; /* 위아래 메시지와의 간격 */
-  align-items: flex-start; /* AI가 제시하는 옵션이므로 왼쪽 정렬 */
-  max-width: 80%; /* 일반 말풍선과 유사한 너비 */
-  align-self: flex-start; /* AI 말풍선처럼 왼쪽에 위치 */
-}
 
-/* 채팅창 내 선택 버튼 (이미지 기반 스타일) */
-.chat-option-btn {
-  background-color: #f0f0f0; /* AI 말풍선 배경색과 유사하게 */
-  color: #333333; /* AI 말풍선 텍스트 색상과 유사하게 */
-  border: 1px solid #e0e0e0; /* 약간의 테두리 */
-  border-radius: 12px; /* 둥근 모서리 */
-  padding: 10px 15px;
-  width: 100%; /* 컨테이너 너비에 맞춤 */
-  text-align: left; /* 텍스트 왼쪽 정렬 */
-  cursor: pointer;
-  font-size: 0.95em;
-  transition: background-color 0.2s, transform 0.1s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
+    /* 채팅창 내 선택지 컨테이너 */
+    .chat-options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 10px 0;
+      align-items: flex-start;
+      max-width: 80%;
+      align-self: flex-start;
+    }
 
-.chat-option-btn:hover {
-  background-color: #e9e9e9;
-  transform: translateY(-1px);
-}
+    /* 채팅창 내 선택 버튼 */
+    .chat-option-btn {
+      background-color: #f0f0f0;
+      color: #333333;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 10px 15px;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.95em;
+      transition: background-color 0.2s, transform 0.1s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
 
-.chat-option-btn.selected { /* 선택된 버튼 스타일 (이미지 참고) */
-  background-color: #fff9c4; /* 연한 노란색 계열 */
-  color: #5c563a;
-  border-color: #f5e7a1;
-  font-weight: bold;
-}
+    .chat-option-btn:hover {
+      background-color: #e9e9e9;
+      transform: translateY(-1px);
+    }
 
-.chat-option-btn:disabled { /* 이미 선택되어 비활성화된 버튼 */
-  background-color: #f8f8f8;
-  color: #aaaaaa;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
+    .chat-option-btn.selected {
+      background-color: #fff9c4;
+      color: #5c563a;
+      border-color: #f5e7a1; /* 오타 수정 */
+      font-weight: bold;
+    }
 
+    .chat-option-btn:disabled {
+      background-color: #f8f8f8;
+      color: #aaaaaa;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
@@ -370,109 +339,374 @@
   </nav>
   <div id="meter-container"><div id="volume-level"></div></div>
   <div id="chat-window"></div>
-  <div id="topic-area"></div>
   <div id="input-area">
     <button id="mic-button">🎤</button>
     <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
     <button id="send-btn">➤</button>
   </div>
+
   <script type="module">
     import './js/firebase-config.js';
     import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
-    import { playTTSFromText, stopCurrentTTS } from './js/tts.js';
+    import { playTTSFromText, stopCurrentTTS } from './js/tts.js'; // `stopCurrentTTS`도 import
     import LOZEE_ANALYSIS from './js/lozee-analysis.js';
     import { saveSessionLog } from './js/firebase-utils.js';
     import { counselingTopicsByAge } from './js/counseling_topics.js';
 
     // 상태
-    let skipTTS=false, hasGreeted=false, isProcessing=false;
-    let chatHistory=[], selectedMain=null;
-    let meta={ lastInputTimestamp:Date.now(), fillerCount:0, clickedOption:false, presentedIndices:[] };
+    let skipTTS = false;
+    let hasGreeted = false;
+    let isProcessing = false;
+    let chatHistory = [];
+    let selectedMain = null;
+    let meta = { lastInputTimestamp: Date.now(), fillerCount: 0, clickedOption: false, presentedIndices:[] };
+    let isPlayingTTS = false; // TTS 재생 상태 추적
 
-    // UI
-    const chatWindow=document.getElementById('chat-window');
-    const topicArea=document.getElementById('topic-area');
-    const inputArea=document.getElementById('input-area');
-    const chatInput=document.getElementById('chat-input');
-    const sendBtn=document.getElementById('send-btn');
-    const micButton=document.getElementById('mic-button');
-    const menuToggle=document.getElementById('menu-toggle');
-    const dropdownMenu=document.getElementById('dropdown-menu');
-    const meterLevel=document.getElementById('volume-level');
+    // UI 요소
+    const chatWindow = document.getElementById('chat-window');
+    const topicArea = document.getElementById('topic-area'); // 이제 사용 안 할 수 있지만, 변수는 유지 (오류 방지)
+    const inputArea = document.getElementById('input-area');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const micButton = document.getElementById('mic-button');
+    const menuToggle = document.getElementById('menu-toggle');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    const meterLevel = document.getElementById('volume-level');
 
-    // GNB
-    menuToggle.addEventListener('click',()=>dropdownMenu.classList.toggle('show'));
-    document.addEventListener('click',e=>{ if(!document.getElementById('gnb').contains(e.target)) dropdownMenu.classList.remove('show'); });
+    // GNB 메뉴 토글
+    menuToggle.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
+    document.addEventListener('click', e => {
+      if (!document.getElementById('gnb').contains(e.target)) {
+        dropdownMenu.classList.remove('show');
+      }
+    });
 
-       // 사용자 정보
+    // 사용자 정보 (localStorage에서 가져오기)
     const userName = localStorage.getItem('lozee_username') || '친구';
     const userAge = parseInt(localStorage.getItem('lozee_userage') || '0', 10);
-    const voc = getKoreanVocativeParticle(userName);
+    const voc = getKoreanVocativeParticle(userName); // gpt-dialog.js에서 export 필요
 
-    // 초기화 로직
-  document.addEventListener('DOMContentLoaded', async () => {
-  console.log('✅ js/firebase-config.js 모듈 로드됨');
-  console.log('DOMContentLoaded 이벤트 발생');
+    // 초기화 로직 (단일 DOMContentLoaded 리스너)
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('✅ js/firebase-config.js 모듈 로드됨');
+      console.log('DOMContentLoaded 이벤트 발생');
 
-  const greeting = getInitialGreeting(userName + voc, hasGreeted);
-  appendMessage(greeting, 'ai');
-  
-  // 첫 인사 및 로직 playTTSFromText 대신 playTTSWithControl 사용
-  try {
-    await playTTSWithControl(greeting); 
-  } catch (error) {
-    console.warn("첫 TTS 자동 재생 실패 (사용자 상호작용 필요할 수 있음):", error);
-  }
-  
-  hasGreeted = true;
-  showMainTopics();
-});
+      const greeting = getInitialGreeting(userName + voc, hasGreeted); // gpt-dialog.js에서 export 필요
+      appendMessage(greeting, 'ai');
+      
+      try {
+        await playTTSWithControl(greeting);
+      } catch (error) {
+        console.warn("첫 TTS 자동 재생 실패 (사용자 상호작용 필요할 수 있음):", error);
+        // TODO: 사용자에게 클릭 유도 메시지 표시 또는 다른 대안 고려
+      }
+      
+      hasGreeted = true;
+      showMainTopics();
+    });
 
-    // 메시지
-    function appendMessage(text,role){ const b=document.createElement('div'); b.className='bubble '+role; b.textContent=text; chatWindow.appendChild(b); chatWindow.scrollTop=chatWindow.scrollHeight; }
-    function showAnalysis(){ const n=document.createElement('div'); n.className='analysis-notification'; n.textContent='🟡분석 완료'; n.onclick=()=>location.href='analysis.html'; chatWindow.appendChild(n); chatWindow.scrollTop=chatWindow.scrollHeight; }
-    function playTTSWithControl(txt) {stopCurrentTTS();               // ensure stopCurrentTTS is imported
-    if (skipTTS) { skipTTS = false; return; } return playTTSFromText(txt, localStorage.getItem('lozee_voice'));
+    // 메시지 관련 함수
+    function appendMessage(text, role) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ' + role;
+      bubble.textContent = text;
+      chatWindow.appendChild(bubble);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
-    // 오디오 분석
-    let audioContext,analyser,source,dataArray,animId,streamRef;
-    const LOW={r:0,g:200,b:0},MID={r:255,g:200,b:0},HIGH={r:255,g:69,b:0};
-    function interp(c1,c2,f){return`rgb(${Math.round(c1.r+f*(c2.r-c1.r))},${Math.round(c1.g+f*(c2.g-c1.g))},${Math.round(c1.b+f*(c2.b-c1.b))})`;}
-    function setupAudioAnalysis(s){ if(audioContext)audioContext.close();audioContext=new AudioContext();analyser=audioContext.createAnalyser();analyser.fftSize=256;source=audioContext.createMediaStreamSource(s);source.connect(analyser);dataArray=new Uint8Array(analyser.frequencyBinCount);streamRef=s;draw();}
-    function draw(){animId=requestAnimationFrame(draw);if(!analyser||!dataArray)return;analyser.getByteFrequencyData(dataArray);let sum=dataArray.reduce((a,v)=>a+v,0);let avg=sum/dataArray.length;let norm=Math.min(100,Math.max(0,(avg/140)*100));meterLevel.style.width=norm+'%';let col=norm<=50?interp(LOW,MID,norm/50):interp(MID,HIGH,(norm-50)/50);meterLevel.style.background=`linear-gradient(to right, var(--background-color), ${col})`;}
-    function stopAudio(){ cancelAnimationFrame(animId); if(source)source.disconnect();streamRef.getTracks().forEach(t=>t.stop()); if(audioContext)audioContext.close();meterLevel.style.width='0%';meterLevel.style.background=getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-default-bg');}
+    function showAnalysis() {
+      const notification = document.createElement('div');
+      notification.className = 'analysis-notification';
+      notification.textContent = '🟡분석 완료';
+      notification.onclick = () => location.href = 'analysis.html'; // analysis.html이 실제로 존재하는지 확인 필요
+      chatWindow.appendChild(notification);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
 
-    // STT
-    const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
-    let recog,isRec=false;
-    if(Rec){ recog=new Rec();recog.continuous=true;recog.interimResults=false;recog.lang='ko-KR';
-      recog.onstart=()=>{isRec=true;micButton.classList.add('recording');};
-      recog.onend=()=>{isRec=false;micButton.classList.remove('recording');stopAudio();};
-      recog.onresult = e => {let txt = ''; for (let i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) txt += e.results[i][0].transcript;}
-      if (txt) sendMessage(txt);       // <-- handleUserText → sendMessage
+    // TTS 제어 재생 함수
+    async function playTTSWithControl(txt) {
+      stopCurrentTTS(); // tts.js에서 export 필요
+      if (skipTTS) {
+        skipTTS = false;
+        return Promise.resolve(); // TTS 건너뛸 때도 Promise 반환 일관성
+      }
+      isPlayingTTS = true;
+      try {
+        await playTTSFromText(txt, localStorage.getItem('lozee_voice')); // tts.js에서 export 필요
+      } catch (error) {
+        console.error("playTTSWithControl 내 TTS 재생 오류:", error);
+        // 오류 발생 시에도 isPlayingTTS 상태 업데이트
+      } finally {
+        isPlayingTTS = false;
+      }
+    }
+
+    // 오디오 분석 관련 (Web Audio API)
+    let audioContext, analyser, source, dataArray, animId, streamRef;
+    const LOW = { r:0, g:200, b:0 };
+    const MID = { r:255, g:200, b:0 };
+    const HIGH = { r:255, g:69, b:0 };
+
+    function interp(c1, c2, f) {
+      return `rgb(${Math.round(c1.r + f * (c2.r - c1.r))},${Math.round(c1.g + f * (c2.g - c1.g))},${Math.round(c1.b + f * (c2.b - c1.b))})`;
+    }
+
+    function setupAudioAnalysis(stream) {
+      if (audioContext) audioContext.close();
+      audioContext = new AudioContext();
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      streamRef = stream; // 나중에 트랙 중지를 위해 스트림 참조 저장
+      draw();
+    }
+
+    function draw() {
+      animId = requestAnimationFrame(draw);
+      if (!analyser || !dataArray) return;
+      analyser.getByteFrequencyData(dataArray);
+      let sum = dataArray.reduce((a, v) => a + v, 0);
+      let avg = sum / dataArray.length;
+      let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
+      meterLevel.style.width = norm + '%';
+      let col = norm <= 50 ? interp(LOW, MID, norm / 50) : interp(MID, HIGH, (norm - 50) / 50);
+      meterLevel.style.background = `linear-gradient(to right, var(--background-color), ${col})`;
+
+      // 사용자 음성 감지 시 TTS 중단 (STT 활성화 및 TTS 재생 중에만)
+      if (norm > 10 && isRec && isPlayingTTS && !skipTTS) {
+        console.log("사용자 음성 감지, TTS 중단 시도");
+        stopCurrentTTS();
+        skipTTS = true;
+      }
+    }
+
+    function stopAudio() {
+      if (animId) cancelAnimationFrame(animId);
+      if (source) source.disconnect();
+      if (streamRef) streamRef.getTracks().forEach(track => track.stop());
+      if (audioContext) audioContext.close();
+      meterLevel.style.width = '0%';
+      // meterLevel 기본 배경색 설정 (CSS 변수 사용 권장)
+      meterLevel.style.background = getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-container-bg');
+    }
+
+    // STT (Web Speech API)
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recog, isRec = false;
+
+    if (SpeechRecognitionAPI) {
+      recog = new SpeechRecognitionAPI();
+      recog.continuous = true; // 연속적인 결과 반환 안 함 (하나의 문장 완성 후 결과)
+      recog.interimResults = false; // 중간 결과 반환 안 함
+      recog.lang = 'ko-KR';
+
+      recog.onstart = () => {
+        isRec = true;
+        micButton.classList.add('recording');
       };
-      recog.onerror=err=>{console.error(err);appendMessage('음성 인식 오류','ai_feedback');isRec=false;micButton.classList.remove('recording');stopAudio();};
-      micButton.onclick=async()=>{ if(isRec){recog.stop();}else{try{const s=await navigator.mediaDevices.getUserMedia({audio:true});setupAudioAnalysis(s);recog.start();}catch(e){console.error(e);appendMessage('마이크 권한 오류','ai_feedback');}}};
-    } else { micButton.disabled=true;appendMessage('브라우저에서 음성 인식 지원하지 않습니다.','ai_feedback'); }
+      recog.onend = () => {
+        isRec = false;
+        micButton.classList.remove('recording');
+        stopAudio(); // STT 종료 시 오디오 분석도 중지
+      };
+      recog.onresult = event => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript;
+          }
+        }
+        if (transcript) {
+          console.log("STT 결과:", transcript);
+          sendMessage(transcript);
+        }
+      };
+      recog.onerror = event => {
+        console.error('Speech recognition error:', event.error);
+        appendMessage('음성 인식 오류: ' + event.error, 'ai_feedback');
+        isRec = false;
+        micButton.classList.remove('recording');
+        stopAudio();
+      };
 
-    // 토픽 플로우
-    function showMainTopics(){appendMessage('어떤 이야기를 나눠볼까?','ai');topicArea.innerHTML='';const t=Object.keys(counselingTopicsByAge[getAgeGroup()]);t.push('자유주제');t.forEach(topic=>{const b=document.createElement('button');b.className='topic-btn';b.textContent=topic;b.onclick=()=>selectMainTopic(topic);topicArea.appendChild(b);});topicArea.style.display='flex';}
-    function selectMainTopic(topic){selectedMain=topic;topicArea.style.display='none';appendMessage(topic+' 이야기를 선택했어!','ai');setTimeout(showSubTopics,300);}    
-    function showSubTopics(){appendMessage('조금 더 구체적으로?','ai');topicArea.innerHTML='';let subs=selectedMain==='자유주제'?['자유롭게 이야기해봐']:(counselingTopicsByAge[getAgeGroup()][selectedMain]||[]).map(i=>i.displayText);subs.forEach(sub=>{const b=document.createElement('button');b.className='subtopic-btn';b.textContent=sub;b.onclick=()=>startChat(sub);topicArea.appendChild(b);});topicArea.style.display='flex';}
-    function startChat(init){topicArea.style.display='none';inputArea.style.display='flex';sendMessage(init);}   
-    function getAgeGroup(){if(userAge<=10)return'8-10';if(userAge<=15)return'11-15';return'30+';}
+      micButton.onclick = async () => {
+        if (isRec) {
+          recog.stop();
+        } else {
+          stopCurrentTTS(); // 현재 TTS 중지
+          skipTTS = true;   // 다음 AI 응답 TTS 건너뛰기
 
-    // stuck detection
-    function detectStuck(txt,his,meta){const now=Date.now();if(meta.lastInputTimestamp&&now-meta.lastInputTimestamp>300000)return true; if(meta.fillerCount>=3)return true;const recent=his.filter(m=>m.role==='user').slice(-5);if(recent.length===5&&recent.every(m=>m.content.trim().length<5))return true; if(meta.clickedOption)return false;return false;}
-    function showPreferenceOptions(){const avail=window.LOZEE_DIALOG.preferenceTopics.map((_,i)=>i).filter(i=>!meta.presentedIndices.includes(i));if(!avail.length)return;const idx=avail[Math.floor(Math.random()*avail.length)];meta.presentedIndices.push(idx);const n=document.createElement('div');n.className='analysis-notification';const b=document.createElement('button');b.className='topic-btn';b.textContent=window.LOZEE_DIALOG.preferenceTopics[idx](userName);b.onclick=()=>{meta.clickedOption=true;startChat(b.textContent);};n.appendChild(b);chatWindow.appendChild(n);chatWindow.scrollTop=chatWindow.scrollHeight;}
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            setupAudioAnalysis(stream); // 오디오 분석 시작
+            recog.start();
+          } catch (e) {
+            console.error('마이크 접근 오류:', e);
+            appendMessage('마이크 사용 권한이 필요합니다.', 'ai_feedback');
+          }
+        }
+      };
+    } else {
+      micButton.disabled = true;
+      appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'ai_feedback');
+    }
 
-    async function sendMessage(text){if(!text||isProcessing)return;isProcessing=true;appendMessage(text,'user');chatHistory.push({role:'user',content:text});chatInput.value='';const res=await getGptResponse(text,{chatHistory});const d=await res.json();const cut=d.text.indexOf('{');const clean=cut>=0?d.text.slice(0,cut).trim():d.text;appendMessage(clean,'ai');await playTTSWithControl(clean);chatHistory.push({role:'ai',content:clean});await saveSessionLog(text,clean,d.analysis||{});if(d.analysis){LOZEE_ANALYSIS?.inferAgeAndLanguage&&await LOZEE_ANALYSIS. inferAgeAndLanguage(chatHistory.map(m=>m.role+':'+m.content).join('\n'));}if(d.analysis)showAnalysis();if(d.analysis){}if(d.analysis){}if(d.analysis){}if(d.analysis){}if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis);if(d.analysis){};if(d.analysis){};if(d.analysis);if(d.analysis);}   
-    // event binding
-    sendBtn.addEventListener('click',()=>sendMessage(chatInput.value));
-    chatInput.addEventListener('keydown',e=>{meta.lastInputTimestamp=Date.now();const fillers=['음','…','어','글쎄','모르겠어요','잘 모르겠어'];meta.fillerCount=fillers.some(f=>chatInput.value.includes(f))?meta.fillerCount+1:0;meta.clickedOption=false;skipTTS=true;stopCurrentTTS();if(e.key==='Enter')sendMessage(chatInput.value);});
+    // 토픽 플로우 - 선택창 (채팅창 내 버튼 표시)
+    function displayOptionsInChat(optionsArray, onSelectCallback, context = null) {
+      console.log("displayOptionsInChat 함수 시작됨, 옵션:", optionsArray);
+      const optionsContainer = document.createElement('div');
+      optionsContainer.className = 'chat-options-container';
+      const buttons = [];
 
-       
+      optionsArray.forEach(optionText => {
+        console.log("옵션 버튼 생성 중:", optionText);
+        const button = document.createElement('button');
+        button.className = 'chat-option-btn';
+        button.textContent = optionText;
+        
+        button.onclick = () => {
+          buttons.forEach(btn => {
+            btn.disabled = true;
+            if (btn === button) {
+              btn.classList.add('selected');
+            }
+          });
+          // 선택된 옵션을 사용자 메시지처럼 채팅창에 추가 (선택 사항)
+          // appendMessage(optionText, 'user'); 
+          onSelectCallback(optionText, context); 
+        };
+        optionsContainer.appendChild(button);
+        buttons.push(button);
+      });
+
+      chatWindow.appendChild(optionsContainer);
+      console.log("옵션 컨테이너가 chatWindow에 추가됨");
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    // 토픽 플로우 - 주제 (수정된 로직)
+    function showMainTopics() {
+      console.log("showMainTopics 함수 시작됨");
+      appendMessage('어떤 이야기를 나눠볼까?', 'ai');
+      const topics = Object.keys(counselingTopicsByAge[getAgeGroup()]);
+      topics.push('자유주제');
+      
+      displayOptionsInChat(topics, (selectedTopic) => {
+        selectedMain = selectedTopic;
+        appendMessage(selectedTopic + ' 이야기를 선택했구나!', 'ai'); // AI 응답 변경
+        setTimeout(showSubTopics, 300);
+      });
+      if (topicArea) topicArea.style.display = 'none !important'; // 기존 topicArea 확실히 숨기기
+    }
+
+    function showSubTopics() {
+      console.log("showSubTopics 함수 시작됨, 선택된 메인 주제:", selectedMain);
+      appendMessage('조금 더 구체적으로 이야기해 줄래?', 'ai');
+      
+      let subtopics;
+      if (selectedMain === '자유주제') {
+        subtopics = ['응, 자유롭게 이야기 시작해줘!'];
+      } else {
+        const ageGroupTopics = counselingTopicsByAge[getAgeGroup()];
+        const mainTopicDetails = ageGroupTopics && ageGroupTopics[selectedMain];
+        subtopics = mainTopicDetails ? mainTopicDetails.map(item => item.displayText) : ['대화를 시작할 준비가 됐어.'];
+        if (!subtopics.length) {
+            subtopics = ['바로 대화 시작할까?'];
+        }
+      }
+
+      displayOptionsInChat(subtopics, (selectedSubtopic) => {
+        startChat(selectedSubtopic);
+      });
+      if (topicArea) topicArea.style.display = 'none !important';
+    }
+
+    function startChat(initText) {
+      console.log("startChat 함수 시작됨, 초기 메시지:", initText);
+      if (topicArea) topicArea.style.display = 'none !important';
+      inputArea.style.display = 'flex'; // 입력창 표시
+      sendMessage(initText);
+    }   
+
+    function getAgeGroup() {
+      if (userAge <= 10) return '8-10';
+      if (userAge <= 15) return '11-15';
+      return '30+'; // 기본값 또는 성인
+    }  
+
+    // Stuck Detection (사용자 요청으로 showPreferenceOptions는 제거됨)
+    function detectStuck(txt, his, meta) {
+      const now = Date.now();
+      if (meta.lastInputTimestamp && (now - meta.lastInputTimestamp) > 300000) return true; // 5분 이상 입력 없을 때
+      if (meta.fillerCount >= 3) return true; // 필러 3회 이상
+      const recentUserMessages = his.filter(m => m.role === 'user').slice(-5);
+      if (recentUserMessages.length === 5 && recentUserMessages.every(m => m.content.trim().length < 5)) return true; // 최근 5회 사용자 발화 매우 짧음
+      if (meta.clickedOption) return false; // 옵션 클릭 직후는 stuck 아님
+      return false;
+    }
+    // showPreferenceOptions 함수는 제거됨
+
+    // 메시지 전송 함수
+    async function sendMessage(text) {
+      if (!text || String(text).trim() === '' || isProcessing) return;
+      isProcessing = true;
+      sendBtn.classList.add('loading');
+
+      appendMessage(text, 'user');
+      chatHistory.push({ role: 'user', content: text });
+      chatInput.value = '';
+
+      try {
+        const res = await getGptResponse(text, { chatHistory }); // gpt-dialog.js에서 export 필요
+        if (!res.ok) {
+            const errorData = await res.text();
+            throw new Error(`GPT API 오류 ${res.status}: ${errorData}`);
+        }
+        const d = await res.json();
+        const cut = d.text.indexOf('{'); // 분석 JSON이 함께 올 경우 잘라내기
+        const clean = cut >= 0 ? d.text.slice(0, cut).trim() : d.text.trim();
+        
+        appendMessage(clean, 'ai');
+        await playTTSWithControl(clean);
+        
+        chatHistory.push({ role: 'ai', content: clean });
+        await saveSessionLog(text, clean, d.analysis || {}); // firebase-utils.js에서 export 필요
+
+        if (d.analysis) {
+          // LOZEE_ANALYSIS.trackEmotionTone(d.analysis); // 필요시 호출
+          // LOZEE_ANALYSIS.trackSituation(d.analysis); // 필요시 호출
+          if (LOZEE_ANALYSIS && LOZEE_ANALYSIS.inferAgeAndLanguage) { // lozee-analysis.js에서 export 필요
+             await LOZEE_ANALYSIS.inferAgeAndLanguage(chatHistory.map(m=>m.role+':'+m.content).join('\n'));
+          }
+          showAnalysis(); // 분석 완료 알림 표시
+        }
+      } catch (error) {
+        console.error("sendMessage 내 오류:", error);
+        appendMessage("미안, 지금은 답변하기 조금 어려워. 잠시 후 다시 시도해 줄래?", "ai_feedback");
+      } finally {
+        isProcessing = false;
+        sendBtn.classList.remove('loading');
+      }
+    }   
+
+    // 이벤트 바인딩
+    sendBtn.addEventListener('click', () => sendMessage(chatInput.value));
+    chatInput.addEventListener('keydown', e => {
+      meta.lastInputTimestamp = Date.now();
+      const fillers = ['음','…','어','글쎄','모르겠어요','잘 모르겠어'];
+      meta.fillerCount = fillers.some(f => chatInput.value.includes(f)) ? meta.fillerCount + 1 : 0;
+      meta.clickedOption = false;
+      
+      stopCurrentTTS();
+      skipTTS = true;
+      
+      if (e.key === 'Enter' && !e.isComposing) { // 한글 입력 완료 후 Enter 키 이벤트 처리
+        e.preventDefault(); // Enter 키 기본 동작(줄바꿈 등) 방지
+        sendMessage(chatInput.value);
+      }
+    });
   </script>
 </body>
 </html>
