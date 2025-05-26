@@ -13,7 +13,7 @@ export function getInitialGreeting(fullUserNameWithVocative, greetedYet) {
 /**
  * 1) 호격 조사 결정: '아/야'
  */
-export function getKoreanVocativeParticle(name) { [gpt-dialog.js]
+export function getKoreanVocativeParticle(name) { 
   if (!name) return '야';
   const code = name.charCodeAt(name.length - 1);
   if (code < 0xAC00 || code > 0xD7A3) return '야';
@@ -24,7 +24,7 @@ export function getKoreanVocativeParticle(name) { [gpt-dialog.js]
 /**
  * 2) 인용 조사 결정: '(이)라고'
  */
-export function getKoreanNamingParticle(name) { [gpt-dialog.js]
+export function getKoreanNamingParticle(name) { 
   if (!name) return '라고';
   const code = name.charCodeAt(name.length - 1);
   if (code < 0xAC00 || code > 0xD7A3) return '라고';
@@ -35,7 +35,7 @@ export function getKoreanNamingParticle(name) { [gpt-dialog.js]
 /**
  * 3) 사용자 의도 감지 (감정 vs 사실)
  */
-export function detectIntent(text) { [gpt-dialog.js]
+export function detectIntent(text) { 
   if (typeof text !== 'string') return 'fact';
   const keywords = ['슬펐','우울','화났','기분','행복','짜증','신나','분노','불안','걱정','스트레스','힘들','좋아','싫어'];
   return keywords.some(k => text.includes(k)) ? 'emotion' : 'fact';
@@ -50,7 +50,7 @@ export function detectIntent(text) { [gpt-dialog.js]
  * @param {object} meta { lastInputTimestamp: number, fillerCount: number, clickedOption: boolean }
  * @returns {boolean} 막힘 상태 여부
  */ //
-export function detectStuck(userText, chatHistory, meta) { [gpt-dialog.js]
+export function detectStuck(userText, chatHistory, meta) { 
   const now = Date.now();
   if (meta.lastInputTimestamp && (now - meta.lastInputTimestamp) > 300000) {
     return true;
@@ -134,7 +134,7 @@ ${idx+1}. ${fn(nameVoc)}`;
 /**
  * 6) GPT 호출 및 메시지 구성
  */
-export async function getGptResponse(userText, { chatHistory=[] }={}) { [gpt-dialog.js]
+export async function getGptResponse(userText, { chatHistory=[] }={}) { 
   const intent = detectIntent(userText); // 같은 모듈 내 함수 호출
   const userName = localStorage.getItem('lozee_username') || '친구';
   const userAge = parseInt(localStorage.getItem('lozee_userage')||0, 10);
@@ -158,7 +158,7 @@ export async function getGptResponse(userText, { chatHistory=[] }={}) { [gpt-dia
 /**
  * 7) 대화 종료 메시지
  */
-export function getExitPrompt(userName='친구', userAge=0) { [gpt-dialog.js]
+export function getExitPrompt(userName='친구', userAge=0) { 
   const voc = getKoreanVocativeParticle(userName); // 같은 모듈 내 함수 호출
   const promptEnd = userAge >= 56
     ? `${userName}님, 오늘 대화 감사합니다!`
