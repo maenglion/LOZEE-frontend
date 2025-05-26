@@ -1,4 +1,9 @@
 // js/gpt-dialog.js
+// 0) GPT 백엔드 URL 정의 (Railway 프로덕션 서버)
+const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat';
+
+window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
+
 // LOZEE GPT 대화 로직 (중요도 순 정렬 및 중복 제거)
 window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
 
