@@ -1,6 +1,7 @@
 // js/gpt-dialog.js
 // 0) GPT 백엔드 URL 정의 (Railway 프로덕션 서버)
-const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat';
+const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'; [gpt-dialog.js]
+
 
 window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
 
@@ -10,74 +11,63 @@ window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
 /**
  * 1) 호격 조사 결정: '아/야'
  */
-window.LOZEE_DIALOG.getKoreanVocativeParticle = function(name) {
+export function getKoreanVocativeParticle(name) { [gpt-dialog.js]
   if (!name) return '야';
   const code = name.charCodeAt(name.length - 1);
   if (code < 0xAC00 || code > 0xD7A3) return '야';
   const hasBatchim = (code - 0xAC00) % 28 !== 0;
   return hasBatchim ? '아' : '야';
-};
+}
 
 /**
  * 2) 인용 조사 결정: '(이)라고'
  */
-window.LOZEE_DIALOG.getKoreanNamingParticle = function(name) {
+export function getKoreanNamingParticle(name) { [gpt-dialog.js]
   if (!name) return '라고';
   const code = name.charCodeAt(name.length - 1);
   if (code < 0xAC00 || code > 0xD7A3) return '라고';
   const hasBatchim = (code - 0xAC00) % 28 !== 0;
   return hasBatchim ? '이라고' : '라고';
-};
+}
 
 /**
  * 3) 사용자 의도 감지 (감정 vs 사실)
  */
-window.LOZEE_DIALOG.detectIntent = function(text) {
+export function detectIntent(text) { [gpt-dialog.js]
   if (typeof text !== 'string') return 'fact';
   const keywords = ['슬펐','우울','화났','기분','행복','짜증','신나','분노','불안','걱정','스트레스','힘들','좋아','싫어'];
   return keywords.some(k => text.includes(k)) ? 'emotion' : 'fact';
-};
+}
 
 /**
  * 4) 추천 주제 목록 (추가 가능)
  */
-/**
- * 4-1) 대화 막힘 감지 (스턱 상태 판단 함수)
- * @param {string} userText 최근 사용자 입력
- * @param {Array} chatHistory 대화 기록
- * @returns {boolean} 막힘 상태 여부
- */
-/**
- * 4-1) 대화 막힘 감지 (스턱 상태 판단 함수)
+ /** // 4-1) 대화 막힘 감지 (스턱 상태 판단 함수)
  * @param {string} userText 최근 사용자 입력
  * @param {Array} chatHistory 대화 기록
  * @param {object} meta { lastInputTimestamp: number, fillerCount: number, clickedOption: boolean }
  * @returns {boolean} 막힘 상태 여부
- */
-window.LOZEE_DIALOG.detectStuck = function(userText, chatHistory, meta) {
+ */ //
+export function detectStuck(userText, chatHistory, meta) { [gpt-dialog.js]
   const now = Date.now();
-  // 1) 입력이 없는 상태가 5분(300000ms) 이상 지속
   if (meta.lastInputTimestamp && (now - meta.lastInputTimestamp) > 300000) {
     return true;
   }
-  // 2) 필러가 많아지고 1분 지연이 3회 이상
   if (meta.fillerCount >= 3) {
     return true;
   }
-  // 3) 최근 5회 사용자 발화 길이 < 5자
   const recent = chatHistory.filter(m => m.role === 'user').slice(-5);
   if (recent.length === 5 && recent.every(m => m.content.trim().length < 5)) {
     return true;
   }
-  // 4) 단, 선택지를 클릭한 경우는 stuck으로 간주하지 않음
   if (meta.clickedOption) {
     return false;
   }
   return false;
-};
+}
 
 // 4) 추천 주제 목록 (추가 가능)
-window.LOZEE_DIALOG.preferenceTopics = [
+export const preferenceTopics = [ [gpt-dialog.js]
   name => `${name}, 네가 가장 좋아하는 사람 3명은 누구야? 1등부터 3등까지 말해줄 수 있어?`,
   name => `${name}, 그럼 반대로 혹시 네가 별로 좋아하지 않거나 불편하게 느끼는 사람 3명이 있다면 알려줄 수 있을까?`,
   name => `${name}, 너는 누구와 새로운 것들을 배우고 즐기는 걸 좋아해? (최대 3명)`,
@@ -97,15 +87,12 @@ window.LOZEE_DIALOG.preferenceTopics = [
 /**
  * 5) 시스템 프롬프트 생성 (간결, 핵심 지시 및 상호작용 가이드)
  */
-window.LOZEE_DIALOG.getSystemPrompt = function({ userName='친구', userAge=0 }={}, intent='fact') {
-  const voc = window.LOZEE_DIALOG.getKoreanVocativeParticle(userName);
-  const naming = window.LOZEE_DIALOG.getKoreanNamingParticle(userName);
+export function getSystemPrompt({ userName='친구', userAge=0 }={}, intent='fact') { [gpt-dialog.js]
+  const voc = getKoreanVocativeParticle(userName); // 같은 모듈 내 함수 호출
+  const naming = getKoreanNamingParticle(userName); // 같은 모듈 내 함수 호출
   const nameVoc = `${userName}${voc}`;
 
-  // 최우선: 1-2문장, 60토큰 이하
   let prompt = `[필수] 1-2문장, 최대 60토큰 이내로 답변하세요.`;
-
-  // 나이대별 호칭·말투
   if (userAge >= 56) {
     prompt += `
 사용자: ${userName}님 (56세 이상), 존댓말 사용.`;
@@ -113,8 +100,6 @@ window.LOZEE_DIALOG.getSystemPrompt = function({ userName='친구', userAge=0 }=
     prompt += `
 사용자: ${nameVoc}, 편한 반말 사용. 호칭은 '${nameVoc}' 또는 '${userName}${naming}'.`;
   }
-
-  // 역할 및 의도별 가이드
   prompt += `
 당신은 따뜻한 심리 코치 'LOZEE'입니다.`;
   if (intent === 'emotion') {
@@ -126,42 +111,32 @@ window.LOZEE_DIALOG.getSystemPrompt = function({ userName='친구', userAge=0 }=
     prompt += `
 먼저 사실을 정확히 이해하기 위한 질문을 우선하세요.`;
   }
-
-  // ASD 사용자 간략 지침
   prompt += `
 [ASD 지침] 명확하고 직접적인 언어 사용.`;
-
-  // 상호작용적 대화 제안 (RPG 선택지 스타일)
   prompt += `
 [선택지 제안] 대화 전환점에 2-3개의 짧은 선택지를 제시하세요. 예: "지금까지 이야기했는데, ${nameVoc}, 어떻게 할까요? 1. 정리해보기 2. 다른 이야기하기".`;
-
-  // 추천 주제 제안 (랜덤, 중복 제외 지시)
   prompt += `
 [추천 주제] 사용자가 대화를 이어가기 어려워할 때, 아래 목록에서 1가지를 랜덤으로 제시하세요. 이미 사용된 주제는 제외합니다.`;
-  window.LOZEE_DIALOG.preferenceTopics.forEach((fn, idx) => {
+  preferenceTopics.forEach((fn, idx) => { // 같은 모듈 내 preferenceTopics 사용
     prompt += `
 ${idx+1}. ${fn(nameVoc)}`;
   });
-
-  // 구조화된 정보 요약 제안
   prompt += `
 [구조화 요약] 복잡한 내용에는 항목별 리스트로 요약하세요.`;
-
-  // 분석 JSON 지시
   prompt += `
 [분석 JSON] 분석 객체만 JSON으로 반환: { sentiment, emotion_intensity, keywords, cognitive_distortion_flags, vocabularyDiversity, sentenceComplexity }.`;
-
   return prompt;
-};
+}
+
 
 /**
  * 6) GPT 호출 및 메시지 구성
  */
-window.LOZEE_DIALOG.getGptResponse = async function(userText, { chatHistory=[] }={}) {
-  const intent = window.LOZEE_DIALOG.detectIntent(userText);
+export async function getGptResponse(userText, { chatHistory=[] }={}) { [gpt-dialog.js]
+  const intent = detectIntent(userText); // 같은 모듈 내 함수 호출
   const userName = localStorage.getItem('lozee_username') || '친구';
   const userAge = parseInt(localStorage.getItem('lozee_userage')||0, 10);
-  const systemPrompt = window.LOZEE_DIALOG.getSystemPrompt({ userName, userAge }, intent);
+  const systemPrompt = getSystemPrompt({ userName, userAge }, intent); // 같은 모듈 내 함수 호출
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -176,15 +151,15 @@ window.LOZEE_DIALOG.getGptResponse = async function(userText, { chatHistory=[] }
     body: JSON.stringify(payload)
   });
   return res;
-};
+}
 
 /**
  * 7) 대화 종료 메시지
  */
-window.LOZEE_DIALOG.getExitPrompt = function(userName='친구', userAge=0) {
-  const voc = window.LOZEE_DIALOG.getKoreanVocativeParticle(userName);
+export function getExitPrompt(userName='친구', userAge=0) { [gpt-dialog.js]
+  const voc = getKoreanVocativeParticle(userName); // 같은 모듈 내 함수 호출
   const promptEnd = userAge >= 56
     ? `${userName}님, 오늘 대화 감사합니다!`
     : `${userName}${voc}, 오늘 이야기 고마웠어요!}`;
   return `${promptEnd} 혹시 이 대화 전보다 기분이 얼마나 나아졌는지 1(전혀)부터 5(매우) 사이 숫자로 알려줄래요?`;
-};
+}
