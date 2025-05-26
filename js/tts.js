@@ -102,5 +102,3 @@ export function stopCurrentTTS() {
   }
 }
 
-// 파일 끝에 있는 불필요한 '}' 는 없는지 확인합니다.
-// (제공해주신 tts.js 파일 내용 끝에 '}'가 있었습니다)
