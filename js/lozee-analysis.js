@@ -12,8 +12,8 @@ const timeTracking = {
   intervalId: null
 };
 
-export function trackTime() { [lozee-analysis.js]
-  const state = timeTracking; [lozee-analysis.js]
+export function trackTime() { 
+  const state = timeTracking; 
   if (state.intervalId) return;
   state.start = Date.now();
   state.wordCount = 0;
@@ -32,8 +32,8 @@ export function trackTime() { [lozee-analysis.js]
   }, 5*60*1000);
 }
 
-export function stopTrackTime() { [lozee-analysis.js]
-  const state = timeTracking; [lozee-analysis.js]
+export function stopTrackTime() { 
+  const state = timeTracking; 
   if (state.intervalId) {
     clearInterval(state.intervalId);
     state.intervalId = null;
@@ -41,19 +41,19 @@ export function stopTrackTime() { [lozee-analysis.js]
 }
 
 // --- 2) 감정 어조 분석 트래킹 ---
-export function trackEmotionTone(analysisData) { [lozee-analysis.js]
+export function trackEmotionTone(analysisData) { 
   console.log('[LOZEE_ANALYSIS] 감정 어조 분석:', analysisData);
   // TODO: 차트/클라우드 렌더링 구현
 }
 
 // --- 3) 상황 분석 (인지왜곡 패턴 탐지) ---
-export function trackSituation(analysisData) { [lozee-analysis.js]
+export function trackSituation(analysisData) { 
   console.log('[LOZEE_ANALYSIS] 상황 분석:', analysisData);
   // TODO: 상황 패턴 추출 및 매칭 구현
 }
 
 // --- 4) 문해력/표현력 분석 렌더러 ---
-export function renderLiteracyAnalysis(result, containerId) { [lozee-analysis.js]
+export function renderLiteracyAnalysis(result, containerId) { 
   const el = document.getElementById(containerId);
   if (!el) return;
   if (!result || (!result.literacyFlags && !result.recommendations)) {
@@ -72,7 +72,7 @@ export function renderLiteracyAnalysis(result, containerId) { [lozee-analysis.js
 }
 
 // --- 5) 언어·연령 유추 기능 ---
-export async function inferAgeAndLanguage(conversationText) { [lozee-analysis.js]
+export async function inferAgeAndLanguage(conversationText) {
   try {
     const payload = {
       conversation: conversationText
@@ -111,5 +111,3 @@ const LOZEE_ANALYSIS = {
 
 export default LOZEE_ANALYSIS;
 
-// 파일 끝에 있는 불필요한 '}' 는 없는지 확인합니다.
-// (제공해주신 파일 내용 끝에 '}'가 있었습니다)
