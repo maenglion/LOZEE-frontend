@@ -2,16 +2,14 @@
 <html lang="ko">
 <head>
   <script>
-    // 초기 설정 확인 및 리다이렉션 로직
     const isConfigured = localStorage.getItem('lozee_username') &&
                          localStorage.getItem('lozee_voice') &&
                          localStorage.getItem('lozee_userage');
 
-    // 'currentTopic' 변수 이름 변경 (중복 선언 방지)
-    const topicForRedirect = localStorage.getItem('lozee_current_topic');
+    const currentTopic = localStorage.getItem('lozee_current_topic');
 
     if (isConfigured) {
-      const targetUrl = topicForRedirect ? `talk.html?topic=${encodeURIComponent(topicForRedirect)}` : 'talk.html';
+      const targetUrl = currentTopic ? `talk.html?topic=${encodeURIComponent(currentTopic)}` : 'talk.html';
       window.location.href = targetUrl;
     }
   </script>
@@ -49,29 +47,17 @@
       border-radius: 18px;
       font-size: 15px;
       line-height: 1.5;
-      white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
+      white-space: pre-wrap;
     }
     .user {
       align-self: flex-end;
       background-color: #ffffff;
-      border: 1px solid #e0e0e0; /* 테두리 추가 */
       border-bottom-right-radius: 0;
     }
     .ai {
       align-self: flex-start;
       background-color: #eaeaea;
       border-bottom-left-radius: 0;
-    }
-    .ai_feedback { /* 시스템 메시지 또는 AI의 부가적 피드백 스타일 */
-      align-self: center;
-      background-color: #e0f7fa; /* 다른 배경색 */
-      color: #00796b;            /* 다른 글자색 */
-      font-size: 13px;
-      max-width: 80%;
-      text-align: center;
-      border-radius: 10px;
-      margin-top: 5px;
-      margin-bottom: 5px;
     }
     #talk-btn {
       background-color: #ffd400;
@@ -85,7 +71,6 @@
       width: 90%;
       max-width: 360px;
       align-self: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* 그림자 효과 */
     }
     #talk-btn.active {
       background-color: #ffae00;
@@ -98,30 +83,66 @@
   <button id="talk-btn">🎤 말하기</button>
 
   <script type="module">
-    // gpt-dialog.js에서 함수들을 가져옵니다. getKoreanVocativeParticle도 여기서 사용 가능해야 합니다.
-    import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
+    import { getInitialGreeting } from './js/gpt-dialog.js';
     import { playTTSFromText } from './js/tts.js';
     import { getSTTFromAudio } from './js/stt.js';
-    // Firebase 관련 import
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getGptResponse } from './js/gpt-dialog.js';
+    import { initializeApp } from 'firebase/app';
+    import { getFirestore, collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
-    // Firebase 설정 (실제 값으로 교체 필요)
-  const firebaseConfig = {
-  apiKey: "AIzaSyBnuL-CEvcU4NiIyG4yOe6mQjMnh9aArIY",                // Web API key
-  authDomain: "lozee-af4d3.firebaseapp.com",                        // Auth 도메인
-  projectId: "lozee-af4d3",                                        // 프로젝트 ID
-  storageBucket: "lozee-af4d3.firebasestorage.app",                // 스토리지 버킷
-  messagingSenderId: "838397276113",                               // 메시징 발신자 ID
-  appId: "1:838397276113:web:fc8cb3bdf59ecd52fabaf0",               // 앱 ID
-  measurementId: "G-C23DLE9GZ4"                                    // Analytics 측정 ID (선택)
-  };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+    async function saveUserProfile() {
+      const userId = localStorage.getItem('lozee_username');
+      const diagnosis = localStorage.getItem('lozee_usernote') || '';
+      const voice = localStorage.getItem('lozee_voice');
 
-    // --- 전역 변수 및 상태 관리 ---
+      if (!userId) return;
+
+      await setDoc(doc(db, 'users', userId), {
+        name: userId,
+        diagnosis,
+        voice,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    async function saveSessionLog(userText, aiReply) {
+      const userId = localStorage.getItem('lozee_username');
+      if (!userId) return;
+
+      await addDoc(collection(db, 'sessions'), {
+        userId,
+        timestamp: serverTimestamp(),
+        userText,
+        aiReply
+      });
+    }
+
+    async function saveJournalEntry(topic, summary) {
+      const userId = localStorage.getItem('lozee_username');
+      if (!userId || !topic || !summary) return;
+
+      await addDoc(collection(db, 'journals'), {
+        userId,
+        topic,
+        summary,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    saveUserProfile();
+
     const chatWindow = document.getElementById('chat-window');
     const talkBtn = document.getElementById('talk-btn');
 
@@ -130,352 +151,76 @@
     let mediaRecorder;
     let mediaStream;
     let audioChunks = [];
-    let chatHistory = []; // 대화 기록을 저장할 배열 (필수 선언)
 
-    // 로컬 스토리지에서 사용자 정보 가져오기
     const userName = localStorage.getItem('lozee_username') || '친구';
     const hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
-    const voiceId = localStorage.getItem('lozee_voice') || 'ko-KR-Chirp3-HD-Zephyr'; // 기본 음성 설정
+    const voiceId = localStorage.getItem('lozee_voice') || 'ko-KR-Chirp3-HD-Zephyr';
     const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
-    
-    // 'currentTopic' 변수 이름 변경 (중복 선언 방지) 및 URL에서 토픽 가져오기
-    const topicFromUrl = new URLSearchParams(window.location.search).get('topic');
+    const currentTopic = new URLSearchParams(window.location.search).get('topic');
 
-    // 사용자 이름에 맞는 호격 조사 적용 (필수 선언)
-    let userNameWithVocative = userName; // 기본값
-    // gpt-dialog.js가 로드되어 LOZEE_DIALOG 객체와 해당 함수가 사용 가능할 때 호출
-    // 이 스크립트는 type="module"이므로, import된 getKoreanVocativeParticle을 직접 사용 가능
-    if (typeof getKoreanVocativeParticle === 'function') {
-        const vocativeParticle = getKoreanVocativeParticle(userName);
-        userNameWithVocative = `${userName}${vocativeParticle}`;
-    } else {
-        console.warn("getKoreanVocativeParticle 함수를 찾을 수 없습니다. userNameWithVocative가 기본값으로 설정됩니다.");
-        userNameWithVocative = `${userName}야`; // 안전한 기본값
-    }
-
-    // 대화 상태 관리 객체 (요약 제안 확인 등)
-    window.LOZEE_STATE = window.LOZEE_STATE || {};
-
-    // journals 컬렉션 읽어오기
-    async function renderJournals() {
-    const listContainer = document.getElementById("journal-list");
-    const snapshot = await getDocs(collection(db, "journals"));
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const card = document.createElement("div");
-      card.className = "journal-card";
-      card.innerHTML = `
-        <h3>${data.title}</h3>
-        <p>${data.summary}</p>
-        <small>${data.createdAt?.toDate().toLocaleString()}</small>
-      `;
-      listContainer.append(card);
-    });
-  }
-
-   // 페이지 로드 시 렌더 호출
-   document.addEventListener("DOMContentLoaded", renderJournals);
-
-
-    // --- Firestore 저장 함수들 ---
-    async function saveUserProfile() {
-      const userId = localStorage.getItem('lozee_username');
-      // 'lozee_usernote'는 민후의 특성 메모 등에 사용될 수 있음 (예: 'asd_traits')
-      const diagnosis = localStorage.getItem('lozee_usernote') || ''; 
-      const voice = localStorage.getItem('lozee_voice');
-
-      if (!userId) return;
-
-      try {
-        await setDoc(doc(db, 'users', userId), {
-          name: userId,
-          diagnosis, // 또는 userTraits, notes 등 더 일반적인 이름 사용 가능
-          voice,
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp() // 마지막 로그인 시간 등 추가 정보
-        }, { merge: true }); // 기존 문서에 병합 (덮어쓰지 않음)
-        console.log("사용자 프로필 저장됨.");
-      } catch (error) {
-        console.error("사용자 프로필 저장 중 오류:", error);
-      }
-    }
-    saveUserProfile(); // 페이지 로드 시 사용자 프로필 저장/업데이트
-
-    async function saveSessionLog(userUtterance, aiResponse, analysisData = null) {
-      const userId = localStorage.getItem('lozee_username');
-      if (!userId) return;
-
-      try {
-        await addDoc(collection(db, 'sessions'), {
-          userId,
-          timestamp: serverTimestamp(),
-          userText: userUtterance,
-          aiReply: aiResponse,
-          analysis: analysisData // GPT의 분석 데이터도 함께 저장
-        });
-        console.log("세션 로그 저장됨.");
-      } catch (error) {
-        console.error("세션 로그 저장 중 오류:", error);
-      }
-    }
-
-    // 기존 짧은 AI 답변 저장 함수 (요약 기능과 별개)
-    async function saveJournalEntry(topic, summaryText) {
-      const userId = localStorage.getItem('lozee_username');
-      if (!userId || !topic || !summaryText) return;
-
-      try {
-        await addDoc(collection(db, 'journals'), {
-          userId,
-          topic,
-          title: summaryText.substring(0, 25) + (summaryText.length > 25 ? "..." : ""), // 간단 제목
-          summary: summaryText, // AI의 짧은 답변
-          createdAt: serverTimestamp(),
-          entryType: "ai_reply_snippet" // 유형 구분
-        });
-        console.log("AI 답변 스니펫 일기 저장됨.");
-      } catch (error) {
-        console.error("AI 답변 스니펫 일기 저장 중 오류:", error);
-      }
-    }
-
-    // 대화 요약본 저장 함수
-    async function saveConversationSummaryAsJournal(summaryText, summaryAnalysis, conversationContext) {
-      const userId = localStorage.getItem('lozee_username');
-      if (!userId || !summaryText) {
-        console.log("User ID 또는 요약 내용이 없어 일기를 저장할 수 없습니다.");
-        return;
-      }
-
-      let title = `대화 요약 (${new Date().toLocaleDateString()})`;
-      const currentTopicTextFromContext = conversationContext.selectedTopic?.displayText;
-      const currentStageFromContext = conversationContext.currentStage;
-
-      if (currentTopicTextFromContext && currentTopicTextFromContext !== 'USER_WILL_DEFINE_IN_CHAT' && currentTopicTextFromContext.trim() !== '') {
-        title = currentTopicTextFromContext;
-      } else if (currentStageFromContext) {
-        title = `${currentStageFromContext} 대화 요약`;
-      } else {
-        title = summaryText.substring(0, 25) + (summaryText.length > 25 ? "..." : "");
-      }
-
-      let moodDisplay = "기분 정보 없음";
-      let keywordsDisplay = [];
-
-      if (summaryAnalysis && summaryAnalysis.sentiment) {
-        moodDisplay = `전반적 느낌: ${summaryAnalysis.sentiment}`;
-        if (summaryAnalysis.emotion_intensity) {
-          moodDisplay += ` (강도: ${(summaryAnalysis.emotion_intensity * 10).toFixed(1)}/10점)`;
-        }
-      }
-      if (summaryAnalysis && summaryAnalysis.keywords && summaryAnalysis.keywords.length > 0) {
-          keywordsDisplay = summaryAnalysis.keywords;
-      }
-
-      try {
-        await addDoc(collection(db, 'journals'), {
-          userId: userId,
-          topic: currentTopicTextFromContext || currentStageFromContext || "대화 요약",
-          title: title,
-          summary: summaryText,
-          mood: moodDisplay,
-          keywords: keywordsDisplay,
-          createdAt: serverTimestamp(),
-          entryType: "conversation_summary"
-        });
-        console.log("대화 요약이 성공적으로 일기에 저장되었습니다.");
-      } catch (error) {
-        console.error("일기 저장 중 오류 발생: ", error);
-      }
-    }
-
-    // --- UI 및 대화 로직 함수 ---
     function appendMessage(text, role = 'ai') {
       const bubble = document.createElement('div');
-      bubble.className = `bubble ${role}`; // role에 따라 'ai_feedback' 등도 가능
+      bubble.className = `bubble ${role}`;
       bubble.textContent = text;
       chatWindow.appendChild(bubble);
-      chatWindow.scrollTop = chatWindow.scrollHeight; // 항상 최신 메시지로 스크롤
+      chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
     async function initGreeting() {
-      // getInitialGreeting 함수는 topicFromUrl(URL에서 가져온 주제)을 사용할 수 있도록 전달
-      const greeting = getInitialGreeting(userName, hasVisited, lastSummary, topicFromUrl);
+      const greeting = getInitialGreeting(userName, hasVisited, lastSummary);
       appendMessage(greeting, 'ai');
-      chatHistory.push({ role: 'assistant', content: greeting }); // 첫 인사도 기록
       await playTTSFromText(greeting, voiceId);
-      localStorage.setItem('lozee_hasVisited', 'true'); // 방문 기록 저장
+      localStorage.setItem('lozee_hasVisited', 'true');
     }
 
     async function startRecording() {
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(mediaStream);
-        audioChunks = [];
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(mediaStream);
+      audioChunks = [];
 
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = mediaRecorderStopHandler; // 분리된 핸들러 사용
-        mediaRecorder.start();
-        console.log("녹음 시작됨.");
-      } catch (err) {
-        console.error("녹음 시작 오류:", err);
-        appendMessage("음성 녹음을 시작할 수 없어요. 마이크 권한을 확인해주세요.", "ai_feedback");
-        // 버튼 상태 복원
-        isRecording = false;
-        talkBtn.classList.remove('active');
-        talkBtn.textContent = '🎤 말하기';
-      }
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const userText = await getSTTFromAudio(blob);
+        appendMessage(userText, 'user');
+
+        const gptRes = await getGptResponse(userText);
+        const reply = gptRes.rephrasing || '음... 다시 말해줄래?';
+        appendMessage(reply, 'ai');
+        await playTTSFromText(reply, voiceId);
+        await saveSessionLog(userText, reply);
+
+        if (currentTopic && reply.length < 1000) {
+          await saveJournalEntry(currentTopic, reply);
+        }
+      };
+
+      mediaRecorder.start();
     }
 
     function stopRecording() {
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-        console.log("녹음 중지됨.");
-        // 스트림 트랙 중지 (마이크 사용 해제)
-        if (mediaStream) {
-          mediaStream.getTracks().forEach(track => track.stop());
-        }
-      }
+      mediaRecorder.stop();
     }
-    
-    // mediaRecorder.onstop 이벤트 핸들러 (핵심 로직)
-    // 이 함수는 이전의 복잡했던 mediaRecorder.onstop 내용을 담습니다.
-    const mediaRecorderStopHandler = async () => {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' }); // 오디오 타입 명시
-      const userText = await getSTTFromAudio(blob);
-      
-      if (!userText || userText.trim() === "") {
-        console.log("STT 결과가 비어있습니다.");
-        appendMessage("음성을 인식하지 못했어요. 조금 더 크고 분명하게 말씀해주시겠어요? 😊", 'ai_feedback');
-        // 버튼 상태 복원
-        isRecording = false;
-        talkBtn.classList.remove('active');
-        talkBtn.textContent = '🎤 말하기';
-        return;
-      }
 
-      appendMessage(userText, 'user');
-      chatHistory.push({ role: 'user', content: userText });
-
-      const currentConversationContext = {
-          userAge: localStorage.getItem('lozee_userage'),
-          userDisease: JSON.parse(localStorage.getItem('lozee_userdisease') || '[]'),
-          userName: userName,
-          currentStage: localStorage.getItem('currentStage') || 'Stage 1',
-          selectedTopic: JSON.parse(localStorage.getItem('selectedTopic') || '{}'),
-          chatHistory: chatHistory.slice(0, -1) // 현재 사용자 발화(userText)를 제외한 이전 히스토리
-      };
-      currentConversationContext.selectedTopicText = currentConversationContext.selectedTopic?.displayText || '';
-
-      let isSummarizationConfirmed = false;
-      if (window.LOZEE_STATE && window.LOZEE_STATE.awaitingSummaryConfirmation) {
-        if (userText.includes("1") || userText.toLowerCase().includes("응") || userText.includes("정리") || userText.includes("요약") || userText.toLowerCase().includes("그래") || userText.toLowerCase().includes("예")) {
-            isSummarizationConfirmed = true;
-        }
-        window.LOZEE_STATE.awaitingSummaryConfirmation = false; // 상태 초기화
-      }
-
-      let aiReplyText;
-      let aiReplyAnalysis;
-
-      try {
-        if (isSummarizationConfirmed) {
-          appendMessage("알겠어, 우리가 나눈 이야기를 정리해볼게! 잠시만 기다려줘 😊", 'ai_feedback');
-          await playTTSFromText("알겠어, 우리가 나눈 이야기를 정리해볼게! 잠시만 기다려줘", voiceId);
-
-          const summaryResponse = await getGptResponse("SYSTEM_COMMAND_SUMMARIZE_HISTORY", {
-              ...currentConversationContext, // userAge, userName 등 기본 정보 전달
-              chatHistory: currentConversationContext.chatHistory // 요약할 실제 대화 내역
-          });
-          
-          if (!summaryResponse.ok) throw new Error(`GPT API 오류: ${summaryResponse.status}`);
-          const summaryData = await summaryResponse.json();
-
-          aiReplyText = summaryData.text;
-          aiReplyAnalysis = summaryData.analysis;
-
-          appendMessage(aiReplyText, 'ai'); // 요약문 표시
-          await playTTSFromText(aiReplyText, voiceId);
-          await saveSessionLog(`대화 요약 요청 (${userText})`, aiReplyText, aiReplyAnalysis);
-
-          await saveConversationSummaryAsJournal(aiReplyText, aiReplyAnalysis, currentConversationContext);
-
-          const saveConfirmMsg = `${userNameWithVocative}, 방금 정리한 내용은 일기에도 잘 남겨뒀어! 언제든 다시 펼쳐볼 수 있을 거야. ✨`;
-          appendMessage(saveConfirmMsg, 'ai');
-          await playTTSFromText(saveConfirmMsg, voiceId);
-          
-          chatHistory.push({ role: 'assistant', content: aiReplyText }); // 요약문을 대화 기록에 추가
-          chatHistory.push({ role: 'assistant', content: saveConfirmMsg }); // 저장 확인 메시지도 기록
-
-        } else {
-          // 일반 대화 처리
-          const gptResponse = await getGptResponse(userText, {
-              ...currentConversationContext, // userName, userAge 등 전달
-              chatHistory: currentConversationContext.chatHistory // 현재 사용자 발화 제외한 히스토리
-          });
-
-          if (!gptResponse.ok) throw new Error(`GPT API 오류: ${gptResponse.status}`);
-          const gptData = await gptResponse.json();
-
-          aiReplyText = gptData.text || '음... 다시 말해줄래?';
-          aiReplyAnalysis = gptData.analysis;
-
-          appendMessage(aiReplyText, 'ai');
-          await playTTSFromText(aiReplyText, voiceId);
-          await saveSessionLog(userText, aiReplyText, aiReplyAnalysis);
-          chatHistory.push({ role: 'assistant', content: aiReplyText });
-
-          // 기존의 짧은 AI 답변 저장 로직 (topicFromUrl 기반)
-          if (topicFromUrl && aiReplyText.length < 1000) {
-            await saveJournalEntry(topicFromUrl, aiReplyText);
-          }
-
-          if (aiReplyText.includes("정리해볼까?") && (aiReplyText.includes("1.") || aiReplyText.includes("첫 번째")) && (aiReplyText.includes("2.") || aiReplyText.includes("두 번째"))) {
-              window.LOZEE_STATE = window.LOZEE_STATE || {};
-              window.LOZEE_STATE.awaitingSummaryConfirmation = true;
-          }
-        }
-      } catch (error) {
-          console.error("GPT 응답 처리 또는 저장 중 오류:", error);
-          const errorMsg = "미안해, 지금은 응답하기 조금 어려운 것 같아. 잠시 후에 다시 시도해 줄래?";
-          appendMessage(errorMsg, 'ai_feedback');
-          await playTTSFromText(errorMsg, voiceId);
-          chatHistory.push({ role: 'assistant', content: errorMsg }); // 오류 응답도 기록
-      }
-
-      isRecording = false;
-      talkBtn.classList.remove('active');
-      talkBtn.textContent = '🎤 말하기';
-    };
-
-
-    // --- 이벤트 리스너 ---
     talkBtn.addEventListener('click', async () => {
       if (!hasGreeted) {
         await initGreeting();
         hasGreeted = true;
-        // 첫 인사 후 바로 녹음 시작하지 않음 (사용자가 다시 버튼 누르도록)
-        return; 
+        return;
       }
 
       if (!isRecording) {
         await startRecording();
-        // startRecording 내부에서 오류 발생 시 버튼 상태가 복원되므로, 여기서는 성공 가정
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            talkBtn.classList.add('active');
-            talkBtn.textContent = '⏹️ 멈추기';
-            isRecording = true;
-        }
+        talkBtn.classList.add('active');
+        talkBtn.textContent = '⏹️ 멈추기';
       } else {
         stopRecording();
-        // onstop 핸들러에서 isRecording = false로 설정하므로, 여기서는 버튼 텍스트만 변경
-        // talkBtn.classList.remove('active'); // onstop에서 처리
-        // talkBtn.textContent = '🎤 말하기'; // onstop에서 처리
-        // isRecording = false; // onstop에서 처리
+        talkBtn.classList.remove('active');
+        talkBtn.textContent = '🎤 말하기';
       }
-      // isRecording 상태는 startRecording 성공 여부 및 stopRecording 호출 시점에 따라 결정됨
+      isRecording = !isRecording;
     });
-
   </script>
 </body>
 </html>
