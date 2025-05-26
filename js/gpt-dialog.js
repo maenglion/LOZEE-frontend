@@ -2,11 +2,13 @@
 // 0) GPT 백엔드 URL 정의 (Railway 프로덕션 서버)
 const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'; [gpt-dialog.js]
 
-
-window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
-
-// LOZEE GPT 대화 로직 (중요도 순 정렬 및 중복 제거)
-window.LOZEE_DIALOG = window.LOZEE_DIALOG || {};
+export function getInitialGreeting(fullUserNameWithVocative, greetedYet) {
+  if (greetedYet) {
+    return `${fullUserNameWithVocative}, 다시 만나서 반가워! 오늘은 어떤 이야기를 해볼까?`;
+  } else {
+    return `${fullUserNameWithVocative}, 안녕! 나는 너의 마음친구 로지야. 오늘 대화 준비 됐어?`;
+  }
+}
 
 /**
  * 1) 호격 조사 결정: '아/야'
