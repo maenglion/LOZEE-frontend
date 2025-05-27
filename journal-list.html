@@ -3,179 +3,352 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>페이지 제목</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <title>나의 이야기 모음집 - LOZEE</title> <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <link rel="stylesheet" href="gnb.css"> <style>
+        /* journal-list.html 고유 스타일 */
+        :root {
+            --primary-color: #6e8efb; /* talk.html과 일관성 */
+            --secondary-color: #5a7edf;
+            --background-color: #f4f6f8; /* analysis.html과 유사한 배경 */
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --gnb-height: 56px; /* gnb.css와 일치해야 함 */
+        }
 
-    <link rel="stylesheet" href="gnb.css">
+        body {
+            margin: 0;
+            padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 (gnb.css에 없다면 필요) */
+            font-family: 'KoPub World Dotum', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
 
-    <style>
-        /* talk.html 페이지 고유의 스타일 (GNB 관련 스타일은 없어야 함) */
+        .container {
+            max-width: 1100px; /* PC에서 좀 더 넓게 */
+            margin: 20px auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .page-title { /* 기존 h1 스타일 대체 */
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 2em; 
+            margin-bottom: 30px; 
+            font-weight: 700;
+        }
+
+.main-tags-area {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center; /* 내부 요소들 가운데 정렬 */
+        }
+
+        .main-tags-area h2 { /* 섹션 제목 스타일 */
+            font-size: 1.2em;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: none; /* 기존 h2 밑줄 제거 */
+        }
+
+        .tag-button-list {
+            display: flex;
+            flex-wrap: wrap; /* 태그가 많으면 다음 줄로 */
+            justify-content: center; /* 버튼들 가운데 정렬 */
+            gap: 10px;
+        }
+
+        .tag-filter-btn {
+            padding: 8px 15px;
+            background-color: #e8eaf6; /* 태그 클라우드의 .badge와 유사한 색 */
+            color: #3f51b5;
+            border: none;
+            border-radius: 20px; /* 좀 더 둥글게 */
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .tag-filter-btn:hover {
+            background-color: #c5cae9;
+            transform: translateY(-1px);
+        }
+
+        .tag-filter-btn.active { /* 현재 선택된 태그 버튼 스타일 */
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+
+
+        .card-list {
+            display: grid;
+            /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); PC에서는 여러 열 */
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .journal-card {
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .journal-topic { /* 주제 */
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        
+        .journal-emotion { /* 감정 */
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .journal-summary-preview { /* Journal 시작 40글자 */
+            font-size: 0.95em;
+            color: #444;
+            margin-bottom: 12px;
+            flex-grow: 1; /* 요약이 남은 공간을 채우도록 */
+        }
+
+        .journal-session-count { /* 그 주제로 대화를 한 횟수 */
+            font-size: 0.8em;
+            color: #777;
+            text-align: right;
+            margin-top: auto; /* 카드 하단에 위치하도록 */
+        }
+        
+        .journal-date { /* 기존 스타일 활용 또는 수정 */
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+
+        .pagination { /* 기존 스타일 활용 */
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            font-size: 1em; /* 크기 약간 조정 */
+            margin-top: 30px;
+        }
+
+        .pagination a {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .pagination a:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .pagination .current {
+            color: var(--text-color);
+            background-color: #e0e0e0;
+        }
+
+        /* 반응형 카드 레이아웃 */
+        @media (min-width: 1024px) { /* 넓은 PC 화면: 3열 */
+            .card-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (min-width: 601px) and (max-width: 1023px) { /* 태블릿 및 중간 PC 화면: 2열 */
+            .card-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) { /* 모바일 화면: 1열 */
+            .card-list {
+                grid-template-columns: 1fr;
+            }
+            .search-filter-area input[type="text"],
+            .search-filter-area input[type="date"],
+            .search-filter-area select,
+            .search-filter-area button {
+                width: 100%; /* 모바일에서 검색 필터 요소들 전체 너비 사용 */
+                margin-bottom: 10px;
+            }
+            .search-filter-area {
+                flex-direction: column;
+            }
+        }
+
     </style>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'KoPubWorld Dotum', sans-serif;
-      background-color: #D9D9D9;
-      color: #333;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 40px 20px;
-      box-sizing: border-box;
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 24px;
-      margin-bottom: 70px;
-    }
-
-    .card-list {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .journal-card {
-      width: 320px;
-      background-color: #ffffff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-      border-radius: 12px;
-      padding: 20px;
-      box-sizing: border-box;
-      text-align: left;
-    }
-
-    .journal-date {
-      font-size: 12px;
-      color: #666;
-      margin-bottom: 4px;
-    }
-
-    .journal-number {
-      font-size: 12px;
-      font-weight: bold;
-      color: #a8a8a8;
-      margin-left: 8px;
-    }
-
-    .journal-title {
-      font-size: 18px;
-      font-weight: bold;
-      line-height: 1.4;
-      margin: 6px 0 10px;
-      word-break: keep-all;
-    }
-
-    .journal-mood {
-      font-size: 12px;
-      color: #424242;
-      margin-bottom: 10px;
-    }
-
-    .journal-summary {
-      font-size: 14px;
-      line-height: 1.6;
-      color: #444;
-    }
-
-    .back-button {
-      background-color: #0095FF;
-      color: white;
-      font-size: 16px;
-      padding: 14px 24px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-bottom: 40px;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      font-size: 16px;
-    }
-
-    .pagination a {
-      text-decoration: none;
-      color: #0095FF;
-      font-weight: bold;
-    }
-
-    .pagination .current {
-      color: #000;
-    }
-  </style>
 </head>
 <body>
-
     <nav id="gnb">
-    <div id="gnb-title">LOZEE</div>
-    <button id="menu-toggle">☰</button>
-    <div id="dropdown-menu">
-      <a href="mypage.html">🎨 내 정보 보기</a> 
-      <a href="index.html">✨ 새로운 이야기 시작!</a> 
-      <a href="analysis.html">📊 우리 이야기 분석</a> 
-      <a href="journal-list.html">📖 이야기 모음집</a> 
-      <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
-    </div>
+        <div id="gnb-title">LOZEE</div>
+        <button id="menu-toggle">☰</button>
+        <div id="dropdown-menu">
+          <a href="mypage.html">🎨 내 정보 보기</a> 
+          <a href="index.html">✨ 새로운 이야기 시작!</a> 
+          <a href="analysis.html">📊 우리 이야기 분석</a> 
+          <a href="journal-list.html">📖 이야기 모음집</a> 
+          <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
+        </div>
     </nav> 
 
-  <main class="container">
-    <h1>민후 감정일기 리스트</h1>
+       <main class="container">
+        <h1 id="pageMainTitle" class="page-title">나의 이야기 모음집 📖</h1>
 
-    <div class="card-list">
-      <!-- 예시 카드 1 -->
-      <div class="journal-card">
-        <div class="journal-date">
-          2025년 05월 03일 토요일
-          <span class="journal-number">01</span>
+        <div class="main-tags-area">
+            <h2>✨ 나의 주요 이야기 조각들 ✨</h2>
+            <div id="mainTagButtons" class="tag-button-list">
+                </div>
         </div>
-        <div class="journal-title">시험이 걱정돼서 마음이 조마조마했어요.</div>
-        <div class="journal-mood">기분: 불안(20), 슬픔(10)</div>
-        <div class="journal-summary">내일 시험인데 공부가 안 돼서 걱정이 많았어. 친구들과 놀고 싶은 마음도 들었고...</div>
-      </div>
 
-      <!-- 예시 카드 2 -->
-      <div class="journal-card">
-        <div class="journal-date">
-          2025년 05월 04일 일요일
-          <span class="journal-number">02</span>
+        <div class="card-list" id="journalCardList">
+            </div>
+
+        <div class="pagination" style="display:none;"> <a href="#">〈</a>
+            <a href="#" class="current">1</a>
+            <a href="#">2</a>
+            <a href="#">3</a>
+            <a href="#">〉</a>
         </div>
-        <div class="journal-title">산책하면서 기분이 조금 좋아졌어요.</div>
-        <div class="journal-mood">기분: 기쁨(40), 불안(10)</div>
-        <div class="journal-summary">오늘은 엄마랑 산책도 하고 바람도 쐬었어. 기분이 훨씬 나아졌어. 하지만 시험은 여전히...</div>
-      </div>
+    </main>
 
-      <!-- 예시 카드 3 -->
-      <div class="journal-card">
-        <div class="journal-date">
-          2025년 05월 05일 월요일
-          <span class="journal-number">03</span>
-        </div>
-        <div class="journal-title">학교에서 친구랑 말다툼을 했어요.</div>
-        <div class="journal-mood">기분: 분노(30), 슬픔(20)</div>
-        <div class="journal-summary">친구가 내 말을 안 들어줘서 속상했어. 괜히 짜증도 났고, 나중에 미안하다고 했지만...</div>
-      </div>
-    </div>
+    <script src="./js/gnb.js" defer></script> 
+    <script type="module">
+        // Firebase 관련 import (firebase-config.js에서 db를 export해야 함)
+        import { db } from './js/firebase-config.js';
+        import { collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+        import { counselingTopicsByAge } from './js/counseling_topics.js'; // 주제 목록 가져오기
 
-    <button class="back-button" onclick="location.href='talk.html'">처음으로 가기</button>
+        const journalCardListEl = document.getElementById('journalCardList');
+        const pageMainTitleEl = document.getElementById('pageMainTitle');
+        const topicSearchEl = document.getElementById('topicSearch');
+        const searchBtn = document.getElementById('searchBtn');
 
-    <div class="pagination">
-      <a href="#">〈</a>
-      <a href="#" class="current">1</a>
-      <a href="#">2</a>
-      <a href="#">3</a>
-      <a href="#">〉</a>
-    </div>
-  </main>
-   <script src="./js/gnb.js" defer></script> 
+        // 사용자 이름 가져와서 제목에 반영
+        const userName = localStorage.getItem('lozee_username') || '나';
+        if (pageMainTitleEl) {
+            pageMainTitleEl.textContent = `${userName}의 이야기 모음집 📖`;
+        }
+
+        // 주제 검색 필터 옵션 채우기
+        function populateTopicFilter() {
+            if (!topicSearchEl) return;
+            // counselingTopicsByAge에서 모든 주제 카테고리 추출 (모든 연령대 통합 또는 현재 사용자 연령대만)
+            // 여기서는 모든 연령대의 카테고리를 합쳐서 중복 제거하여 사용
+            let allTopics = new Set();
+            for (const ageGroup in counselingTopicsByAge) {
+                Object.keys(counselingTopicsByAge[ageGroup]).forEach(topic => allTopics.add(topic));
+            }
+            allTopics.forEach(topic => {
+                const option = document.createElement('option');
+                option.value = topic;
+                option.textContent = topic;
+                topicSearchEl.appendChild(option);
+            });
+        }
+
+        // Firestore에서 저널 데이터 로드 함수 (예시)
+        async function loadJournals(filters = {}) {
+            if (!journalCardListEl) return;
+            journalCardListEl.innerHTML = ''; // 기존 목록 비우기
+
+            const userId = localStorage.getItem('cbtUserEmail'); // 또는 다른 사용자 식별자
+            if (!userId) {
+                journalCardListEl.innerHTML = '<p>사용자 정보를 찾을 수 없습니다.</p>';
+                return;
+            }
+
+            let q = query(collection(db, 'journals'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
+            
+            // 필터 적용 (실제 구현 시 더 정교한 쿼리 필요)
+            if (filters.topic) {
+                q = query(q, where('topic', '==', filters.topic));
+            }
+            if (filters.date) { // 날짜 필터는 범위로 구현해야 할 수 있음 (예: 해당 날짜의 시작~끝)
+                // q = query(q, where('createdAt', '>=', startDate), where('createdAt', '<=', endDate));
+                console.warn("날짜 필터는 아직 구현되지 않았습니다.");
+            }
+            if (filters.tag) { // 태그 필터는 keywords 배열에 대한 array-contains 쿼리 사용
+                // q = query(q, where('keywords', 'array-contains', filters.tag));
+                console.warn("태그 필터는 아직 구현되지 않았습니다.");
+            }
+            
+            try {
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) {
+                    journalCardListEl.innerHTML = '<p>아직 기록된 이야기가 없어요. 로지와 대화를 시작해보세요!</p>';
+                    return;
+                }
+                querySnapshot.forEach((doc) => {
+                    const journal = doc.data();
+                    const card = document.createElement('div');
+                    card.className = 'journal-card';
+                    
+                    // 카드 내용 구성 (요청사항 반영)
+                    const dateStr = journal.createdAt?.toDate ? journal.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 없음';
+                    const topic = journal.topic || '알 수 없는 주제';
+                    const emotion = journal.mood || (journal.detailedAnalysis?.overallSentiment) || '감정 기록 없음'; // mood 또는 sentiment 사용
+                    const summaryPreview = journal.summary ? journal.summary.substring(0, 40) + (journal.summary.length > 40 ? '...' : '') : '요약 없음';
+                    const sessionCount = journal.sessionCount || 1; // DB에 이 필드가 있어야 함 (예시)
+
+                    card.innerHTML = `
+                        <div class="journal-date">${dateStr}</div>
+                        <div class="journal-topic">${topic}</div>
+                        <div class="journal-emotion">주요 감정: ${emotion}</div>
+                        <div class="journal-summary-preview">${summaryPreview}</div>
+                        <div class="journal-session-count">이 주제 대화 횟수: ${sessionCount}회</div>
+                    `;
+                    // 카드 클릭 시 해당 저널 상세 페이지로 이동하는 로직 추가 가능
+                    // card.onclick = () => { location.href = `journal-detail.html?id=${doc.id}`; };
+                    journalCardListEl.appendChild(card);
+                });
+            } catch (error) {
+                console.error("저널 로드 중 오류:", error);
+                journalCardListEl.innerHTML = '<p>이야기를 불러오는 데 문제가 발생했어요.</p>';
+            }
+        }
+        
+        // 검색 버튼 이벤트 리스너
+        if (searchBtn) {
+            searchBtn.onclick = () => {
+                const filters = {
+                    topic: document.getElementById('topicSearch').value,
+                    date: document.getElementById('dateSearch').value,
+                    tag: document.getElementById('tagSearch').value.trim()
+                };
+                // 빈 값 필터는 제거
+                for (const key in filters) {
+                    if (!filters[key]) {
+                        delete filters[key];
+                    }
+                }
+                loadJournals(filters);
+            };
+        }
+
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            populateTopicFilter(); // 주제 필터 옵션 채우기
+            loadJournals(); // 초기 저널 목록 로드
+        });
+    </script>
+     <script src="./js/gnb.js" defer></script>
 </body>
 </html>
-
-
