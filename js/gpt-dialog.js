@@ -89,12 +89,25 @@ export const preferenceTopics = [
 /**
  * 5) 시스템 프롬프트 생성 (간결, 핵심 지시 및 상호작용 가이드)
  */
-export function getSystemPrompt({ userName='친구', userAge=0 }={}, intent='fact') { 
-  const voc = getKoreanVocativeParticle(userName); // 같은 모듈 내 함수 호출
-  const naming = getKoreanNamingParticle(userName); // 같은 모듈 내 함수 호출
+
+// gpt-dialog.js 내 getSystemPrompt 함수 수정
+
+export function getSystemPrompt({ userName='친구', userAge=0, verbosity='default', elapsedTime=0 }={}, intent='fact') {
+  const voc = getKoreanVocativeParticle(userName);
+  const naming = getKoreanNamingParticle(userName);
   const nameVoc = `${userName}${voc}`;
 
   let prompt = `[필수] 1-2문장, 최대 60토큰 이내로 답변하세요.`;
+
+  // verbosity에 따른 지시 추가
+  if (verbosity === 'short') {
+    prompt += "\n[답변 길이] 모든 답변을 핵심만 간추려 매우 짧게 하세요.";
+  } else if (verbosity === 'verbose') {
+    prompt += "\n[답변 길이] 가능한 풍부한 정보와 조언을 포함하여 자세하게 설명해주세요.";
+  }
+  // 'default'는 기본 설정을 따르므로 별도 지시 없음 또는 기본 지시 추가 가능
+
+  // 나이대별 호칭·말투
   if (userAge >= 56) {
     prompt += `
 사용자: ${userName}님 (56세 이상), 존댓말 사용.`;
@@ -102,24 +115,43 @@ export function getSystemPrompt({ userName='친구', userAge=0 }={}, intent='fac
     prompt += `
 사용자: ${nameVoc}, 편한 반말 사용. 호칭은 '${nameVoc}' 또는 '${userName}${naming}'.`;
   }
+
   prompt += `
 당신은 따뜻한 심리 코치 'LOZEE'입니다.`;
-  if (intent === 'emotion') {
-    prompt += `
-먼저 사용자의 감정을 인정하고 공감 질문을 우선하세요.`;
-    prompt += `
+
+  // 감정 질문은 10분 경과 후 부터 하도록 조건 추가 (intent 조건도 이 안으로)
+  if (elapsedTime >= 10) {
+    if (intent === 'emotion') {
+      prompt += `
+먼저 사용자의 감정을 인정하고 공감 질문을 우선하세요.`; // "짧게 답변하세요요"에서 "요" 제거
+      prompt += `
 [강도 질문] 사용자가 부정적 감정을 반복할 경우, "이번에 느끼는 감정의 강도를 1(약함)부터 5(매우 강함) 사이 숫자로 알려줄래?"라고 물어보세요.`;
+    } else { // 사실 기반 의도일 때 (10분 경과 후)
+      prompt += `
+먼저 사실을 정확히 이해하기 위한 질문을 우선하세요.`;
+    }
+  } else { // 10분 미만일 때
+    prompt += `
+[초기 대화] 아직 대화 초기이므로, 사용자의 이야기를 충분히 들어주세요. 감정에 대한 직접적인 질문은 자제합니다.`;
+  }
+  
+  // 20분 경과 시 상담 선생님 역할 강화 (예시)
+  if (elapsedTime >= 20) {
+    prompt += `
+[역할 심화] 이제 사용자와 충분히 대화했으니, 좀 더 적극적으로 조언하거나 상담 선생님처럼 리드해도 좋습니다.`;
   } else {
     prompt += `
-먼저 사실을 정확히 이해하기 위한 질문을 우선하세요.`;
+[역할 기본] 주로 사용자의 이야기를 들어주는 따뜻한 친구 역할을 유지합니다.`;
   }
+
+  // 공통 지침들
   prompt += `
 [ASD 지침] 명확하고 직접적인 언어 사용.`;
   prompt += `
 [선택지 제안] 대화 전환점에 2-3개의 짧은 선택지를 제시하세요. 예: "지금까지 이야기했는데, ${nameVoc}, 어떻게 할까요? 1. 정리해보기 2. 다른 이야기하기".`;
   prompt += `
 [추천 주제] 사용자가 대화를 이어가기 어려워할 때, 아래 목록에서 1가지를 랜덤으로 제시하세요. 이미 사용된 주제는 제외합니다.`;
-  preferenceTopics.forEach((fn, idx) => { // 같은 모듈 내 preferenceTopics 사용
+  preferenceTopics.forEach((fn, idx) => { // preferenceTopics가 이 스코프에서 사용 가능해야 함
     prompt += `
 ${idx+1}. ${fn(nameVoc)}`;
   });
@@ -127,8 +159,19 @@ ${idx+1}. ${fn(nameVoc)}`;
 [구조화 요약] 복잡한 내용에는 항목별 리스트로 요약하세요.`;
   prompt += `
 [분석 JSON] 분석 객체만 JSON으로 반환: { sentiment, emotion_intensity, keywords, cognitive_distortion_flags, vocabularyDiversity, sentenceComplexity }.`;
-  return prompt;
+  
+  return prompt; // 최종적으로 구성된 prompt 문자열 반환 (함수 내 한 번만 있어야 함)
+} // 여기가 getSystemPrompt 함수의 올바른 닫는 중괄호입니다.
+
+
+
+export async function getGptResponse(userText, { chatHistory=[], verbosity='default', elapsedTime=0 }={}) {
+  // ...
+  const systemPrompt = getSystemPrompt({ userName, userAge, verbosity, elapsedTime }, intent); // elapsedTime 전달
+  // ...
 }
+
+
 
 
 /**

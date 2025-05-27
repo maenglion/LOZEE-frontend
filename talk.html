@@ -356,6 +356,8 @@
     import { saveSessionLog } from './js/firebase-utils.js';
     import { counselingTopicsByAge } from './js/counseling_topics.js';
 
+
+
     // 상태 변수
     let skipTTS = false;
     let hasGreeted = false;
@@ -366,6 +368,12 @@
     let isPlayingTTS = false; 
     let conversationStartTime = null;
     let analysisNotificationShown = false;
+    // 답변의 양 제어 
+    let messageCountForPreferenceCheck = 0;
+    let gptVerbosityPreference = 'default'; // 'short', 'default', 'verbose'
+    let preferenceSetTimestamp = 0;
+    const PREFERENCE_DURATION = 10 * 60 * 1000; // 10분 (밀리초 단위)
+    let preferenceCheckDoneThisSession = false; // 한 세션에서 한 번만 물어보도록 (선택 사항)
 
     // UI 요소
     const chatWindow = document.getElementById('chat-window');
@@ -478,10 +486,44 @@
     } else { micButton.disabled = true; appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'assistant_feedback'); }
 
     // 토픽 플로우 - 선택창
-    function displayOptionsInChat(optionsArray, onSelectCallback, context = null) { console.log("displayOptionsInChat 함수 시작됨, 옵션 배열:", optionsArray); const optionsContainer = document.createElement('div'); optionsContainer.className = 'chat-options-container'; const buttons = []; optionsArray.forEach(optionObject => { let buttonText; let displayTextForCallback; if (typeof optionObject === 'string') { buttonText = optionObject; displayTextForCallback = optionObject; console.log("옵션 버튼 생성 중 (문자열):", optionObject); } else if (optionObject && typeof optionObject.displayText !== 'undefined') { buttonText = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : optionObject.displayText; displayTextForCallback = optionObject.displayText; console.log("옵션 버튼 생성 중 (객체):", optionObject.displayText); } else { console.warn("displayOptionsInChat: 잘못된 형식의 옵션입니다.", optionObject); return; } const button = document.createElement('button'); button.className = 'chat-option-btn'; button.textContent = buttonText; button.onclick = () => { buttons.forEach(btn => { btn.disabled = true; if (btn === button) { btn.classList.add('selected'); } }); onSelectCallback(displayTextForCallback, context); }; optionsContainer.appendChild(button); buttons.push(button); }); chatWindow.appendChild(optionsContainer); console.log("옵션 컨테이너가 chatWindow에 추가됨"); chatWindow.scrollTop = chatWindow.scrollHeight; }
+    function displayOptionsInChat(optionsArray, onSelectCallback, context = null) 
+    { console.log("displayOptionsInChat 함수 시작됨, 옵션 배열:", optionsArray); 
+    const optionsContainer = document.createElement('div'); optionsContainer.className = 'chat-options-container'; 
+    const buttons = []; optionsArray.forEach(optionObject => { let buttonText; let displayTextForCallback; 
+      if (typeof optionObject === 'string') { buttonText = optionObject; displayTextForCallback = optionObject; console.log("옵션 버튼 생성 중 (문자열):", optionObject); } else if (optionObject && typeof optionObject.displayText !== 'undefined') { buttonText = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : optionObject.displayText; displayTextForCallback = optionObject.displayText; console.log("옵션 버튼 생성 중 (객체):", optionObject.displayText); } else { console.warn("displayOptionsInChat: 잘못된 형식의 옵션입니다.", optionObject); return; } const button = document.createElement('button'); button.className = 'chat-option-btn'; button.textContent = buttonText; button.onclick = () => { buttons.forEach(btn => { btn.disabled = true; if (btn === button) { btn.classList.add('selected'); } }); onSelectCallback(displayTextForCallback, context); }; optionsContainer.appendChild(button); buttons.push(button); }); chatWindow.appendChild(optionsContainer); console.log("옵션 컨테이너가 chatWindow에 추가됨"); chatWindow.scrollTop = chatWindow.scrollHeight; }
 
     // 토픽 플로우 - 주제
-    function showMainTopics() { console.log("showMainTopics 함수 시작됨"); appendMessage('어떤 이야기를 나눠볼까?', 'assistant'); const currentAgeGroup = getAgeGroup(); const ageGroupData = counselingTopicsByAge[currentAgeGroup]; let topicsWithOptions = []; if (ageGroupData) { topicsWithOptions = Object.keys(ageGroupData).map(categoryName => { let icon = '💬'; if (ageGroupData[categoryName] && ageGroupData[categoryName].length > 0 && ageGroupData[categoryName][0].icon) { icon = ageGroupData[categoryName][0].icon; } return { icon: icon, displayText: categoryName }; }); } else { console.warn(`counselingTopicsByAge에 '${currentAgeGroup}'에 대한 데이터가 없습니다.`); } topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제' }); console.log("displayOptionsInChat에 전달될 배열:", topicsWithOptions); displayOptionsInChat(topicsWithOptions, (selectedTopicText) => { selectedMain = selectedTopicText; appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); setTimeout(showSubTopics, 300); }); if (topicArea) topicArea.style.display = 'none !important'; }
+    function showMainTopics() { console.log("showMainTopics 함수 시작됨"); 
+    appendMessage('어떤 이야기를 나눠볼까?', 'assistant'); const currentAgeGroup = getAgeGroup(); 
+    const ageGroupData = counselingTopicsByAge[currentAgeGroup]; let topicsWithOptions = []; 
+    if (ageGroupData) { topicsWithOptions = Object.keys(ageGroupData).map(categoryName => { let icon = '💬'; 
+    if (ageGroupData[categoryName] && ageGroupData[categoryName].length > 0 && ageGroupData[categoryName][0].icon) 
+    { icon = ageGroupData[categoryName][0].icon; } return { icon: icon, displayText: categoryName }; }); 
+    } else { 
+
+    console.warn(`counselingTopicsByAge에 '${currentAgeGroup}'에 대한 데이터가 없습니다.`); } 
+    topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제' }); console.log("displayOptionsInChat에 전달될 배열:", topicsWithOptions); 
+
+    displayOptionsInChat(topicsWithOptions, (selectedTopicText) => 
+    
+    { selectedMain = selectedTopicText; // 선택된 메인 주제 저장
+       // 사용자가 선택한 주제를 채팅창에 표시 
+       appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
+       // await playTTSWithControl(selectedMain + ' 이야기를 선택했구나!'); // 필요시 TTS
+         if (selectedMain === '자유주제') {
+         const message = '네가 정하면 돼. 어떤 이야기가 하고 싶어?';
+         appendMessage(message, 'assistant');
+         // await playTTSWithControl(message); // 필요시 TTS
+    
+        if (topicArea) topicArea.style.display = 'none !important'; // 기존 topicArea 숨김
+        inputArea.style.display = 'flex'; // 입력창 바로 표시
+        chatInput.focus(); // 입력창에 포커스
+        // showSubTopics나 startChat을 호출하지 않음
+        } else {
+        setTimeout(showSubTopics, 300); // 다른 주제는 하위주제로 이동동
+      }
+    });
+  }
    
     function showSubTopics() { if (!selectedMain) { console.warn("showSubTopics 호출되었으나, selectedMain이 설정되지 않았습니다."); return;  } console.log("showSubTopics 함수 시작됨, 선택된 메인 주제:", selectedMain); appendMessage('조금 더 구체적으로 이야기해 줄래?', 'assistant'); let subtopicOptions; if (selectedMain === '자유주제') { subtopicOptions = [{ icon: '🗣️', displayText: '응, 자유롭게 이야기 시작해줘!' }]; } else { const ageGroupData = counselingTopicsByAge[getAgeGroup()]; const mainTopicData = ageGroupData ? ageGroupData[selectedMain] : undefined; if (mainTopicData && Array.isArray(mainTopicData)) { subtopicOptions = mainTopicData;  } else { console.warn(`'${selectedMain}'에 대한 하위 주제를 찾을 수 없거나 형식이 잘못되었습니다.`); subtopicOptions = [{ icon: '💬', displayText: '대화를 시작할 준비가 됐어.' }]; } if (!subtopicOptions || !subtopicOptions.length) {  subtopicOptions = [{ icon: '▶️', displayText: '바로 대화 시작할까?' }]; } } console.log("displayOptionsInChat에 전달될 하위 주제 배열 (수정 후):", subtopicOptions); displayOptionsInChat(subtopicOptions, (selectedSubtopicText) => { startChat(selectedSubtopicText); }); if (topicArea) topicArea.style.display = 'none !important'; }
 
@@ -572,6 +614,84 @@
         sendBtn.classList.remove('loading');
       }
     }   
+
+    // assistant의 말의 양
+    function askForVerbosityPreference() {
+    if (verbosityPromptCount >= 2) return; // 세션당 최대 2번만 질문
+
+     const options = [
+    { displayText: "말을 좀 줄여줘" },
+    { displayText: "지금이 적당해" },
+    { displayText: "나에게 더 많은 조언을 줘" }
+    ];
+ 
+     appendMessage("지금 내가 하는 말이 너에게 적당한지 알려줄래?", 'assistant');
+     // await playTTSWithControl("지금 내가 하는 말이 너에게 적당한지 알려줄래?");
+
+    displayOptionsInChat(options, (selectedOption) => {
+    appendMessage(selectedOption, 'user'); 
+
+    if (selectedOption === "말을 좀 줄여줘") {
+      gptVerbosityPreference = 'short';
+    } else if (selectedOption === "나에게 더 많은 조언을 줘") {
+      gptVerbosityPreference = 'verbose';
+    } else {
+      gptVerbosityPreference = 'default';
+    }
+    
+    verbosityPromptCount++; // 질문 횟수 증가
+    lastVerbosityPromptTime = Date.now(); // 마지막 질문 시간 기록
+    
+    const followupMessage = "알려줘서 고마워! 이 설정은 약 10분간 유지될 거야. 계속해서 하고 싶은 이야기를 해줘.";
+    appendMessage(followupMessage, 'assistant');
+    // await playTTSWithControl(followupMessage);
+    });
+   }
+
+   // sendMessage 함수 수정 (핵심 로직)
+   async function sendMessage(text, inputMethod = 'text') {
+  
+    // ... (기존 isProcessing, appendMessage(user), chatHistory.push(user), thinkingBubble 등 로직) ...
+    if (!conversationStartTime) conversationStartTime = Date.now(); // 최초 대화 시작 시간 기록
+
+    try {
+    const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
+    
+    // getGptResponse 호출 시 현재 verbosity와 경과 시간 정보 전달
+    const res = await getGptResponse(text, { 
+        chatHistory, 
+        verbosity: gptVerbosityPreference, 
+        elapsedTime: elapsedTimeInMinutes 
+    }); 
+    
+    thinkingBubble.remove(); // 응답 후 생각 중 풍선 제거
+
+    // ... (기존 res.ok 체크 및 d, clean 변수 처리 로직) ...
+    
+    appendMessage(clean, 'assistant');
+    
+    // ... (inputMethod에 따른 TTS 호출 로직) ...
+    
+    chatHistory.push({ role: 'assistant', content: clean });
+    assistantMessageCount++; // AI 응답 횟수 증가
+    
+    // ... (saveSessionLog, 기존 분석 알림 로직 등) ...
+
+    // 말 길이 선호도 질문 조건 체크
+    if (verbosityPromptCount === 0 && assistantMessageCount >= 5) {
+      askForVerbosityPreference();
+    } else if (verbosityPromptCount === 1 && (Date.now() - lastVerbosityPromptTime > PREFERENCE_PROMPT_INTERVAL)) {
+      askForVerbosityPreference();
+    }
+
+    // 20분 경과 시 로지의 역할 변화는 getSystemPrompt에서 처리 (아래 참고)
+
+  } catch (error) {
+    // ... (기존 오류 처리) ...
+  } finally {
+    // ... (isProcessing = false 등) ...
+  }
+}
 
     // 이벤트 바인딩
     sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text')); 

@@ -23,7 +23,6 @@ export const counselingTopicsByAge = {
     "친구 이야기": [ 
       { icon: "😔", displayText: "친구들이 날 피하는 것 같아", tags: ["따돌림", "소외감", "친구 관계 어려움"], type: "situation" },
       { icon: "🥺", displayText: "친구랑 놀고 싶은데, 어떻게 말 걸어?", tags: ["관계 시작의 어려움", "사회성 부족", "소심함"], type: "situation" },
-      { icon: "🤷", displayText: "왜 나만 친구가 없을까?", tags: ["외로움", "친구 부재"], type: "situation" }, // 상황에 대한 질문
       { icon: "😠", displayText: "친구들이 내 말 안 들어줘서 속상해", tags: ["무시당하는 느낌", "존중받지 못함"], type: "situation" }, // 상황 + 감정이나, 상황 탐색 우선
       { icon: "🤦", displayText: "친구들이 날 이해 못 하는 것 같아", tags: ["오해", "서운함", "공감 부족"], type: "situation" },
       { icon: "🧐", displayText: "나만 모르는 친구들 규칙이 있나봐", tags: ["사회적 규칙 이해 어려움", "눈치 없음"], type: "situation" },
@@ -39,7 +38,6 @@ export const counselingTopicsByAge = {
       { icon: "🗣️", displayText: "내 말이 잘 안 통해, 답답해", tags: ["의사소통의 어려움", "조리 있게 말하기"], type: "situation" },
       { icon: "😥", displayText: "내가 말 못해서 대화 끊길까 봐 걱정돼", tags: ["언어 지연 우려", "대화 불안", "말더듬"], type: "situation" },
       { icon: "😤", displayText: "내 말을 오해해서 너무 억울해", tags: ["오해로 인한 억울함", "의사소통 오류"], type: "situation" }, // 왜 억울한지 상황을 듣고 감정 강도를 물어봐야 함
-      { icon: "🎭", displayText: "역할극 상상놀이 재미없고 어려워", tags: ["상상력 부족", "역할극 어려움", "사회적 상상력"], type: "situation" },
       { icon: "🗣️", displayText: "사람들 앞에서 목소리가 떨려", tags: ["발표 불안", "대면 불안", "사회 공포"], type: "emotion_intensity" } // 보통 얼마나 떨리는데 1부터 10까지로 말해봐
     ],
     "학교생활 이야기": [ // 대부분 situation 타입으로 분류
