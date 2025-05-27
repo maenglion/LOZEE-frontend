@@ -3,104 +3,353 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>페이지 제목</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <title>🎨 나의 로지 보관함 - LOZEE</title> <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <link rel="stylesheet" href="gnb.css"> <style>
+        /* mypage.html 고유 스타일 */
+        :root {
+            --primary-color: #6e8efb;
+            --secondary-color: #5a7edf;
+            --background-color: #f4f6f8;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --gnb-height: 56px;
+            --profile-placeholder-bg: #d0d9ff; /* 프로필 사진 대체 동그라미 배경색 */
+        }
 
-    <link rel="stylesheet" href="gnb.css">
+        body {
+            margin: 0;
+            padding-top: var(--gnb-height);
+            font-family: 'KoPub World Dotum', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
 
-    <style>
-        /* talk.html 페이지 고유의 스타일 (GNB 관련 스타일은 없어야 함) */
+        .container {
+            max-width: 800px; /* 내용 영역 너비 */
+            margin: 20px auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .page-title {
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 2em; 
+            margin-bottom: 30px; 
+            font-weight: 700;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 반응형 그리드 */
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .profile-card, .info-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center; /* 기본 가운데 정렬 */
+        }
+
+        .profile-card h2, .info-card h2 {
+            font-size: 1.2em;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        /* 1. 유저 이미지 (동그라미 색상) */
+        .profile-photo-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--profile-placeholder-bg); /* 지정된 색상 */
+            margin: 0 auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em; /* 이모티콘 또는 첫 글자용 */
+            color: white; /* 이모티콘 또는 첫 글자 색상 */
+            font-weight: bold;
+        }
+        /* 실제 이미지가 있을 경우 (기존 스타일 재활용 또는 수정) */
+        /* .profile img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px auto; display:block; } */
+
+
+        .info-item {
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        .info-item .label {
+            font-weight: bold;
+            color: #555;
+        }
+        .info-item .value {
+            color: var(--text-color);
+        }
+
+        /* 6. LOZEE와의 계획 */
+        .plans-card ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+        .plans-card li {
+            background-color: #eef2f7;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        /* 7. 나의 최근 감정 대화 카드 */
+        .recent-journals-title { /* h2와 동일한 스타일 적용 */
+            font-size: 1.2em;
+            color: var(--primary-color);
+            margin-top: 30px; /* 위쪽 카드와의 간격 */
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .recent-journal-card-list { /* journal-list.html의 .card-list와 유사하게 */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .journal-card { /* journal-list.html의 .journal-card 스타일 재활용 또는 유사하게 */
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        .journal-card .topic { font-size: 1em; font-weight: bold; color: var(--primary-color); margin-bottom: 5px;}
+        .journal-card .emotion { font-size: 0.85em; color: #555; margin-bottom: 8px; font-style:italic;}
+        .journal-card .summary { font-size: 0.9em; color: #444; max-height: 3.2em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;}
+
+
+        @media (max-width: 600px) {
+            .profile-grid {
+                grid-template-columns: 1fr; /* 모바일에서는 1열로 */
+            }
+        }
     </style>
-  <style>
-    body { font-family: 'Arial', sans-serif; background-color: #f9f9f9; margin: 0; }
-    header { background-color: #222; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
-    .profile { display: flex; align-items: center; padding: 20px; background: white; margin: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .profile img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-right: 16px; }
-    .profile-info { display: flex; flex-direction: column; }
-    .profile-info .name { font-size: 1.2rem; font-weight: bold; color: #333; }
-    .profile-info .email, .profile-info .age { font-size: 0.95rem; color: #666; margin-top: 4px; }
-    .journal-list { padding: 0 20px 20px; }
-    .journal-list h2 { font-size: 1.2rem; margin-bottom: 12px; color: #333; }
-    .journal-card { background: white; padding: 12px 16px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .journal-card h3 { margin: 0 0 6px; font-size: 1rem; color: #222; }
-    .journal-card p { margin: 0 0 4px; font-size: 0.9rem; color: #555; }
-    .journal-card small { color: #999; font-size: 0.8rem; }
-    @media (max-width: 600px) { .profile { flex-direction: column; align-items: flex-start; } .profile img { margin-bottom: 10px; } }
-  </style>
 </head>
 <body>
     <nav id="gnb">
-    <div id="gnb-title">LOZEE</div>
-    <button id="menu-toggle">☰</button>
-    <div id="dropdown-menu">
-      <a href="mypage.html">🎨 내 정보 보기</a> 
-      <a href="index.html">✨ 새로운 이야기 시작!</a> 
-      <a href="analysis.html">📊 우리 이야기 분석</a> 
-      <a href="journal-list.html">📖 이야기 모음집</a> 
-      <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
-    </div>
-    </nav>
-  <header>나의 정보</header>
-  <section class="profile">
-    <img id="user-photo" src="" alt="유저 사진" />
-    <div class="profile-info">
-      <div class="name" id="user-name">닉네임</div>
-      <div class="email" id="user-email">이메일</div>
-      <div class="age" id="user-age">나이</div>
-    </div>
-  </section>
-  <section class="journal-list">
-    <h2>나의 감정 대화 목록</h2>
-    <div id="journal-list"></div>
-  </section>
+        <div id="gnb-title">LOZEE</div>
+        <button id="menu-toggle">☰</button>
+        <div id="dropdown-menu">
+          <a href="mypage.html">🎨 내 정보 보기</a> 
+          <a href="index.html">✨ 새로운 이야기 시작!</a> 
+          <a href="analysis.html">📊 우리 이야기 분석</a> 
+          <a href="journal-list.html">📖 이야기 모음집</a> 
+          <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
+        </div>
+    </nav> 
 
-  <script type="module">
-    import './js/firebase-config.js';
-    import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-    import { db } from './js/firebase-config.js';
+    <main class="container">
+        <h1 id="pageMainTitle" class="page-title">🎨 나의 로지 보관함</h1>
 
-    async function loadProfile() {
-      const userId = localStorage.getItem('cbtUserEmail') || '';
-      if (!userId) return;
-      const userRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        document.getElementById('user-photo').src = data.photoURL || 'https://via.placeholder.com/60';
-        document.getElementById('user-name').textContent = data.name || '';
-        document.getElementById('user-email').textContent = userId;
-        document.getElementById('user-age').textContent = data.age ? `${data.age}세` : '';
-      }
-    }
+        <div class="profile-grid">
+            <div class="profile-card">
+                <div id="userPhotoPlaceholder" class="profile-photo-placeholder">
+                    </div>
+                <h2 id="userNameDisplay" style="border-bottom:none; margin-bottom:5px;">닉네임 불러오는 중...</h2>
+                <p id="userEmailDisplay" style="font-size:0.9em; color:#777;">이메일 불러오는 중...</p>
+            </div>
 
-    async function loadJournalList() {
-      const userId = localStorage.getItem('cbtUserEmail') || '';
-      if (!userId) return;
-      const listContainer = document.getElementById('journal-list');
-      const q = query(
-        collection(db, 'journals'),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const card = document.createElement('div');
-        card.className = 'journal-card';
-        card.innerHTML = `
-          <h3>${data.title}</h3>
-          <p>${data.summary}</p>
-          <small>${data.createdAt?.toDate().toLocaleString()}</small>
-        `;
-        listContainer.appendChild(card);
-      });
-    }
+            <div class="info-card">
+                <h2>🎂 내 정보</h2>
+                <p class="info-item"><span class="label">만 나이:</span> <span id="userFullAge" class="value">정보 없음</span></p>
+                <p class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">정보 없음</span></p>
+                <p class="info-item"><span class="label">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">정보 없음</span></p>
+            </div>
+            
+            <div class="info-card plans-card">
+                <h2>🤝 로지와의 약속!</h2>
+                <ul id="lozeePlans">
+                    <li>📝 언어 표현 연습 함께 하기 (예정)</li>
+                    <li>💡 생각 습관 탐험 이어가기 (예정)</li>
+                    <li style="color:#999; font-style:italic;">아직 로지와의 특별한 약속은 없어요!</li>
+                </ul>
+            </div>
+        </div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-      loadProfile();
-      loadJournalList();
-    });
-  </script>
-   <script src="./js/gnb.js" defer></script> 
+        <h2 class="recent-journals-title">💬 최근 나눈 이야기 살짝 보기</h2>
+        <div class="recent-journal-card-list" id="recentJournalList">
+            <div class="journal-card">
+                <div class="topic">학교생활 이야기</div>
+                <div class="emotion">마음 날씨: 걱정, 조금 답답</div>
+                <div class="summary">선생님이 갑자기 질문해서 깜짝 놀랐지만, 그래도 씩씩하게 대답하려고 노력했어...</div>
+            </div>
+            <div class="journal-card">
+                <div class="topic">친구 이야기</div>
+                <div class="emotion">마음 날씨: 신남! 조금은 아쉬움</div>
+                <div class="summary">단짝 친구랑 비밀 놀이를 했는데, 시간이 너무 빨리 가서 아쉬웠지만 정말 재미있었어! 또 하고 싶다!</div>
+            </div>
+            <div class="journal-card">
+                <div class="topic">나의 꿈 이야기</div>
+                <div class="emotion">마음 날씨: 설렘, 기대감</div>
+                <div class="summary">내가 만약 하늘을 나는 발명가가 된다면, 구름 위에서 아이스크림을 만들어 먹을 거야! 얼마나 신날까?</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="./js/gnb.js" defer></script> 
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+
+        const userNameDisplayEl = document.getElementById('userNameDisplay');
+        const userEmailDisplayEl = document.getElementById('userEmailDisplay');
+        const userFullAgeEl = document.getElementById('userFullAge');
+        const userPhotoPlaceholderEl = document.getElementById('userPhotoPlaceholder');
+        const lastLoginDateEl = document.getElementById('lastLoginDate');
+        const totalSessionsCountEl = document.getElementById('totalSessionsCount');
+        const lozeePlansEl = document.getElementById('lozeePlans');
+        const recentJournalListEl = document.getElementById('recentJournalList');
+        const pageMainTitleEl = document.getElementById('pageMainTitle');
+
+
+        async function loadUserProfile() {
+            const userId = localStorage.getItem('cbtUserEmail') || ''; // users 컬렉션의 문서 ID로 사용
+            if (!userId) {
+                userNameDisplayEl.textContent = '로그인 정보 없음';
+                return;
+            }
+
+            const userRef = doc(db, 'users', userId);
+            try {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    
+                    const displayName = data.name || '친구';
+                    userNameDisplayEl.textContent = displayName;
+                    if (pageMainTitleEl) pageMainTitleEl.textContent = `${displayName}의 로지 보관함 🎨`;
+
+
+                    if (userPhotoPlaceholderEl) {
+                        if (data.photoURL) { // 실제 이미지가 있다면
+                            userPhotoPlaceholderEl.innerHTML = `<img src="${data.photoURL}" alt="${displayName} 사진" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                        } else { // 이미지가 없다면 닉네임 첫 글자 또는 기본 이모티콘
+                            userPhotoPlaceholderEl.textContent = displayName.charAt(0) || '😊';
+                        }
+                    }
+                    
+                    if(userEmailDisplayEl) userEmailDisplayEl.textContent = userId; // 이메일은 userId로 사용
+                    
+                    if(userFullAgeEl) {
+                        // Firestore에 birthDate가 "YYYY-MM-DD" 형식으로 저장되어 있다고 가정
+                        if (data.birthDate) {
+                            const birthDate = new Date(data.birthDate);
+                            const today = new Date();
+                            let age = today.getFullYear() - birthDate.getFullYear();
+                            const m = today.getMonth() - birthDate.getMonth();
+                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                age--;
+                            }
+                            userFullAgeEl.textContent = `만 ${age}세`;
+                        } else if (data.age) { // birthDate가 없고 age 필드만 있다면 그것 사용
+                             userFullAgeEl.textContent = `만 ${data.age}세 (기록된 나이)`;
+                        } else {
+                            userFullAgeEl.textContent = '나이 정보 없음';
+                        }
+                    }
+
+                    if(lastLoginDateEl && data.lastLogin?.toDate) { // Firestore 타임스탬프 객체라면 toDate() 사용
+                        lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric'});
+                    } else {
+                        if(lastLoginDateEl) lastLoginDateEl.textContent = '최근 기록 없음';
+                    }
+
+                    // 총 대화 횟수 (sessions 컬렉션에서 userId로 카운트 필요)
+                    // 이 부분은 Firestore 쿼리가 추가로 필요하여 복잡할 수 있습니다.
+                    // users 문서에 totalSessionCount 같은 필드를 만들어 talk.html에서 업데이트하는 것이 더 효율적입니다.
+                    // 지금은 임시로 표시합니다.
+                    if(totalSessionsCountEl) totalSessionsCountEl.textContent = data.totalSessionCount ? `${data.totalSessionCount}회` : '기록 준비 중'; 
+
+                } else {
+                    userNameDisplayEl.textContent = '사용자 정보 없음';
+                }
+            } catch (error) {
+                console.error("프로필 로드 중 오류:", error);
+                if(userNameDisplayEl) userNameDisplayEl.textContent = '정보 로드 실패';
+            }
+        }
+
+        function displayLozeePlans() {
+            if (!lozeePlansEl) return;
+            lozeePlansEl.innerHTML = ''; // 기존 내용 비우기
+            const plans = []; // 실제로는 Firestore 또는 localStorage에서 가져와야 함
+
+            // 예시: "다음번에 이어 이야기하기" 데이터 확인
+            const continueTopicData = localStorage.getItem('lozee_continue_topic');
+            if (continueTopicData) {
+                try {
+                    const topicToContinue = JSON.parse(continueTopicData);
+                    plans.push(`↪️ 저번에 이야기하다 멈춘 '${topicToContinue.details || '생각 패턴'}'에 대해 더 깊이 이야기 나눠보기로 했어요!`);
+                } catch (e) { console.error("이어하기 주제 파싱 오류", e); }
+            }
+            // 예시: 언어 연습
+            // if (localStorage.getItem('lozee_needs_language_practice') === 'true') {
+            // plans.push("🌱 로지와 함께 말솜씨 키우기 연습을 하기로 했어요!");
+            // }
+
+
+            if (plans.length > 0) {
+                plans.forEach(planText => {
+                    const li = document.createElement('li');
+                    li.textContent = planText;
+                    lozeePlansEl.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "아직 로지와의 특별한 약속은 없어요! 새로운 이야기를 시작해볼까요?";
+                li.style.color = "#777";
+                li.style.fontStyle = "italic";
+                lozeePlansEl.appendChild(li);
+            }
+        }
+
+        function displayRecentJournals() { // 하드코딩된 예시 데이터 사용
+            if (!recentJournalListEl) return;
+            recentJournalListEl.innerHTML = ''; // 기존 내용 비우기
+
+            const sampleJournals = [
+                { topic: "학교생활 이야기", emotion: "걱정, 조금 답답", summary: "선생님이 갑자기 질문해서 깜짝 놀랐지만, 그래도 씩씩하게 대답하려고 노력했어. 다음엔 더 잘할 수 있겠지?"},
+                { topic: "친구 이야기", emotion: "신남! 조금은 아쉬움", summary: "단짝 친구랑 비밀 놀이를 했는데, 시간이 너무 빨리 가서 아쉬웠지만 정말 재미있었어! 또 하고 싶다!"},
+                { topic: "나의 꿈 이야기", emotion: "설렘, 기대감", summary: "내가 만약 하늘을 나는 발명가가 된다면, 구름 위에서 아이스크림을 만들어 먹을 거야! 얼마나 신날까? 상상만 해도 즐거워."}
+            ];
+
+            sampleJournals.forEach(journal => {
+                const card = document.createElement('div');
+                card.className = 'journal-card';
+                card.innerHTML = `
+                    <div class="topic">${journal.topic}</div>
+                    <div class="emotion">마음 날씨: ${journal.emotion}</div>
+                    <div class="summary">${journal.summary}</div>
+                `;
+                recentJournalListEl.appendChild(card);
+            });
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserProfile();
+            displayLozeePlans(); // "LOZEE와의 계획" 표시
+            displayRecentJournals(); // "최근 감정 대화" 하드코딩된 내용으로 표시
+            // loadJournalList(); // 실제 저널 목록 로드는 journal-list.html에서와 유사하게 구현 필요
+        });
+    </script>
 </body>
 </html>
