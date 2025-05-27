@@ -198,7 +198,7 @@
             // 1. 언어·나이 분석 섹션 처리
             const languageAgeSection = document.getElementById('languageAgeSection');
             if (languageAgeSection) {
-                if (userAge > 10 || !analysisResults || !analysisResults.ageLanguageAnalysis) { // 10세 초과 또는 분석 결과 없을 시 숨김
+                if (userAge > 16 || !analysisResults || !analysisResults.ageLanguageAnalysis) { // 10세 초과 또는 분석 결과 없을 시 숨김
                     languageAgeSection.style.display = 'none';
                 } else {
                     languageAgeSection.style.display = 'block'; 
