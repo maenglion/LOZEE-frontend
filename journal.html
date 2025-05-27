@@ -6,12 +6,20 @@
                          localStorage.getItem('lozee_voice') &&
                          localStorage.getItem('lozee_userage');
 
-    const currentTopic = localStorage.getItem('lozee_current_topic');
 
-    if (isConfigured) {
-      const targetUrl = currentTopic ? `talk.html?topic=${encodeURIComponent(currentTopic)}` : 'talk.html';
-      window.location.href = targetUrl;
-    }
+let currentTopic = new URLSearchParams(window.location.search).get('topic'); // URL 파라미터에서 먼저 가져옴
+
+if (!currentTopic) { // URL 파라미터에 'topic'이 없다면
+    currentTopic = localStorage.getItem('lozee_current_topic'); // localStorage에서 가져옴
+}
+
+if (currentTopic) {
+    console.log("현재 주제:", currentTopic);
+    // ... 주제를 사용하는 로직 ...
+} else {
+    console.log("설정된 주제가 없습니다.");
+
+}
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -162,8 +170,7 @@
     const hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
     const voiceId = localStorage.getItem('lozee_voice') || 'ko-KR-Chirp3-HD-Zephyr';
     const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
-    const currentTopic = new URLSearchParams(window.location.search).get('topic');
-
+  
     function appendMessage(text, role = 'ai') {
       const bubble = document.createElement('div');
       bubble.className = `bubble ${role}`;

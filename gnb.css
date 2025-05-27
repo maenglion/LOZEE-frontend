@@ -1,0 +1,86 @@
+#gnb {
+    padding: 0 30px; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--gnb-height);
+    background-color: var(--gnb-bg);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+#gnb-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--gnb-title-color);
+}
+
+#menu-toggle {
+    background: none;
+    border: none;
+    color: var(--gnb-menu-toggle-color);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#dropdown-menu {
+    position: fixed;
+    top: var(--gnb-height);
+    right: 0;
+    background-color: var(--gnb-dropdown-bg);
+    border-radius: 0 0 0 8px;
+    box-shadow: -3px 3px 6px rgba(0,0,0,0.2);
+    width: 200px;
+    z-index: 999;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease-out;
+}
+
+#dropdown-menu.show {
+    max-height: 300px; /* 필요시 talk.html의 값과 일치시키거나 조정 */
+}
+
+#dropdown-menu a {
+    display: block;
+    padding: 12px 16px;
+    text-decoration: none;
+    color: var(--gnb-dropdown-text-color);
+    border-bottom: 1px solid var(--gnb-dropdown-border-color);
+    font-size: 0.95em;
+}
+#dropdown-menu a:last-child {
+    border-bottom: none;
+}
+#dropdown-menu a:hover {
+    background-color: var(--gnb-dropdown-hover-bg);
+}
+
+/* GNB 반응형 스타일 (talk.html의 @media 규칙에서 가져오거나 여기에 통합) */
+@media (max-width: 600px) {
+  #gnb { padding: 0 20px; } 
+  #gnb-title { font-size: 1.1em; }
+}
+
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>페이지 제목</title>
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+
+    <link rel="stylesheet" href="./css/gnb.css"> 
+
+    <style>
+        /* talk.html 페이지 고유의 스타일 (GNB 관련 스타일은 없어야 함) */
+    </style>
+</head>
