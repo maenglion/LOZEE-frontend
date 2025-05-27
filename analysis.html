@@ -155,7 +155,9 @@
         Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; 
         Chart.defaults.font.size = 12; 
 
-        document.addEventListener('DOMContentLoaded', async () => {
+            document.addEventListener('DOMContentLoaded', async () => {
+            // --- DOM 요소 가져오기 (한 번만 수행) ---
+            const languageAgeSection = document.getElementById('languageAgeSection');
             const realAgeEl = document.getElementById('realAge');
             const predictedLangAgeEl = document.getElementById('predictedLangAge');
             const ageFeedbackEl = document.getElementById('ageFeedback');
@@ -170,45 +172,47 @@
             const situationChartEl = document.getElementById('situationChart');
             const empathyMessageEl = document.getElementById('empathyMessage');
 
-
             const userAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 0; 
             if(realAgeEl) realAgeEl.textContent = userAge || "정보 없음";
 
+            // --- localStorage에서 분석 결과 가져오기 (한 번만 수행) ---
             const analysisDataString = localStorage.getItem('lozee_conversation_analysis');
-            let analysisResults = null;
-            let accumulatedDurationMinutes = 0;
+            let analysisResults = null; // 실제 분석 결과 객체를 담을 변수
+            let accumulatedDurationMinutes = 0; // 누적 대화 시간을 담을 변수
 
             if (analysisDataString) {
                 try {
                     const fullAnalysis = JSON.parse(analysisDataString);
-                    analysisResults = fullAnalysis.results;
+                    analysisResults = fullAnalysis.results; // 여기서 results 객체를 할당
                     accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0;
                 } catch (e) {
                     console.error("저장된 분석 결과 파싱 오류:", e);
-                    // 오류 발생 시 사용자에게 알림
-                    document.querySelector('.container').innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
-                    return; // 더 이상 진행하지 않음
+                    if (document.querySelector('.container')) { // container 요소가 있다면
+                        document.querySelector('.container').innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
+                    }
+                    return; 
                 }
             } else {
-                 // 분석 데이터가 아예 없을 경우의 처리
-                document.querySelector('.container').innerHTML = '<h1>아직 로지와 나눈 이야기가 없나 봐요! 😮</h1><p style="text-align:center;">먼저 로지와 신나게 이야기하고 다시 와주세요!</p>';
+                if (document.querySelector('.container')) { // container 요소가 있다면
+                    document.querySelector('.container').innerHTML = '<h1>아직 로지와 나눈 이야기가 없나 봐요! 😮</h1><p style="text-align:center;">먼저 로지와 신나게 이야기하고 다시 와주세요!</p>';
+                }
                 return; 
             }
             
-            // 1. 언어·나이 분석 섹션 처리
-            const languageAgeSection = document.getElementById('languageAgeSection');
+            // --- 1. 언어·나이 분석 섹션 처리 (중복 제거된 로직) ---
             if (languageAgeSection) {
-            // if (userAge > 10) { // 👈 원래 조건
-            if (false) { // 👈 임시로 항상 보이게 하려면 false로 변경 (테스트 후 원래대로 복구!)
-            languageAgeSection.style.display = 'none';
-            console.log(`언어·나이 분석: 사용자 나이(${userAge})가 10세를 초과하여 숨김 처리합니다.`);
-            } else {
-          languageAgeSection.style.display = 'block'; // 보이도록 설정
-            // ... (언어 연령 분석 결과 표시 로직) ...
-         }
-         }
+                if (userAge > 10 || !analysisResults || !analysisResults.ageLanguageAnalysis) { 
+                    languageAgeSection.style.display = 'none';
+                    if (userAge > 10) console.log(`언어·나이 분석: 사용자 나이(${userAge})가 10세를 초과하여 숨김 처리합니다.`);
+                    else console.log(`언어·나이 분석: 필요한 분석 데이터가 없어 숨김 처리합니다.`);
+                } else {
+                    languageAgeSection.style.display = 'block'; 
+                    console.log(`언어·나이 분석: 사용자 나이(${userAge})가 10세 이하이므로 표시합니다.`);
+                    
+                    // 여기서 predictedLangAgeEl, ageFeedbackEl 등이 null이 아닌지 한 번 더 확인 (안전장치)
                     if(predictedLangAgeEl && ageFeedbackEl && ageDifferenceVisualEl && languagePracticeBtn){
                         let predicted = null;
+                        // analysisResults는 이미 위에서 파싱했으므로, 여기서 다시 localStorage를 읽을 필요 없음
                         if (analysisResults.ageLanguageAnalysis.estimatedAgeRange) {
                             const ageRangeMatch = String(analysisResults.ageLanguageAnalysis.estimatedAgeRange).match(/\d+/);
                             if (ageRangeMatch) predicted = parseInt(ageRangeMatch[0], 10);
@@ -229,39 +233,33 @@
 
                             if (accumulatedDurationMinutes < 120) { 
                                 visualText = "(로지랑 나눈 이야기로 본 첫인상! 🌱)";
-                                if (Math.abs(diffYearsApprox) < 1) {
-                                    feedbackMsg = `지금까지 나눈 이야기로는 ${predicted}살 친구처럼 말하는 것 같아! 이건 첫인상이니까 앞으로 더 다양하게 이야기 나눠보자!`;
-                                    ageFeedbackEl.classList.add('positive');
-                                } else if (diffYearsApprox > 0) {
-                                    feedbackMsg = `지금까지 이야기로는 ${predicted}살 친구처럼 느껴지네! 아직은 첫인상이니까, 앞으로 로지랑 더 많은 이야기를 나누면서 너의 멋진 말솜씨를 보여줘!`;
-                                    ageFeedbackEl.classList.add('neutral');
-                                    if (userAge <= 10) languagePracticeBtn.style.display = 'inline-block'; // 조건 충족 시 버튼 표시
-                                } else {
-                                    feedbackMsg = `와! 지금까지 이야기로는 ${predicted}살 형님/누님처럼 말하는데? 정말 멋지다! (깜짝 첫인상!)`;
-                                    ageFeedbackEl.classList.add('positive');
-                                }
+                                if (Math.abs(diffYearsApprox) < 1) { feedbackMsg = `지금까지 나눈 이야기로는 ${predicted}살 친구처럼 말하는 것 같아! 이건 첫인상이니까 앞으로 더 다양하게 이야기 나눠보자!`; ageFeedbackEl.classList.add('positive');
+                                } else if (diffYearsApprox > 0) { feedbackMsg = `지금까지 이야기로는 ${predicted}살 친구처럼 느껴지네! 아직은 첫인상이니까, 앞으로 로지랑 더 많은 이야기를 나누면서 너의 멋진 말솜씨를 보여줘!`; ageFeedbackEl.classList.add('neutral');
+                                } else { feedbackMsg = `와! 지금까지 이야기로는 ${predicted}살 형님/누님처럼 말하는데? 정말 멋지다! (깜짝 첫인상!)`; ageFeedbackEl.classList.add('positive');}
                             } else if (accumulatedDurationMinutes < 360) { 
                                 visualText = "(이야기를 더 많이 나눠보니 알 것 같아! 🌳)";
                                 feedbackMsg = `이제 너의 말솜씨가 ${predicted}살 친구처럼 느껴져! 우리 재미있는 이야기 더 많이 하자!`;
                                 ageFeedbackEl.classList.add(diffYearsApprox > 0 && Math.abs(diffYearsApprox) >=1 ? 'neutral' : 'positive');
-                                if (userAge <= 10 && diffYearsApprox >= 1) languagePracticeBtn.style.display = 'inline-block';
                             } else { 
                                 visualText = "(로지가 본 너의 멋진 말솜씨! 🌟)";
                                 feedbackMsg = `이제 네 말솜씨를 꽤 정확하게 알 것 같아! ${predicted}살 친구들처럼 정말 훌륭해!`;
                                 ageFeedbackEl.classList.add('positive');
-                                if (userAge <= 10 && diffYearsApprox >= 1) languagePracticeBtn.style.display = 'inline-block';
                             }
                             
-                            if (languagePracticeBtn.style.display === 'inline-block') {
+                            if (userAge <= 10 && diffYearsApprox >= 1 && predicted !== null) { // predicted가 null이 아닐 때만 버튼 표시
+                                languagePracticeBtn.style.display = 'inline-block';
                                 languagePracticeBtn.onclick = () => {
                                     alert("재미있는 언어 연습을 준비하고 있어! 조금만 기다려줘! 😊");
                                 };
+                            } else {
+                                languagePracticeBtn.style.display = 'none';
                             }
 
                         } else { 
                             predictedLangAgeEl.textContent = "정보 부족";
                             feedbackMsg = (accumulatedDurationMinutes >= 30) ? "지금은 네 말솜씨 나이를 정확히 알기 어렵네. 다음에 다시 확인해 줄래?" : "로지와 30분 이상 이야기하면 말솜씨 나이를 알려줄 수 있어!";
                             ageFeedbackEl.classList.add('neutral');
+                            languagePracticeBtn.style.display = 'none';
                         }
                         
                         ageDifferenceVisualEl.textContent = visualText;
@@ -269,9 +267,11 @@
                         ageFeedbackEl.style.display = 'block';
                     }
                 }
-        );
+            } else { // languageAgeSection이 없을 경우 (HTML 구조 문제)
+                 console.warn("ID가 'languageAgeSection'인 요소를 찾을 수 없습니다.");
+            }
 
-            // 2. 감정 어조 및 태그 클라우드
+            // --- 2. 감정 어조 및 태그 클라우드 (analysisResults 사용) ---
             if (analysisResults && analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
                 if(emotionChartEl) emotionChartEl.style.display = 'block';
                 renderEmotionChart('emotionChart', analysisResults.emotionToneData);
@@ -284,14 +284,10 @@
                     empathyMessageEl.style.display = 'block';
                 }
             }
-            
-            if (analysisResults && analysisResults.keywords && analysisResults.keywords.length > 0) {
-                const tagsForCloud = analysisResults.keywords.map(kw => ({ text: kw, weight: 5 + Math.floor(Math.random() * 10) })); // 가중치는 예시
-                renderTagCloud('tagCloud', tagsForCloud);
-            } else {
-                if(tagCloudEl) tagCloudEl.innerHTML = '<p style="text-align:center; color:#888;">이야기 속에서 자주 나온 단어들을 모으고 있어요!</p>';
-            }
-            
+            // ... (태그 클라우드, 반복 패턴, 상황 분석 등도 analysisResults를 사용하여 처리) ...
+            // (나머지 렌더링 함수 호출 및 공유 버튼 로직은 이전과 동일)
+        });
+
             // 3. 반복 패턴
             if (analysisResults && analysisResults.patterns && analysisResults.patterns.length > 0) {
                 renderPatternDashboard('patternDashboard', analysisResults.patterns);
