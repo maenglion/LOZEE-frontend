@@ -215,8 +215,10 @@
             background-color: #5a7edf;
         }
 
-        @media (max-width: 768px) { h1 { font-size: 1.7em; } h2 { font-size: 1.3em; } .section { padding: 20px; } #emotionChart, #situationChart { height: 280px; } .methodology-list { font-size: 0.85em; } }
-        @media (max-width: 480px) { .container { margin: 15px auto; padding: 0 15px; } h1 { font-size: 1.5em; margin-bottom: 25px; } h2 { font-size: 1.2em; } .section { padding: 15px; margin-top: 20px;} .section p { font-size: 0.95em; } .feedback { padding: 10px 15px; font-size: 0.9em;} #emotionChart, #situationChart { height: 250px; } .badge { font-size: 0.85em; padding: 6px 10px;} .assistant-analysis-notice { font-size: 0.7em; } .methodology-list { font-size: 0.8em; } }
+        @media (max-width: 768px) { h1 { font-size: 1.7em; } h2 { font-size: 1.3em; } .section { padding: 20px; } 
+        #emotionChart, #situationChart { height: 280px; } .methodology-list { font-size: 0.85em; } }
+        @media (max-width: 480px) { .container { margin: 15px auto; padding: 0 15px; } h1 { font-size: 1.5em; margin-bottom: 25px; } h2 { font-size: 1.2em; } .section { padding: 15px; margin-top: 20px;} .section p { font-size: 0.95em; } .feedback { padding: 10px 15px; font-size: 0.9em;} 
+        #emotionChart, #situationChart { height: 250px; } .badge { font-size: 0.85em; padding: 6px 10px;} .assistant-analysis-notice { font-size: 0.7em; } .methodology-list { font-size: 0.8em; } }
 
     </style>
 </head>
@@ -265,7 +267,7 @@
                 우리가 나눈 이야기에서 어떤 느낌들이 많았는지, 또 어떤 단어들을 자주 사용했는지 보여줄게! 네 마음속 날씨를 함께 알아보자! ☀️🌧️
             </p>
             <canvas id="emotionChart"></canvas>
-            <div id="tagCloud">
+            <p id="empathyMessage" class="feedback" style="display:none; margin-top:15px;"></p> <div id="tagCloud">
                 </div>
         </div>
 
@@ -293,12 +295,16 @@
     </div>
 
     <script type="module">
-        // Chart.js를 사용한다면, Chart.js 라이브러리를 먼저 import해야 합니다.
-        // 예: import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
-        // Chart.register(...registerables);
-        // Chart.defaults.color = '#333'; // Chart.js 기본 텍스트 색상
-        // Chart.defaults.borderColor = '#ddd'; // Chart.js 기본 테두리 색상
-        // Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; // Chart.js 기본 폰트
+        // 감정 차트트
+        import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
+        Chart.register(...registerables);
+       
+        // Chart.js 전역 기본값 설정
+        Chart.defaults.color = '#333'; // 기본 텍스트 색상
+        Chart.defaults.borderColor = '#e0e0e0'; // 기본 테두리 색상 (조금 더 연하게)
+        Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; // 기본 폰트
+        Chart.defaults.font.size = 12; // 기본 폰트 크기 (필요시 조절)
+        // Chart.defaults.plugins.legend.display = false; // 범례를 항상 숨기고 싶다면
 
         // --- 실제 데이터 로드 및 렌더링 로직 ---
         document.addEventListener('DOMContentLoaded', async () => {
@@ -502,8 +508,143 @@
                 // 인지왜곡 없을 때의 메시지는 DOMContentLoaded에서 직접 처리
             }
         }
-        // Chart.js 관련 렌더링 함수(renderEmotionChart, renderSituationChart)는 
-        // Chart.js 라이브러리 import 및 실제 데이터 연동 후 구현 필요합니다.
+        // renderEmotionChart 함수 예시 (실제 데이터와 연동 필요)
+        // emotionCounts 객체는 Firestore 등에서 불러온 실제 분석 결과라고 가정합니다.
+        // 예시: const emotionCounts = { '기쁨': 5, '슬픔': 2, '분노': 1, '불안': 4, '수치': 1, '중립': 3 };
+        // analysis.html <script type="module"> 내
+
+// ... (Chart.js import 및 기본 설정) ...
+
+// emotionCounts 객체는 Firestore 등에서 불러온 실제 분석 결과라고 가정합니다.
+// 예시: const emotionCounts = { '기쁨': 5, '슬픔': 2, '분노': 1, '불안': 4, '수치': 1, '중립': 3 };
+
+// renderEmotionChart 함수 호출 후 또는 그 내부에서 다음 로직 실행
+function displayEmpathyMessage(emotionCounts) {
+    const empathyMessageEl = document.getElementById('empathyMessage'); // HTML에 <p id="empathyMessage" class="feedback neutral"></p> 등 추가 필요
+    if (!empathyMessageEl || !emotionCounts || Object.keys(emotionCounts).length === 0) {
+        if (empathyMessageEl) empathyMessageEl.style.display = 'none';
+        return;
+    }
+
+    // 가장 빈도가 높은 감정 찾기 (단순 예시, 여러 감정을 고려할 수 있음)
+    let highestEmotion = '';
+    let highestCount = 0;
+    let totalEmotions = 0;
+    for (const emotion in emotionCounts) {
+        totalEmotions += emotionCounts[emotion];
+        if (emotionCounts[emotion] > highestCount) {
+            highestCount = emotionCounts[emotion];
+            highestEmotion = emotion;
+        }
+    }
+
+    if (totalEmotions === 0) { // 감정 데이터가 있지만 모두 0인 경우
+        empathyMessageEl.textContent = "로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 앞으로 더 많은 이야기를 나누면서 네 마음을 함께 알아가자! 😊";
+        empathyMessageEl.className = 'feedback neutral'; // CSS 클래스에 맞게
+        empathyMessageEl.style.display = 'block';
+        return;
+    }
+
+    let message = "";
+
+    // 감정 비율에 따른 다양한 공감 메시지 생성 로직
+    // (여기는 예시이며, 더 정교하고 다양한 시나리오를 만들 수 있습니다.)
+
+    if (highestEmotion === '기쁨' && highestCount / totalEmotions > 0.4) { // 기쁨이 40% 이상일 때
+        message = `이야기 속에서 '기쁨'의 순간들이 많았구나! 정말 신나고 즐거운 일들이 많았던 것 같아! ✨ 로지도 네 덕분에 행복해졌어!`;
+    } else if (highestEmotion === '불안' && emotionCounts['기쁨'] > 0) {
+        message = `마음속에 '불안'한 느낌도 있었지만, '기쁨'의 순간들도 함께 있었네! 어려운 마음 속에서도 빛나는 점을 찾은 네가 정말 대단해! 앞으로 로지가 더 힘이 되어줄게.`;
+    } else if (highestEmotion === '불안') {
+        message = `'불안'한 마음이 조금 컸었구나. 그래도 로지에게 솔직하게 이야기해줘서 정말 고마워. 그 마음을 잘 다독일 수 있도록 로지가 곁에 있을게.`;
+    } else if (highestEmotion === '슬픔') {
+        message = `마음이 조금 슬펐던 순간들이 있었네. 괜찮아, 슬픈 마음도 소중한 내 마음의 신호등이란다. 로지가 네 마음을 꼭 안아줄게. 꼬옥! 🤗`;
+    } else if (highestEmotion === '분노') {
+        message = `혹시 '화'가 나거나 '짜증'나는 일이 있었니? 그런 마음이 들 때는 로지에게 바로 이야기해줘도 괜찮아. 네 마음이 편안해지도록 돕고 싶어.`;
+    } else if (emotionCounts['기쁨'] > 0 && emotionCounts['슬픔'] > 0) {
+        message = `기쁜 마음도 있었고, 조금은 슬픈 마음도 함께 있었네. 우리 마음은 원래 여러 가지 색깔을 가지고 있단다. 모두 다 소중한 네 마음이야.`;
+    } else {
+        message = `로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 어떤 느낌이 들었는지 더 자세히 이야기해 줄 수 있을까? 😊`;
+    }
+    
+    // 사용자 이름 추가하여 개인화
+    const userName = localStorage.getItem('lozee_username') || '친구';
+    empathyMessageEl.textContent = `${userName}아, ${message}`;
+    empathyMessageEl.className = 'feedback neutral'; // 또는 감정에 따라 positive/negative
+    empathyMessageEl.style.display = 'block';
+}
+
+
+
+       // 감정별 색상 매핑 (앱의 주조색 및 감정의미 고려)
+        const emotionColors = {
+        '기쁨': 'rgba(255, 215, 0, 0.7)',   // 금색 (주조색 var(--primary-color)와 어울리게)
+        '슬픔': 'rgba(135, 206, 235, 0.7)', // 하늘색
+        '분노': 'rgba(255, 107, 107, 0.7)', // 붉은 계열
+        '불안': 'rgba(169, 169, 169, 0.7)', // 회색
+        '수치': 'rgba(255, 182, 193, 0.7)', // 분홍 계열 (새로 추가된 감정)
+        '중립': 'rgba(220, 220, 220, 0.7)', // 연한 회색 (새로 추가된 감정)
+        // 필요한 다른 감정 색상 추가
+       };
+
+       const labels = Object.keys(emotionCounts);
+       const data = Object.values(emotionCounts);
+       const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(201, 203, 207, 0.7)'); // 매핑되지 않은 감정은 기본 회색
+
+       new Chart(ctx, {
+        type: 'bar', // 또는 'doughnut', 'pie' 등 다른 차트 타입 고려 가능
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '나의 마음 신호등', // 좀 더 친근한 레이블
+                data: data,
+                backgroundColor: backgroundColors,
+                borderColor: backgroundColors.map(color => color.replace('0.7', '1')), // 테두리는 조금 더 진하게
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true, // 반응형 활성화 (캔버스 크기 자동 조절)
+            maintainAspectRatio: false, // 이 옵션을 false로 하고 캔버스에 직접 크기 지정 또는 부모 div로 제어
+            indexAxis: 'y', // 가로 막대 차트로 변경하여 가독성 향상 (선택 사항)
+            scales: {
+                x: { // 가로 막대 차트 사용 시 x축이 값 축이 됨
+                    beginAtZero: true,
+                    ticks: { 
+                        precision: 0,
+                        color: '#333' // 축 눈금 색상
+                    },
+                    grid: {
+                        color: '#e0e0e0' // 축 그리드 라인 색상
+                    }
+                },
+                y: { // 가로 막대 차트 사용 시 y축이 레이블 축이 됨
+                    ticks: {
+                        color: '#333'
+                    },
+                    grid: {
+                        display: false // y축 그리드 라인은 깔끔하게 제거 가능
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top', // 범례 위치
+                    labels: {
+                        color: '#333', // 범례 텍스트 색상
+                        font: {
+                            family: "'KoPub World Dotum', sans-serif"
+                        }
+                    }
+                },
+                tooltip: { // 마우스 올렸을 때 나오는 툴팁
+                    titleFont: { family: "'KoPub World Dotum', sans-serif" },
+                    bodyFont: { family: "'KoPub World Dotum', sans-serif" }
+                }
+            }
+        }
+    });
+
+
     </script>
 </body>
 </html>
