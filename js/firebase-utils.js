@@ -4,6 +4,7 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
+import { saveSessionLog, updateTopicStats } from './js/firebase-utils.js';
 
 /**
  * 세션 로그를 Firestore의 sessions 컬렉션에 저장합니다.
@@ -20,6 +21,43 @@ export async function saveSessionLog(userText, aiText, analysis = {}) {
     console.log('✅ 세션 로그 저장 완료');
   } catch (err) {
     console.error('❌ 세션 로그 저장 중 오류:', err);
+  }
+}
+
+
+export async function updateTopicStats(userId, topicName) {
+  if (!userId || !topicName) {
+    console.warn("[Firebase Utils] updateTopicStats: userId 또는 topicName이 없습니다.");
+    return;
+  }
+
+  // users 컬렉션의 특정 사용자 문서 아래에 topicStats 하위 컬렉션을 사용한다고 가정
+  const topicStatRef = doc(db, `users/${userId}/topicStats`, topicName); 
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const topicStatDoc = await transaction.get(topicStatRef);
+      
+      if (!topicStatDoc.exists()) {
+        // 해당 주제에 대한 통계 문서가 없으면 새로 생성
+        transaction.set(topicStatRef, {
+          count: 1, // 첫 대화이므로 횟수는 1
+          lastChattedAt: serverTimestamp(), // Firestore 서버 타임스탬프
+          firstChattedAt: serverTimestamp(), // 첫 대화 시간이므로 동일
+          topicDisplayName: topicName // 실제 주제 표시명 (선택 사항)
+        });
+      } else {
+        // 기존 통계 문서가 있으면 count를 1 증가시키고 lastChattedAt 업데이트
+        const newCount = (topicStatDoc.data().count || 0) + 1;
+        transaction.update(topicStatRef, {
+          count: newCount,
+          lastChattedAt: serverTimestamp()
+        });
+      }
+    });
+    console.log(`[Firebase Utils] '${topicName}' 주제 통계 업데이트 완료.`);
+  } catch (error) {
+    console.error(`[Firebase Utils] '${topicName}' 주제 통계 업데이트 중 오류:`, error);
   }
 }
 
