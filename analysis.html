@@ -145,8 +145,11 @@
     </div>
 
     <script type="module">
-        import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
+               // Chart.js ESM 모듈 불러오기
+        import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js/dist/chart.esm.js';
         Chart.register(...registerables);
+
+     
        
         Chart.defaults.color = '#333'; 
         Chart.defaults.borderColor = '#e0e0e0'; 
