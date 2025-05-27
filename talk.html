@@ -493,37 +493,46 @@
       if (typeof optionObject === 'string') { buttonText = optionObject; displayTextForCallback = optionObject; console.log("옵션 버튼 생성 중 (문자열):", optionObject); } else if (optionObject && typeof optionObject.displayText !== 'undefined') { buttonText = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : optionObject.displayText; displayTextForCallback = optionObject.displayText; console.log("옵션 버튼 생성 중 (객체):", optionObject.displayText); } else { console.warn("displayOptionsInChat: 잘못된 형식의 옵션입니다.", optionObject); return; } const button = document.createElement('button'); button.className = 'chat-option-btn'; button.textContent = buttonText; button.onclick = () => { buttons.forEach(btn => { btn.disabled = true; if (btn === button) { btn.classList.add('selected'); } }); onSelectCallback(displayTextForCallback, context); }; optionsContainer.appendChild(button); buttons.push(button); }); chatWindow.appendChild(optionsContainer); console.log("옵션 컨테이너가 chatWindow에 추가됨"); chatWindow.scrollTop = chatWindow.scrollHeight; }
 
     // 토픽 플로우 - 주제
-    function showMainTopics() { console.log("showMainTopics 함수 시작됨"); 
-    appendMessage('어떤 이야기를 나눠볼까?', 'assistant'); const currentAgeGroup = getAgeGroup(); 
-    const ageGroupData = counselingTopicsByAge[currentAgeGroup]; let topicsWithOptions = []; 
-    if (ageGroupData) { topicsWithOptions = Object.keys(ageGroupData).map(categoryName => { let icon = '💬'; 
-    if (ageGroupData[categoryName] && ageGroupData[categoryName].length > 0 && ageGroupData[categoryName][0].icon) 
-    { icon = ageGroupData[categoryName][0].icon; } return { icon: icon, displayText: categoryName }; }); 
-    } else { 
+    function showMainTopics() {
+    console.log("showMainTopics 함수 시작됨");
+    appendMessage('어떤 이야기를 나눠볼까?', 'assistant');
+    const currentAgeGroup = getAgeGroup();
+    const ageGroupData = counselingTopicsByAge[currentAgeGroup];
+    let topicsWithOptions = [];
+    if (ageGroupData) {
+        topicsWithOptions = Object.keys(ageGroupData).map(categoryName => {
+            let icon = '💬';
+            if (ageGroupData[categoryName] && ageGroupData[categoryName].length > 0 && ageGroupData[categoryName][0].icon) {
+                icon = ageGroupData[categoryName][0].icon;
+            }
+            return { icon: icon, displayText: categoryName };
+        });
+    } else {
+        console.warn(`counselingTopicsByAge에 '${currentAgeGroup}'에 대한 데이터가 없습니다.`);
+    }
+    topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제' });
+    console.log("displayOptionsInChat에 전달될 배열:", topicsWithOptions); 
 
-    console.warn(`counselingTopicsByAge에 '${currentAgeGroup}'에 대한 데이터가 없습니다.`); } 
-    topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제' }); console.log("displayOptionsInChat에 전달될 배열:", topicsWithOptions); 
-
-    displayOptionsInChat(topicsWithOptions, (selectedTopicText) => 
-    
-    { selectedMain = selectedTopicText; // 선택된 메인 주제 저장
-       // 사용자가 선택한 주제를 채팅창에 표시 
-       appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
-       // await playTTSWithControl(selectedMain + ' 이야기를 선택했구나!'); // 필요시 TTS
-         if (selectedMain === '자유주제') {
-         const message = '네가 정하면 돼. 어떤 이야기가 하고 싶어?';
-         appendMessage(message, 'assistant');
-         // await playTTSWithControl(message); // 필요시 TTS
-    
-        if (topicArea) topicArea.style.display = 'none !important'; // 기존 topicArea 숨김
-        inputArea.style.display = 'flex'; // 입력창 바로 표시
-        chatInput.focus(); // 입력창에 포커스
-        // showSubTopics나 startChat을 호출하지 않음
+    // displayOptionsInChat 호출과 콜백 함수 정의
+    displayOptionsInChat(topicsWithOptions, (selectedTopicText) => { // => 바로 다음에 {
+        selectedMain = selectedTopicText; 
+        appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
+        
+        if (selectedMain === '자유주제') {
+            const message = '네가 정하면 돼. 어떤 이야기가 하고 싶어?';
+            appendMessage(message, 'assistant');
+            // if (topicArea) topicArea.style.display = 'none !important'; // 이 위치 또는 아래 showMainTopics 끝으로
+            inputArea.style.display = 'flex'; 
+            chatInput.focus(); 
         } else {
-        setTimeout(showSubTopics, 300); // 다른 주제는 하위주제로 이동동
-      }
-    });
-  }
+            setTimeout(showSubTopics, 300); 
+        }
+    }); // displayOptionsInChat 호출 괄호 닫고 세미콜론
+    // 이전에 #topic-area를 숨기는 코드가 있었다면, showMainTopics 함수의 마지막에 두는 것이 적절합니다.
+    if (topicArea) { // topicArea가 null이 아닐 경우에만 실행
+        topicArea.style.display = 'none !important';
+    }
+}
    
     function showSubTopics() { if (!selectedMain) { console.warn("showSubTopics 호출되었으나, selectedMain이 설정되지 않았습니다."); return;  } console.log("showSubTopics 함수 시작됨, 선택된 메인 주제:", selectedMain); appendMessage('조금 더 구체적으로 이야기해 줄래?', 'assistant'); let subtopicOptions; if (selectedMain === '자유주제') { subtopicOptions = [{ icon: '🗣️', displayText: '응, 자유롭게 이야기 시작해줘!' }]; } else { const ageGroupData = counselingTopicsByAge[getAgeGroup()]; const mainTopicData = ageGroupData ? ageGroupData[selectedMain] : undefined; if (mainTopicData && Array.isArray(mainTopicData)) { subtopicOptions = mainTopicData;  } else { console.warn(`'${selectedMain}'에 대한 하위 주제를 찾을 수 없거나 형식이 잘못되었습니다.`); subtopicOptions = [{ icon: '💬', displayText: '대화를 시작할 준비가 됐어.' }]; } if (!subtopicOptions || !subtopicOptions.length) {  subtopicOptions = [{ icon: '▶️', displayText: '바로 대화 시작할까?' }]; } } console.log("displayOptionsInChat에 전달될 하위 주제 배열 (수정 후):", subtopicOptions); displayOptionsInChat(subtopicOptions, (selectedSubtopicText) => { startChat(selectedSubtopicText); }); if (topicArea) topicArea.style.display = 'none !important'; }
 
@@ -669,7 +678,7 @@
     // ... (기존 res.ok 체크 및 d, clean 변수 처리 로직) ...
     
     appendMessage(clean, 'assistant');
-    
+
     // ... (inputMethod에 따른 TTS 호출 로직) ...
     
     chatHistory.push({ role: 'assistant', content: clean });
