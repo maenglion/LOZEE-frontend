@@ -656,9 +656,6 @@
     // await playTTSWithControl(followupMessage);
     });
    }
-
-   // sendMessage 함수 수정 (핵심 로직)
-   async function sendMessage(text, inputMethod = 'text') {
   
     // ... (기존 isProcessing, appendMessage(user), chatHistory.push(user), thinkingBubble 등 로직) ...
     if (!conversationStartTime) conversationStartTime = Date.now(); // 최초 대화 시작 시간 기록
