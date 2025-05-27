@@ -4,7 +4,6 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, setDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
-import { saveSessionLog, updateTopicStats } from './js/firebase-utils.js';
 
 /**
  * 세션 로그를 Firestore의 sessions 컬렉션에 저장합니다.
