@@ -164,16 +164,6 @@ ${idx+1}. ${fn(nameVoc)}`;
 } // 여기가 getSystemPrompt 함수의 올바른 닫는 중괄호입니다.
 
 
-
-export async function getGptResponse(userText, { chatHistory=[], verbosity='default', elapsedTime=0 }={}) {
-  // ...
-  const systemPrompt = getSystemPrompt({ userName, userAge, verbosity, elapsedTime }, intent); // elapsedTime 전달
-  // ...
-}
-
-
-
-
 /**
  * 6) GPT 호출 및 메시지 구성
  */
