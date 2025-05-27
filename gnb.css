@@ -22,6 +22,7 @@
 body {
     padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
     font-family: 'KoPub World Dotum', sans-serif; /* GNB 외 다른 페이지에도 영향 줄 수 있으니 주의 */
+
 }
 
 
