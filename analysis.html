@@ -16,7 +16,7 @@
             --card-bg-analysis: #ffffff;
             --text-color-analysis: #333333;
             --explanation-bg-analysis: #eef2f7;
-            --gnb-height: 56px; /* gnb.css와 일치 또는 gnb.css에서 body padding 관리 */
+            --gnb-height: 56px; 
         }
         body, html { 
             margin:0; 
@@ -24,7 +24,6 @@
             background:#f4f6f8; 
             color: var(--text-color-analysis); 
         }
-        /* gnb.css에서 body padding-top을 관리한다면 아래 줄 삭제 가능 */
         body { padding-top: var(--gnb-height); }
 
         .container { max-width:900px; margin:25px auto; padding:0 25px; }
@@ -57,8 +56,8 @@
         .methodology-list li strong { color: #34495e; }
         .action-button { display: inline-block; margin-top: 15px; background-color: #6e8efb; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; transition: background-color 0.2s; }
         .action-button:hover { background-color: #5a7edf; }
-        @media (max-width: 768px) { h1 { font-size: 1.7em; } h2 { font-size: 1.3em; } .section { padding: 20px; } #emotionChart, #situationChart { /* height 제거, aspect-ratio 사용 */ aspect-ratio: 4 / 3; } .methodology-list { font-size: 0.85em; } }
-        @media (max-width: 480px) { .container { margin: 15px auto; padding: 0 15px; } h1 { font-size: 1.5em; margin-bottom: 25px; } h2 { font-size: 1.2em; } .section { padding: 15px; margin-top: 20px;} .section p { font-size: 0.95em; } .feedback { padding: 10px 15px; font-size: 0.9em;} #emotionChart, #situationChart { /* height 제거, aspect-ratio 사용 */ aspect-ratio: 1 / 1; } .badge { font-size: 0.85em; padding: 6px 10px;} .assistant-analysis-notice { font-size: 0.7em; } .methodology-list { font-size: 0.8em; } }
+        @media (max-width: 768px) { h1 { font-size: 1.7em; } h2 { font-size: 1.3em; } .section { padding: 20px; } #emotionChart, #situationChart { aspect-ratio: 4 / 3; } .methodology-list { font-size: 0.85em; } }
+        @media (max-width: 480px) { .container { margin: 15px auto; padding: 0 15px; } h1 { font-size: 1.5em; margin-bottom: 25px; } h2 { font-size: 1.2em; } .section { padding: 15px; margin-top: 20px;} .section p { font-size: 0.95em; } .feedback { padding: 10px 15px; font-size: 0.9em;} #emotionChart, #situationChart { aspect-ratio: 1 / 1; } .badge { font-size: 0.85em; padding: 6px 10px;} .assistant-analysis-notice { font-size: 0.7em; } .methodology-list { font-size: 0.8em; } }
     </style>
 </head>
 <body>
@@ -73,7 +72,6 @@
           <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
         </div>
     </nav>
-   
 
     <div class="container">
         <h1>🚀 로지와 함께한 이야기 탐험!</h1>
@@ -81,7 +79,8 @@
             <button id="reportShareButton">나의 이야기 보고서 공유하기 🔗</button>
         </div>
 
-        <div class="section" id="languageAgeSection" style="display:none;"> <h2>🗣️ 내 말솜씨 나이는 몇 살일까?</h2>
+        <div class="section" id="languageAgeSection" style="display:none;"> 
+            <h2>🗣️ 내 말솜씨 나이는 몇 살일까?</h2>
             <p class="assistant-analysis-notice">LOZEE AI 분석</p>
             <p class="module-explanation">
                 로지와 이야기하면서 네가 사용한 말들을 보고, 네 말솜씨가 몇 살 친구랑 비슷한지 알려줄게! 실제 나이랑 달라도 괜찮아, 함께 더 멋지게 말하는 법을 배우면 되니까! 😉
@@ -117,7 +116,8 @@
             <p class="module-explanation">
                 우리가 나눈 이야기에서 어떤 느낌들이 많았는지, 또 어떤 단어들을 자주 사용했는지 보여줄게! 네 마음속 날씨를 함께 알아보자! ☀️🌧️
             </p>
-            <canvas id="emotionChart" style="display:none;"></canvas> <p id="empathyMessage" class="feedback" style="display:none; margin-top:15px;"></p> 
+            <canvas id="emotionChart" style="display:none;"></canvas> 
+            <p id="empathyMessage" class="feedback" style="display:none; margin-top:15px;"></p> 
             <div id="tagCloud"></div>
         </div>
 
@@ -145,18 +145,15 @@
     </div>
 
     <script type="module">
-        // Chart.js ESM 모듈 불러오기
         import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
         Chart.register(...registerables);
        
-        // Chart.js 전역 기본값 설정
         Chart.defaults.color = '#333'; 
         Chart.defaults.borderColor = '#e0e0e0'; 
         Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; 
         Chart.defaults.font.size = 12; 
 
-            document.addEventListener('DOMContentLoaded', async () => {
-            // --- DOM 요소 가져오기 (한 번만 수행) ---
+        document.addEventListener('DOMContentLoaded', async () => {
             const languageAgeSection = document.getElementById('languageAgeSection');
             const realAgeEl = document.getElementById('realAge');
             const predictedLangAgeEl = document.getElementById('predictedLangAge');
@@ -169,50 +166,52 @@
             const emotionChartEl = document.getElementById('emotionChart');
             const tagCloudEl = document.getElementById('tagCloud');
             const patternDashboardEl = document.getElementById('patternDashboard');
-            const situationChartEl = document.getElementById('situationChart');
+            const situationChartEl = document.getElementById('situationChart'); // 이전에 누락되었을 수 있음
             const empathyMessageEl = document.getElementById('empathyMessage');
 
             const userAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 0; 
             if(realAgeEl) realAgeEl.textContent = userAge || "정보 없음";
 
-            // --- localStorage에서 분석 결과 가져오기 (한 번만 수행) ---
             const analysisDataString = localStorage.getItem('lozee_conversation_analysis');
-            let analysisResults = null; // 실제 분석 결과 객체를 담을 변수
-            let accumulatedDurationMinutes = 0; // 누적 대화 시간을 담을 변수
+            let analysisResults = null;
+            let accumulatedDurationMinutes = 0;
 
             if (analysisDataString) {
                 try {
                     const fullAnalysis = JSON.parse(analysisDataString);
-                    analysisResults = fullAnalysis.results; // 여기서 results 객체를 할당
+                    analysisResults = fullAnalysis.results;
                     accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0;
                 } catch (e) {
                     console.error("저장된 분석 결과 파싱 오류:", e);
-                    if (document.querySelector('.container')) { // container 요소가 있다면
+                    if (document.querySelector('.container')) {
                         document.querySelector('.container').innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
                     }
                     return; 
                 }
             } else {
-                if (document.querySelector('.container')) { // container 요소가 있다면
-                    document.querySelector('.container').innerHTML = '<h1>아직 로지와 나눈 이야기가 없나 봐요! 😮</h1><p style="text-align:center;">먼저 로지와 신나게 이야기하고 다시 와주세요!</p>';
+                if (document.querySelector('.container')) {
+                     // 모든 분석 섹션을 숨기고 "데이터 없음" 메시지를 페이지 중앙에 표시할 수 있음
+                    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+                    const noDataContainer = document.querySelector('.container') || document.body;
+                    noDataContainer.innerHTML = '<h1>아직 로지와 나눈 이야기가 없나 봐요! 😮</h1><p style="text-align:center;">먼저 로지와 신나게 이야기하고 분석 결과를 확인해보세요!</p>' + (document.querySelector('.share-button-container') ? document.querySelector('.share-button-container').outerHTML : ''); // 공유 버튼은 남길 수 있음
+
                 }
                 return; 
             }
             
-            // --- 1. 언어·나이 분석 섹션 처리 (중복 제거된 로직) ---
+            // --- 1. 언어·나이 분석 섹션 처리 ---
             if (languageAgeSection) {
-                if (userAge > 10 || !analysisResults || !analysisResults.ageLanguageAnalysis) { 
+                // 기준 연령을 12세로 변경
+                if (userAge > 12 || !analysisResults || !analysisResults.ageLanguageAnalysis) { 
                     languageAgeSection.style.display = 'none';
-                    if (userAge > 10) console.log(`언어·나이 분석: 사용자 나이(${userAge})가 10세를 초과하여 숨김 처리합니다.`);
-                    else console.log(`언어·나이 분석: 필요한 분석 데이터가 없어 숨김 처리합니다.`);
+                    if (userAge > 12) console.log(`언어·나이 분석: 사용자 나이(${userAge})가 12세를 초과하여 숨김 처리합니다.`);
+                    else console.log(`언어·나이 분석: 필요한 분석 데이터가 없어 숨김 처리 (analysisResults: ${!!analysisResults}, ageLanguageAnalysis: ${!!(analysisResults && analysisResults.ageLanguageAnalysis)})`);
                 } else {
                     languageAgeSection.style.display = 'block'; 
-                    console.log(`언어·나이 분석: 사용자 나이(${userAge})가 10세 이하이므로 표시합니다.`);
+                    console.log(`언어·나이 분석: 사용자 나이(${userAge})가 12세 이하이므로 표시합니다.`);
                     
-                    // 여기서 predictedLangAgeEl, ageFeedbackEl 등이 null이 아닌지 한 번 더 확인 (안전장치)
                     if(predictedLangAgeEl && ageFeedbackEl && ageDifferenceVisualEl && languagePracticeBtn){
                         let predicted = null;
-                        // analysisResults는 이미 위에서 파싱했으므로, 여기서 다시 localStorage를 읽을 필요 없음
                         if (analysisResults.ageLanguageAnalysis.estimatedAgeRange) {
                             const ageRangeMatch = String(analysisResults.ageLanguageAnalysis.estimatedAgeRange).match(/\d+/);
                             if (ageRangeMatch) predicted = parseInt(ageRangeMatch[0], 10);
@@ -246,7 +245,8 @@
                                 ageFeedbackEl.classList.add('positive');
                             }
                             
-                            if (userAge <= 10 && diffYearsApprox >= 1 && predicted !== null) { // predicted가 null이 아닐 때만 버튼 표시
+                            // 언어 연습 버튼 표시 조건 (예: 예측이 실제보다 1살 이상 어리고, 12세 이하일 때)
+                            if (userAge <= 12 && diffYearsApprox >= 1 && predicted !== null) { 
                                 languagePracticeBtn.style.display = 'inline-block';
                                 languagePracticeBtn.onclick = () => {
                                     alert("재미있는 언어 연습을 준비하고 있어! 조금만 기다려줘! 😊");
@@ -254,7 +254,6 @@
                             } else {
                                 languagePracticeBtn.style.display = 'none';
                             }
-
                         } else { 
                             predictedLangAgeEl.textContent = "정보 부족";
                             feedbackMsg = (accumulatedDurationMinutes >= 30) ? "지금은 네 말솜씨 나이를 정확히 알기 어렵네. 다음에 다시 확인해 줄래?" : "로지와 30분 이상 이야기하면 말솜씨 나이를 알려줄 수 있어!";
@@ -267,15 +266,15 @@
                         ageFeedbackEl.style.display = 'block';
                     }
                 }
-            } else { // languageAgeSection이 없을 경우 (HTML 구조 문제)
+            } else { 
                  console.warn("ID가 'languageAgeSection'인 요소를 찾을 수 없습니다.");
             }
 
-            // --- 2. 감정 어조 및 태그 클라우드 (analysisResults 사용) ---
+            // --- 2. 감정 어조 및 태그 클라우드 ---
             if (analysisResults && analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
                 if(emotionChartEl) emotionChartEl.style.display = 'block';
-                renderEmotionChart('emotionChart', analysisResults.emotionToneData);
-                if(empathyMessageEl) displayEmpathyMessage(analysisResults.emotionToneData);
+                renderEmotionChart('emotionChart', analysisResults.emotionToneData); // 실제 데이터로 차트 그리기
+                if(empathyMessageEl) displayEmpathyMessage(analysisResults.emotionToneData); // 공감 메시지 표시
             } else {
                 if(emotionChartEl) emotionChartEl.style.display = 'none';
                 if(empathyMessageEl) {
@@ -284,18 +283,22 @@
                     empathyMessageEl.style.display = 'block';
                 }
             }
-            // ... (태그 클라우드, 반복 패턴, 상황 분석 등도 analysisResults를 사용하여 처리) ...
-            // (나머지 렌더링 함수 호출 및 공유 버튼 로직은 이전과 동일)
-        });
-
-            // 3. 반복 패턴
+            
+            if (analysisResults && analysisResults.keywords && analysisResults.keywords.length > 0) {
+                const tagsForCloud = analysisResults.keywords.map(kw => ({ text: kw, weight: 5 + Math.floor(Math.random() * 10) }));
+                renderTagCloud('tagCloud', tagsForCloud);
+            } else {
+                if(tagCloudEl) tagCloudEl.innerHTML = '<p style="text-align:center; color:#888;">이야기 속에서 자주 나온 단어들을 모으고 있어요!</p>';
+            }
+            
+            // --- 3. 반복 패턴 ---
             if (analysisResults && analysisResults.patterns && analysisResults.patterns.length > 0) {
                 renderPatternDashboard('patternDashboard', analysisResults.patterns);
             } else {
                 if(patternDashboardEl) patternDashboardEl.innerHTML = '<p style="text-align:center; color:#888;">반복되는 이야기 패턴을 찾고 있어요!</p>';
             }
 
-            // 4. 상황 분석 (인지왜곡)
+            // --- 4. 상황 분석 (인지왜곡) ---
             if(situationChartEl) situationChartEl.style.display = 'none'; 
 
             if (analysisResults && analysisResults.cognitiveDistortions && analysisResults.cognitiveDistortions.length > 0) {
@@ -305,7 +308,6 @@
                     continueDistortionTalkBtn.onclick = () => {
                         localStorage.setItem('lozee_continue_topic', JSON.stringify({
                             type: 'cognitive_distortion',
-                            // 실제 왜곡 내용을 저장하거나, 단순히 이어하기 플래그만 전달
                             details: analysisResults.cognitiveDistortions[0] || '생각 패턴' 
                         }));
                         alert("알겠어! 다음번에 로지를 만나면 이 생각에 대해 더 이야기 나눠보자! 😊");
@@ -318,10 +320,10 @@
 
             // 공유 버튼 로직
             if(reportShareButton) { reportShareButton.onclick = () => {const shareableLink = window.location.href; if (navigator.share) { navigator.share({ title: '로지와 나눈 이야기 분석 결과', text: '로지와 나눈 대화 분석 결과를 확인해보세요!', url: shareableLink, }).then(() => console.log('성공적으로 공유됨')).catch((error) => console.log('공유 실패', error)); } else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(shareableLink).then(() => { alert('공유 링크가 복사되었습니다!\n' + shareableLink); }).catch(err => { console.error('클립보드 복사 실패:', err); alert('링크 복사에 실패했어요. 수동으로 복사해주세요:\n' + shareableLink); }); } else { prompt('아래 링크를 복사하여 공유하세요:', shareableLink); } }; }
-        
+        });
 
         // --- 데이터 렌더링 함수들 ---
-        function renderTagCloud(elementId, tags) { const cloudEl = document.getElementById(elementId); if(cloudEl && tags && tags.length > 0) { cloudEl.innerHTML = tags.map(tag => { const size = 0.8 + (tag.weight / 15); const opacity = Math.max(0.5, tag.weight / 10); return `<span class="badge" style="opacity:<span class="math-inline">\{opacity\}; font\-size\:</span>{size}em;">${tag.text}</span>`; }).join(''); } else if (cloudEl) { cloudEl.innerHTML = '<p style="text-align:center; color:#888;">아직 주요 단어가 충분히 모이지 않았어요.</p>'; } }
+        function renderTagCloud(elementId, tags) { const cloudEl = document.getElementById(elementId); if(cloudEl && tags && tags.length > 0) { cloudEl.innerHTML = tags.map(tag => { const size = 0.8 + (tag.weight / 15); const opacity = Math.max(0.5, tag.weight / 10); return `<span class="badge" style="opacity:${opacity}; font-size:${size}em;">${tag.text}</span>`; }).join(''); } else if (cloudEl) { cloudEl.innerHTML = '<p style="text-align:center; color:#888;">아직 주요 단어가 충분히 모이지 않았어요.</p>'; } }
         function renderPatternDashboard(elementId, patterns) { const dashEl = document.getElementById(elementId); if(dashEl && patterns && patterns.length > 0) { dashEl.innerHTML = patterns.map(p => `<p>💡 ${p}</p>`).join(''); } else if (dashEl) { dashEl.innerHTML = '<p style="text-align:center; color:#888;">반복되는 이야기 패턴을 찾고 있어요!</p>'; } }
         function alertCognitiveDistortions(elementId, distortions) { const alertEl = document.getElementById(elementId); if(alertEl && distortions && distortions.length > 0) { alertEl.innerHTML = distortions.map(d => `<p class="cognitive-distortion-item">${d}</p>`).join(''); } else if (alertEl) { alertEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';} }
         
@@ -332,27 +334,32 @@
                 if(chartEl) {
                     chartEl.style.display = 'none';
                     const parentSection = chartEl.closest('.section');
-                    if (parentSection && !parentSection.querySelector('.no-chart-data-message')) { // 메시지 중복 방지
+                    if (parentSection && !parentSection.querySelector('.no-chart-data-message')) { 
                          const noDataMsg = document.createElement('p');
                          noDataMsg.textContent = "감정 변화를 그리기에 아직 이야기가 부족해요. 😟";
                          noDataMsg.style.textAlign = 'center';
                          noDataMsg.style.color = '#888';
                          noDataMsg.classList.add('no-chart-data-message');
-                         chartEl.insertAdjacentElement('afterend', noDataMsg);
+                         chartEl.insertAdjacentElement('afterend', noDataMsg); // 차트 요소 다음에 메시지 삽입
                     }
                 }
                 return;
             }
+            // 차트가 이미 그려져 있다면 파괴하고 다시 그리기 (데이터 업데이트 시)
+            const existingChart = Chart.getChart(ctx);
+            if (existingChart) {
+                existingChart.destroy();
+            }
 
-            const emotionColors = { /* ... 이전 답변의 emotionColors 객체 ... */ '기쁨': 'rgba(255, 215, 0, 0.7)','슬픔': 'rgba(135, 206, 235, 0.7)','분노': 'rgba(255, 107, 107, 0.7)','불안': 'rgba(169, 169, 169, 0.7)','수치': 'rgba(255, 182, 193, 0.7)','중립': 'rgba(220, 220, 220, 0.7)'};
+            const emotionColors = { '기쁨': 'rgba(255, 215, 0, 0.7)','슬픔': 'rgba(135, 206, 235, 0.7)','분노': 'rgba(255, 107, 107, 0.7)','불안': 'rgba(169, 169, 169, 0.7)','수치': 'rgba(255, 182, 193, 0.7)','중립': 'rgba(220, 220, 220, 0.7)'};
             const labels = Object.keys(emotionData);
             const dataValues = Object.values(emotionData);
             const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(201, 203, 207, 0.7)');
 
-            new Chart(ctx, { /* ... 이전 답변의 Chart.js new Chart(...) 옵션 ... */ type: 'bar', data: { labels: labels, datasets: [{ label: '나의 마음 신호등', data: dataValues, backgroundColor: backgroundColors, borderColor: backgroundColors.map(color => color.replace('0.7', '1')), borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { precision: 0, color: Chart.defaults.color }, grid: { color: Chart.defaults.borderColor } }, y: { ticks: { color: Chart.defaults.color }, grid: { display: false } } }, plugins: { legend: { position: 'top', labels: { color: Chart.defaults.color, font: { family: Chart.defaults.font.family } } }, tooltip: { titleFont: { family: Chart.defaults.font.family }, bodyFont: { family: Chart.defaults.font.family } } } } });
+            new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: '나의 마음 신호등', data: dataValues, backgroundColor: backgroundColors, borderColor: backgroundColors.map(color => color.replace('0.7', '1')), borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { precision: 0, color: Chart.defaults.color }, grid: { color: Chart.defaults.borderColor } }, y: { ticks: { color: Chart.defaults.color }, grid: { display: false } } }, plugins: { legend: { position: 'top', labels: { color: Chart.defaults.color, font: { family: Chart.defaults.font.family } } }, tooltip: { titleFont: { family: Chart.defaults.font.family }, bodyFont: { family: Chart.defaults.font.family } } } } });
         }
 
-        function displayEmpathyMessage(emotionData) { /* ... 이전 답변의 displayEmpathyMessage 함수 코드 ... */ const empathyMessageEl = document.getElementById('empathyMessage'); if (!empathyMessageEl || !emotionData || Object.keys(emotionData).length === 0) { if (empathyMessageEl) empathyMessageEl.style.display = 'none'; return; } let highestEmotion = ''; let highestCount = 0; let totalEmotions = 0; for (const emotion in emotionData) { totalEmotions += emotionData[emotion]; if (emotionData[emotion] > highestCount) { highestCount = emotionData[emotion]; highestEmotion = emotion; } } if (totalEmotions === 0) { empathyMessageEl.textContent = "로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 앞으로 더 많은 이야기를 나누면서 네 마음을 함께 알아가자! 😊"; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block'; return; } let message = ""; const userName = localStorage.getItem('lozee_username') || '친구'; if (highestEmotion === '기쁨' && highestCount / totalEmotions > 0.4) { message = `${userName}야, 이야기 속에서 '기쁨'의 순간들이 많았구나! 정말 신나고 즐거운 일들이 많았던 것 같아! ✨ 로지도 네 덕분에 행복해졌어!`; } else if (highestEmotion === '불안' && emotionData['기쁨'] > 0) { message = `${userName}야, 마음속에 '불안'한 느낌도 있었지만, '기쁨'의 순간들도 함께 있었네! 어려운 마음 속에서도 빛나는 점을 찾은 네가 정말 대단해! 앞으로 로지가 더 힘이 되어줄게.`; } else if (highestEmotion === '불안') { message = `${userName}야, '불안'한 마음이 조금 컸었구나. 그래도 로지에게 솔직하게 이야기해줘서 정말 고마워. 그 마음을 잘 다독일 수 있도록 로지가 곁에 있을게.`; } else if (highestEmotion === '슬픔') { message = `${userName}야, 마음이 조금 슬펐던 순간들이 있었네. 괜찮아, 슬픈 마음도 소중한 내 마음의 신호등이란다. 로지가 네 마음을 꼭 안아줄게. 꼬옥! 🤗`; } else if (highestEmotion === '분노') { message = `${userName}야, 혹시 '화'가 나거나 '짜증'나는 일이 있었니? 그런 마음이 들 때는 로지에게 바로 이야기해줘도 괜찮아. 네 마음이 편안해지도록 돕고 싶어.`; } else if (emotionData['기쁨'] > 0 && emotionData['슬픔'] > 0) { message = `${userName}야, 기쁜 마음도 있었고, 조금은 슬픈 마음도 함께 있었네. 우리 마음은 원래 여러 가지 색깔을 가지고 있단다. 모두 다 소중한 네 마음이야.`; } else { message = `${userName}야, 로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 어떤 느낌이 들었는지 더 자세히 이야기해 줄 수 있을까? 😊`; } empathyMessageEl.textContent = message; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block';}
+        function displayEmpathyMessage(emotionData) { const empathyMessageEl = document.getElementById('empathyMessage'); if (!empathyMessageEl || !emotionData || Object.keys(emotionData).length === 0) { if (empathyMessageEl) empathyMessageEl.style.display = 'none'; return; } let highestEmotion = ''; let highestCount = 0; let totalEmotions = 0; for (const emotion in emotionData) { totalEmotions += emotionData[emotion]; if (emotionData[emotion] > highestCount) { highestCount = emotionData[emotion]; highestEmotion = emotion; } } if (totalEmotions === 0) { empathyMessageEl.textContent = "로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 앞으로 더 많은 이야기를 나누면서 네 마음을 함께 알아가자! 😊"; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block'; return; } let message = ""; const userName = localStorage.getItem('lozee_username') || '친구'; if (highestEmotion === '기쁨' && highestCount / totalEmotions > 0.4) { message = `${userName}아(야), 이야기 속에서 '기쁨'의 순간들이 많았구나! 정말 신나고 즐거운 일들이 많았던 것 같아! ✨ 로지도 네 덕분에 행복해졌어!`; } else if (highestEmotion === '불안' && emotionData['기쁨'] > 0) { message = `${userName}아(야), 마음속에 '불안'한 느낌도 있었지만, '기쁨'의 순간들도 함께 있었네! 어려운 마음 속에서도 빛나는 점을 찾은 네가 정말 대단해! 앞으로 로지가 더 힘이 되어줄게.`; } else if (highestEmotion === '불안') { message = `${userName}아(야), '불안'한 마음이 조금 컸었구나. 그래도 로지에게 솔직하게 이야기해줘서 정말 고마워. 그 마음을 잘 다독일 수 있도록 로지가 곁에 있을게.`; } else if (highestEmotion === '슬픔') { message = `${userName}아(야), 마음이 조금 슬펐던 순간들이 있었네. 괜찮아, 슬픈 마음도 소중한 내 마음의 신호등이란다. 로지가 네 마음을 꼭 안아줄게. 꼬옥! 🤗`; } else if (highestEmotion === '분노') { message = `${userName}아(야), 혹시 '화'가 나거나 '짜증'나는 일이 있었니? 그런 마음이 들 때는 로지에게 바로 이야기해줘도 괜찮아. 네 마음이 편안해지도록 돕고 싶어.`; } else if (emotionData['기쁨'] > 0 && emotionData['슬픔'] > 0) { message = `${userName}아(야), 기쁜 마음도 있었고, 조금은 슬픈 마음도 함께 있었네. 우리 마음은 원래 여러 가지 색깔을 가지고 있단다. 모두 다 소중한 네 마음이야.`; } else { message = `${userName}아(야), 로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 어떤 느낌이 들었는지 더 자세히 이야기해 줄 수 있을까? 😊`; } empathyMessageEl.textContent = message; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block';}
     </script>
     <script src="./js/gnb.js" defer></script> 
 </body>
