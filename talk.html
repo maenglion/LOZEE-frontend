@@ -12,15 +12,6 @@
       --background-color: #ffffff;
       --text-color: #333333;
       
-      --gnb-bg: #6878E9; /* GNB 배경색 변경 */
-      --gnb-text-color: #ffffff;
-      --gnb-title-color: #ffffff; /* GNB 타이틀 흰색으로 변경 */
-      --gnb-menu-toggle-color: #ffffff; /* 햄버거 메뉴 아이콘 흰색으로 변경 */
-      --gnb-dropdown-bg: var(--gnb-bg);
-      --gnb-dropdown-text-color: var(--gnb-text-color);
-      --gnb-dropdown-border-color: #4a5568;
-      --gnb-dropdown-hover-bg: var(--secondary-color);
-
       --user-bubble-bg: var(--primary-color);
       --user-bubble-text: #ffffff;
       --assistant-bubble-bg: #F5E7A1; /* 로지 말풍선 배경색 변경 */
@@ -61,29 +52,7 @@
       overflow: hidden;
     }
 
-    #gnb {
-      padding: 0 30px; 
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: var(--gnb-height);
-      background-color: var(--gnb-bg);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 1000;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-sizing: border-box;
-    }
-
-    #gnb-title {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: var(--gnb-title-color);
-    }
-
-    #menu-toggle {
+      #menu-toggle {
       background: none;
       border: none;
       color: var(--gnb-menu-toggle-color);
@@ -113,14 +82,6 @@
       max-height: 300px;
     }
 
-    #dropdown-menu a {
-      display: block;
-      padding: 12px 16px;
-      text-decoration: none;
-      color: var(--gnb-dropdown-text-color);
-      border-bottom: 1px solid var(--gnb-dropdown-border-color);
-      font-size: 0.95em;
-    }
     #dropdown-menu a:last-child {
       border-bottom: none;
     }
@@ -330,16 +291,18 @@
   </style>
 </head>
 <body>
-  <nav id="gnb">
+    <nav id="gnb">
     <div id="gnb-title">LOZEE</div>
     <button id="menu-toggle">☰</button>
     <div id="dropdown-menu">
-      <a href="mypage.html">My Page</a>
-      <a href="index.html">주제 변경</a>
-      <a href="analysis.html">대화 분석</a>
-      <a href="journal-list.html">대화 목록</a>
+      <a href="mypage.html">🎨 내 정보 보기</a> 
+      <a href="index.html">✨ 새로운 이야기 시작!</a> 
+      <a href="analysis.html">📊 우리 이야기 분석</a> 
+      <a href="journal-list.html">📖 이야기 모음집</a> 
+      <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
     </div>
-  </nav>
+    </nav>
+    
   <div id="meter-container"><div id="volume-level"></div></div>
   <div id="chat-window"></div>
   <div id="input-area">
