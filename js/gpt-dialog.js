@@ -97,7 +97,7 @@ export function getSystemPrompt({ userName='친구', userAge=0, verbosity='defau
   const naming = getKoreanNamingParticle(userName);
   const nameVoc = `${userName}${voc}`;
 
-  let prompt = `[필수] 1-2문장, 최대 60토큰 이내로 답변하세요.`;
+  let prompt = `[필수] 1-2문장, 최대 40토큰 이내로 답변하세요.`;
 
   // verbosity에 따른 지시 추가
   if (verbosity === 'short') {
@@ -123,16 +123,19 @@ export function getSystemPrompt({ userName='친구', userAge=0, verbosity='defau
   if (elapsedTime >= 10) {
     if (intent === 'emotion') {
       prompt += `
-먼저 사용자의 감정을 인정하고 공감 질문을 우선하세요.`; // "짧게 답변하세요요"에서 "요" 제거
+먼저 사용자의 감정이나 사실을 인정하고 잘 들어주세요.`; // "짧게 답변하세요"에서 "요" 제거
       prompt += `
 [강도 질문] 사용자가 부정적 감정을 반복할 경우, "이번에 느끼는 감정의 강도를 1(약함)부터 5(매우 강함) 사이 숫자로 알려줄래?"라고 물어보세요.`;
     } else { // 사실 기반 의도일 때 (10분 경과 후)
       prompt += `
-먼저 사실을 정확히 이해하기 위한 질문을 우선하세요.`;
+먼저 사실을 정확히 이해하기 위한 대화를 우선하세요.`;
     }
   } else { // 10분 미만일 때
     prompt += `
-[초기 대화] 아직 대화 초기이므로, 사용자의 이야기를 충분히 들어주세요. 감정에 대한 직접적인 질문은 자제합니다.`;
+[초기 대화] 아직 대화 초기이므로, 사용자의 이야기를 충분히 들어주세요. 질문보다 공감을 합니다.`;
+    prompt += `
+[초기 대화] 마지막을 최대한 질문으로 하지 마세요. 강도 질문도 초기 10분간은 1번만 합니다`;
+
   }
   
   // 20분 경과 시 상담 선생님 역할 강화 (예시)
