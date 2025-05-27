@@ -1,3 +1,30 @@
+/* gnb.css */
+/* GNB에서 사용하는 CSS 변수 (talk.html의 :root 에서 가져오거나 여기에 재정의) */
+:root { /* 또는 이 파일에 필요한 변수만 선언 */
+    --gnb-bg: #6878E9; /* 요청하신 GNB 배경색 */
+    --gnb-text-color: #ffffff; /* GNB 기본 텍스트 색 (드롭다운 등) */
+    --gnb-title-color: #ffffff; /* LOZEE 타이틀 색상 */
+    --gnb-menu-toggle-color: #ffffff; /* 햄버거 메뉴 색상 */
+    
+    --gnb-dropdown-bg: var(--gnb-bg); /* 드롭다운 배경은 GNB 배경과 동일하게 */
+    --gnb-dropdown-text-color: var(--gnb-text-color); /* 드롭다운 텍스트 색상 */
+    --gnb-dropdown-border-color: #4a5568; /* 드롭다운 구분선 색상 (기존 값 유지) */
+    /* --secondary-color를 직접 참조하는 대신, GNB 호버 전용 색상 변수 사용 또는 직접 값 지정 */
+    --gnb-dropdown-hover-bg: #5a7edf; /* 예: secondary-color 값을 직접 사용 */
+    
+    --gnb-height: 56px;
+
+        /* GNB와 관련된 다른 페이지들에서도 사용될 수 있는 공통 변수들 */
+    --primary-color: #6e8efb; /* talk.html 에서 사용되던 값 */
+    --secondary-color: #5a7edf; /* talk.html 에서 사용되던 값 */
+}
+
+body {
+    padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
+    font-family: 'KoPub World Dotum', sans-serif; /* GNB 외 다른 페이지에도 영향 줄 수 있으니 주의 */
+}
+
+
 #gnb {
     padding: 0 30px; 
     position: fixed;
