@@ -3,247 +3,227 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>페이지 제목</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-
-    <link rel="stylesheet" href="gnb.css">
-
-    <style>
-        /* talk.html 페이지 고유의 스타일 (GNB 관련 스타일은 없어야 함) */
+    <title>나의 이야기 기록 - LOZEE</title> <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <link rel="stylesheet" href="gnb.css"> <style>
+        /* journal.html 고유 스타일 */
+        :root {
+            --primary-color: #6e8efb;
+            --secondary-color: #5a7edf;
+            --background-color: #f4f6f8;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --gnb-height: 56px;
+        }
+        body {
+            margin: 0;
+            padding-top: var(--gnb-height);
+            font-family: 'KoPub World Dotum', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .page-header { text-align: center; margin-bottom: 30px; }
+        .topic-title { color: var(--primary-color); font-size: 1.8em; font-weight: 700; margin-bottom: 5px;}
+        .topic-stats { font-size: 0.9em; color: #555; margin-bottom: 20px; }
+        .topic-stats span { margin: 0 10px; }
+        .session-card-list { display: flex; flex-direction: column; gap: 20px; }
+        .session-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .session-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .session-date { font-size: 0.9em; color: #777; }
+        .session-card h3 { /* 회차별 제목 */
+            font-size: 1.2em;
+            color: var(--secondary-color);
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .session-summary { font-size: 0.95em; margin-bottom: 15px; white-space: pre-wrap; }
+        .session-analysis-summary {
+            background-color: #eef2f7;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .session-analysis-summary h4 { margin-top: 0; font-size: 1em; color: #333; }
+        .pagination { display: flex; justify-content: center; gap: 12px; font-size: 1em; margin-top: 30px; }
+        .pagination a { text-decoration: none; color: var(--primary-color); font-weight: bold; padding: 5px 10px; border-radius: 4px; transition: background-color 0.2s, color 0.2s; }
+        .pagination a:hover { background-color: var(--secondary-color); color: white; }
+        .pagination .current { color: var(--text-color); background-color: #e0e0e0; }
     </style>
-  <script>
-    const isConfigured = localStorage.getItem('lozee_username') &&
-                         localStorage.getItem('lozee_voice') &&
-                         localStorage.getItem('lozee_userage');
-
-
-let currentTopic = new URLSearchParams(window.location.search).get('topic'); // URL 파라미터에서 먼저 가져옴
-
-if (!currentTopic) { // URL 파라미터에 'topic'이 없다면
-    currentTopic = localStorage.getItem('lozee_current_topic'); // localStorage에서 가져옴
-}
-
-if (currentTopic) {
-    console.log("현재 주제:", currentTopic);
-    // ... 주제를 사용하는 로직 ...
-} else {
-    console.log("설정된 주제가 없습니다.");
-
-}
-  </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LOZEE와 대화하기</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    header {
-      background-color: #222;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.3rem;
-    }
-    #chat-window {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .bubble {
-      max-width: 75%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      font-size: 15px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-    .user {
-      align-self: flex-end;
-      background-color: #ffffff;
-      border-bottom-right-radius: 0;
-    }
-    .ai {
-      align-self: flex-start;
-      background-color: #eaeaea;
-      border-bottom-left-radius: 0;
-    }
-    #talk-btn {
-      background-color: #ffd400;
-      border: none;
-      padding: 16px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      margin: 10px;
-      border-radius: 30px;
-      width: 90%;
-      max-width: 360px;
-      align-self: center;
-    }
-    #talk-btn.active {
-      background-color: #ffae00;
-    }
-  </style>
 </head>
 <body>
-    
     <nav id="gnb">
-    <div id="gnb-title">LOZEE</div>
-    <button id="menu-toggle">☰</button>
-    <div id="dropdown-menu">
-      <a href="mypage.html">🎨 내 정보 보기</a> 
-      <a href="index.html">✨ 새로운 이야기 시작!</a> 
-      <a href="analysis.html">📊 우리 이야기 분석</a> 
-      <a href="journal-list.html">📖 이야기 모음집</a> 
-      <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
-    </div>
-    </nav>
+        <div id="gnb-title">LOZEE</div>
+        <button id="menu-toggle">☰</button>
+        <div id="dropdown-menu">
+          <a href="mypage.html">🎨 내 정보 보기</a> 
+          <a href="index.html">✨ 새로운 이야기 시작!</a> 
+          <a href="analysis.html">📊 우리 이야기 분석</a> 
+          <a href="journal-list.html">📖 이야기 모음집</a> 
+          <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
+        </div>
+    </nav> 
 
+    <main class="container">
+        <div class="page-header">
+            <h1 id="topicTitleDisplay" class="topic-title">주제 불러오는 중...</h1>
+            <div class="topic-stats">
+                <span id="totalSessionCount">총 0회</span> | <span id="lastSessionDate">마지막 대화: 정보 없음</span>
+            </div>
+        </div>
 
-  <header>LOZEE와 대화하기</header>
-  <div id="chat-window"></div>
-  <button id="talk-btn">🎤 말하기</button>
+        <div class="session-card-list" id="sessionCardList">
+            </div>
 
-  <script type="module">
-    import './js/firebase-config.js';
-    import { getInitialGreeting } from './js/gpt-dialog.js';
-    import { playTTSFromText } from './js/tts.js';
-    import { getSTTFromAudio } from './js/stt.js';
-    import { getGptResponse } from './js/gpt-dialog.js';
-    import { initializeApp } from 'firebase/app';
-    import { getFirestore, collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+        <div class="pagination" style="display:none;">
+            </div>
+    </main>
 
-     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    <script src="./js/gnb.js" defer></script> 
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { collection, query, where, getDocs, orderBy, limit, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
-    async function saveUserProfile() {
-      const userId = localStorage.getItem('lozee_username');
-      const diagnosis = localStorage.getItem('lozee_usernote') || '';
-      const voice = localStorage.getItem('lozee_voice');
+        const topicTitleDisplayEl = document.getElementById('topicTitleDisplay');
+        const totalSessionCountEl = document.getElementById('totalSessionCount');
+        const lastSessionDateEl = document.getElementById('lastSessionDate');
+        const sessionCardListEl = document.getElementById('sessionCardList');
+        // const paginationEl = document.querySelector('.pagination'); // 페이지네이션 요소
 
-      if (!userId) return;
+        // URL에서 주제명(또는 주제 ID) 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentDisplayTopic = urlParams.get('topic'); // journal-list.html에서 넘겨준 주제명 또는 ID
+        const userId = localStorage.getItem('cbtUserEmail'); // 사용자 식별
 
-      await setDoc(doc(db, 'users', userId), {
-        name: userId,
-        diagnosis,
-        voice,
-        createdAt: serverTimestamp()
-      });
-    }
+        // Firestore에서 topicStats 정보 가져오기 (선택 사항이지만 있으면 좋음)
+        async function loadTopicStats() {
+            if (!userId || !currentDisplayTopic || !totalSessionCountEl || !lastSessionDateEl) return;
 
-    async function saveSessionLog(userText, aiReply) {
-      const userId = localStorage.getItem('lozee_username');
-      if (!userId) return;
+            try {
+                // users/{userId}/topicStats/{topicName} 경로 또는
+                // journals 컬렉션에서 해당 topic으로 그룹화하여 count 및 최신 날짜 계산 (더 복잡)
+                // 여기서는 topicStats 컬렉션이 있다고 가정하고 가져옵니다.
+                const topicStatRef = doc(db, `users/${userId}/topicStats`, currentDisplayTopic);
+                const topicStatSnap = await getDoc(topicStatRef);
 
-      await addDoc(collection(db, 'sessions'), {
-        userId,
-        timestamp: serverTimestamp(),
-        userText,
-        aiReply
-      });
-    }
-
-    async function saveJournalEntry(topic, summary) {
-      const userId = localStorage.getItem('lozee_username');
-      if (!userId || !topic || !summary) return;
-
-      await addDoc(collection(db, 'journals'), {
-        userId,
-        topic,
-        summary,
-        createdAt: serverTimestamp()
-      });
-    }
-
-    saveUserProfile();
-
-    const chatWindow = document.getElementById('chat-window');
-    const talkBtn = document.getElementById('talk-btn');
-
-    let hasGreeted = false;
-    let isRecording = false;
-    let mediaRecorder;
-    let mediaStream;
-    let audioChunks = [];
-
-    const userName = localStorage.getItem('lozee_username') || '친구';
-    const hasVisited = localStorage.getItem('lozee_hasVisited') === 'true';
-    const voiceId = localStorage.getItem('lozee_voice') || 'ko-KR-Chirp3-HD-Zephyr';
-    const lastSummary = localStorage.getItem('lozee_lastSummary') || '';
-  
-    function appendMessage(text, role = 'ai') {
-      const bubble = document.createElement('div');
-      bubble.className = `bubble ${role}`;
-      bubble.textContent = text;
-      chatWindow.appendChild(bubble);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    async function initGreeting() {
-      const greeting = getInitialGreeting(userName, hasVisited, lastSummary);
-      appendMessage(greeting, 'ai');
-      await playTTSFromText(greeting, voiceId);
-      localStorage.setItem('lozee_hasVisited', 'true');
-    }
-
-    async function startRecording() {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(mediaStream);
-      audioChunks = [];
-
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(audioChunks, { type: 'audio/webm' });
-        const userText = await getSTTFromAudio(blob);
-        appendMessage(userText, 'user');
-
-        const gptRes = await getGptResponse(userText);
-        const reply = gptRes.rephrasing || '음... 다시 말해줄래?';
-        appendMessage(reply, 'ai');
-        await playTTSFromText(reply, voiceId);
-        await saveSessionLog(userText, reply);
-
-        if (currentTopic && reply.length < 1000) {
-          await saveJournalEntry(currentTopic, reply);
+                if (topicStatSnap.exists()) {
+                    const data = topicStatSnap.data();
+                    totalSessionCountEl.textContent = `총 ${data.count || 0}회 이야기 나눔`;
+                    if (data.lastChattedAt?.toDate) {
+                        lastSessionDateEl.textContent = `마지막 대화: ${data.lastChattedAt.toDate().toLocaleDateString('ko-KR')}`;
+                    }
+                } else {
+                     totalSessionCountEl.textContent = `총 ?회 이야기 나눔`; // 정보 없을 시
+                     lastSessionDateEl.textContent = `마지막 대화: 정보 없음`;
+                }
+            } catch (error) {
+                console.error("주제 통계 로드 중 오류:", error);
+            }
         }
-      };
 
-      mediaRecorder.start();
-    }
+        // Firestore에서 해당 주제의 회차별 저널(세션) 데이터 로드
+        async function loadSessionsForTopic() {
+            if (!userId || !currentDisplayTopic || !sessionCardListEl || !topicTitleDisplayEl) {
+                if(sessionCardListEl) sessionCardListEl.innerHTML = "<p>정보를 불러오는 데 필요한 값이 부족해요.</p>";
+                return;
+            }
 
-    function stopRecording() {
-      mediaRecorder.stop();
-    }
+            topicTitleDisplayEl.textContent = currentDisplayTopic; // URL에서 가져온 주제명 표시
+            sessionCardListEl.innerHTML = ''; // 기존 목록 비우기
 
-    talkBtn.addEventListener('click', async () => {
-      if (!hasGreeted) {
-        await initGreeting();
-        hasGreeted = true;
-        return;
-      }
+            try {
+                // journals 컬렉션에서 userId와 topic이 일치하는 문서들을 createdAt 내림차순으로 가져옴
+                const q = query(
+                    collection(db, 'journals'), 
+                    where('userId', '==', userId),
+                    where('topic', '==', currentDisplayTopic), // topic 필드로 필터링
+                    orderBy('createdAt', 'desc') 
+                    // TODO: 페이지네이션 구현 시 limit() 및 startAfter() 등 사용
+                );
+                const querySnapshot = await getDocs(q);
 
-      if (!isRecording) {
-        await startRecording();
-        talkBtn.classList.add('active');
-        talkBtn.textContent = '⏹️ 멈추기';
-      } else {
-        stopRecording();
-        talkBtn.classList.remove('active');
-        talkBtn.textContent = '🎤 말하기';
-      }
-      isRecording = !isRecording;
-    });
-  </script>
-   <script src="./js/gnb.js" defer></script> 
+                if (querySnapshot.empty) {
+                    sessionCardListEl.innerHTML = `<p>'${currentDisplayTopic}' 주제로 나눈 이야기가 아직 없어요.</p>`;
+                    // 만약 topicStats에서 count를 못 가져왔다면 여기서 querySnapshot.size로 업데이트 가능
+                    if(totalSessionCountEl && querySnapshot.size === 0) totalSessionCountEl.textContent = '총 0회 이야기 나눔';
+                    return;
+                }
+
+                // topicStats가 없다면 여기서 횟수 업데이트
+                if (totalSessionCountEl && !userTopicStatsLoaded) { // userTopicStatsLoaded 플래그로 중복 업데이트 방지
+                     totalSessionCountEl.textContent = `총 ${querySnapshot.size}회 이야기 나눔`;
+                }
+
+
+                querySnapshot.forEach((docSnap, index) => {
+                    const data = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = 'session-card';
+
+                    const dateStr = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 없음';
+                    const sessionTitle = data.title || `${querySnapshot.size - index}회차 이야기`; // title 필드가 없다면 회차로 표시
+                    const summary = data.summary ? data.summary.substring(0, 800) : '요약 내용이 없습니다.'; // 800자 제한
+                    
+                    // 간단한 로지 분석 요약 (detailedAnalysis 객체 활용)
+                    let lozeeAnalysisSummary = "로지 분석 준비 중...";
+                    if (data.detailedAnalysis) {
+                        const da = data.detailedAnalysis;
+                        lozeeAnalysisSummary = "";
+                        if(da.overallSentiment) lozeeAnalysisSummary += `전반적인 느낌: ${da.overallSentiment}. `;
+                        if(da.emotionIntensity) lozeeAnalysisSummary += `감정 강도: ${(da.emotionIntensity * 100).toFixed(0)}%. `;
+                        if(da.keywords && da.keywords.length > 0) lozeeAnalysisSummary += `주요 단어: ${da.keywords.slice(0,2).join(', ')}. `;
+                        // 필요한 분석 내용 추가
+                    }
+
+                    card.innerHTML = `
+                        <div class="session-header">
+                            <span class="session-date">${dateStr}</span>
+                        </div>
+                        <h3>${sessionTitle}</h3>
+                        <p class="session-summary">${summary}</p>
+                        <div class="session-analysis-summary">
+                            <h4>로지 생각 엿보기 🧐</h4>
+                            <p>${lozeeAnalysisSummary}</p>
+                        </div>
+                    `;
+                    // 카드 클릭 시 analysis.html로 이동하여 해당 세션의 상세 분석 보여주기
+                    card.onclick = () => {
+                        // 해당 세션의 분석 결과를 localStorage에 저장하거나, sessionId를 전달
+                        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
+                            results: data.detailedAnalysis || {}, // 상세 분석 결과 전달
+                            accumulatedDurationMinutes: data.sessionDurationMinutes || 0, // 세션 지속 시간 (DB에 저장되어 있어야 함)
+                            // 기타 필요한 정보
+                        }));
+                        window.location.href = `analysis.html?sessionId=${docSnap.id}`; // 또는 journalId
+                    };
+                    sessionCardListEl.appendChild(card);
+                });
+                 // 페이지네이션 UI 업데이트 로직 (필요시)
+
+            } catch (error) {
+                console.error(`'${currentDisplayTopic}' 주제의 세션 로드 중 오류:`, error);
+                sessionCardListEl.innerHTML = '<p>이야기 기록을 불러오는 데 문제가 발생했어요. 😥</p>';
+            }
+        }
+
+        let userTopicStatsLoaded = false; // topicStats 로드 여부 플래그
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (currentDisplayTopic) {
+                await loadTopicStats(); // 주제 통계 먼저 로드 (선택 사항)
+                userTopicStatsLoaded = true;
+                await loadSessionsForTopic(); // 그 다음 세션 목록 로드
+            } else {
+                if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "선택된 주제 없음";
+                if(sessionCardListEl) sessionCardListEl.innerHTML = "<p>표시할 주제가 선택되지 않았어요. '이야기 모음집'에서 주제를 선택해주세요.</p>";
+            }
+        });
+    </script>
+    <script src="./js/gnb.js" defer></script> 
 </body>
 </html>
