@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>나의 이야기 모음집 - LOZEE</title> <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <title>나의 이야기 모음집 - LOZEE</title>
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
     <link rel="stylesheet" href="gnb.css"> <style>
         /* journal-list.html 고유 스타일 */
         :root {
-            --primary-color: #6e8efb; /* talk.html과 일관성 */
+            --primary-color: #6e8efb;
             --secondary-color: #5a7edf;
-            --background-color: #f4f6f8; /* analysis.html과 유사한 배경 */
+            --background-color: #f4f6f8;
             --text-color: #333333;
             --card-bg: #ffffff;
-            --gnb-height: 56px; /* gnb.css와 일치해야 함 */
+            --gnb-height: 56px; 
         }
 
         body {
             margin: 0;
-            padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 (gnb.css에 없다면 필요) */
+            padding-top: var(--gnb-height);
             font-family: 'KoPub World Dotum', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
@@ -25,13 +26,13 @@
         }
 
         .container {
-            max-width: 1100px; /* PC에서 좀 더 넓게 */
+            max-width: 1100px;
             margin: 20px auto;
             padding: 20px;
             box-sizing: border-box;
         }
 
-        .page-title { /* 기존 h1 스타일 대체 */
+        .page-title {
             color: var(--primary-color);
             text-align: center;
             font-size: 2em; 
@@ -39,36 +40,36 @@
             font-weight: 700;
         }
 
-.main-tags-area {
+        .main-tags-area {
             background-color: var(--card-bg);
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 30px;
-            text-align: center; /* 내부 요소들 가운데 정렬 */
+            text-align: center;
         }
 
-        .main-tags-area h2 { /* 섹션 제목 스타일 */
+        .main-tags-area h2 {
             font-size: 1.2em;
             color: var(--primary-color);
             margin-top: 0;
             margin-bottom: 15px;
-            border-bottom: none; /* 기존 h2 밑줄 제거 */
+            border-bottom: none;
         }
 
         .tag-button-list {
             display: flex;
-            flex-wrap: wrap; /* 태그가 많으면 다음 줄로 */
-            justify-content: center; /* 버튼들 가운데 정렬 */
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
         }
 
         .tag-filter-btn {
             padding: 8px 15px;
-            background-color: #e8eaf6; /* 태그 클라우드의 .badge와 유사한 색 */
+            background-color: #e8eaf6;
             color: #3f51b5;
             border: none;
-            border-radius: 20px; /* 좀 더 둥글게 */
+            border-radius: 20px;
             cursor: pointer;
             font-size: 0.95em;
             font-weight: 500;
@@ -80,17 +81,14 @@
             transform: translateY(-1px);
         }
 
-        .tag-filter-btn.active { /* 현재 선택된 태그 버튼 스타일 */
+        .tag-filter-btn.active {
             background-color: var(--primary-color);
             color: white;
             font-weight: bold;
         }
 
-
-
         .card-list {
             display: grid;
-            /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); PC에서는 여러 열 */
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -106,46 +104,49 @@
             flex-direction: column;
         }
 
-        .journal-topic { /* 주제 */
+        .journal-topic {
             font-size: 1.1em;
             font-weight: bold;
             color: var(--primary-color);
             margin-bottom: 8px;
         }
         
-        .journal-emotion { /* 감정 */
+        .journal-emotion {
             font-size: 0.9em;
             color: #555;
             margin-bottom: 12px;
             font-style: italic;
         }
 
-        .journal-summary-preview { /* Journal 시작 40글자 */
+        .journal-summary-preview {
             font-size: 0.95em;
             color: #444;
             margin-bottom: 12px;
-            flex-grow: 1; /* 요약이 남은 공간을 채우도록 */
+            flex-grow: 1; 
+            /* 여러 줄 말줄임 (필요시) */
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* 보여줄 줄 수 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 2.85em; /* 0.95em * 1.6 * 2줄 (대략적인 높이) */
         }
 
-        .journal-session-count { /* 그 주제로 대화를 한 횟수 */
+        .journal-session-info { /* 날짜와 횟수를 묶는 div */
             font-size: 0.8em;
             color: #777;
             text-align: right;
-            margin-top: auto; /* 카드 하단에 위치하도록 */
+            margin-top: auto; 
+        }
+        .journal-date, .journal-session-count {
+             display: block; /* 각 정보를 다른 줄에 표시 */
         }
         
-        .journal-date { /* 기존 스타일 활용 또는 수정 */
-            font-size: 0.8em;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-
-        .pagination { /* 기존 스타일 활용 */
+        .pagination {
             display: flex;
             justify-content: center;
             gap: 12px;
-            font-size: 1em; /* 크기 약간 조정 */
+            font-size: 1em;
             margin-top: 30px;
         }
 
@@ -166,33 +167,15 @@
             background-color: #e0e0e0;
         }
 
-        /* 반응형 카드 레이아웃 */
-        @media (min-width: 1024px) { /* 넓은 PC 화면: 3열 */
-            .card-list {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        @media (min-width: 1024px) { 
+            .card-list { grid-template-columns: repeat(3, 1fr); }
         }
-        @media (min-width: 601px) and (max-width: 1023px) { /* 태블릿 및 중간 PC 화면: 2열 */
-            .card-list {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        @media (min-width: 601px) and (max-width: 1023px) { 
+            .card-list { grid-template-columns: repeat(2, 1fr); }
         }
-        @media (max-width: 600px) { /* 모바일 화면: 1열 */
-            .card-list {
-                grid-template-columns: 1fr;
-            }
-            .search-filter-area input[type="text"],
-            .search-filter-area input[type="date"],
-            .search-filter-area select,
-            .search-filter-area button {
-                width: 100%; /* 모바일에서 검색 필터 요소들 전체 너비 사용 */
-                margin-bottom: 10px;
-            }
-            .search-filter-area {
-                flex-direction: column;
-            }
+        @media (max-width: 600px) { 
+            .card-list { grid-template-columns: 1fr; }
         }
-
     </style>
 </head>
 <body>
@@ -208,7 +191,7 @@
         </div>
     </nav> 
 
-       <main class="container">
+    <main class="container">
         <h1 id="pageMainTitle" class="page-title">나의 이야기 모음집 📖</h1>
 
         <div class="main-tags-area">
@@ -220,7 +203,8 @@
         <div class="card-list" id="journalCardList">
             </div>
 
-        <div class="pagination" style="display:none;"> <a href="#">〈</a>
+        <div class="pagination" style="display:none;"> 
+            <a href="#">〈</a>
             <a href="#" class="current">1</a>
             <a href="#">2</a>
             <a href="#">3</a>
@@ -230,125 +214,190 @@
 
     <script src="./js/gnb.js" defer></script> 
     <script type="module">
-        // Firebase 관련 import (firebase-config.js에서 db를 export해야 함)
         import { db } from './js/firebase-config.js';
-        import { collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-        import { counselingTopicsByAge } from './js/counseling_topics.js'; // 주제 목록 가져오기
+        import { collection, query, where, getDocs, orderBy } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+        // counseling_topics.js는 이 페이지에서 직접 사용하지 않으므로 import 제외 가능
 
         const journalCardListEl = document.getElementById('journalCardList');
         const pageMainTitleEl = document.getElementById('pageMainTitle');
-        const topicSearchEl = document.getElementById('topicSearch');
-        const searchBtn = document.getElementById('searchBtn');
+        const mainTagButtonsEl = document.getElementById('mainTagButtons');
 
-        // 사용자 이름 가져와서 제목에 반영
         const userName = localStorage.getItem('lozee_username') || '나';
         if (pageMainTitleEl) {
             pageMainTitleEl.textContent = `${userName}의 이야기 모음집 📖`;
         }
 
-        // 주제 검색 필터 옵션 채우기
-        function populateTopicFilter() {
-            if (!topicSearchEl) return;
-            // counselingTopicsByAge에서 모든 주제 카테고리 추출 (모든 연령대 통합 또는 현재 사용자 연령대만)
-            // 여기서는 모든 연령대의 카테고리를 합쳐서 중복 제거하여 사용
-            let allTopics = new Set();
-            for (const ageGroup in counselingTopicsByAge) {
-                Object.keys(counselingTopicsByAge[ageGroup]).forEach(topic => allTopics.add(topic));
-            }
-            allTopics.forEach(topic => {
-                const option = document.createElement('option');
-                option.value = topic;
-                option.textContent = topic;
-                topicSearchEl.appendChild(option);
+        let allUserJournals = []; 
+        let userTopicStats = {}; // 주제별 통계 (횟수, 마지막 대화일)
+        let currentFilterTag = '전체보기';
+
+        function displayMainTags(journals) {
+            if (!mainTagButtonsEl) return;
+            mainTagButtonsEl.innerHTML = ''; 
+
+            const tagCounts = {};
+            journals.forEach(journal => {
+                if (journal.keywords && Array.isArray(journal.keywords)) {
+                    journal.keywords.forEach(tag => {
+                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                    });
+                }
+            });
+
+            const sortedTags = Object.entries(tagCounts)
+                .sort(([,a],[,b]) => b-a)
+                .slice(0, 5) 
+                .map(([tag]) => tag);
+
+            const allViewBtn = document.createElement('button');
+            allViewBtn.className = 'tag-filter-btn active'; // 초기엔 전체보기가 활성
+            allViewBtn.textContent = '✨ 전체 이야기';
+            allViewBtn.dataset.tag = '전체보기'; 
+            allViewBtn.onclick = () => {
+                currentFilterTag = '전체보기';
+                renderJournalCards(); // renderJournalCards 호출
+                updateTagButtonStates();
+            };
+            mainTagButtonsEl.appendChild(allViewBtn);
+
+            sortedTags.forEach(tag => {
+                const button = document.createElement('button');
+                button.className = 'tag-filter-btn';
+                button.textContent = `#${tag}`;
+                button.dataset.tag = tag;
+                button.onclick = () => {
+                    currentFilterTag = tag;
+                    renderJournalCards(); // renderJournalCards 호출
+                    updateTagButtonStates();
+                };
+                mainTagButtonsEl.appendChild(button);
             });
         }
 
-        // Firestore에서 저널 데이터 로드 함수 (예시)
-        async function loadJournals(filters = {}) {
+        function updateTagButtonStates() {
+            if (!mainTagButtonsEl) return;
+            const buttons = mainTagButtonsEl.querySelectorAll('.tag-filter-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.tag === currentFilterTag) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        // 저널 카드를 화면에 렌더링하는 함수 (주제별 요약 및 최신순 정렬 반영)
+        function renderJournalCards() {
             if (!journalCardListEl) return;
-            journalCardListEl.innerHTML = ''; // 기존 목록 비우기
+            journalCardListEl.innerHTML = ''; 
 
-            const userId = localStorage.getItem('cbtUserEmail'); // 또는 다른 사용자 식별자
-            if (!userId) {
-                journalCardListEl.innerHTML = '<p>사용자 정보를 찾을 수 없습니다.</p>';
+            const filteredByTag = currentFilterTag && currentFilterTag !== '전체보기'
+                ? allUserJournals.filter(journal => journal.keywords && journal.keywords.includes(currentFilterTag))
+                : allUserJournals;
+
+            if (filteredByTag.length === 0) {
+                journalCardListEl.innerHTML = currentFilterTag && currentFilterTag !== '전체보기'
+                    ? `<p>'#${currentFilterTag}' 태그가 포함된 이야기가 아직 없어요. 🧐</p>`
+                    : '<p>아직 기록된 이야기가 없어요. 로지와 대화를 시작해보세요! 😊</p>';
                 return;
             }
 
-            let q = query(collection(db, 'journals'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
-            
-            // 필터 적용 (실제 구현 시 더 정교한 쿼리 필요)
-            if (filters.topic) {
-                q = query(q, where('topic', '==', filters.topic));
+            // 주제별로 그룹화 (요청하신 "그 주제로 여러 번 대화했으면 마지막 SERVER_TIMESTAMP 기준으로")
+            const topicsMap = new Map();
+            filteredByTag.forEach(journal => {
+                const topicKey = journal.topic || '기타 이야기';
+                if (!topicsMap.has(topicKey) || journal.createdAt.toMillis() > topicsMap.get(topicKey).latestTimestamp) {
+                    topicsMap.set(topicKey, {
+                        latestJournal: journal,
+                        latestTimestamp: journal.createdAt.toMillis(),
+                        count: (userTopicStats[topicKey] ? userTopicStats[topicKey].count : 1), // DB에서 가져온 횟수 사용
+                        emotions: new Set(), // 필요시 활용
+                        keywordsSummary: new Set() // 필요시 활용
+                    });
+                }
+                // count는 userTopicStats에서 가져오는 것이 더 정확하므로, 여기서는 집계하지 않음.
+                // 만약 userTopicStats가 없다면, 아래와 같이 클라이언트에서 임시로 집계할 수 있음.
+                // else {
+                //    const existing = topicsMap.get(topicKey);
+                //    existing.count = (existing.count || 0) +1; // 이 방식은 정확한 횟수 반영이 아님.
+                // }
+                if (journal.mood) topicsMap.get(topicKey).emotions.add(journal.mood);
+                if (journal.keywords) journal.keywords.forEach(kw => topicsMap.get(topicKey).keywordsSummary.add(kw));
+            });
+
+            const displayableTopics = Array.from(topicsMap.values())
+                                         .sort((a,b) => b.latestTimestamp - a.latestTimestamp);
+
+            displayableTopics.forEach(topicSummary => {
+                const journal = topicSummary.latestJournal;
+                const card = document.createElement('div');
+                card.className = 'journal-card';
+                
+                const dateStr = journal.createdAt?.toDate ? journal.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 없음';
+                const topicDisplay = journal.topic || '나눈 이야기';
+                const emotionDisplay = journal.mood || (journal.detailedAnalysis?.overallSentiment) || '기록된 마음'; 
+                const summaryPreview = journal.summary ? journal.summary.substring(0, 40) + (journal.summary.length > 40 ? '...' : '') : '요약 없음';
+                const sessionCount = topicSummary.count; // userTopicStats에서 가져온 값
+
+                card.innerHTML = `
+                    <div class="journal-topic">${topicDisplay}</div>
+                    <div class="journal-emotion">최근 마음: ${emotionDisplay}</div>
+                    <div class="journal-summary-preview">${summaryPreview}</div>
+                    <div class="journal-session-info">
+                        <span class="journal-date">마지막 이야기: ${dateStr}</span>
+                        <span class="journal-session-count">이 주제로 나눈 이야기: ${sessionCount}번</span>
+                    </div>
+                `;
+                // 카드 클릭 시, 해당 주제의 가장 최근 저널 상세 페이지로 이동하도록 수정
+                card.onclick = () => { 
+                    // 상세 페이지가 있다면 ID 전달, 없다면 alert 등
+                    // location.href = `journal-detail.html?id=${journal.id}`; 
+                    alert(`'${topicDisplay}' 주제의 가장 최근 대화입니다. (상세보기 준비 중)`);
+                };
+                journalCardListEl.appendChild(card);
+            });
+        }
+
+        async function loadInitialData() {
+            const userId = localStorage.getItem('cbtUserEmail');
+            if (!userId) {
+                if(journalCardListEl) journalCardListEl.innerHTML = '<p>사용자 정보를 찾을 수 없습니다. 먼저 로지와 이야기해주세요!</p>';
+                if(mainTagButtonsEl) mainTagButtonsEl.innerHTML = '';
+                return;
             }
-            if (filters.date) { // 날짜 필터는 범위로 구현해야 할 수 있음 (예: 해당 날짜의 시작~끝)
-                // q = query(q, where('createdAt', '>=', startDate), where('createdAt', '<=', endDate));
-                console.warn("날짜 필터는 아직 구현되지 않았습니다.");
-            }
-            if (filters.tag) { // 태그 필터는 keywords 배열에 대한 array-contains 쿼리 사용
-                // q = query(q, where('keywords', 'array-contains', filters.tag));
-                console.warn("태그 필터는 아직 구현되지 않았습니다.");
-            }
-            
+
             try {
-                const querySnapshot = await getDocs(q);
-                if (querySnapshot.empty) {
-                    journalCardListEl.innerHTML = '<p>아직 기록된 이야기가 없어요. 로지와 대화를 시작해보세요!</p>';
+                // 1. 주제별 통계 로드 (DB에 저장된 횟수 및 마지막 대화일)
+                const statsQuery = query(collection(db, `users/${userId}/topicStats`));
+                const statsSnapshot = await getDocs(statsQuery);
+                statsSnapshot.forEach((doc) => {
+                    userTopicStats[doc.id] = doc.data(); // { count: 5, lastChattedAt: Timestamp, ... }
+                });
+
+                // 2. 전체 저널 로드 (최신순)
+                const journalsQuery = query(collection(db, 'journals'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
+                const journalsSnapshot = await getDocs(journalsQuery);
+                allUserJournals = journalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                if (allUserJournals.length === 0) {
+                    if(journalCardListEl) journalCardListEl.innerHTML = '<p>아직 기록된 이야기가 없어요. 로지와 대화를 시작해보세요! 😊</p>';
+                    if(mainTagButtonsEl) mainTagButtonsEl.innerHTML = '<p>이야기를 나누면 자주 나온 마음 조각들을 여기서 볼 수 있어요!</p>';
                     return;
                 }
-                querySnapshot.forEach((doc) => {
-                    const journal = doc.data();
-                    const card = document.createElement('div');
-                    card.className = 'journal-card';
-                    
-                    // 카드 내용 구성 (요청사항 반영)
-                    const dateStr = journal.createdAt?.toDate ? journal.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 없음';
-                    const topic = journal.topic || '알 수 없는 주제';
-                    const emotion = journal.mood || (journal.detailedAnalysis?.overallSentiment) || '감정 기록 없음'; // mood 또는 sentiment 사용
-                    const summaryPreview = journal.summary ? journal.summary.substring(0, 40) + (journal.summary.length > 40 ? '...' : '') : '요약 없음';
-                    const sessionCount = journal.sessionCount || 1; // DB에 이 필드가 있어야 함 (예시)
+                
+                displayMainTags(allUserJournals); 
+                currentFilterTag = '전체보기'; 
+                renderJournalCards(); // 저널 카드 렌더링 (내부에서 userTopicStats 사용)
 
-                    card.innerHTML = `
-                        <div class="journal-date">${dateStr}</div>
-                        <div class="journal-topic">${topic}</div>
-                        <div class="journal-emotion">주요 감정: ${emotion}</div>
-                        <div class="journal-summary-preview">${summaryPreview}</div>
-                        <div class="journal-session-count">이 주제 대화 횟수: ${sessionCount}회</div>
-                    `;
-                    // 카드 클릭 시 해당 저널 상세 페이지로 이동하는 로직 추가 가능
-                    // card.onclick = () => { location.href = `journal-detail.html?id=${doc.id}`; };
-                    journalCardListEl.appendChild(card);
-                });
             } catch (error) {
-                console.error("저널 로드 중 오류:", error);
-                journalCardListEl.innerHTML = '<p>이야기를 불러오는 데 문제가 발생했어요.</p>';
+                console.error("초기 데이터 로드 중 오류:", error);
+                if(journalCardListEl) journalCardListEl.innerHTML = '<p>이야기를 불러오는 데 문제가 발생했어요. 😭</p>';
             }
         }
-        
-        // 검색 버튼 이벤트 리스너
-        if (searchBtn) {
-            searchBtn.onclick = () => {
-                const filters = {
-                    topic: document.getElementById('topicSearch').value,
-                    date: document.getElementById('dateSearch').value,
-                    tag: document.getElementById('tagSearch').value.trim()
-                };
-                // 빈 값 필터는 제거
-                for (const key in filters) {
-                    if (!filters[key]) {
-                        delete filters[key];
-                    }
-                }
-                loadJournals(filters);
-            };
-        }
-
-
-        // 페이지 로드 시 실행
+                
         document.addEventListener('DOMContentLoaded', () => {
-            populateTopicFilter(); // 주제 필터 옵션 채우기
-            loadJournals(); // 초기 저널 목록 로드
+            loadInitialData(); 
         });
     </script>
-     <script src="./js/gnb.js" defer></script>
 </body>
 </html>
