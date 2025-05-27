@@ -328,36 +328,53 @@
         function alertCognitiveDistortions(elementId, distortions) { const alertEl = document.getElementById(elementId); if(alertEl && distortions && distortions.length > 0) { alertEl.innerHTML = distortions.map(d => `<p class="cognitive-distortion-item">${d}</p>`).join(''); } else if (alertEl) { alertEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';} }
         
         function renderEmotionChart(canvasId, emotionData) { 
-            const ctx = document.getElementById(canvasId)?.getContext('2d');
-            if (!ctx || !emotionData || Object.keys(emotionData).length === 0) {
-                const chartEl = document.getElementById(canvasId);
-                if(chartEl) {
-                    chartEl.style.display = 'none';
-                    const parentSection = chartEl.closest('.section');
-                    if (parentSection && !parentSection.querySelector('.no-chart-data-message')) { 
-                         const noDataMsg = document.createElement('p');
-                         noDataMsg.textContent = "감정 변화를 그리기에 아직 이야기가 부족해요. 😟";
-                         noDataMsg.style.textAlign = 'center';
-                         noDataMsg.style.color = '#888';
-                         noDataMsg.classList.add('no-chart-data-message');
-                         chartEl.insertAdjacentElement('afterend', noDataMsg); // 차트 요소 다음에 메시지 삽입
-                    }
-                }
-                return;
-            }
-            // 차트가 이미 그려져 있다면 파괴하고 다시 그리기 (데이터 업데이트 시)
-            const existingChart = Chart.getChart(ctx);
-            if (existingChart) {
-                existingChart.destroy();
-            }
+     const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx || !emotionData || Object.keys(emotionData).length === 0) {
+        // ... (데이터 없을 때 처리 로직은 기존과 동일) ...
+        return;
+    }
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
+    }
 
-            const emotionColors = { '기쁨': 'rgba(255, 215, 0, 0.7)','슬픔': 'rgba(135, 206, 235, 0.7)','분노': 'rgba(255, 107, 107, 0.7)','불안': 'rgba(169, 169, 169, 0.7)','수치': 'rgba(255, 182, 193, 0.7)','중립': 'rgba(220, 220, 220, 0.7)'};
-            const labels = Object.keys(emotionData);
-            const dataValues = Object.values(emotionData);
-            const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(201, 203, 207, 0.7)');
+    const emotionColors = { /* ... 이전 답변의 emotionColors 객체 ... */ };
+    const labels = Object.keys(emotionData);
+    const dataValues = Object.values(emotionData);
+    const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(201, 203, 207, 0.7)');
 
-            new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: '나의 마음 신호등', data: dataValues, backgroundColor: backgroundColors, borderColor: backgroundColors.map(color => color.replace('0.7', '1')), borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, ticks: { precision: 0, color: Chart.defaults.color }, grid: { color: Chart.defaults.borderColor } }, y: { ticks: { color: Chart.defaults.color }, grid: { display: false } } }, plugins: { legend: { position: 'top', labels: { color: Chart.defaults.color, font: { family: Chart.defaults.font.family } } }, tooltip: { titleFont: { family: Chart.defaults.font.family }, bodyFont: { family: Chart.defaults.font.family } } } } });
+    new Chart(ctx, {
+        type: 'doughnut', // 👈 차트 타입을 'doughnut'으로 변경
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '나의 마음 비율', // 레이블 변경
+                data: dataValues,
+                backgroundColor: backgroundColors,
+                borderColor: '#ffffff', // 도넛 조각 사이 구분선 색상 (흰색 추천)
+                borderWidth: 2 // 구분선 두께
+            }]
+        },
+        options: {
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    position: 'bottom', // 범례 위치를 아래로 변경 (도넛 차트에 어울림)
+                    labels: { 
+                        color: Chart.defaults.color, 
+                        font: { family: Chart.defaults.font.family, size: 11 }, // 폰트 크기 약간 작게
+                        padding: 15 // 범례 항목 간 간격
+                    } 
+                },
+                tooltip: { /* ... 기존 툴팁 설정 ... */ },
+                // 도넛 차트 중앙에 텍스트 표시 (선택 사항, Chart.js 플러그인 또는 커스텀 로직 필요)
+                // 예: 가장 큰 감정 표시 등
+            },
+            // cutout: '60%' // 도넛 두께 조절 (예: '60%'면 가운데 구멍이 40% 차지)
         }
+    });
+}
 
         function displayEmpathyMessage(emotionData) { const empathyMessageEl = document.getElementById('empathyMessage'); if (!empathyMessageEl || !emotionData || Object.keys(emotionData).length === 0) { if (empathyMessageEl) empathyMessageEl.style.display = 'none'; return; } let highestEmotion = ''; let highestCount = 0; let totalEmotions = 0; for (const emotion in emotionData) { totalEmotions += emotionData[emotion]; if (emotionData[emotion] > highestCount) { highestCount = emotionData[emotion]; highestEmotion = emotion; } } if (totalEmotions === 0) { empathyMessageEl.textContent = "로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 앞으로 더 많은 이야기를 나누면서 네 마음을 함께 알아가자! 😊"; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block'; return; } let message = ""; const userName = localStorage.getItem('lozee_username') || '친구'; if (highestEmotion === '기쁨' && highestCount / totalEmotions > 0.4) { message = `${userName}아(야), 이야기 속에서 '기쁨'의 순간들이 많았구나! 정말 신나고 즐거운 일들이 많았던 것 같아! ✨ 로지도 네 덕분에 행복해졌어!`; } else if (highestEmotion === '불안' && emotionData['기쁨'] > 0) { message = `${userName}아(야), 마음속에 '불안'한 느낌도 있었지만, '기쁨'의 순간들도 함께 있었네! 어려운 마음 속에서도 빛나는 점을 찾은 네가 정말 대단해! 앞으로 로지가 더 힘이 되어줄게.`; } else if (highestEmotion === '불안') { message = `${userName}아(야), '불안'한 마음이 조금 컸었구나. 그래도 로지에게 솔직하게 이야기해줘서 정말 고마워. 그 마음을 잘 다독일 수 있도록 로지가 곁에 있을게.`; } else if (highestEmotion === '슬픔') { message = `${userName}아(야), 마음이 조금 슬펐던 순간들이 있었네. 괜찮아, 슬픈 마음도 소중한 내 마음의 신호등이란다. 로지가 네 마음을 꼭 안아줄게. 꼬옥! 🤗`; } else if (highestEmotion === '분노') { message = `${userName}아(야), 혹시 '화'가 나거나 '짜증'나는 일이 있었니? 그런 마음이 들 때는 로지에게 바로 이야기해줘도 괜찮아. 네 마음이 편안해지도록 돕고 싶어.`; } else if (emotionData['기쁨'] > 0 && emotionData['슬픔'] > 0) { message = `${userName}아(야), 기쁜 마음도 있었고, 조금은 슬픈 마음도 함께 있었네. 우리 마음은 원래 여러 가지 색깔을 가지고 있단다. 모두 다 소중한 네 마음이야.`; } else { message = `${userName}아(야), 로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 어떤 느낌이 들었는지 더 자세히 이야기해 줄 수 있을까? 😊`; } empathyMessageEl.textContent = message; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block';}
     </script>
