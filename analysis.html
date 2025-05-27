@@ -1,20 +1,28 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
+   <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE와 함께하는 마음 탐험!</title>
     <link
         href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap"
         rel="stylesheet"
     />
+    <link rel="stylesheet" href="gnb.css"> 
     <style>
+        /* analysis.html 페이지 고유 스타일 */ 
+    :root { /* analysis.html에서 사용할 CSS 변수 (필요시) */
+            --primary-color-analysis: #6078ea; /* 페이지 제목 등에 사용 */
+            --card-bg-analysis: #ffffff;
+            --text-color-analysis: #333333;
+            --explanation-bg-analysis: #eef2f7; }
+        
         body, html { 
             margin:0; 
-            padding:0; 
+            padding:0; /* body의 padding-top은 gnb.css에서 관리 */
             font-family:'KoPub World Dotum', sans-serif; 
             background:#f4f6f8; 
-            color: #333333; 
+            color: var(--text-color-analysis); 
         }
         .container { 
             max-width:900px; 
@@ -22,7 +30,7 @@
             padding:0 25px; 
         }
         h1 {
-            color: #6078ea; 
+            color: var(--primary-color-analysis); 
             text-align: center;
             font-size: 2em; 
             margin-bottom: 15px; 
@@ -223,17 +231,16 @@
     </style>
 </head>
 <body>
-    
     <nav id="gnb">
-    <div id="gnb-title">LOZEE</div>
-    <button id="menu-toggle">☰</button>
-    <div id="dropdown-menu">
-      <a href="mypage.html">🎨 내 정보 보기</a> 
-      <a href="index.html">✨ 새로운 이야기 시작!</a> 
-      <a href="analysis.html">📊 우리 이야기 분석</a> 
-      <a href="journal-list.html">📖 이야기 모음집</a> 
-      <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
-    </div>
+        <div id="gnb-title">LOZEE</div>
+        <button id="menu-toggle">☰</button>
+        <div id="dropdown-menu">
+          <a href="mypage.html">🎨 내 정보 보기</a> 
+          <a href="index.html">✨ 새로운 이야기 시작!</a> 
+          <a href="analysis.html">📊 우리 이야기 분석</a> 
+          <a href="journal-list.html">📖 이야기 모음집</a> 
+          <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
+        </div>
     </nav>
 
     <div class="container">
@@ -532,61 +539,56 @@
 // 예시: const emotionCounts = { '기쁨': 5, '슬픔': 2, '분노': 1, '불안': 4, '수치': 1, '중립': 3 };
 
 // renderEmotionChart 함수 호출 후 또는 그 내부에서 다음 로직 실행
-function displayEmpathyMessage(emotionCounts) {
-    const empathyMessageEl = document.getElementById('empathyMessage'); // HTML에 <p id="empathyMessage" class="feedback neutral"></p> 등 추가 필요
-    if (!empathyMessageEl || !emotionCounts || Object.keys(emotionCounts).length === 0) {
-        if (empathyMessageEl) empathyMessageEl.style.display = 'none';
-        return;
-    }
+        function displayEmpathyMessage(emotionData) { // emotionData는 { '감정': 빈도수 } 객체
+            const empathyMessageEl = document.getElementById('empathyMessage'); 
+            if (!empathyMessageEl || !emotionData || Object.keys(emotionData).length === 0) {
+                if (empathyMessageEl) empathyMessageEl.style.display = 'none';
+                return;
+            }
 
-    // 가장 빈도가 높은 감정 찾기 (단순 예시, 여러 감정을 고려할 수 있음)
-    let highestEmotion = '';
-    let highestCount = 0;
-    let totalEmotions = 0;
-    for (const emotion in emotionCounts) {
-        totalEmotions += emotionCounts[emotion];
-        if (emotionCounts[emotion] > highestCount) {
-            highestCount = emotionCounts[emotion];
-            highestEmotion = emotion;
+            let highestEmotion = '';
+            let highestCount = 0;
+            let totalEmotions = 0;
+            for (const emotion in emotionData) {
+                totalEmotions += emotionData[emotion];
+                if (emotionData[emotion] > highestCount) {
+                    highestCount = emotionData[emotion];
+                    highestEmotion = emotion;
+                }
+            }
+
+            if (totalEmotions === 0) { 
+                empathyMessageEl.textContent = "로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 앞으로 더 많은 이야기를 나누면서 네 마음을 함께 알아가자! 😊";
+                empathyMessageEl.className = 'feedback neutral'; 
+                empathyMessageEl.style.display = 'block';
+                return;
+            }
+
+            let message = "";
+            const userName = localStorage.getItem('lozee_username') || '친구';
+
+            if (highestEmotion === '기쁨' && highestCount / totalEmotions > 0.4) { 
+                message = `${userName}야, 이야기 속에서 '기쁨'의 순간들이 많았구나! 정말 신나고 즐거운 일들이 많았던 것 같아! ✨ 로지도 네 덕분에 행복해졌어!`;
+            } else if (highestEmotion === '불안' && emotionData['기쁨'] > 0) {
+                message = `${userName}야, 마음속에 '불안'한 느낌도 있었지만, '기쁨'의 순간들도 함께 있었네! 어려운 마음 속에서도 빛나는 점을 찾은 네가 정말 대단해! 앞으로 로지가 더 힘이 되어줄게.`;
+            } else if (highestEmotion === '불안') {
+                message = `${userName}야, '불안'한 마음이 조금 컸었구나. 그래도 로지에게 솔직하게 이야기해줘서 정말 고마워. 그 마음을 잘 다독일 수 있도록 로지가 곁에 있을게.`;
+            } else if (highestEmotion === '슬픔') {
+                message = `${userName}야, 마음이 조금 슬펐던 순간들이 있었네. 괜찮아, 슬픈 마음도 소중한 내 마음의 신호등이란다. 로지가 네 마음을 꼭 안아줄게. 꼬옥! 🤗`;
+            } else if (highestEmotion === '분노') {
+                message = `${userName}야, 혹시 '화'가 나거나 '짜증'나는 일이 있었니? 그런 마음이 들 때는 로지에게 바로 이야기해줘도 괜찮아. 네 마음이 편안해지도록 돕고 싶어.`;
+            } else if (emotionData['기쁨'] > 0 && emotionData['슬픔'] > 0) {
+                message = `${userName}야, 기쁜 마음도 있었고, 조금은 슬픈 마음도 함께 있었네. 우리 마음은 원래 여러 가지 색깔을 가지고 있단다. 모두 다 소중한 네 마음이야.`;
+            } else {
+                message = `${userName}야, 로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 어떤 느낌이 들었는지 더 자세히 이야기해 줄 수 있을까? 😊`;
+            }
+            
+            empathyMessageEl.textContent = message;
+            empathyMessageEl.className = 'feedback neutral'; 
+            empathyMessageEl.style.display = 'block';
         }
-    }
-
-    if (totalEmotions === 0) { // 감정 데이터가 있지만 모두 0인 경우
-        empathyMessageEl.textContent = "로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 앞으로 더 많은 이야기를 나누면서 네 마음을 함께 알아가자! 😊";
-        empathyMessageEl.className = 'feedback neutral'; // CSS 클래스에 맞게
-        empathyMessageEl.style.display = 'block';
-        return;
-    }
-
-    let message = "";
-
-    // 감정 비율에 따른 다양한 공감 메시지 생성 로직
-    // (여기는 예시이며, 더 정교하고 다양한 시나리오를 만들 수 있습니다.)
-
-    if (highestEmotion === '기쁨' && highestCount / totalEmotions > 0.4) { // 기쁨이 40% 이상일 때
-        message = `이야기 속에서 '기쁨'의 순간들이 많았구나! 정말 신나고 즐거운 일들이 많았던 것 같아! ✨ 로지도 네 덕분에 행복해졌어!`;
-    } else if (highestEmotion === '불안' && emotionCounts['기쁨'] > 0) {
-        message = `마음속에 '불안'한 느낌도 있었지만, '기쁨'의 순간들도 함께 있었네! 어려운 마음 속에서도 빛나는 점을 찾은 네가 정말 대단해! 앞으로 로지가 더 힘이 되어줄게.`;
-    } else if (highestEmotion === '불안') {
-        message = `'불안'한 마음이 조금 컸었구나. 그래도 로지에게 솔직하게 이야기해줘서 정말 고마워. 그 마음을 잘 다독일 수 있도록 로지가 곁에 있을게.`;
-    } else if (highestEmotion === '슬픔') {
-        message = `마음이 조금 슬펐던 순간들이 있었네. 괜찮아, 슬픈 마음도 소중한 내 마음의 신호등이란다. 로지가 네 마음을 꼭 안아줄게. 꼬옥! 🤗`;
-    } else if (highestEmotion === '분노') {
-        message = `혹시 '화'가 나거나 '짜증'나는 일이 있었니? 그런 마음이 들 때는 로지에게 바로 이야기해줘도 괜찮아. 네 마음이 편안해지도록 돕고 싶어.`;
-    } else if (emotionCounts['기쁨'] > 0 && emotionCounts['슬픔'] > 0) {
-        message = `기쁜 마음도 있었고, 조금은 슬픈 마음도 함께 있었네. 우리 마음은 원래 여러 가지 색깔을 가지고 있단다. 모두 다 소중한 네 마음이야.`;
-    } else {
-        message = `로지와 이야기하면서 네 마음속 여러 가지 느낌들을 살펴보았어. 어떤 느낌이 들었는지 더 자세히 이야기해 줄 수 있을까? 😊`;
-    }
     
-    // 사용자 이름 추가하여 개인화
-    const userName = localStorage.getItem('lozee_username') || '친구';
-    empathyMessageEl.textContent = `${userName}아, ${message}`;
-    empathyMessageEl.className = 'feedback neutral'; // 또는 감정에 따라 positive/negative
-    empathyMessageEl.style.display = 'block';
-}
-
-
+ 
 
        // 감정별 색상 매핑 (앱의 주조색 및 감정의미 고려)
         const emotionColors = {
