@@ -98,16 +98,3 @@ body {
   #gnb-title { font-size: 1.1em; }
 }
 
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>페이지 제목</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-
-    <link rel="stylesheet" href="./css/gnb.css"> 
-
-    <style>
-        /* talk.html 페이지 고유의 스타일 (GNB 관련 스타일은 없어야 함) */
-    </style>
-</head>
