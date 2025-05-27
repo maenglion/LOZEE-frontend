@@ -198,10 +198,15 @@
             // 1. 언어·나이 분석 섹션 처리
             const languageAgeSection = document.getElementById('languageAgeSection');
             if (languageAgeSection) {
-                if (userAge > 16 || !analysisResults || !analysisResults.ageLanguageAnalysis) { // 10세 초과 또는 분석 결과 없을 시 숨김
-                    languageAgeSection.style.display = 'none';
-                } else {
-                    languageAgeSection.style.display = 'block'; 
+            // if (userAge > 10) { // 👈 원래 조건
+            if (false) { // 👈 임시로 항상 보이게 하려면 false로 변경 (테스트 후 원래대로 복구!)
+            languageAgeSection.style.display = 'none';
+            console.log(`언어·나이 분석: 사용자 나이(${userAge})가 10세를 초과하여 숨김 처리합니다.`);
+            } else {
+          languageAgeSection.style.display = 'block'; // 보이도록 설정
+            // ... (언어 연령 분석 결과 표시 로직) ...
+         }
+         }
                     if(predictedLangAgeEl && ageFeedbackEl && ageDifferenceVisualEl && languagePracticeBtn){
                         let predicted = null;
                         if (analysisResults.ageLanguageAnalysis.estimatedAgeRange) {
@@ -264,7 +269,7 @@
                         ageFeedbackEl.style.display = 'block';
                     }
                 }
-            }
+        );
 
             // 2. 감정 어조 및 태그 클라우드
             if (analysisResults && analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
@@ -317,7 +322,7 @@
 
             // 공유 버튼 로직
             if(reportShareButton) { reportShareButton.onclick = () => {const shareableLink = window.location.href; if (navigator.share) { navigator.share({ title: '로지와 나눈 이야기 분석 결과', text: '로지와 나눈 대화 분석 결과를 확인해보세요!', url: shareableLink, }).then(() => console.log('성공적으로 공유됨')).catch((error) => console.log('공유 실패', error)); } else if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(shareableLink).then(() => { alert('공유 링크가 복사되었습니다!\n' + shareableLink); }).catch(err => { console.error('클립보드 복사 실패:', err); alert('링크 복사에 실패했어요. 수동으로 복사해주세요:\n' + shareableLink); }); } else { prompt('아래 링크를 복사하여 공유하세요:', shareableLink); } }; }
-        });
+        
 
         // --- 데이터 렌더링 함수들 ---
         function renderTagCloud(elementId, tags) { const cloudEl = document.getElementById(elementId); if(cloudEl && tags && tags.length > 0) { cloudEl.innerHTML = tags.map(tag => { const size = 0.8 + (tag.weight / 15); const opacity = Math.max(0.5, tag.weight / 10); return `<span class="badge" style="opacity:<span class="math-inline">\{opacity\}; font\-size\:</span>{size}em;">${tag.text}</span>`; }).join(''); } else if (cloudEl) { cloudEl.innerHTML = '<p style="text-align:center; color:#888;">아직 주요 단어가 충분히 모이지 않았어요.</p>'; } }
