@@ -35,13 +35,11 @@
       --analysis-notification-bg: #fff3cd;
       --analysis-notification-text: #856404;
 
-      --gnb-height: 56px;
       --chat-input-area-height: 70px;
     }
 
     body {
       margin: 0;
-      padding-top: var(--gnb-height);
       font-family: 'KoPub World Dotum', sans-serif;
       background: var(--background-color);
       color: var(--text-color);
@@ -50,43 +48,6 @@
       height: 100vh;
       box-sizing: border-box;
       overflow: hidden;
-    }
-
-      #menu-toggle {
-      background: none;
-      border: none;
-      color: var(--gnb-menu-toggle-color);
-      font-size: 24px;
-      cursor: pointer;
-      padding: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #dropdown-menu {
-      position: fixed;
-      top: var(--gnb-height);
-      right: 0;
-      background-color: var(--gnb-dropdown-bg);
-      border-radius: 0 0 0 8px;
-      box-shadow: -3px 3px 6px rgba(0,0,0,0.2);
-      width: 200px;
-      z-index: 999;
-      overflow: hidden;
-      max-height: 0;
-      transition: max-height 0.3s ease-out;
-    }
-
-    #dropdown-menu.show {
-      max-height: 300px;
-    }
-
-    #dropdown-menu a:last-child {
-      border-bottom: none;
-    }
-    #dropdown-menu a:hover {
-      background-color: var(--gnb-dropdown-hover-bg);
     }
 
     #meter-container {
@@ -239,9 +200,7 @@
     }
     
     @media (max-width: 600px) {
-      #gnb { padding: 0 20px; } 
       #input-area { padding: 0 20px; } 
-      #gnb-title { font-size: 1.1em; }
       .bubble { padding: 9px 13px; max-width: 85%; }
       #chat-input { padding: 9px 14px; }
       #mic-button, #send-btn { width: 40px; height: 40px; font-size: 1.2em;}
@@ -288,10 +247,11 @@
       cursor: not-allowed;
       opacity: 0.7;
     }
+    
   </style>
 </head>
 <body>
-    <nav id="gnb">
+   <nav id="gnb">
     <div id="gnb-title">LOZEE</div>
     <button id="menu-toggle">☰</button>
     <div id="dropdown-menu">
@@ -301,8 +261,8 @@
       <a href="journal-list.html">📖 이야기 모음집</a> 
       <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
     </div>
-    </nav>
-    
+</nav>
+
   <div id="meter-container"><div id="volume-level"></div></div>
   <div id="chat-window"></div>
   <div id="input-area">
