@@ -5,7 +5,7 @@ export const counselingTopicsByAge = {
   '7-10': { // 10세 이하 특정 필요 아동 대상 주제 (카테고리별 그룹화)
     "감정 이야기": [
       { icon: "😡", displayText: "나 엄청 화나가!", tags: ["분노 폭발", "감정 조절 어려움"], type: "emotion_intensity" },
-      { icon: "😭", displayText: "이유 없이 화가 막 나", tags: ["갑작스러운 분노", "이유 모를 화"], type: "emotion_intensity" },
+      { icon: "😭", displayText: "뭐든지 참을 수는 없을까?", tags: ["갑작스러운 분노", "이유 모를 화"], type: "emotion_intensity" },
       { icon: "😢", displayText: "갑자기 너무 슬퍼", tags: ["갑작스러운 슬픔", "이유 모를 슬픔"], type: "emotion_intensity" },
       { icon: "🤔", displayText: "내 마음인데 조절이 안돼", tags: ["감정 조절 어려움", "자기 통제 부족"], type: "else" }, // 감정 조절의 '상황'이나 '양상'을 묻는 것이 더 적절
       { icon: "🎢", displayText: "기분이 갑자기 좋았다 나빠져", tags: ["감정 기복", "변덕스러움"], type: "else" }, // 감정 변화의 '양상'이나 '계기'를 묻는 것이 더 적절
@@ -17,27 +17,25 @@ export const counselingTopicsByAge = {
       { icon: "😒", displayText: "괜히 짜증 나고 다 싫어", tags: ["짜증", "거부감", "반항심"], type: "emotion_intensity" },
       { icon: "🤫", displayText: "내 감정을 말로 하기 어려워", tags: ["표현의 어려움", "내적 언어"], type: "situation" }, // 감정 표현의 어려움 자체가 핵심
       { icon: "💔", displayText: "내 마음 몰라줘서 속상해", tags: ["이해받지 못함", "서운함"], type: "situation" }, // 상황. 왜, 무슨일이야? 라고 물어봐야 할 거 같아
-      { icon: "💧", displayText: "울고싶은데 참아야해.", tags: ["억눌린 슬픔", "감정 억압"], type: "situation" }, // 상황. 왜, 무슨일이야? 라고 물어봐야 할 거 같아
+      { icon: "💧", displayText: "울고 싶은데 참아야해.", tags: ["억눌린 슬픔", "감정 억압"], type: "situation" }, // 상황. 왜, 무슨일이야? 라고 물어봐야 할 거 같아
       { icon: "💬", displayText: "난 발표하는게 너무 떨려", tags: ["발화 전 생각 멈춤", "발표 불안", "긴장"], type: "emotion_intensity" } // 특정 상황에서의 감정 강도
     ],
     "친구 이야기": [ 
       { icon: "😔", displayText: "친구들이 날 피하는 것 같아", tags: ["따돌림", "소외감", "친구 관계 어려움"], type: "situation" },
-      { icon: "🥺", displayText: "친구랑 놀고 싶은데, 어떻게 말 걸어?", tags: ["관계 시작의 어려움", "사회성 부족", "소심함"], type: "situation" },
-      { icon: "😠", displayText: "친구들이 내 말 안 들어줘서 속상해", tags: ["무시당하는 느낌", "존중받지 못함"], type: "situation" }, // 상황 + 감정이나, 상황 탐색 우선
-      { icon: "🤦", displayText: "친구들이 날 이해 못 하는 것 같아", tags: ["오해", "서운함", "공감 부족"], type: "situation" },
+      { icon: "🥺", displayText: "사람들과 친해지려면 어떻게 말 걸어?", tags: ["관계 시작의 어려움", "사회성 부족", "소심함"], type: "situation" },
+      { icon: "😠", displayText: "내가 특이한 거야?", tags: ["무시당하는 느낌", "존중받지 못함"], type: "situation" }, // 상황 + 감정이나, 상황 탐색 우선
+      { icon: "🤦", displayText: "친구들이 내 의도를 몰라줘", tags: ["오해", "서운함", "공감 부족"], type: "situation" },
       { icon: "🧐", displayText: "나만 모르는 친구들 규칙이 있나봐", tags: ["사회적 규칙 이해 어려움", "눈치 없음"], type: "situation" },
       { icon: "🤝", displayText: "친구랑 싸웠는데 누가 잘못한거야?", tags: ["갈등 해결의 어려움", "친구 관계 어려움"], type: "situation" },
-      { icon: "😨", displayText: "새로운 곳, 새로운 사람 이런 거 너무 불편해", tags: ["강박", "사회적 불안", "낯가림"], type: "situation" }, // 상황으로 인한 감정
-      { icon: "😵", displayText: "다른 사람 표정/말투, 잘 모르겠어", tags: ["비언어적 단서 파악 어려움", "공감 능력 부족"], type: "situation" },
+      { icon: "😨", displayText: "난 변화가 너무 불편해", tags: ["강박", "사회적 불안", "낯가림"], type: "situation" }, // 상황으로 인한 감정
+      { icon: "😵", displayText: "다른 사람 표정/말투로 그 사람의 기분을 잘 모르겠어", tags: ["비언어적 단서 파악 어려움", "공감 능력 부족"], type: "situation" },
       { icon: "👀", displayText: "눈 마주치기 너무 부담스러워", tags: ["시선 처리의 어려움", "사회적 불안"], type: "situation" }, // 상황에 따른 감정
-      { icon: "😳", displayText: "같이 놀고 싶은데, 애들이 이상하게 봐", tags: ["시선 불안", "소속감 문제", "자의식 과잉"], type: "situation" },
+      { icon: "😳", displayText: "사실을 말한 건데,잘못된 걸까?", tags: ["맥락 파악 어려움", "사회적 단서 부족", "사회성 부족족"], type: "situation" },
       { icon: "⁉️", displayText: "농담인지 진담인지 헷갈려", tags: ["맥락 파악 어려움", "유머 이해 부족", "사회적 단서 부족"], type: "situation" },
       { icon: "🥊", displayText: "친구가 놀릴 때 어떻게 해야 해?", tags: ["괴롭힘 대처", "자기방어 어려움"], type: "situation" },
-      { icon: "🫂", displayText: "다른 사람이 만지면 너무 불편해", tags: ["감각과민", "개인 공간 침해"], type: "situation" }, // 상황에 따른 감각/감정
-      { icon: "👨‍👩‍👧‍👦", displayText: "다 같이 놀 때 끼기 어려워", tags: ["그룹 활동 어려움", "사회성 부족"], type: "situation" },
-      { icon: "🗣️", displayText: "내 말이 잘 안 통해, 답답해", tags: ["의사소통의 어려움", "조리 있게 말하기"], type: "situation" },
-      { icon: "😥", displayText: "내가 말 못해서 대화 끊길까 봐 걱정돼", tags: ["언어 지연 우려", "대화 불안", "말더듬"], type: "situation" },
-      { icon: "😤", displayText: "내 말을 오해해서 너무 억울해", tags: ["오해로 인한 억울함", "의사소통 오류"], type: "situation" }, // 왜 억울한지 상황을 듣고 감정 강도를 물어봐야 함
+      { icon: "🫂", displayText: "다른 사람과 몸이 닿으면 너무 불편해", tags: ["감각과민", "개인 공간 침해"], type: "situation" }, // 상황에 따른 감각/감정
+      { icon: "👨‍👩‍👧‍👦", displayText: "여러명이 같이 하는 일은 너무 불편해", tags: ["그룹 활동 어려움", "사회성 부족"], type: "situation" },
+      { icon: "😤", displayText: "다른 사람은은 말을 오해해서 너무 억울해", tags: ["오해로 인한 억울함", "의사소통 오류"], type: "situation" }, // 왜 억울한지 상황을 듣고 감정 강도를 물어봐야 함
       { icon: "🗣️", displayText: "사람들 앞에서 목소리가 떨려", tags: ["발표 불안", "대면 불안", "사회 공포"], type: "emotion_intensity" } // 보통 얼마나 떨리는데 1부터 10까지로 말해봐
     ],
     "학교생활 이야기": [ // 대부분 situation 타입으로 분류
