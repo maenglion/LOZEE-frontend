@@ -372,14 +372,22 @@
     diagnosisError.textContent = '';
     localStorage.setItem('lozee_diagnoses', JSON.stringify(selectedDiagnoses));
 
-            // 다음 단계: 이름/생년월일 입력 (보호자면 본인 정보 먼저, 당사자면 본인 정보)
-            if (selectedUserType === 'caregiver') {
-                nameBirthSelfTitleEl.textContent = "보호자님의 정보를 알려주세요.";
-                nameSelfPromptEl.textContent = "로지가 보호자님을 어떻게 부르면 좋을까요?";
-                nameSelfInput.placeholder = "보호자님 이름 또는 별명";
-                birthSelfPromptEl.textContent = "보호자님의 생년월일을 선택해주세요.";
-                populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 18, 90); // 보호자 나이 범위
-                showStep(stepNameBirthSelf);
+        // 다음 단계: 이름/생년월일 입력 (보호자면 본인 정보 먼저, 당사자면 본인 정보)
+         if (selectedUserType === 'caregiver') {
+             caregiverNameFromInput = name; // name은 nameSelfInput.value.trim()
+             caregiverSelfBirthDate = birthDate; // birthDate는 y,m,d로 조합
+             caregiverSelfAge = age; // age는 calculateAge 결과
+
+        // 다음 단계: 자녀 정보 입력 UI 설정
+             nameBirthChildTitleEl.textContent = "아이(또는 가족)의 정보를 알려주세요.";
+             nameChildPromptEl.textContent = "로지가 아이(또는 가족)를 어떻게 부르면 좋을까요?";
+             nameChildInput.placeholder = "아이(또는 가족) 이름 또는 별명";
+             nameChildInput.value = ''; // 이전 값 초기화
+             birthChildPromptEl.textContent = "아이(또는 가족)의 생년월일을 선택해주세요.";
+             populateBirthSelects(birthChildYear, birthChildMonth, birthChildDay, 0, 20); // 👈 자녀 나이 범위로 호출
+             showStep(stepNameBirthChild);
+
+
             } else { // directUser
                 nameBirthSelfTitleEl.textContent = "만나서 반가워요! 당신에 대해 알려주세요.";
                 nameSelfPromptEl.textContent = "로지가 당신을 어떻게 부르면 좋을까요?";
