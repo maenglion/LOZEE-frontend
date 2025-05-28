@@ -239,35 +239,38 @@
     </div>
 
     <script type="module">
-        let ChartJS = null; // Chart.js 객체를 저장할 변수
+        let chartLibraryInitialized = false; // Chart.js 초기화 여부 플래그
 
         // Chart.js ESM 모듈 동적 import 및 초기화 시도
-        async function initializeChartJs() {
-            try {
-                const chartModule = await import('https://cdn.jsdelivr.net/npm/chart.js/dist/chart.esm.js'); // 가장 일반적인 CDN 링크
-                ChartJS = chartModule.Chart;
-                ChartJS.register(...chartModule.registerables);
+       function initializeChartJsGlobal() { // 함수 이름 변경 (선택 사항)
+    try {
+        if (typeof Chart !== 'undefined' && Chart) { // 전역 'Chart' 객체가 있는지 확인
+            // UMD 버전은 대부분의 요소가 자동 등록되거나, Chart 객체를 통해 접근 가능
+            // Chart.register(...Chart.controllers, ...Chart.elements, ...Chart.scales, ...Chart.plugins); // 필요시에만 특정 요소 등록
             
-                ChartJS.defaults.color = '#333'; 
-                ChartJS.defaults.borderColor = '#e0e0e0'; 
-                ChartJS.defaults.font.family = "'KoPub World Dotum', sans-serif"; 
-                ChartJS.defaults.font.size = 12; 
-                console.log("Analysis Page: Chart.js 라이브러리가 성공적으로 로드 및 초기화되었습니다.");
-                return true;
-            } catch (error) {
-                console.error("Analysis Page: Chart.js 라이브러리 로드 또는 초기화 실패!", error);
-                const emotionChartContainer = document.getElementById('emotionChartContainer');
-                if (emotionChartContainer) {
-                    emotionChartContainer.innerHTML = '<p style="text-align:center; color:red; padding:20px;">차트 라이브러리를 불러오는 데 문제가 있어요. 😭<br>인터넷 연결을 확인하고 페이지를 새로고침 해보세요.</p>';
-                }
-                return false;
+            Chart.defaults.color = '#333'; 
+            Chart.defaults.borderColor = '#e0e0e0'; 
+            Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; 
+            Chart.defaults.font.size = 12; 
+            console.log("Analysis Page: Chart.js(UMD) 라이브러리가 인식되고 기본값이 설정되었습니다.");
+            chartLibraryInitialized = true;
+            return true;
+        } else {
+            console.error("Analysis Page: Chart.js(UMD) 라이브러리를 찾을 수 없습니다. <head>에 스크립트가 올바르게 추가되었는지 확인하세요.");
+            const emotionChartContainer = document.getElementById('emotionChartContainer');
+            if (emotionChartContainer) {
+                emotionChartContainer.innerHTML = '<p style="text-align:center; color:red; padding:20px;">차트 기능에 문제가 있어요. 😭<br>새로고침하거나 나중에 다시 시도해주세요.</p>';
             }
+            return false;
         }
-
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("Analysis Page: DOMContentLoaded 이벤트 시작");
-            const chartJsReady = await initializeChartJs(); // Chart.js 초기화 기다림
+    } catch (error) {
+        console.error("Analysis Page: Chart.js(UMD) 초기화 중 오류!", error);
+        return false;
+    }
+}
+       document.addEventListener('DOMContentLoaded', async () => {
+       console.log("Analysis Page: DOMContentLoaded 이벤트 시작");
+       const chartJsIsReady = initializeChartJsGlobal(); // 변경된 함수 호출
 
             // --- DOM 요소 가져오기 ---
             const languageAgeSection = document.getElementById('languageAgeSection');
@@ -414,14 +417,19 @@
             }
 
             // 2. 감정 어조 및 태그 클라우드
-            if (chartJsReady && analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
-                if(emotionChartEl) emotionChartEl.style.display = 'block';
-                renderEmotionChart('emotionChart', analysisResults.emotionToneData);
-                if(empathyMessageEl) displayEmpathyMessage(analysisResults.emotionToneData);
-            } else {
-                if(emotionChartEl) emotionChartEl.style.display = 'none';
-                if(empathyMessageEl) { empathyMessageEl.textContent = "아직은 네 마음속 감정들을 자세히 알기 어려워. 로지랑 더 많은 이야기를 나눠보자!"; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block'; }
-            }
+            // renderEmotionChart 호출 전에 chartJsIsReady 확인
+         if (chartJsIsReady && analysisResults && analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
+         if(emotionChartEl) emotionChartEl.style.display = 'block';
+         renderEmotionChart('emotionChart', analysisResults.emotionToneData); // 이 함수 내부에서 new Chart(...) 사용
+         if(empathyMessageEl) displayEmpathyMessage(analysisResults.emotionToneData);
+         } else if (chartJsIsReady) { // 차트 라이브러리는 로드되었으나 데이터가 없는 경우
+          const chartContainer = document.getElementById('emotionChartContainer');
+        if(emotionChartEl) emotionChartEl.style.display = 'none';
+        if(chartContainer && !chartContainer.querySelector('.no-chart-message')) {
+            chartContainer.innerHTML = '<p class="no-chart-message" style="text-align:center; color:#888; padding:20px;">분석이 쌓이면 여기에 마음 색깔 차트가 완성될 거야! 😊</p>';
+        }
+        if(empathyMessageEl) { empathyMessageEl.textContent = "아직은 네 마음속 감정들을 자세히 알기 어려워. 로지랑 더 많은 이야기를 나눠보자!"; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block'; }
+        }
             if (analysisResults.keywords && analysisResults.keywords.length > 0) {
                 const tagsForCloud = analysisResults.keywords.map(kw => ({ text: kw, weight: 5 + Math.floor(Math.random() * 10) }));
                 if(tagCloudEl) renderTagCloud('tagCloud', tagsForCloud);
@@ -453,7 +461,10 @@
         function alertCognitiveDistortions(elementId, distortions) { const alertEl = document.getElementById(elementId); if(!alertEl) return; if(distortions && distortions.length > 0) { alertEl.innerHTML = distortions.map(d => `<p class="cognitive-distortion-item">${d}</p>`).join(''); } else { alertEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';} }
         
         function renderEmotionChart(canvasId, emotionData) { 
-            if (!ChartJS) { console.error("Chart.js가 로드되지 않아 차트를 그릴 수 없습니다."); return; }
+            if (!chartLibraryInitialized || typeof Chart === 'undefined') { // ChartJS 대신 chartLibraryInitialized 와 전역 Chart 확인
+             console.error("Chart.js가 준비되지 않아 차트를 그릴 수 없습니다."); 
+             // ... (차트 라이브러리 문제 시 메시지 표시 로직) ...
+            return; }
             const ctx = document.getElementById(canvasId)?.getContext('2d');
             const chartEl = document.getElementById(canvasId);
             if (!ctx) { console.error("renderEmotionChart: 캔버스 context를 가져올 수 없습니다."); if(chartEl) chartEl.style.display = 'none'; return; }
