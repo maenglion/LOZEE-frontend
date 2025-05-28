@@ -9,7 +9,8 @@ const VALID_CBT_EMAILS = [
     "orchidyoung@naver.com" ,
     "sujakso138@naver.com " , 
     "maenghakjae@gmail.com " ,
-    "yesook0613@naver.com" 
+    "yesook0613@naver.com" ,
+    "unbearable_@naver.com"
     // 필요에 따라 여기에 더 많은 이메일 주소를 추가할 수 있습니다.
 ].map(email => email.toLowerCase()); // 비교를 위해 미리 소문자로 변환
 
