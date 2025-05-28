@@ -201,7 +201,7 @@ export const counselingTopicsByAge = {
       { icon: "🗣️💬", displayText: "다른 사람들에게 우리 아이의 특별함에 대해 어떻게 이야기해야 할지 어려워요.", tags: ["사회적 소통", "신경다양성 설명", "이해 구하기"], type: "else" }
     ],
     "가족 관계 (양육자 관점)": [
-      { icon: "夫婦😥", displayText: "아이 문제로 배우자와의 관계가 점점 힘들어져요.", tags: ["가족 관계 어려움", "부부 갈등", "양육 스트레스", "소통 단절"], type: "situation" },
+      { icon: "😥", displayText: "아이 문제로 배우자와의 관계가 점점 힘들어져요.", tags: ["가족 관계 어려움", "부부 갈등", "양육 스트레스", "소통 단절"], type: "situation" },
       { icon: "👵🏻👴🏻❓", displayText: "부모님(시부모님)께 아이 문제로 지원받고 싶지만, 이해받기 어려워요.", tags: ["가족 관계 어려움", "조부모와 갈등", "세대 차이", "이해 부족"], type: "situation" },
       { icon: "🗣️💔", displayText: "친척이나 주변 사람들의 (아이 관련) 말에 상처받을 때가 많아요.", tags: ["가족 관계 어려움", "사회적 편견", "정서적 고립", "상처"], type: "emotion_intensity" },
       { icon: "👩‍❤️‍👨🚫", displayText: "육아 때문에 부부만의 시간이 거의 없어져서 소원해진 것 같아요.", tags: ["가족 관계 어려움", "부부 관계 소홀", "정서적 교류 부족"], type: "situation" },
