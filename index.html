@@ -30,7 +30,7 @@
         .diagnosis-options { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 20px; max-height: 60vh; overflow-y: auto; padding: 0 10px;}
         .diagnosis-btn, .caregiver-nd-btn { display: block; width: 85%; max-width: 480px; margin-bottom: 10px; padding: 12px; font-size: 1em; background: rgba(255, 255, 255, 0.9); color: #5f73e0; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; cursor: pointer; font-weight: 500; transition: background-color 0.2s; }
         .diagnosis-btn:hover, .caregiver-nd-btn:hover { background: #fff; }
-        .diagnosis-btn.selected, .caregiver-nd-btn.selected { background-color: #6e8efb; color: white; border-color: #6e8efb; }
+        .diagnosis-btn.selected, .caregiver-nd-btn.selected { background-color: #FFEB3B; color: #333; border-color: #FBC02D; font-weight:bold;} /* 선택 시 노란색 계열 */
         .optional-text { font-size: 0.8em; color: #e0e0e0; font-weight: normal; }
         
         .secondary-btn { background: #78909c; color: white; margin-top: 10px; }
@@ -57,7 +57,8 @@
     </style>
 </head>
 <body class="step-background-main">
-    <div id="stepUserType" class="step active"> <h2>당신은 어디에 해당하시나요?</h2>
+    <div id="stepUserType" class="step active">
+        <h2>당신은 어디에 해당하시나요?</h2>
         <div class="user-type-options">
             <button class="user-type-btn" data-usertype="directUser">제가 직접 이야기 나눌 거예요<br><span class="btn-subtitle">(신경다양인 당사자)</span></button>
             <button class="user-type-btn" data-usertype="caregiver">제가 보호자예요<br><span class="btn-subtitle">(양육자, 배우자 등)</span></button>
@@ -70,7 +71,8 @@
         <p id="cbtInfo">CBT 참여자 이메일 주소를 입력해주세요.</p>
         <input type="email" id="cbtCodeInput" placeholder="이메일 주소" />
         <div class="error-message" id="cbtCodeError"></div>
-        <button id="submitCbtCodeBtn">다음</button> </div>
+        <button id="submitCbtCodeBtn">다음</button>
+    </div>
 
     <div id="stepCaregiverNeurodiversity" class="step">
         <h2>보호자님에 대해서도 알려주시겠어요? <span class="optional-text">(선택 사항)</span></h2>
@@ -156,20 +158,6 @@
     </div>
 
     <script type="module">
-        // --- Script Content (이전 답변의 최종 JavaScript 코드와 동일) ---
-        // import ...
-        // DOMContentLoaded 리스너 시작
-        //   DOM 요소 가져오기
-        //   상태 변수
-        //   헬퍼 함수 (showStep, populateBirthSelects, calculateAge, createBaseUserData, checkForExistingCbtUser)
-        //   이벤트 핸들러 (userTypeButtons.onclick, submitCbtCodeBtn.onclick, ...)
-        //   페이지 로드 시 초기 실행 (showStep(stepUserType))
-        // DOMContentLoaded 리스너 끝
-        // --- Script Content End ---
-
-        // (이전 답변에서 제공한 JavaScript 코드를 여기에 그대로 넣어주세요)
-        // (단, checkForExistingCbtUser 함수는 DOMContentLoaded 리스너 안이나 그 이전에 정의되어야 합니다.)
-        // (모든 이벤트 핸들러 등록도 DOMContentLoaded 안으로!)
         import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js';
         import { db } from './js/firebase-config.js'; 
         import { doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
@@ -177,6 +165,7 @@
       document.addEventListener('DOMContentLoaded', () => {
         console.log("DOMContentLoaded 이벤트 발생: index.html");
 
+        // --- DOM 요소 가져오기 ---
         const stepUserType = document.getElementById('stepUserType');
         const stepCBT = document.getElementById('stepCBT');
         const stepCaregiverNeurodiversity = document.getElementById('stepCaregiverNeurodiversity');
@@ -193,7 +182,7 @@
         const submitCbtCodeBtn = document.getElementById('submitCbtCodeBtn');
         
         const caregiverNdOptionBtns = document.querySelectorAll('.caregiver-nd-btn');
-        const caregiverNdError = document.getElementById('caregiverNdError'); // HTML에 추가 필요할 수 있음
+        const caregiverNdError = document.getElementById('caregiverNdError');
         const submitCaregiverNdBtn = document.getElementById('submitCaregiverNdBtn');
         
         const diagnosisTitleEl = document.getElementById('diagnosisTitle');
@@ -203,10 +192,10 @@
         const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn');
         
         const nameBirthSelfTitleEl = document.getElementById('nameBirthSelfTitle');
-        const nameSelfPromptEl = document.getElementById('nameSelfPromptLabel'); // ID 변경 (label의 for와 일치)
+        const nameSelfPromptEl = document.getElementById('nameSelfPromptLabel');
         const nameSelfInput = document.getElementById('nameSelfInput');
         const nameSelfError = document.getElementById('nameSelfError');
-        const birthSelfPromptEl = document.getElementById('birthSelfPromptLabel'); // ID 변경
+        const birthSelfPromptEl = document.getElementById('birthSelfPromptLabel');
         const birthSelfInfoTextEl = document.getElementById('birthSelfInfoText');
         const birthSelfYear = document.getElementById('birthSelfYear');
         const birthSelfMonth = document.getElementById('birthSelfMonth');
@@ -215,10 +204,10 @@
         const submitNameBirthSelfBtn = document.getElementById('submitNameBirthSelfBtn');
 
         const nameBirthChildTitleEl = document.getElementById('nameBirthChildTitle');
-        const nameChildPromptEl = document.getElementById('nameChildPromptLabel'); // ID 변경
+        const nameChildPromptEl = document.getElementById('nameChildPromptLabel');
         const nameChildInput = document.getElementById('nameChildInput');
         const nameChildError = document.getElementById('nameChildError');
-        const birthChildPromptEl = document.getElementById('birthChildPromptLabel'); // ID 변경
+        const birthChildPromptEl = document.getElementById('birthChildPromptLabel');
         const birthChildInfoTextEl = document.getElementById('birthChildInfoText');
         const birthChildYear = document.getElementById('birthChildYear');
         const birthChildMonth = document.getElementById('birthChildMonth');
@@ -231,17 +220,22 @@
         const submitChildEmailBtn = document.getElementById('submitChildEmailBtn');
         const skipChildEmailBtn = document.getElementById('skipChildEmailBtn');
 
+        // --- 상태 변수 ---
         let selectedUserType = ''; 
         let caregiverSelfName = '', caregiverSelfBirthDate = '', caregiverSelfAge = 0;
         let childName = '', childBirthDate = '', childAge = 0;
         let directUserName = '', directUserBirthDate = '', directUserAge = 0;
         let selectedCaregiverNd = [];
-        let selectedDiagnoses = [];
+        let selectedDiagnoses = []; // 당사자 또는 아이/가족의 진단 정보
 
+        // --- 헬퍼 함수 ---
         function showStep(elToShow) {
             document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
-            if (elToShow) elToShow.classList.add('active');
-            else console.error("showStep: 표시할 요소가 전달되지 않았습니다.");
+            if (elToShow) {
+                elToShow.classList.add('active');
+            } else {
+                console.error("showStep: 표시할 요소가 전달되지 않았습니다.");
+            }
         }
 
         function populateBirthSelects(yearEl, monthEl, dayEl, startYearOffset = 3, endYearOffset = 90) {
@@ -261,12 +255,30 @@
             for (let d = 1; d <= 31; d++) { const opt = document.createElement('option'); opt.value = d; opt.textContent = d + '일'; dayEl.appendChild(opt); }
         }
         
-        function calculateAge(y, m, d) { const dob = new Date(y, m - 1, d); const today = new Date(); let age = today.getFullYear() - dob.getFullYear(); const monthDiff = today.getMonth() - dob.getMonth(); if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) { age--; } return age; }
-        function createBaseUserData(email, userTypeToSave) { return { email: email, userType: userTypeToSave, lastLogin: serverTimestamp() }; }
+        function calculateAge(y, m, d) { 
+            if(!y || !m || !d) return 0; // 값이 없으면 0 반환
+            const dob = new Date(y, parseInt(m) - 1, d); 
+            const today = new Date(); 
+            let age = today.getFullYear() - dob.getFullYear(); 
+            const monthDiff = today.getMonth() - dob.getMonth(); 
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) { age--; } 
+            return age; 
+        }
+        
+        function createBaseUserData(email, userTypeToSave) { 
+            return { 
+                email: email, 
+                userType: userTypeToSave, 
+                lastLogin: serverTimestamp() 
+            }; 
+        }
 
         async function checkForExistingCbtUser(email) {
             const userTypeFromStorage = localStorage.getItem('lozee_userType'); 
-            if (!email || !userTypeFromStorage) {console.log("checkForExistingCbtUser: 이메일 또는 사용자 유형 로컬 정보 없음"); return false;}
+            if (!email || !userTypeFromStorage) {
+                console.log("checkForExistingCbtUser: 이메일 또는 사용자 유형 로컬 정보 없음"); 
+                return false;
+            }
 
             console.log(`기존 사용자 정보 확인 시도: ${email}, 유형: ${userTypeFromStorage}`);
             try {
@@ -284,47 +296,62 @@
                         return false;
                     }
                     localStorage.setItem('isCbtUser', 'true');
+                    
+                    // Firestore에 저장된 정보로 localStorage 업데이트
+                    localStorage.setItem('lozee_username', userData.name || (userData.userType === 'caregiver' ? (userData.childName || '아이') : '친구'));
+                    localStorage.setItem('lozee_userage', (userData.age || (userData.userType === 'caregiver' ? userData.childAge : 0) || 0).toString());
+                    
                     if (userData.userType === 'caregiver') {
-                        localStorage.setItem('lozee_username', userData.name || '보호자'); // 보호자 본인 이름
-                        localStorage.setItem('lozee_userage', (userData.age || 0).toString()); // 보호자 본인 나이
-                        localStorage.setItem('lozee_child_name', userData.childName || '아이');
-                        localStorage.setItem('lozee_child_age', (userData.childAge || 0).toString());
+                        if(userData.childName) localStorage.setItem('lozee_child_name', userData.childName);
+                        if(userData.childAge !== undefined) localStorage.setItem('lozee_child_age', userData.childAge.toString());
                         if(userData.childDiagnoses) localStorage.setItem('lozee_diagnoses', JSON.stringify(userData.childDiagnoses)); // 자녀의 진단
                         if(userData.caregiverNeurodiversity) localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(userData.caregiverNeurodiversity));
                         if(userData.childLozeeEmail) localStorage.setItem('lozee_child_email', userData.childLozeeEmail);
+                        // 보호자 본인 정보 (이름, 나이는 lozee_username, lozee_userage에 이미 저장됨)
                     } else { // directUser
-                        localStorage.setItem('lozee_username', userData.name || '친구');
-                        localStorage.setItem('lozee_userage', (userData.age || 0).toString());
                         if(userData.diagnoses) localStorage.setItem('lozee_diagnoses', JSON.stringify(userData.diagnoses)); // 당사자의 진단
                     }
+                    
                     console.log(`사용자 정보 로드 완료. talk.html로 이동합니다.`);
                     window.location.href = 'talk.html';
                     return true; 
                 } else {
-                    console.log("Firestore에 해당 이메일의 사용자 정보가 없습니다.");
+                    console.log("Firestore에 해당 이메일의 사용자 정보가 없습니다. 새로 가입 절차를 진행합니다.");
+                    // Firestore에 정보가 없으면 cbtUserEmail과 isCbtUser, lozee_userType 외 다른 로컬 정보는 유효하지 않음
+                    localStorage.removeItem('lozee_username');
+                    localStorage.removeItem('lozee_userage');
+                    localStorage.removeItem('lozee_diagnoses');
+                    localStorage.removeItem('lozee_caregiver_neurodiversity');
+                    localStorage.removeItem('lozee_child_email');
+                    localStorage.removeItem('lozee_child_name'); // 추가
+                    localStorage.removeItem('lozee_child_age'); // 추가
                 }
             } catch (error) { console.error("Firestore에서 사용자 정보 로드 중 오류:", error); }
             return false; 
         }
 
-        userTypeButtons.forEach(button => {
-            button.onclick = () => {
-                selectedUserType = button.dataset.usertype;
-                localStorage.setItem('lozee_userType', selectedUserType);
-                if(cbtTitleEl && cbtInfoEl && cbtCodeInput){
-                    if (selectedUserType === 'caregiver') {
-                        cbtTitleEl.textContent = "보호자님, 반갑습니다!";
-                        cbtInfoEl.textContent = "원활한 서비스 이용을 위해 보호자님의 이메일 주소를 입력해주세요.";
-                        cbtCodeInput.placeholder = "보호자님 이메일 주소";
-                    } else { 
-                        cbtTitleEl.textContent = "로지와 대화 시작하기";
-                        cbtInfoEl.textContent = "CBT 참여자 이메일 주소를 입력해주세요.";
-                        cbtCodeInput.placeholder = "이메일 주소";
+        // --- 이벤트 핸들러 등록 ---
+        if (userTypeButtons && userTypeButtons.length > 0) {
+            userTypeButtons.forEach(button => {
+                button.onclick = () => {
+                    selectedUserType = button.dataset.usertype;
+                    localStorage.setItem('lozee_userType', selectedUserType);
+                    if(cbtTitleEl && cbtInfoEl && cbtCodeInput){
+                        if (selectedUserType === 'caregiver') {
+                            cbtTitleEl.textContent = "보호자님, 반갑습니다!";
+                            cbtInfoEl.textContent = "원활한 서비스 이용을 위해 보호자님의 이메일 주소를 입력해주세요.";
+                            cbtCodeInput.placeholder = "보호자님 이메일 주소";
+                        } else { 
+                            cbtTitleEl.textContent = "로지와 대화 시작하기";
+                            cbtInfoEl.textContent = "CBT 참여자 이메일 주소를 입력해주세요.";
+                            cbtCodeInput.placeholder = "이메일 주소";
+                        }
                     }
-                }
-                showStep(stepCBT);
-            };
-        });
+                    showStep(stepCBT);
+                };
+            });
+        } else { console.error("userTypeButtons 요소를 찾을 수 없습니다."); }
+
 
         if(submitCbtCodeBtn) submitCbtCodeBtn.onclick = async () => {
             const email = cbtCodeInput.value.trim();
@@ -332,17 +359,48 @@
             cbtCodeError.textContent = '';
             localStorage.setItem('cbtUserEmail', email.toLowerCase());
             localStorage.setItem('isCbtUser', 'true');
+            
             const existingUserProcessed = await checkForExistingCbtUser(email);
             if (existingUserProcessed) return; 
-            if (selectedUserType === 'caregiver') { showStep(stepCaregiverNeurodiversity); } 
-            else { 
+
+            if (selectedUserType === 'caregiver') { 
+                showStep(stepCaregiverNeurodiversity); 
+            } else { 
                 if(diagnosisTitleEl) diagnosisTitleEl.textContent = "현재 어떤 어려움을 느끼고 있나요?";
                 if(diagnosisInfoEl) diagnosisInfoEl.textContent = "해당하는 항목을 모두 선택해주세요. (중복 선택 가능)";
                 showStep(stepDiagnosisType); 
             }
         };
 
-        caregiverNdOptionBtns.forEach(button => { /* ...선택 로직... */ });
+        if (caregiverNdOptionBtns && caregiverNdOptionBtns.length > 0) {
+            caregiverNdOptionBtns.forEach(button => {
+                button.onclick = () => {
+                    const ndType = button.dataset.nd;
+                    if (ndType === 'unsure_or_none') {
+                        if (button.classList.contains('selected')) {
+                            button.classList.remove('selected'); selectedCaregiverNd = [];
+                        } else {
+                            caregiverNdOptionBtns.forEach(btn => btn.classList.remove('selected'));
+                            button.classList.add('selected'); selectedCaregiverNd = [ndType];
+                        }
+                    } else {
+                        let unsureBtn = null;
+                        caregiverNdOptionBtns.forEach(btn => { if (btn.dataset.nd === 'unsure_or_none') unsureBtn = btn; });
+                        if (unsureBtn && unsureBtn.classList.contains('selected')) {
+                            unsureBtn.classList.remove('selected'); selectedCaregiverNd = [];
+                        }
+                        button.classList.toggle('selected');
+                        if (selectedCaregiverNd.includes(ndType)) {
+                            selectedCaregiverNd = selectedCaregiverNd.filter(d => d !== ndType);
+                        } else {
+                            selectedCaregiverNd.push(ndType);
+                        }
+                    }
+                    if(caregiverNdError) caregiverNdError.textContent = '';
+                    console.log("선택된 보호자/배우자 신경다양성:", selectedCaregiverNd);
+                };
+            });
+        }
         if(submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => {
             localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(selectedCaregiverNd));
             if(diagnosisTitleEl) diagnosisTitleEl.textContent = "아이(또는 가족)의 어떤 점에 대해 이야기 나누고 싶으세요?";
@@ -350,13 +408,43 @@
             showStep(stepDiagnosisType);
         };
 
-        diagnosisOptionBtns.forEach(button => { /* ...선택 로직... */ });
+        if(diagnosisOptionBtns && diagnosisOptionBtns.length > 0) {
+            diagnosisOptionBtns.forEach(button => {
+                button.onclick = () => {
+                    const diagnosis = button.dataset.diagnosis;
+                    const isExclusive = (diagnosis === 'NotApplicable' || diagnosis === 'Unsure');
+                    if (isExclusive) {
+                        if (button.classList.contains('selected')) {
+                            button.classList.remove('selected'); selectedDiagnoses = [];
+                        } else {
+                            diagnosisOptionBtns.forEach(btn => btn.classList.remove('selected'));
+                            button.classList.add('selected'); selectedDiagnoses = [diagnosis];
+                        }
+                    } else {
+                        let exclusiveBtn = null;
+                        diagnosisOptionBtns.forEach(btn => { if (btn.dataset.diagnosis === 'NotApplicable' || btn.dataset.diagnosis === 'Unsure') exclusiveBtn = btn; });
+                        if (exclusiveBtn && exclusiveBtn.classList.contains('selected')) {
+                            exclusiveBtn.classList.remove('selected'); selectedDiagnoses = [];
+                        }
+                        button.classList.toggle('selected');
+                        if (selectedDiagnoses.includes(diagnosis)) {
+                            selectedDiagnoses = selectedDiagnoses.filter(d => d !== diagnosis);
+                        } else {
+                            selectedDiagnoses.push(diagnosis);
+                        }
+                    }
+                    if(diagnosisError) diagnosisError.textContent = '';
+                    console.log("선택된 진단 유형:", selectedDiagnoses);
+                };
+            });
+        }
         if(submitDiagnosisBtn) submitDiagnosisBtn.onclick = () => {
-            if (selectedDiagnoses.length === 0 && !selectedDiagnoses.includes('NotApplicable') && !selectedDiagnoses.includes('Unsure')) {
+            if (selectedDiagnoses.length === 0) {
                 diagnosisError.textContent = "하나 이상 선택해주세요."; return;
             }
             diagnosisError.textContent = '';
             localStorage.setItem('lozee_diagnoses', JSON.stringify(selectedDiagnoses));
+            
             if (selectedUserType === 'caregiver') {
                 if(nameBirthSelfTitleEl) nameBirthSelfTitleEl.textContent = "보호자님의 정보를 알려주세요.";
                 if(nameSelfPromptEl) nameSelfPromptEl.textContent = "로지가 보호자님을 어떻게 부르면 좋을까요?";
@@ -384,6 +472,7 @@
             birthSelfError.textContent = '';
             const age = calculateAge(y, m, d);
             const birthDate = `<span class="math-inline">\{y\}\-</span>{String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
             if (selectedUserType === 'caregiver') {
                 caregiverSelfName = name; caregiverSelfBirthDate = birthDate; caregiverSelfAge = age;
                 if(nameBirthChildTitleEl) nameBirthChildTitleEl.textContent = "아이(또는 가족)의 정보를 알려주세요.";
@@ -419,6 +508,7 @@
             if (!cbtUserEmail || !userTypeToSave) { console.error("필수 정보 누락으로 Firestore 저장 불가"); return; }
             const userDocRef = doc(db, "users", cbtUserEmail);
             let userDataToSave = createBaseUserData(cbtUserEmail, userTypeToSave);
+
             if (userTypeToSave === 'caregiver') {
                 userDataToSave.name = caregiverSelfName; 
                 userDataToSave.birthDate = caregiverSelfBirthDate;
@@ -439,10 +529,11 @@
                 if (!userSnap.exists()) { userDataToSave.createdAt = serverTimestamp(); }
                 await setDoc(userDocRef, userDataToSave , { merge: true });
                 console.log("Firestore에 모든 사용자 정보 저장/업데이트 완료.");
+                // talk.html에서 사용할 localStorage 정보 최종 설정
                 if (userTypeToSave === 'caregiver') {
-                    localStorage.setItem('lozee_username', caregiverSelfName); // 보호자 본인 이름 저장
+                    localStorage.setItem('lozee_username', caregiverSelfName); // 보호자 본인 이름을 lozee_username으로
                     localStorage.setItem('lozee_userage', caregiverSelfAge.toString());
-                    localStorage.setItem('lozee_child_name', childName); // 자녀 이름도 별도 저장
+                    localStorage.setItem('lozee_child_name', childName); 
                     localStorage.setItem('lozee_child_age', childAge.toString());
                 } else { // directUser
                     localStorage.setItem('lozee_username', directUserName);
@@ -451,9 +542,27 @@
             } catch (error) { console.error("Firestore에 사용자 정보 저장 중 오류:", error); }
         }
 
-        if(submitChildEmailBtn) submitChildEmailBtn.onclick = async () => { /* ... */ };
-        if(skipChildEmailBtn) skipChildEmailBtn.onclick = () => { /* ... */ };
+        if(submitChildEmailBtn) submitChildEmailBtn.onclick = async () => {
+            const childEmail = childLozeeEmailInput.value.trim();
+            if (childEmail && !validateCbtEmail(childEmail)) { childEmailError.textContent = "올바른 이메일 형식이 아닙니다."; return; }
+            childEmailError.textContent = '';
+            const cbtUserEmail = localStorage.getItem('cbtUserEmail'); 
+            if (cbtUserEmail && childEmail) {
+                localStorage.setItem('lozee_child_email', childEmail.toLowerCase());
+                try {
+                    const userDocRef = doc(db, "users", cbtUserEmail);
+                    await setDoc(userDocRef, { childLozeeEmail: childEmail.toLowerCase() }, { merge: true });
+                    console.log("Firestore에 아이/가족 로지 이메일 저장 완료.");
+                } catch (error) { console.error("Firestore에 아이/가족 로지 이메일 저장 중 오류:", error); }
+            }
+            window.location.href = 'talk.html';
+        };
+        if(skipChildEmailBtn) skipChildEmailBtn.onclick = () => {
+            localStorage.removeItem('lozee_child_email'); 
+            window.location.href = 'talk.html';
+        };
 
+        // 페이지 로드 시 항상 첫 단계부터 시작 (기존 사용자 확인은 CBT 이메일 입력 후)
         showStep(stepUserType); 
     });
     </script>
