@@ -40,6 +40,14 @@
         .input-group input, .input-group .select-row { width: 100%; margin-bottom: 0; }
 
 
+        /* index.html <style> 태그 내 수정 */
+        .diagnosis-btn.selected, .caregiver-nd-btn.selected { 
+            background-color: #FFEB3B; /* 노란색 계열 (예시) */
+            color: #333; /* 노란 배경에 어울리는 글자색 */
+            border-color: #FBC02D; /* 노란색 계열 테두리 */
+            font-weight: bold;
+        }
+
         @media (max-width: 600px) { 
             h2 { font-size: 1.6em; margin-bottom: 15px;} 
             p, .info-text { font-size: 0.95em; margin-bottom:10px;} 
@@ -91,7 +99,7 @@
     </div>
 
     <div id="stepDiagnosisType" class="step">
-        <h2 id="diagnosisTitle">신경다양성 특성 이해하기</h2>
+        <h2 id="diagnosisTitle">나의 신경다양성 정보</h2>
         <p id="diagnosisInfo">해당하는 항목을 모두 선택해주세요. (중복 선택 가능)</p>
         <div class="diagnosis-options">
             <button class="diagnosis-btn" data-diagnosis="ASD">자폐 스펙트럼 (ASD)</button>
@@ -299,13 +307,70 @@
         };
 
         // 5-4. (자신 또는 아이/가족의) 신경다양성 유형 선택
-        diagnosisOptionBtns.forEach(button => { /* ... 이전과 동일한 선택 로직 (selectedDiagnoses 업데이트) ... */ });
-        submitDiagnosisBtn.onclick = () => {
-            if (selectedDiagnoses.length === 0 && !selectedDiagnoses.includes('NotApplicable') && !selectedDiagnoses.includes('Unsure')) {
-                diagnosisError.textContent = "하나 이상 선택해주세요."; return;
+       diagnosisOptionBtns.forEach(button => {
+        button.onclick = () => {
+            const diagnosis = button.dataset.diagnosis;
+            const isExclusiveOption = (diagnosis === 'NotApplicable' || diagnosis === 'Unsure');
+
+            if (isExclusiveOption) {
+            // "해당 없음" 또는 "잘 모르겠어요"를 클릭한 경우
+            if (button.classList.contains('selected')) {
+                // 이미 선택된 상태면 선택 해제
+                button.classList.remove('selected');
+                selectedDiagnoses = [];
+            } else {
+                // 다른 모든 버튼 선택 해제 후 이 버튼만 선택
+                diagnosisOptionBtns.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+                selectedDiagnoses = [diagnosis];
             }
-            diagnosisError.textContent = '';
-            localStorage.setItem('lozee_diagnoses', JSON.stringify(selectedDiagnoses)); // 당사자/자녀 공통 사용 키
+        } else {
+            // 일반 진단 유형을 클릭한 경우 (중복 선택 가능)
+            // 만약 "해당 없음" 또는 "잘 모르겠어요"가 이전에 선택되어 있었다면 해제
+            diagnosisOptionBtns.forEach(btn => {
+                if (btn.dataset.diagnosis === 'NotApplicable' || btn.dataset.diagnosis === 'Unsure') {
+                    btn.classList.remove('selected');
+                }
+            });
+            // selectedDiagnoses 배열에서도 "NotApplicable", "Unsure" 제거
+            selectedDiagnoses = selectedDiagnoses.filter(d => d !== 'NotApplicable' && d !== 'Unsure');
+
+            // 현재 클릭한 버튼 선택/해제 토글
+            button.classList.toggle('selected');
+            if (selectedDiagnoses.includes(diagnosis)) {
+                selectedDiagnoses = selectedDiagnoses.filter(d => d !== diagnosis);
+            } else {
+                selectedDiagnoses.push(diagnosis);
+            }
+        }
+        
+        // 선택된 진단이 하나도 없고, "해당 없음"이나 "잘 모르겠어요"도 선택 안 된 경우
+        // 사용자가 모든 선택을 해제했을 때, selectedDiagnoses를 빈 배열로 유지
+        if (!isExclusiveOption && !button.classList.contains('selected') && !selectedDiagnoses.some(val => button.dataset.diagnosis === val)) {
+            // 이미 filter로 제거되었으므로 추가 동작 필요 없음
+        }
+        
+        // 만약 일반 진단 유형을 선택했는데, selectedDiagnoses가 비게 되면 (모두 해제 시)
+        // "해당 없음"이나 "잘 모르겠어요"를 기본으로 선택하게 할 수도 있지만, 지금은 그냥 비워둠.
+        
+        diagnosisError.textContent = ''; // 선택 시 오류 메시지 초기화
+        console.log("선택된 진단 유형:", selectedDiagnoses);
+    };
+});
+
+      // submitDiagnosisBtn.onclick 핸들러는 기존과 동일하게 유지 가능하나,
+      // selectedDiagnoses 배열에 "NotApplicable" 또는 "Unsure"만 있거나,
+      // 혹은 여러 일반 진단 유형이 함께 있는지만 확인합니다.
+    submitDiagnosisBtn.onclick = () => {
+        if (selectedDiagnoses.length === 0) { // 아무것도 선택 안 함
+        diagnosisError.textContent = "하나 이상 선택해주세요. 특별히 해당사항이 없거나 잘 모르겠다면 관련 옵션을 선택할 수 있어요.";
+        return;
+        }
+    // 만약 "NotApplicable"이나 "Unsure"가 다른 일반 진단과 함께 선택될 수 없도록 하려면,
+    // 여기서 추가적인 유효성 검사 가능 (현재 로직은 이미 위에서 처리)
+    
+    diagnosisError.textContent = '';
+    localStorage.setItem('lozee_diagnoses', JSON.stringify(selectedDiagnoses));
 
             // 다음 단계: 이름/생년월일 입력 (보호자면 본인 정보 먼저, 당사자면 본인 정보)
             if (selectedUserType === 'caregiver') {
