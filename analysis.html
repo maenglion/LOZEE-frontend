@@ -129,16 +129,33 @@
     <script type="module">
         // Chart.js ESM 모듈 불러오기 (jsDelivr의 일반 최신 버전 링크 사용)
         import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js/dist/chart.esm.js';
-        Chart.register(...registerables);
-       
-        // Chart.js 전역 기본값 설정
-        Chart.defaults.color = '#333'; 
-        Chart.defaults.borderColor = '#e0e0e0'; 
-        Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; 
-        Chart.defaults.font.size = 12; 
+        // 또는 특정 버전 명시 (예: 4.4.3)
+        // import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.esm.js';
+        
+        // Chart.js 로드 성공/실패 확인용 로그 (import 직후)
+        if (typeof Chart !== 'undefined') {
+            console.log("Analysis Page: Chart.js 라이브러리가 성공적으로 로드되었습니다.");
+            Chart.register(...registerables);
+
+            // Chart.js 전역 기본값 설정
+            Chart.defaults.color = '#333'; 
+            Chart.defaults.borderColor = '#e0e0e0'; 
+            Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; 
+            Chart.defaults.font.size = 12; 
+
+        } else {
+            console.error("Analysis Page: Chart.js 라이브러리 로드에 실패했습니다! 이 오류가 해결되어야 합니다.");
+            // Chart.js 로드 실패 시 사용자에게 알림 (선택 사항)
+            const containerEl = document.querySelector('.container');
+            if (containerEl) {
+                containerEl.innerHTML = '<h1>앗! 분석 페이지를 여는 데 필요한 파일을 불러오지 못했어요 😥</h1><p style="text-align:center;">인터넷 연결을 확인하고 페이지를 새로고침 해보세요.</p>';
+            }
+            // Chart.js 로드 실패 시 이후 스크립트 실행이 의미 없을 수 있으므로, 여기서 중단할 수도 있습니다.
+            // 하지만 DOMContentLoaded 리스너는 실행되도록 두어 다른 기본 정보라도 표시될 수 있게 합니다.
+        }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log("Analysis Page: DOMContentLoaded"); 
+        console.log("Analysis Page: DOMContentLoaded 이벤트 시작");
 
             // --- DOM 요소 가져오기 ---
             const languageAgeSection = document.getElementById('languageAgeSection');
@@ -147,137 +164,151 @@
             const ageFeedbackEl = document.getElementById('ageFeedback');
             const ageDifferenceVisualEl = document.getElementById('ageDifferenceVisual');
             const languagePracticeBtn = document.getElementById('languagePracticeBtn');
-            
+    
+            const emotionToneSection = document.getElementById('emotionToneSection'); // 감정 어조 섹션
             const emotionChartEl = document.getElementById('emotionChart');
             const empathyMessageEl = document.getElementById('empathyMessage');
             const tagCloudEl = document.getElementById('tagCloud');
-            
+    
+            const patternSection = document.getElementById('patternSection'); // 반복 패턴 섹션
             const patternDashboardEl = document.getElementById('patternDashboard');
-            
+    
+            const situationSection = document.getElementById('situationSection'); // 상황 분석 섹션
             const situationAlertsEl = document.getElementById('situationAlerts');
             const continueDistortionTalkBtn = document.getElementById('continueDistortionTalkBtn');
-            
+            const situationChartEl = document.getElementById('situationChart');
+    
             const reportShareButton = document.getElementById('reportShareButton');
+            const containerEl = document.querySelector('.container');
 
             // --- 데이터 로드 ---
             const userAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 0; 
             if(realAgeEl) realAgeEl.textContent = userAge || "정보 없음";
+            console.log("Analysis Page - User Age:", userAge);
 
             const analysisDataString = localStorage.getItem('lozee_conversation_analysis');
-            console.log("Analysis Page - Analysis Data String from localStorage:", analysisDataString);
             let analysisResults = null;
             let accumulatedDurationMinutes = 0;
 
-            if (analysisDataString) {
-                try {
-                    const fullAnalysis = JSON.parse(analysisDataString);
-                    analysisResults = fullAnalysis.results; // 실제 분석 결과 객체
-                    accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0;
-                    console.log("Analysis Page - Parsed analysisResults:", analysisResults);
-                    console.log("Analysis Page - Accumulated Duration (min):", accumulatedDurationMinutes);
-                } catch (e) {
-                    console.error("저장된 분석 결과 파싱 오류:", e);
-                    if (document.querySelector('.container')) {
-                        document.querySelector('.container').innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
-                    }
-                    return; 
-                }
-            } else {
-                console.log("Analysis Page: localStorage에 'lozee_conversation_analysis' 데이터 없음");
-                if (document.querySelector('.container')) {
-                    document.querySelectorAll('.section').forEach(sec => {
-                        // 방법론 섹션은 남기고 나머지는 숨기거나 "데이터 없음" 메시지 표시
-                        if (sec.id !== 'analysisMethodologySection') {
-                            sec.style.display = 'none'; 
-                        }
-                    });
-                    // 데이터 없음 메시지를 컨테이너 상단에 추가 (방법론 섹션은 유지될 수 있도록)
-                    const containerEl = document.querySelector('.container');
-                    if (containerEl && !containerEl.querySelector('.no-data-message')) {
-                        const noDataMsgDiv = document.createElement('div');
-                        noDataMsgDiv.className = 'feedback neutral no-data-message'; // 스타일 적용
-                        noDataMsgDiv.style.textAlign = 'center';
-                        noDataMsgDiv.style.marginTop = '20px';
-                        noDataMsgDiv.innerHTML = '<h2>아직 로지와 나눈 이야기가 충분하지 않나 봐요! 😮</h2><p>먼저 로지와 신나게 이야기하고 분석 결과를 확인해보세요!</p>';
-                        // 페이지 제목(h1) 다음에 메시지 삽입
-                        const pageTitleH1 = containerEl.querySelector('h1');
-                        if (pageTitleH1 && pageTitleH1.nextSibling) {
-                            pageTitleH1.parentElement.insertBefore(noDataMsgDiv, pageTitleH1.nextSibling.nextSibling); // 공유버튼 다음에
-                        } else if (pageTitleH1) {
-                             pageTitleH1.insertAdjacentElement('afterend', noDataMsgDiv);
-                        } else {
-                            containerEl.prepend(noDataMsgDiv);
-                        }
-                    }
-                }
-                return; 
-            }
+            if (!analysisDataString) { // localStorage에 데이터가 아예 없는 경우
+        console.warn("Analysis Page: localStorage에 'lozee_conversation_analysis' 데이터가 없습니다.");
+        if (containerEl) {
+            // 방법론 섹션을 제외한 모든 분석 섹션 숨기기
+            [languageAgeSection, emotionToneSection, patternSection, situationSection].forEach(sec => {
+                if (sec) sec.style.display = 'none';
+            });
             
-            // --- 각 분석 섹션 렌더링 (analysisResults가 null이 아닐 때만 실행) ---
-            if (analysisResults) {
-                // 1. 언어·나이 분석 섹션 처리
-                if (languageAgeSection) {
-                    if (userAge > 12 || !analysisResults.ageLanguageAnalysis) { 
-                        languageAgeSection.style.display = 'none';
-                        // ... (콘솔 로그는 이전과 동일) ...
-                    } else {
-                        languageAgeSection.style.display = 'block'; 
-                        // ... (언어 연령 분석 결과 표시 로직 - 이전 답변의 완성된 코드 사용) ...
-                        // (feedbackMsg, visualText 설정 및 버튼 표시 조건 등 포함)
-                        let predicted = null;
-                        if (analysisResults.ageLanguageAnalysis.estimatedAgeRange) {
-                            const ageRangeMatch = String(analysisResults.ageLanguageAnalysis.estimatedAgeRange).match(/\d+/);
-                            if (ageRangeMatch) predicted = parseInt(ageRangeMatch[0], 10);
-                        }
-                        let feedbackMsg = ''; let visualText = ''; ageFeedbackEl.className = 'feedback';
-                        if (accumulatedDurationMinutes < 30) { visualText = "(아직 30분이 안 돼서, 살짝 맛보기 분석이야! 🍳)"; predictedLangAgeEl.textContent = "아직 비밀! 😉"; feedbackMsg = "로지와 30분 이상 이야기하면 내가 얼마나 멋지게 말하는지 살짝 알려줄게! 조금만 더 이야기 나눠볼까?"; ageFeedbackEl.classList.add('neutral');
-                        } else if (predicted !== null) { /* ... (나머지 피드백 로직) ... */ } else { predictedLangAgeEl.textContent = "정보 부족"; feedbackMsg = (accumulatedDurationMinutes >= 30) ? "지금은 네 말솜씨 나이를 정확히 알기 어렵네. 다음에 다시 확인해 줄래?" : "로지와 30분 이상 이야기하면 말솜씨 나이를 알려줄 수 있어!"; ageFeedbackEl.classList.add('neutral'); languagePracticeBtn.style.display = 'none';}
-                        if(ageDifferenceVisualEl) ageDifferenceVisualEl.textContent = visualText; if(ageFeedbackEl) ageFeedbackEl.textContent = feedbackMsg; if(ageFeedbackEl) ageFeedbackEl.style.display = 'block';
-                        if (userAge <= 12 && predicted !== null && (userAge - predicted) >= 1) { if(languagePracticeBtn) languagePracticeBtn.style.display = 'inline-block'; /* ... onclick ... */ } else { if(languagePracticeBtn) languagePracticeBtn.style.display = 'none';}
-                    }
-                }
-
-                // 2. 감정 어조 및 태그 클라우드
-                if (analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
-                    if(emotionChartEl) emotionChartEl.style.display = 'block';
-                    renderEmotionChart('emotionChart', analysisResults.emotionToneData);
-                    if(empathyMessageEl) displayEmpathyMessage(analysisResults.emotionToneData);
-                } else {
-                    if(emotionChartEl) emotionChartEl.style.display = 'none';
-                    if(empathyMessageEl) { /* ... 데이터 없음 메시지 ... */ }
-                }
-                if (analysisResults.keywords && analysisResults.keywords.length > 0) {
-                    const tagsForCloud = analysisResults.keywords.map(kw => ({ text: kw, weight: 5 + Math.floor(Math.random() * 10) }));
-                    renderTagCloud('tagCloud', tagsForCloud);
-                } else { /* ... 데이터 없음 메시지 ... */ }
-                
-                // 3. 반복 패턴
-                if (analysisResults.patterns && analysisResults.patterns.length > 0) {
-                    if(patternDashboardEl) renderPatternDashboard('patternDashboard', analysisResults.patterns);
-                } else {
-                    if(patternDashboardEl) patternDashboardEl.innerHTML = '<p style="text-align:center; color:#888;">반복되는 이야기 패턴을 찾고 있어요!</p>';
-                }
-
-                // 4. 상황 분석 (인지왜곡)
-                const situationChartElToHide = document.getElementById('situationChart'); // 변수 재선언 방지
-                if(situationChartElToHide) situationChartElToHide.style.display = 'none'; 
-                if (analysisResults.cognitiveDistortions && analysisResults.cognitiveDistortions.length > 0) {
-                    if(situationAlertsEl) alertCognitiveDistortions('situationAlerts', analysisResults.cognitiveDistortions);
-                    if (continueDistortionTalkBtn) { /* ... 버튼 표시 및 onclick 로직 ... */ }
-                } else {
-                    if(situationAlertsEl) situationAlertsEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';
-                    if(continueDistortionTalkBtn) continueDistortionTalkBtn.style.display = 'none';
-                }
-            } else { // analysisResults 자체가 null인 경우 (위에서 이미 return으로 처리했지만, 방어용)
-                 console.log("Analysis Page: analysisResults 객체가 없습니다. 대부분의 분석 섹션을 숨깁니다.");
-                 document.querySelectorAll('.section').forEach(sec => {
-                    if (sec.id !== 'analysisMethodologySection') sec.style.display = 'none';
-                 });
+            // 데이터 없음 메시지 표시 (기존 방법론 섹션은 유지될 수 있도록)
+            const methodologySection = document.getElementById('analysisMethodologySection');
+            let referenceNodeForMessage = methodologySection; 
+            // 만약 방법론 섹션도 없거나 다른 위치에 메시지를 넣고 싶다면 기준 노드 변경
+            if (!referenceNodeForMessage && containerEl.firstChild) {
+                 referenceNodeForMessage = containerEl.querySelector('h1')?.nextElementSibling || containerEl.firstChild.nextSibling;
+            } else if (!referenceNodeForMessage) {
+                referenceNodeForMessage = containerEl.firstChild;
             }
 
-            // 공유 버튼 로직
-            if(reportShareButton) { reportShareButton.onclick = () => { /* ... 기존 공유 로직 ... */ }; }
-        });
+            if (containerEl && !containerEl.querySelector('.no-data-message')) {
+                const noDataMsgDiv = document.createElement('div');
+                noDataMsgDiv.className = 'feedback neutral no-data-message';
+                noDataMsgDiv.style.textAlign = 'center';
+                noDataMsgDiv.style.marginTop = '20px';
+                noDataMsgDiv.innerHTML = '<h2>아직 로지와 나눈 이야기가 충분하지 않나 봐요! 😮</h2><p>먼저 로지와 신나게 이야기하고 분석 결과를 확인해보세요!</p>';
+                if (referenceNodeForMessage && referenceNodeForMessage.parentElement === containerEl) {
+                    referenceNodeForMessage.insertAdjacentElement('afterend', noDataMsgDiv);
+                } else {
+                     containerEl.insertBefore(noDataMsgDiv, containerEl.children[1] || null); // h1 다음 또는 적절한 위치
+                }
+            }
+        }
+        return; // 분석 데이터 없으면 여기서 종료
+    }
+
+    // analysisDataString이 존재하면 파싱 시도
+    try {
+        const fullAnalysis = JSON.parse(analysisDataString);
+        analysisResults = fullAnalysis.results;
+        accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0;
+        console.log("Analysis Page - Parsed analysisResults:", analysisResults);
+    } catch (e) {
+        console.error("저장된 분석 결과 파싱 오류:", e);
+        if (containerEl) {
+            containerEl.innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
+        }
+        return; 
+    }
+    
+    // analysisResults 객체가 유효하지 않으면 더 이상 진행하지 않음
+    if (!analysisResults) {
+        console.warn("Analysis Page: 파싱 후 analysisResults 객체가 유효하지 않습니다.");
+        // 필요한 경우 사용자에게 알림
+        if (containerEl && !containerEl.querySelector('.no-data-message')) {
+            // ... (위의 "데이터 없음" 메시지와 유사한 처리) ...
+        }
+        return;
+    }
+            
+     // --- 각 분석 섹션 렌더링 (analysisResults가 유효할 때만 실행) ---
+
+    // 1. 언어·나이 분석 섹션 처리
+    if (languageAgeSection) {
+        // 기준 연령을 12세로 (12세 이하에게 표시)
+        if (userAge > 12 || !analysisResults.ageLanguageAnalysis) { 
+            languageAgeSection.style.display = 'none';
+            // ... (콘솔 로그) ...
+        } else {
+            languageAgeSection.style.display = 'block'; 
+            // ... (이전 답변의 언어 연령 분석 결과 표시 로직: predicted, feedbackMsg, visualText, languagePracticeBtn 등) ...
+        }
+    } else { 
+         console.warn("ID가 'languageAgeSection'인 요소를 찾을 수 없습니다.");
+    }
+
+    // 2. 감정 어조 및 태그 클라우드
+    if (emotionToneSection) { // 섹션 요소가 있는지 먼저 확인
+        if (analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
+            if(emotionChartEl) emotionChartEl.style.display = 'block'; // 차트 표시
+            renderEmotionChart('emotionChart', analysisResults.emotionToneData);
+            if(empathyMessageEl) displayEmpathyMessage(analysisResults.emotionToneData);
+        } else {
+            if(emotionChartEl) emotionChartEl.style.display = 'none';
+            if(empathyMessageEl) { /* ... 감정 데이터 없음 메시지 ... */ }
+        }
+        if (analysisResults.keywords && analysisResults.keywords.length > 0) {
+            const tagsForCloud = analysisResults.keywords.map(kw => ({ text: kw, weight: 5 + Math.floor(Math.random() * 10) }));
+            if(tagCloudEl) renderTagCloud('tagCloud', tagsForCloud);
+        } else {
+            if(tagCloudEl) tagCloudEl.innerHTML = '<p style="text-align:center; color:#888;">이야기에서 자주 나온 단어들을 모으고 있어요!</p>';
+        }
+    }
+
+
+    // 3. 반복 패턴
+    if (patternSection) {
+        if (analysisResults.patterns && analysisResults.patterns.length > 0) {
+            if(patternDashboardEl) renderPatternDashboard('patternDashboard', analysisResults.patterns);
+        } else {
+            if(patternDashboardEl) patternDashboardEl.innerHTML = '<p style="text-align:center; color:#888;">반복되는 이야기 패턴을 찾고 있어요!</p>';
+        }
+    }
+
+    // 4. 상황 분석 (인지왜곡)
+    if (situationSection) {
+        const situationChartToHide = document.getElementById('situationChart'); 
+        if(situationChartToHide) situationChartToHide.style.display = 'none'; 
+
+        if (analysisResults.cognitiveDistortions && analysisResults.cognitiveDistortions.length > 0) {
+            if(situationAlertsEl) alertCognitiveDistortions('situationAlerts', analysisResults.cognitiveDistortions);
+            if (continueDistortionTalkBtn) { /* ... 버튼 표시 및 onclick 로직 ... */ }
+        } else {
+            if(situationAlertsEl) situationAlertsEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';
+            if(continueDistortionTalkBtn) continueDistortionTalkBtn.style.display = 'none';
+        }
+    }
+
+    // 공유 버튼 로직
+    if(reportShareButton) { reportShareButton.onclick = () => { /* ... 기존 공유 로직 ... */ }; }
+});
 
         // --- 데이터 렌더링 함수들 (모두 채워진 상태로) ---
         function renderTagCloud(elementId, tags) { const cloudEl = document.getElementById(elementId); if(!cloudEl) return; if(tags && tags.length > 0) { cloudEl.innerHTML = tags.map(tag => { const size = 0.8 + (tag.weight / 15); const opacity = Math.max(0.5, tag.weight / 10); return `<span class="badge" style="opacity:${opacity}; font-size:${size}em;">${tag.text}</span>`; }).join(''); } else { cloudEl.innerHTML = '<p style="text-align:center; color:#888;">이야기에서 자주 나온 단어들을 모으고 있어요!</p>'; } }
