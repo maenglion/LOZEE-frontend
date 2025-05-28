@@ -437,6 +437,27 @@
         } else { micButton.disabled = true; appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'assistant_feedback'); }
 
         // 토픽 플로우 - 선택창
+        function getTopicsForCurrentUser() {
+        const userType = localStorage.getItem('lozee_userType'); // 'directUser' 또는 'caregiver'
+        const age = parseInt(localStorage.getItem('lozee_userage') || '0', 10); // 당사자 또는 보호자 본인 나이
+
+        if (userType === 'directUser') {
+        if (age < 11) return counselingTopicsByAge.directUser['10세미만'];
+        if (age >= 11 && age <= 15) return counselingTopicsByAge.directUser['11-15세'];
+        if (age >= 16 && age <= 29) return counselingTopicsByAge.directUser['16-29세'];
+        // 필요시 30세 이상 당사자 카테고리도 추가 가능
+        return counselingTopicsByAge.directUser['16-29세']; // 기본값 또는 오류 처리
+        } else if (userType === 'caregiver') {
+        // 보호자 모드는 현재 '30+' 연령대 구분 없이 모든 주제를 제공하므로, 바로 반환
+        // (만약 보호자도 연령대별로 다른 주제를 제공한다면 여기서 추가 분기)
+        return counselingTopicsByAge.caregiver;
+        } else {
+        console.warn("알 수 없는 사용자 유형입니다:", userType);
+        // 기본값으로 당사자 11-15세 주제를 보여주거나, 오류 처리
+        return counselingTopicsByAge.directUser['11-15세']; 
+        }
+       }
+                
         function displayOptionsInChat(optionsArray, onSelectCallback) { 
             console.log("displayOptionsInChat 함수 시작됨, 옵션 배열:", optionsArray); 
             const optionsContainer = document.createElement('div'); optionsContainer.className = 'chat-options-container'; 
@@ -476,13 +497,28 @@
 
         // 토픽 플로우 - 주제
         function showMainTopics() { 
-            console.log("showMainTopics 함수 시작됨"); 
-            appendMessage('어떤 이야기를 나눠볼까?', 'assistant'); 
-            const currentAgeGroup = getAgeGroup(); 
-            const ageGroupData = counselingTopicsByAge[currentAgeGroup]; 
-            let topicsWithOptions = []; 
+        console.log("showMainTopics 함수 시작됨"); 
+        appendMessage('어떤 이야기를 나눠볼까?', 'assistant'); 
 
-            const continueTopicData = localStorage.getItem('lozee_continue_topic');
+        const currentUserTopics = getTopicsForCurrentUser(); // 사용자 유형과 나이에 맞는 주제 객체 가져오기
+        let topicsWithOptions = []; 
+
+        if (currentUserTopics) { 
+        // currentUserTopics 객체의 키들(카테고리명)을 가져옴
+        const categoryNames = Object.keys(currentUserTopics);
+        topicsWithOptions = categoryNames.map(categoryName => { 
+            let icon = '💬'; // 기본 아이콘
+            // 각 카테고리 내 첫 번째 주제의 아이콘을 사용하거나, 카테고리 자체에 아이콘 정의 필요
+            if (currentUserTopics[categoryName] && currentUserTopics[categoryName].length > 0 && currentUserTopics[categoryName][0].icon) { 
+                icon = currentUserTopics[categoryName][0].icon; 
+            } 
+            return { icon: icon, displayText: categoryName, isContinuation: false }; 
+        }); 
+        } else { 
+        console.warn(`현재 사용자에 맞는 주제 카테고리를 찾을 수 없습니다.`); 
+        }     
+        
+        const continueTopicData = localStorage.getItem('lozee_continue_topic');
             if (continueTopicData) {
                 try {
                     const topicToContinue = JSON.parse(continueTopicData);
@@ -534,31 +570,36 @@
         }
            
         function showSubTopics() { 
-            if (!selectedMain) { console.warn("showSubTopics 호출되었으나, selectedMain이 설정되지 않았습니다."); return;  } 
-            console.log("showSubTopics 함수 시작됨, 선택된 메인 주제:", selectedMain); 
-            appendMessage('조금 더 구체적으로 이야기해 줄래?', 'assistant'); 
-            let subtopicOptions; 
-            if (selectedMain === '자유주제') { // 이 경우는 showMainTopics에서 이미 처리됨
-                subtopicOptions = [{ icon: '🗣️', displayText: '응, 자유롭게 이야기 시작해줘!' }]; 
-            } else { 
-                const ageGroupData = counselingTopicsByAge[getAgeGroup()]; 
-                const mainTopicData = ageGroupData ? ageGroupData[selectedMain] : undefined; 
-                if (mainTopicData && Array.isArray(mainTopicData)) { 
-                    subtopicOptions = mainTopicData;  // counseling_topics.js의 객체 배열 ({icon, displayText, ...})
-                } else { 
-                    console.warn(`'${selectedMain}'에 대한 하위 주제를 찾을 수 없거나 형식이 잘못되었습니다.`); 
-                    subtopicOptions = [{ icon: '💬', displayText: '대화를 시작할 준비가 됐어.' }]; 
-                } 
-                if (!subtopicOptions || !subtopicOptions.length) {  
-                    subtopicOptions = [{ icon: '▶️', displayText: '바로 대화 시작할까?' }]; 
-                } 
-            } 
-            console.log("displayOptionsInChat에 전달될 하위 주제 배열 (수정 후):", subtopicOptions); 
-            displayOptionsInChat(subtopicOptions, (selectedSubtopicText, fullSubOptionObject) => { 
-                startChat(selectedSubtopicText, 'topic_selection_init'); 
-            }); 
-            if (topicArea) topicArea.style.display = 'none !important'; 
-        }
+    if (!selectedMain) { /* ... */ return;  } 
+    console.log("showSubTopics 함수 시작됨, 선택된 메인 주제(카테고리):", selectedMain); 
+    appendMessage('조금 더 구체적으로 이야기해 줄래?', 'assistant'); 
+
+    const currentUserTopicCategories = getTopicsForCurrentUser(); // 현재 사용자의 전체 주제 카테고리 객체
+    let subtopicOptions = []; 
+
+    if (selectedMain === '자유주제') { // 이 경우는 showMainTopics에서 이미 처리되지만, 방어용
+        // 자유주제는 하위 주제가 없음
+    } else if (currentUserTopicCategories && currentUserTopicCategories[selectedMain] && Array.isArray(currentUserTopicCategories[selectedMain])) { 
+        // currentUserTopicCategories에서 selectedMain(카테고리명)에 해당하는 배열(하위 주제 목록)을 가져옴
+        subtopicOptions = currentUserTopicCategories[selectedMain];  // counseling_topics.js의 객체 배열 ({icon, displayText, ...})
+    } else { 
+        console.warn(`'${selectedMain}' 카테고리에 대한 하위 주제를 찾을 수 없거나 형식이 잘못되었습니다.`); 
+        subtopicOptions = [{ icon: '💬', displayText: '대화를 시작할 준비가 됐어.' }]; 
+    } 
+
+    if (!subtopicOptions || !subtopicOptions.length) {  // 혹시 모를 빈 배열 처리
+        // 이 경우, 바로 startChat을 호출하거나 사용자에게 다른 안내를 할 수 있음
+        console.log(`'${selectedMain}' 카테고리에 하위 주제가 없습니다. 자유롭게 이야기해주세요.`);
+        startChat(`'${selectedMain}'에 대해 자유롭게 이야기해줘.`, 'topic_selection_init');
+        return;
+    } 
+
+    console.log("displayOptionsInChat에 전달될 하위 주제 배열 (수정 후):", subtopicOptions); 
+    displayOptionsInChat(subtopicOptions, (selectedSubtopicText, fullSubOptionObject) => { 
+        startChat(selectedSubtopicText, 'topic_selection_init'); 
+    }); 
+    if (topicArea) topicArea.style.display = 'none !important'; 
+}
 
         function startChat(initText, inputMethod = 'topic_selection_init') { 
             console.log("startChat 함수 시작됨, 초기 메시지:", initText, "입력방식:", inputMethod); 
