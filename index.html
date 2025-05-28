@@ -155,6 +155,11 @@
         import { db } from './js/firebase-config.js'; 
         import { doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
+      // --- DOMContentLoaded 이벤트 리스너 ---
+      // 모든 DOM 관련 작업과 초기화 로직을 이 안으로 옮깁니다.
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOMContentLoaded 이벤트 발생: index.html");
+
         // --- DOM 요소 가져오기 ---
         const stepUserType = document.getElementById('stepUserType');
         const stepCBT = document.getElementById('stepCBT');
@@ -225,16 +230,66 @@
         function calculateAge(y, m, d) { /* ... 기존과 동일 ... */ }
         function createBaseUserData(email, userTypeToSave) { /* ... 기존과 동일 ... */ }
         async function checkForExistingCbtUser(email) { /* ... 이전 답변의 로직을 참고하여, 보호자 본인 정보도 localStorage에 저장/로드 하도록 수정 ... */ }
+ 
+ 
+        function showStep(elToShow) {
+            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+            if (elToShow) elToShow.classList.add('active');
+        }
+
+        function populateBirthSelects(yearEl, monthEl, dayEl, startYearOffset = 3, endYearOffset = 90) {
+            // ... (이전 코드와 동일) ...
+        }
+
+        function calculateAge(y, m, d) {
+            // ... (이전 코드와 동일) ...
+        }
+        
+        function createBaseUserData(email, userTypeToSave) {
+             return {
+                email: email,
+                userType: userTypeToSave,
+                // createdAt은 최초 저장 시에만 추가 (setDoc 로직에서 처리)
+                lastLogin: serverTimestamp()
+            };
+        }
+
+        async function checkForExistingCbtUser(email) {
+            // ... (이전 최종본의 checkForExistingCbtUser 함수 내용) ...
+        }
+
+        // 5. 이벤트 핸들러 ---
+        // 5-1. 사용자 유형 선택
+          userTypeButtons.forEach(button => {
+            button.onclick = () => {
+                selectedUserType = button.dataset.usertype;
+                localStorage.setItem('lozee_userType', selectedUserType);
+                // ... (cbtTitleEl 등 UI 업데이트) ...
+                showStep(stepCBT);
+            };
+        });
+
+        // 5-2. CBT 이메일 제출
+        submitCbtCodeBtn.onclick = async () => {
+            const email = cbtCodeInput.value.trim();
+            // ... (유효성 검사) ...
+            localStorage.setItem('cbtUserEmail', email.toLowerCase());
+            localStorage.setItem('isCbtUser', 'true');
+
+            const existingUserProcessed = await checkForExistingCbtUser(email);
+            if (existingUserProcessed) return; 
+
+            if (selectedUserType === 'caregiver') {
+                // ...
+                showStep(stepCaregiverNeurodiversity);
+            } else { 
+                // ...
+                showStep(stepDiagnosisType);
+            }
+        };
 
 
-        // --- 이벤트 핸들러 ---
-        // 1. 사용자 유형 선택
-        userTypeButtons.forEach(button => { /* ... 기존 로직과 유사하게, cbtTitleEl, cbtInfoEl 업데이트 ... */ });
-
-        // 2. CBT 이메일 제출
-        submitCbtCodeBtn.onclick = async () => { /* ... 기존 로직, checkForExistingCbtUser 호출 등 ... */ };
-
-        // 3. 보호자 본인/관계인 신경다양성 선택
+        // 5-3. 보호자 본인/관계인 신경다양성 선택
         caregiverNdOptionBtns.forEach(button => { /* ... 이전과 동일한 선택 로직 (selectedCaregiverNd 업데이트) ... */ });
         submitCaregiverNdBtn.onclick = () => {
             localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(selectedCaregiverNd));
@@ -243,7 +298,7 @@
             showStep(stepDiagnosisType);
         };
 
-        // 4. (자신 또는 아이/가족의) 신경다양성 유형 선택
+        // 5-4. (자신 또는 아이/가족의) 신경다양성 유형 선택
         diagnosisOptionBtns.forEach(button => { /* ... 이전과 동일한 선택 로직 (selectedDiagnoses 업데이트) ... */ });
         submitDiagnosisBtn.onclick = () => {
             if (selectedDiagnoses.length === 0 && !selectedDiagnoses.includes('NotApplicable') && !selectedDiagnoses.includes('Unsure')) {
@@ -270,7 +325,7 @@
             }
         };
         
-        // 5. 보호자/당사자 본인 이름/생년월일 제출
+        // 5-5. 보호자/당사자 본인 이름/생년월일 제출
         submitNameBirthSelfBtn.onclick = async () => {
             const name = nameSelfInput.value.trim();
             const y = birthSelfYear.value, m = birthSelfMonth.value, d = birthSelfDay.value;
@@ -321,6 +376,15 @@
             await saveUserDataToFirestore(); // 모든 정보 취합 후 저장
             showStep(stepChildEmail); // 다음: 아이/가족 로지 계정 연결
         };
+
+       // --- 페이지 로드 시 초기 실행 로직 ---
+        // populateBirthSelects는 각 이름/생년월일 입력 단계 진입 시 호출
+        populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay); // 당사자/보호자 본인용은 미리 채워둘 수 있음
+        // populateBirthSelects(birthChildYear, birthChildMonth, birthChildDay, 0, 20); // 자녀용은 해당 단계 진입 시
+
+        showStep(stepUserType); // 첫 화면은 사용자 유형 선택
+        }); // 여기가 DOMContentLoaded 리스너의 닫는 중괄호와 괄호입니다.
+
         
         // Firestore에 사용자 데이터 저장 함수
         async function saveUserDataToFirestore() {
@@ -382,11 +446,6 @@
         submitChildEmailBtn.onclick = async () => { /* ... 이전과 동일 (childLozeeEmail Firestore에 저장) ... */ };
         skipChildEmailBtn.onclick = () => { /* ... 이전과 동일 ... */ };
 
-        // --- 페이지 로드 시 실행 ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // populateBirthSelects는 각 이름/생년월일 입력 단계에서 필요시 호출
-            showStep(stepUserType); // 첫 화면은 사용자 유형 선택
-        });
     </script>
 </body>
 </html>
