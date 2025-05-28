@@ -244,8 +244,8 @@
         // Chart.js ESM 모듈 동적 import 및 초기화 시도
         async function initializeChartJs() {
             try {
-                const chartModule = await import('https://cdn.jsdelivr.net/npm/chart.js/dist/chart.esm.js');
-                ChartJS = chartModule.Chart; // 전역 Chart 객체 대신 모듈에서 가져온 Chart 사용
+                const chartModule = await import('https://cdn.jsdelivr.net/npm/chart.js/dist/chart.esm.js'); // 가장 일반적인 CDN 링크
+                ChartJS = chartModule.Chart;
                 ChartJS.register(...chartModule.registerables);
             
                 ChartJS.defaults.color = '#333'; 
@@ -258,11 +258,12 @@
                 console.error("Analysis Page: Chart.js 라이브러리 로드 또는 초기화 실패!", error);
                 const emotionChartContainer = document.getElementById('emotionChartContainer');
                 if (emotionChartContainer) {
-                    emotionChartContainer.innerHTML = '<p style="text-align:center; color:red;">차트 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침 해주세요.</p>';
+                    emotionChartContainer.innerHTML = '<p style="text-align:center; color:red; padding:20px;">차트 라이브러리를 불러오는 데 문제가 있어요. 😭<br>인터넷 연결을 확인하고 페이지를 새로고침 해보세요.</p>';
                 }
                 return false;
             }
         }
+
 
         document.addEventListener('DOMContentLoaded', async () => {
             console.log("Analysis Page: DOMContentLoaded 이벤트 시작");
@@ -468,7 +469,7 @@
             const dataValues = Object.values(emotionData);
             const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(100, 100, 100, 0.7)');
 
-            new ChartJS(ctx, {  // Chart 대신 ChartJS 사용
+           new ChartJS(ctx, { 
                 type: 'doughnut', 
                 data: { 
                     labels: labels, 
