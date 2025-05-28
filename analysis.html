@@ -472,7 +472,7 @@
             if (!emotionData || Object.keys(emotionData).length === 0) { /* ... 데이터 없을 때 처리 ... */ return; }
             if(chartEl) chartEl.style.display = 'block';
 
-            const existingChart = ChartJS.getChart(ctx); // Chart 대신 ChartJS 사용
+            const existingChart = Chart.getChart(ctx);
             if (existingChart) { existingChart.destroy(); }
 
             const emotionColors = { '기쁨': 'rgba(255, 205, 86, 0.7)','슬픔': 'rgba(54, 162, 235, 0.7)','분노': 'rgba(255, 99, 132, 0.7)','불안': 'rgba(153, 102, 255, 0.7)','수치': 'rgba(255, 159, 64, 0.7)','중립': 'rgba(201, 203, 207, 0.7)'};
@@ -480,7 +480,7 @@
             const dataValues = Object.values(emotionData);
             const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(100, 100, 100, 0.7)');
 
-           new ChartJS(ctx, { 
+           new Chart(ctx, { 
                 type: 'doughnut', 
                 data: { 
                     labels: labels, 
@@ -489,8 +489,8 @@
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     plugins: { 
-                        legend: { position: 'bottom', labels: { color: ChartJS.defaults.color, font: { family: ChartJS.defaults.font.family, size: 11 }, padding: 15 } }, 
-                        tooltip: { titleFont: { family: ChartJS.defaults.font.family }, bodyFont: { family: ChartJS.defaults.font.family } } 
+                        legend: { position: 'bottom', labels: { color: Chart.defaults.color, font: { family: Chart.defaults.font.family, size: 11 }, padding: 15 } }, 
+                        tooltip: { titleFont: { family: Chart.defaults.font.family }, bodyFont: { family: Chart.defaults.font.family } } 
                     } 
                 } 
             });
