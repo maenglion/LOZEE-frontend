@@ -157,7 +157,7 @@ export const counselingTopicsByAge = {
       "나와 내 마음 (정체성)": [
         { icon: "🧠❓", displayText: "어릴 때부터 내가 좀 독특하다고 느꼈는데, 이게 뭘까요?", tags: [ "우울증" , "자기 이해", "신경다양성 의심", "정체성 탐색", "과거 회상"], type: "else" },
         { icon: "🧑‍⚕️💡", displayText: "혹시 내가 성인 ADHD나 자폐 스펙트럼일 수 있을까요?", tags: [ "우울증", "신경다양성 의심", "자기 인식", "정보 탐색", "삶의 어려움 원인"], type: "emotion_intensity" },
-        { icon: "🧩😟", displayText: "제 생각이나 감정 표현 방식이 남들과 다른 것 같아 힘들어요.", tags: ["🧩😟", displayText: "제 생각이나 감정 표현 방식이 남들과 다른 것 같아 힘들어요."], type: "situation" },
+        { icon: "🧩😟", displayText: "제 생각이나 감정 표현 방식이 남들과 다른 것 같아 힘들어요.", tags: ["제 생각이나 감정 표현 방식이 남들과 다른 것 같아 힘들어요."], type: "situation" },
         { icon: "📚💼⚠️", displayText: "집중력이나 충동적인 면 때문에 일이 잘 안 풀릴 때가 많아요.", tags: [ "우울증" ,"성인 ADHD 의심", "신경다양성 의심", "업무/학업 어려움", "실행 기능 저하", "자기 관리"], type: "situation" },
         { icon: "👤", displayText: "내가 어떤 사람인지, 뭘 원하는지 혼란스러워요", tags: ["자아 정체성 탐색", "가치관 혼란", "자기 이해"], type: "else" },
         { icon: "👎", displayText: "자존감이 너무 낮아서 힘들어요", tags: ["낮은 자존감", "자기 수용 어려움"], type: "emotion_intensity" },
