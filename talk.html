@@ -632,103 +632,121 @@
             if (!conversationStartTime) conversationStartTime = Date.now();
 
             if (inputMethod !== 'topic_selection_init') { 
-                appendMessage(text, 'user');
-            }
+            appendMessage(text, 'user'); }
+
+        }
+
+           // chatHistory에는 모든 사용자 입력을 기록
             chatHistory.push({ role: 'user', content: text }); 
             const currentUserEmail = localStorage.getItem('cbtUserEmail');
-            if (chatInput) chatInput.value = ''; // chatInput이 null이 아닐 때만
+            if (chatInput) chatInput.value = '';
 
+   
             const thinkingBubble = document.createElement('div');
             thinkingBubble.className = 'bubble assistant thinking'; 
             thinkingBubble.textContent = '생각중이야...'; 
             chatWindow.appendChild(thinkingBubble);
             chatWindow.scrollTop = chatWindow.scrollHeight;
 
-            try {
-                const elapsedTimeInMinutesForGPT = (Date.now() - conversationStartTime) / (1000 * 60);
-                const res = await getGptResponse(text, { 
-                    chatHistory, 
-                    verbosity: gptVerbosityPreference, 
-                    elapsedTime: elapsedTimeInMinutesForGPT 
-                }); 
-                
-                thinkingBubble.remove(); 
+               
+            // 👇 try 블록은 여기서 시작해서 모든 주요 로직을 감싸야 합니다.
+    try {
+        const elapsedTimeInMinutesForGPT = (Date.now() - conversationStartTime) / (1000 * 60);
+        const userDiagnoses = JSON.parse(localStorage.getItem('lozee_diagnoses') || '[]'); // 사용자 특성 가져오기
 
-                if (!res.ok) {
-                    const errorData = await res.text();
-                    console.error(`GPT API 응답 오류 ${res.status}: ${errorData}`);
-                    appendMessage("미안, 지금은 답변하기 조금 어려워. (서버 응답 오류)", "assistant_feedback");
-                    return; 
-                }
-                const d = await res.json();
-                const cut = d.text.indexOf('{'); 
-                const clean = cut >= 0 ? d.text.slice(0, cut).trim() : d.text.trim();
-                    
-                appendMessage(clean, 'assistant'); 
+        const res = await getGptResponse(text, { 
+            chatHistory, 
+            verbosity: gptVerbosityPreference, 
+            elapsedTime: elapsedTimeInMinutesForGPT,
+            userTraits: userDiagnoses // 사용자 특성 정보 전달
+        }); 
+        
+        thinkingBubble.remove(); // 실제 응답 받으면 임시 말풍선 제거
 
-                if (inputMethod === 'stt') { 
-                    await playTTSWithControl(clean);
-                } else if (inputMethod === 'text' && !skipTTS) { 
-                    console.log("텍스트 입력에 대한 응답. TTS는 현재 재생 안 함.");
-                } else if (inputMethod === 'topic_selection_init' && !skipTTS) {
-                    console.log("주제 선택 후 첫 응답. TTS는 현재 재생 안 함.");
-                }
-                if (skipTTS) skipTTS = false; 
-                
-                chatHistory.push({ role: 'assistant', content: clean });
-                assistantMessageCount++; 
+        if (!res.ok) {
+            const errorData = await res.text();
+            console.error(`GPT API 응답 오류 ${res.status}: ${errorData}`);
+            appendMessage("미안, 지금은 답변하기 조금 어려워. (서버 응답 오류)", "assistant_feedback");
+            // isProcessing 등은 finally에서 처리되므로 여기서 return 해도 괜찮음
+            return; 
+        }
+        const d = await res.json();
+        const cut = d.text.indexOf('{'); 
+        const clean = cut >= 0 ? d.text.slice(0, cut).trim() : d.text.trim();
+            
+        appendMessage(clean, 'assistant'); 
 
-                if (currentUserEmail && selectedMain) { // selectedMain이 유효한 주제 문자열일 때
-                    await saveSessionLog(text, clean, d.analysis || {}, selectedMain, currentUserEmail); 
-                    await updateTopicStats(currentUserEmail, selectedMain); 
-                }
+        // 입력 방식에 따라 TTS 재생 여부 결정
+        if (inputMethod === 'stt') { 
+            await playTTSWithControl(clean);
+        } else if (inputMethod === 'text' && !skipTTS) { 
+            console.log("텍스트 입력에 대한 응답. TTS는 현재 재생 안 함.");
+            // 텍스트 입력 시 TTS를 원하시면 아래 주석 해제
+            // await playTTSWithControl(clean); 
+        } else if (inputMethod === 'topic_selection_init' && !skipTTS) {
+            console.log("주제 선택 후 첫 응답. TTS는 현재 재생 안 함.");
+            // 주제 선택 후 AI의 첫 응답에 대한 TTS를 원하면 주석 해제
+            // await playTTSWithControl(clean); 
+        }
+        if (skipTTS) skipTTS = false; 
+        
+        chatHistory.push({ role: 'assistant', content: clean });
+        assistantMessageCount++; 
 
-                // 분석 알림 로직 (15분 기준)
-                const elapsedTimeInMinutesForAnalysis = (Date.now() - conversationStartTime) / (1000 * 60);
-                if (elapsedTimeInMinutesForAnalysis >= 15 && !analysisNotificationShown) { 
-                    console.log(`${elapsedTimeInMinutesForAnalysis.toFixed(1)}분 경과, 상세 분석 시도`);
-                    let detailedAnalysisDataForStorage = {};
-                    let currentTotalConversationMinutes = elapsedTimeInMinutesForAnalysis; 
+        // 세션 로그 및 저널 항목 저장, 주제 통계 업데이트
+        if (currentUserEmail && selectedMain) { // selectedMain은 현재 선택된 대주제
+            await saveSessionLog(text, clean, d.analysis || {}, selectedMain, currentUserEmail); 
+            await updateTopicStats(currentUserEmail, selectedMain); 
+        }
 
-                    if (LOZEE_ANALYSIS && LOZEE_ANALYSIS.inferAgeAndLanguage) { 
-                        try { 
-                            const langAgeResult = await LOZEE_ANALYSIS.inferAgeAndLanguage(chatHistory.map(m=>`${m.role}: ${m.content}`).join('\n')); 
-                            detailedAnalysisDataForStorage.ageLanguageAnalysis = langAgeResult; 
-                        } catch (e) { console.error("inferAgeAndLanguage 오류:", e); } 
-                    }
-                    if (d.analysis) { 
-                        detailedAnalysisDataForStorage.gptRealtimeAnalysis = d.analysis; 
-                        if(d.analysis.keywords) detailedAnalysisDataForStorage.keywords = d.analysis.keywords; 
-                        if(d.analysis.overallSentiment) detailedAnalysisDataForStorage.overallSentiment = d.analysis.overallSentiment; 
-                        if(d.analysis.cognitiveDistortions) detailedAnalysisDataForStorage.cognitiveDistortions = d.analysis.cognitiveDistortions; 
-                    }
+        // 분석 알림 로직 (15분 기준)
+        const elapsedTimeInMinutesForAnalysis = (Date.now() - conversationStartTime) / (1000 * 60);
+        if (elapsedTimeInMinutesForAnalysis >= 15 && !analysisNotificationShown) { 
+            console.log(`${elapsedTimeInMinutesForAnalysis.toFixed(1)}분 경과, 상세 분석 시도`);
+            
+            let detailedAnalysisDataForStorage = {};
+            // Firestore에서 사용자의 총 누적 대화 시간 가져오는 로직이 이상적이나, 지금은 현재 세션 시간으로 대체
+            let currentTotalConversationMinutes = elapsedTimeInMinutesForAnalysis; 
 
-                    if(Object.keys(detailedAnalysisDataForStorage).length > 0) {
-                        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
-                            startTime: conversationStartTime, 
-                            analysisTime: Date.now(),
-                            accumulatedDurationMinutes: currentTotalConversationMinutes,
-                            results: detailedAnalysisDataForStorage
-                        }));
-                        showAnalysis();
-                    }
-                }
-
-                // 말 길이 선호도 질문 로직
-                if (verbosityPromptCount === 0 && assistantMessageCount >= 5) {
-                  askForVerbosityPreference();
-                } else if (verbosityPromptCount === 1 && (Date.now() - lastVerbosityPromptTime > PREFERENCE_PROMPT_INTERVAL)) {
-                  askForVerbosityPreference();
-                }
-            } catch (error) { 
-              if(thinkingBubble) thinkingBubble.remove(); 
-              console.error("sendMessage 내 오류:", error);
-              appendMessage("미안, 지금은 답변하기 조금 어려워. 잠시 후 다시 시도해 줄래?", "assistant_feedback");
-            } finally { 
-              isProcessing = false;
-              if(sendBtn) sendBtn.classList.remove('loading'); // sendBtn null 체크
+            if (LOZEE_ANALYSIS && LOZEE_ANALYSIS.inferAgeAndLanguage) { 
+                try { 
+                    const langAgeResult = await LOZEE_ANALYSIS.inferAgeAndLanguage(chatHistory.map(m=>`${m.role}: ${m.content}`).join('\n')); 
+                    detailedAnalysisDataForStorage.ageLanguageAnalysis = langAgeResult; 
+                } catch (e) { console.error("inferAgeAndLanguage 오류:", e); } 
             }
-        } 
+            if (d.analysis) { 
+                detailedAnalysisDataForStorage.gptRealtimeAnalysis = d.analysis; 
+                if(d.analysis.keywords) detailedAnalysisDataForStorage.keywords = d.analysis.keywords; 
+                if(d.analysis.overallSentiment) detailedAnalysisDataForStorage.overallSentiment = d.analysis.overallSentiment; 
+                if(d.analysis.cognitiveDistortions) detailedAnalysisDataForStorage.cognitiveDistortions = d.analysis.cognitiveDistortions; 
+            }
+
+            if(Object.keys(detailedAnalysisDataForStorage).length > 0) {
+                localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
+                    startTime: conversationStartTime, 
+                    analysisTime: Date.now(),
+                    accumulatedDurationMinutes: currentTotalConversationMinutes,
+                    results: detailedAnalysisDataForStorage
+                }));
+                showAnalysis();
+            }
+        }
+
+               // 말 길이 선호도 질문 로직
+        if (verbosityPromptCount === 0 && assistantMessageCount >= 5) {
+          askForVerbosityPreference();
+        } else if (verbosityPromptCount === 1 && (Date.now() - lastVerbosityPromptTime > PREFERENCE_PROMPT_INTERVAL)) {
+          askForVerbosityPreference();
+        }
+    // 👇 여기가 모든 주요 로직을 감싸는 try 블록의 끝입니다.
+    } catch (error) { 
+      if(thinkingBubble) thinkingBubble.remove(); 
+      console.error("sendMessage 내 오류:", error);
+      appendMessage("미안, 지금은 답변하기 조금 어려워. 잠시 후 다시 시도해 줄래?", "assistant_feedback");
+    } finally { 
+      isProcessing = false;
+      if(sendBtn) sendBtn.classList.remove('loading');
+    }
 
         // --- 이벤트 바인딩 ---
         if(sendBtn) sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text')); 
