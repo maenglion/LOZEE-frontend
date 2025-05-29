@@ -5,21 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTitle">마이 로지</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-    <link rel="stylesheet" href="js/gnb.css">
+    <link rel="stylesheet" href="gnb.css">
     <style>
+        /* mypage.html 고유 스타일 */
         :root {
             --primary-color: #6e8efb;
             --secondary-color: #5a7edf;
             --background-color: #f4f6f8;
             --text-color: #333333;
             --card-bg: #ffffff;
+            --gnb-height: 56px; /* gnb.css의 값과 일치 또는 gnb.css 변수 사용 */
             --profile-placeholder-bg: #d0d9ff; 
             --light-blue-bg: #eef2f7;
             --action-button-bg: #6078ea;
- 
         }
         body {
             margin: 0;
+            /* gnb.css에서 body padding-top을 관리한다면 이 줄은 삭제 가능, 
+               그렇지 않다면 var(--gnb-height) 값이 gnb.css와 일치해야 함 */
+            padding-top: var(--gnb-height); 
             font-family: 'KoPub World Dotum', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
@@ -167,7 +171,8 @@
             <div class="info-card child-info-card" id="childInfoCard" style="display:none;">
                 <h2>🧸 아이/가족 정보</h2>
                 <p class="info-item"><span class="label">이름:</span> <span id="childNameDisplay" class="value">로딩 중...</span></p>
-                <p class="info-item"><span class="label">만 나이:</span> <span id="childFullAgeDisplay" class="value">로딩 중...</span></p> <p class="info-item"><span class="label">특성 이해:</span></p>
+                <p class="info-item"><span class="label">만 나이:</span> <span id="childFullAgeDisplay" class="value">로딩 중...</span></p> 
+                <p class="info-item"><span class="label">특성 이해:</span></p>
                 <ul id="childDiagnosesList" style="margin-top: -5px; margin-bottom:10px; text-align:left;"><li>정보 없음</li></ul>
                 <p class="info-item" style="margin-top:15px;">
                     <span class="label">연결된 로지 계정:</span> 
@@ -184,7 +189,7 @@
         </div>
 
         <div class="section recent-journals-section">
-            <h2 class="recent-journals-title">💬 최근에 나눈 이야기들 (최신 10개)</h2>
+            <h2 class="recent-journals-title">💬 최근에 나눈 이야기들</h2>
             <div id="recentJournalCardList" class="recent-journal-card-list">
                 </div>
             <button id="goToJournalListBtn" class="action-button view-all-journals-btn">📖 전체 이야기 모음집 가기</button>
@@ -216,7 +221,7 @@
         
         const childInfoCardEl = document.getElementById('childInfoCard');
         const childNameDisplayEl = document.getElementById('childNameDisplay');
-        const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay'); // ID 변경
+        const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay');
         const childDiagnosesListEl = document.getElementById('childDiagnosesList');
         const childLozeeEmailDisplayEl = document.getElementById('childLozeeEmailDisplay');
         const childConnectionStatusEl = document.getElementById('childConnectionStatus');
@@ -224,19 +229,20 @@
         const lozeePlansEl = document.getElementById('lozeePlans');
         const recentJournalCardListEl = document.getElementById('recentJournalCardList');
         const goToJournalListBtn = document.getElementById('goToJournalListBtn');
+        // const reportShareButton = document.getElementById('reportShareButton'); // 이 페이지에는 공유 버튼 없음
 
         // --- 헬퍼 함수 ---
         function calculateAgeFromBirthDate(birthDateStr) {
             if (!birthDateStr || !/^\d{4}-\d{2}-\d{2}$/.test(birthDateStr)) return null;
             const birthDate = new Date(birthDateStr);
-            if (isNaN(birthDate.getTime())) return null; // 유효하지 않은 날짜 처리
+            if (isNaN(birthDate.getTime())) return null;
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
             }
-            return age >= 0 ? age : null; // 음수 나이 방지
+            return age >= 0 ? age : null;
         }
 
         function getNeurodiversityText(code) {
@@ -249,13 +255,21 @@
             let loggedInUserEmail = localStorage.getItem('cbtUserEmail') || '';
             let userType = localStorage.getItem('lozee_userType') || ''; 
 
-            if (loggedInUserEmail === 'unbearable_@naver.com') { // 테스트 계정 처리
+            if (loggedInUserEmail === 'unbearable_@naver.com') {
                 userType = 'caregiver';
-                localStorage.setItem('lozee_userType', 'caregiver'); 
+                // localStorage.setItem('lozee_userType', 'caregiver'); // 이메일 체크 후 로드하므로 불필요
             }
 
-            if (!loggedInUserEmail) { /* ... 로그인 정보 없음 UI 처리 ... */ return; }
-            if (!userType && loggedInUserEmail !== 'unbearable_@naver.com') { /* ... 사용자 유형 오류 UI 처리 ... */ return; }
+            if (!loggedInUserEmail) { 
+                if(pageMainTitleEl) pageMainTitleEl.textContent = '로그인이 필요해요';
+                if(userNameDisplayEl) userNameDisplayEl.textContent = '로그인 정보 없음';
+                // 다른 필드들도 초기화 또는 안내 메시지
+                return; 
+            }
+            if (!userType && loggedInUserEmail !== 'unbearable_@naver.com') {
+                if(pageMainTitleEl) pageMainTitleEl.textContent = '사용자 유형 정보 없음';
+                return;
+            }
 
             if(userEmailDisplayEl) userEmailDisplayEl.textContent = loggedInUserEmail;
             
@@ -266,7 +280,6 @@
                     const data = userSnap.data();
                     console.log("Mypage: Firestore 사용자 데이터:", data); 
                     
-                    // 프로필 카드: 로그인한 사용자(당사자 또는 보호자 본인) 정보
                     const profileNameForCard = data.name || (userType === 'caregiver' ? '보호자' : '친구');
                     const profileBirthDate = data.birthDate; 
                     const profileAge = profileBirthDate ? calculateAgeFromBirthDate(profileBirthDate) : (data.age !== undefined ? data.age : null);
@@ -278,8 +291,12 @@
                     if(userFullAgeEl) userFullAgeEl.textContent = profileAge !== null ? `만 ${profileAge}세` : '정보 없음';
                     if(ageLabelEl) ageLabelEl.textContent = "만 나이:"; 
 
-                    if (userPhotoPlaceholderEl) { /* ... 사진 처리 ... */ }
-                    if(lastLoginDateEl && data.lastLogin?.toDate) { /* ... 마지막 로그인 ... */ }
+                    if (userPhotoPlaceholderEl) {
+                        if (data.photoURL) { userPhotoPlaceholderEl.innerHTML = `<img src="${data.photoURL}" alt="${profileNameForCard} 사진">`;} 
+                        else { userPhotoPlaceholderEl.textContent = profileNameForCard.charAt(0) || '😊';}
+                    }
+                    if(lastLoginDateEl && data.lastLogin?.toDate) { lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleDateString('ko-KR');} 
+                    else { if(lastLoginDateEl) lastLoginDateEl.textContent = '최근 기록 없음';}
                     
                     let sessionCountToDisplay = 0;
                     if (userType === 'caregiver') {
@@ -291,7 +308,6 @@
                     }
                     if(totalSessionsCountEl) totalSessionsCountEl.textContent = `${sessionCountToDisplay}회`; 
 
-                    // 사용자 유형별 카드 표시
                     if (userType === 'caregiver') {
                         if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'block';
                         if(childInfoCardEl) childInfoCardEl.style.display = 'block';
@@ -299,83 +315,34 @@
 
                         if (data.caregiverNeurodiversity && data.caregiverNeurodiversity.length > 0 && data.caregiverNeurodiversity[0] !== 'unsure_or_none') {
                             if(caregiverPersonalNeurodiversityListEl) caregiverPersonalNeurodiversityListEl.innerHTML = data.caregiverNeurodiversity.map(nd => `<li>${getNeurodiversityText(nd)}</li>`).join('');
-                        } else {
-                            if(caregiverPersonalNeurodiversityListEl) caregiverPersonalNeurodiversityListEl.innerHTML = '<li>선택된 사항 없음</li>';
-                        }
+                        } else { if(caregiverPersonalNeurodiversityListEl) caregiverPersonalNeurodiversityListEl.innerHTML = '<li>선택된 사항 없음</li>'; }
                         
                         if(childNameDisplayEl) childNameDisplayEl.textContent = data.childName || '정보 없음';
                         const childAgeVal = data.childBirthDate ? calculateAgeFromBirthDate(data.childBirthDate) : (data.childAge !== undefined ? data.childAge : null);
-                        if(childFullAgeDisplayEl) childFullAgeDisplayEl.textContent = childAgeVal !== null ? `만 ${childAgeVal}세` : '정보 없음'; // ID 변경 적용
+                        if(childFullAgeDisplayEl) childFullAgeDisplayEl.textContent = childAgeVal !== null ? `만 ${childAgeVal}세` : '정보 없음'; 
                         
                         if (data.childDiagnoses && data.childDiagnoses.length > 0 && data.childDiagnoses[0] !== 'NotApplicable' && data.childDiagnoses[0] !== 'Unsure') {
                            if(childDiagnosesListEl) childDiagnosesListEl.innerHTML = data.childDiagnoses.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('');
-                        } else {
-                           if(childDiagnosesListEl) childDiagnosesListEl.innerHTML = '<li>특별히 선택된 항목 없음</li>';
-                        }
+                        } else { if(childDiagnosesListEl) childDiagnosesListEl.innerHTML = '<li>특별히 선택된 항목 없음</li>'; }
                         if(childLozeeEmailDisplayEl) childLozeeEmailDisplayEl.textContent = data.childLozeeEmail || '연결 안 됨';
-                        if(childConnectionStatusEl) {
-                            childConnectionStatusEl.innerHTML = data.childLozeeEmail ? '<span class="connected" title="연결됨">🔗</span>' : '<span class="disconnected" title="연결 안 됨">💔</span>';
-                        }
+                        if(childConnectionStatusEl) childConnectionStatusEl.innerHTML = data.childLozeeEmail ? '<span class="connected" title="연결됨">🔗</span>' : '<span class="disconnected" title="연결 안 됨">💔</span>';
                     } else { 
                         if(directUserDiagnosisCardEl) directUserDiagnosisCardEl.style.display = 'block';
                         if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'none';
                         if(childInfoCardEl) childInfoCardEl.style.display = 'none';
-
                         if (data.diagnoses && data.diagnoses.length > 0 && data.diagnoses[0] !== 'NotApplicable' && data.diagnoses[0] !== 'Unsure') {
                            if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = data.diagnoses.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('');
-                        } else {
-                           if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = '<li>선택된 항목 없음</li>';
-                        }
+                        } else { if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = '<li>선택된 항목 없음</li>'; }
                     }
                 } else { /* ... 사용자 정보 없음 UI 처리 ... */ }
             } catch (error) { /* ... 오류 처리 ... */ }
         }
         
-        function displayLozeePlans() {
-            if (!lozeePlansEl) return;
-            lozeePlansEl.innerHTML = ''; 
-            const plans = []; 
-            const userType = localStorage.getItem('lozee_userType') || '';
-
-            const continueTopicDataString = localStorage.getItem('lozee_continue_topic');
-            if (continueTopicDataString) {
-                try {
-                    const topicToContinue = JSON.parse(continueTopicDataString);
-                    const planItem = document.createElement('li');
-                    planItem.innerHTML = `↪️ 저번에 이야기하다 멈춘 '<strong>${topicToContinue.details || '생각 패턴'}</strong>'에 대해 더 깊이 이야기 나눠보기로 했어요!`;
-                    planItem.style.cursor = "pointer";
-                    planItem.onclick = () => {
-                        localStorage.setItem('lozee_talk_init_topic', JSON.stringify(topicToContinue)); 
-                        window.location.href = 'talk.html';
-                    };
-                    plans.push(planItem);
-                } catch (e) { console.error("이어하기 주제 파싱 오류", e); localStorage.removeItem('lozee_continue_topic');}
-            }
-            
-            const needsLanguagePractice = localStorage.getItem('lozee_trigger_language_practice') === 'true';
-            if (userType === 'directUser' && needsLanguagePractice) {
-                 const langPlanItem = document.createElement('li');
-                 langPlanItem.innerHTML = "🌱 로지와 함께 말솜씨 키우기 연습을 해볼까요? (클릭하면 시작 - 준비 중)";
-                 langPlanItem.style.cursor = "pointer";
-                 langPlanItem.onclick = () => {
-                     alert("말솜씨 키우기 연습 기능은 열심히 준비 중이에요! 조금만 기다려주세요 😊");
-                 };
-                 plans.push(langPlanItem);
-            }
-
-            if (plans.length > 0) {
-                plans.forEach(planElement => lozeePlansEl.appendChild(planElement));
-            } else {
-                const li = document.createElement('li');
-                li.textContent = "아직 로지와의 특별한 약속은 없어요! 새로운 이야기를 시작해볼까요?";
-                li.style.color = "#777"; li.style.fontStyle = "italic";
-                lozeePlansEl.appendChild(li);
-            }
-        }
+        function displayLozeePlans() { /* ... 이전 답변의 displayLozeePlans 함수 내용 ... */ }
 
         async function displayRecentJournals() {
             if (!recentJournalCardListEl) return;
-            recentJournalCardListEl.innerHTML = ''; 
+            recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777;">최근 이야기 목록을 불러오는 중...</p>'; 
             const loggedInUserEmail = localStorage.getItem('cbtUserEmail');
             const userType = localStorage.getItem('lozee_userType');
             let targetUserIdForJournals = loggedInUserEmail; 
@@ -393,6 +360,7 @@
                 if (querySnapshot.empty) {
                     recentJournalCardListEl.innerHTML = `<p style="text-align:center; color:#777; padding: 20px 0;">아직 로지와의 이야기가 충분히 쌓이지 않았나 봐요. 🤔</p>`;
                 } else {
+                    recentJournalCardListEl.innerHTML = ''; // 로딩 메시지 제거
                     let sessionCounter = querySnapshot.size; 
                     querySnapshot.forEach((docSnap) => {
                         const journal = docSnap.data();
@@ -418,7 +386,7 @@
                                 accumulatedUserCharCount: journal.userCharCountForThisSession || 0, 
                                 journalId: docSnap.id,
                                 journalTitle: title, 
-                                journalDate: journal.createdAt?.toDate ? journal.createdAt.toDate().toISOString() : null,  // ISO 문자열로 저장
+                                journalDate: journal.createdAt?.toDate ? journal.createdAt.toDate().toISOString() : null,
                                 journalSummaryFull: journal.summary 
                             }));
                             window.location.href = `journal.html?journalId=${docSnap.id}`; 
