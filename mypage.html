@@ -5,25 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTitle">마이 로지</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-    <link rel="stylesheet" href="gnb.css">
-    <style>
-        /* mypage.html 고유 스타일 */
+    <link rel="stylesheet" href="gnb.css"> <style>
         :root {
             --primary-color: #6e8efb;
             --secondary-color: #5a7edf;
             --background-color: #f4f6f8;
             --text-color: #333333;
             --card-bg: #ffffff;
-            --gnb-height: 56px; /* gnb.css의 값과 일치 또는 gnb.css 변수 사용 */
+            --gnb-height: 56px; /* gnb.css와 일치해야 함 */
             --profile-placeholder-bg: #d0d9ff; 
             --light-blue-bg: #eef2f7;
             --action-button-bg: #6078ea;
         }
         body {
             margin: 0;
-            /* gnb.css에서 body padding-top을 관리한다면 이 줄은 삭제 가능, 
-               그렇지 않다면 var(--gnb-height) 값이 gnb.css와 일치해야 함 */
-            padding-top: var(--gnb-height); 
+            padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
             font-family: 'KoPub World Dotum', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
@@ -32,71 +28,27 @@
         .container { max-width: 800px; margin: 20px auto; padding: 20px; box-sizing: border-box; }
         .page-title { color: var(--primary-color); text-align: center; font-size: 2em; margin-bottom: 30px; font-weight: 700; }
         
-        .profile-section { 
-            display: grid;
-            grid-template-columns: auto 1fr; 
-            gap: 20px;
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            align-items: center;
-        }
+        .profile-section { display: grid; grid-template-columns: auto 1fr; gap: 20px; background-color: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; align-items: center; }
         .profile-photo-container { display: flex; justify-content: center; align-items: center; }
         .profile-photo-placeholder { width: 100px; height: 100px; border-radius: 50%; background-color: var(--profile-placeholder-bg); display: flex; align-items: center; justify-content: center; font-size: 2em; color: white; font-weight: bold; }
         .profile-photo-placeholder img { width:100%; height:100%; border-radius:50%; object-fit:cover;}
-
         .profile-details h2 { font-size: 1.5em; color: var(--primary-color); margin-top: 0; margin-bottom: 5px; text-align:left;}
         .profile-details .user-email { font-size: 0.9em; color: #777; margin-bottom:15px; text-align:left;}
         
-        .info-grid { 
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .info-card { background-color: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .info-card h2 { font-size: 1.2em; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; text-align:left;}
-        
         .info-item { margin-bottom: 10px; font-size: 1em; display: flex; justify-content: space-between; align-items: baseline;}
         .info-item .label { font-weight: bold; color: #555; margin-right: 10px; white-space: nowrap; }
         .info-item .value { color: var(--text-color); text-align: right; word-break: keep-all; }
-        
         .neurodiversity-info ul { list-style: none; padding:0; margin:0; text-align:left; }
         .neurodiversity-info li { background-color: #e9eaf6; color: #3f51b5; padding: 6px 10px; border-radius: 15px; font-size: 0.9em; display: inline-block; margin-right: 8px; margin-bottom: 8px;}
-
         .plans-card ul { list-style: none; padding: 0; text-align: left; }
         .plans-card li { background-color: #eef2f7; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 0.95em; cursor:pointer; transition: background-color 0.2s; }
         .plans-card li:hover { background-color: #dbe4f0; }
-
-        .recent-journals-section h2 { 
-            text-align: center; 
-            font-size: 1.4em; 
-            color: var(--primary-color); 
-            margin-top: 30px; 
-            margin-bottom: 20px; 
-            border-bottom: 1px solid #eee; 
-            padding-bottom: 10px;
-        }
-        .recent-journal-card-list { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-            margin-bottom: 20px; 
-        }
-
-        .session-card-wide { 
-            background-color: var(--card-bg, #ffffff); 
-            border-radius: 10px; 
-            padding: 15px 20px; 
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08); 
-            border-left: 4px solid var(--secondary-color, #5a7edf); 
-            display: flex; 
-            flex-direction: column; 
-            cursor: pointer; 
-            transition: box-shadow 0.2s;
-        }
+        .recent-journals-section h2 { text-align: center; font-size: 1.4em; color: var(--primary-color); margin-top: 30px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        .recent-journal-card-list { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .session-card-wide { background-color: var(--card-bg, #ffffff); border-radius: 10px; padding: 15px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid var(--secondary-color, #5a7edf); display: flex; flex-direction: column; cursor: pointer; transition: box-shadow 0.2s;}
         .session-card-wide:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
         .session-card-wide .session-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: none; padding-bottom: 5px; }
         .session-card-wide .session-date { font-size: 0.85em; color: #777; font-weight:normal; }
@@ -107,23 +59,14 @@
         .journal-analysis-banner.positive { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9;}
         .journal-analysis-banner.neutral { background-color: #eceff1; color: #37474f; border: 1px solid #cfd8dc;}
         .journal-analysis-banner.negative { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2;}
-        
         .action-button { display: inline-block; margin-top: 15px; background-color: #6e8efb; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; transition: background-color 0.2s; }
         .action-button:hover { background-color: #5a7edf; }
         .view-all-journals-btn { display: block; width: fit-content; margin: 20px auto 0 auto; }
-
         .connection-status { margin-left: 8px; font-size: 0.9em; }
         .connection-status .connected { color: green; font-weight: bold; }
         .connection-status .disconnected { color: #aaa; }
         .module-explanation { font-size:0.9em; color:#555; margin-bottom:15px; padding: 10px; background-color: #eef2f7; border-radius: 6px; line-height: 1.6; text-align: left; }
-
-        @media (max-width: 700px) {
-            .profile-section { grid-template-columns: 1fr; text-align: center; }
-            .profile-details h2, .profile-details .user-email { text-align: center; }
-            .info-item { flex-direction: column; align-items: flex-start; }
-            .info-item .value { text-align: left; }
-            .info-grid { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 700px) { .profile-section { grid-template-columns: 1fr; text-align: center; } .profile-details h2, .profile-details .user-email { text-align: center; } .info-item { flex-direction: column; align-items: flex-start; } .info-item .value { text-align: left; } .info-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -147,11 +90,11 @@
                 <div id="userPhotoPlaceholder" class="profile-photo-placeholder"></div>
             </div>
             <div class="profile-details">
-                <h2 id="userNameDisplay">로딩 중...</h2>
-                <p id="userEmailDisplay" class="user-email">로딩 중...</p>
-                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value">로딩 중...</span></div>
-                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">로딩 중...</span></div>
-                <div class="info-item"><span class="label" id="sessionCountLabel">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">로딩 중...</span></div>
+                <h2 id="userNameDisplay">정보 로딩 중...</h2>
+                <p id="userEmailDisplay" class="user-email">정보 로딩 중...</p>
+                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value">정보 로딩 중...</span></div>
+                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">정보 로딩 중...</span></div>
+                <div class="info-item"><span class="label" id="sessionCountLabel">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">정보 로딩 중...</span></div>
             </div>
         </div>
 
@@ -184,14 +127,15 @@
             <div class="info-card plans-card">
                 <h2>🤝 로지와의 약속! (로지 숙제)</h2>
                 <p class="module-explanation">로지랑 이런 이야기를 더 나누기로 했었지! 언제든 다시 시작할 수 있어.</p>
-                <ul id="lozeePlans"></ul>
+                <ul id="lozeePlans"><li>내용을 불러오는 중...</li></ul>
             </div>
         </div>
 
         <div class="section recent-journals-section">
             <h2 class="recent-journals-title">💬 최근에 나눈 이야기들</h2>
             <div id="recentJournalCardList" class="recent-journal-card-list">
-                </div>
+                <p style="text-align:center; color:#777;">최근 이야기 목록을 불러오는 중...</p>
+            </div>
             <button id="goToJournalListBtn" class="action-button view-all-journals-btn">📖 전체 이야기 모음집 가기</button>
         </div>
     </main>
@@ -229,7 +173,6 @@
         const lozeePlansEl = document.getElementById('lozeePlans');
         const recentJournalCardListEl = document.getElementById('recentJournalCardList');
         const goToJournalListBtn = document.getElementById('goToJournalListBtn');
-        // const reportShareButton = document.getElementById('reportShareButton'); // 이 페이지에는 공유 버튼 없음
 
         // --- 헬퍼 함수 ---
         function calculateAgeFromBirthDate(birthDateStr) {
@@ -239,9 +182,7 @@
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
             return age >= 0 ? age : null;
         }
 
@@ -261,13 +202,12 @@
             }
 
             if (!loggedInUserEmail) { 
-                if(pageMainTitleEl) pageMainTitleEl.textContent = '로그인이 필요해요';
-                if(userNameDisplayEl) userNameDisplayEl.textContent = '로그인 정보 없음';
-                // 다른 필드들도 초기화 또는 안내 메시지
+                if(pageMainTitleEl) pageMainTitleEl.textContent = '정보를 불러올 수 없어요';
+                if(userNameDisplayEl) userNameDisplayEl.textContent = '로그인 정보가 필요합니다.';
                 return; 
             }
             if (!userType && loggedInUserEmail !== 'unbearable_@naver.com') {
-                if(pageMainTitleEl) pageMainTitleEl.textContent = '사용자 유형 정보 없음';
+                if(pageMainTitleEl) pageMainTitleEl.textContent = '사용자 유형 정보가 없습니다.';
                 return;
             }
 
@@ -293,10 +233,11 @@
 
                     if (userPhotoPlaceholderEl) {
                         if (data.photoURL) { userPhotoPlaceholderEl.innerHTML = `<img src="${data.photoURL}" alt="${profileNameForCard} 사진">`;} 
-                        else { userPhotoPlaceholderEl.textContent = profileNameForCard.charAt(0) || '😊';}
+                        else { userPhotoPlaceholderEl.textContent = profileNameForCard.charAt(0).toUpperCase() || '😊';}
                     }
-                    if(lastLoginDateEl && data.lastLogin?.toDate) { lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleDateString('ko-KR');} 
-                    else { if(lastLoginDateEl) lastLoginDateEl.textContent = '최근 기록 없음';}
+                    if(lastLoginDateEl && data.lastLogin?.toDate) { 
+                        lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric'}); // 간략한 날짜 형식
+                    } else { if(lastLoginDateEl) lastLoginDateEl.textContent = '기록 없음';}
                     
                     let sessionCountToDisplay = 0;
                     if (userType === 'caregiver') {
@@ -308,6 +249,7 @@
                     }
                     if(totalSessionsCountEl) totalSessionsCountEl.textContent = `${sessionCountToDisplay}회`; 
 
+                    // 사용자 유형별 카드 표시
                     if (userType === 'caregiver') {
                         if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'block';
                         if(childInfoCardEl) childInfoCardEl.style.display = 'block';
@@ -334,14 +276,61 @@
                            if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = data.diagnoses.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('');
                         } else { if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = '<li>선택된 항목 없음</li>'; }
                     }
-                } else { /* ... 사용자 정보 없음 UI 처리 ... */ }
-            } catch (error) { /* ... 오류 처리 ... */ }
+                } else { 
+                    if(userNameDisplayEl) userNameDisplayEl.textContent = '사용자 정보를 찾을 수 없어요.';
+                    if(pageMainTitleEl) pageMainTitleEl.textContent = '내 정보';
+                    console.warn(`Mypage: Firestore에 사용자 문서 없음 (${loggedInUserEmail})`);
+                }
+            } catch (error) { 
+                console.error("Mypage: 프로필 로드 중 오류:", error);
+                if(userNameDisplayEl) userNameDisplayEl.textContent = '정보 로드 실패';
+            }
         }
         
-        function displayLozeePlans() { /* ... 이전 답변의 displayLozeePlans 함수 내용 ... */ }
+        function displayLozeePlans() {
+            if (!lozeePlansEl) { console.warn("Mypage: lozeePlansEl 요소를 찾을 수 없습니다."); return; }
+            lozeePlansEl.innerHTML = ''; 
+            const plans = []; 
+            const userType = localStorage.getItem('lozee_userType') || '';
+
+            const continueTopicDataString = localStorage.getItem('lozee_continue_topic');
+            if (continueTopicDataString) {
+                try {
+                    const topicToContinue = JSON.parse(continueTopicDataString);
+                    const planItem = document.createElement('li');
+                    planItem.innerHTML = `↪️ 저번에 이야기하다 멈춘 '<strong>${topicToContinue.details || '생각 패턴'}</strong>'에 대해 더 깊이 이야기 나눠보기로 했어요!`;
+                    planItem.style.cursor = "pointer";
+                    planItem.onclick = () => {
+                        localStorage.setItem('lozee_talk_init_topic', JSON.stringify(topicToContinue)); 
+                        window.location.href = 'talk.html';
+                    };
+                    plans.push(planItem);
+                } catch (e) { console.error("이어하기 주제 파싱 오류", e); localStorage.removeItem('lozee_continue_topic');}
+            }
+            
+            const needsLanguagePractice = localStorage.getItem('lozee_trigger_language_practice') === 'true';
+            if (userType === 'directUser' && needsLanguagePractice) {
+                 const langPlanItem = document.createElement('li');
+                 langPlanItem.innerHTML = "🌱 로지와 함께 말솜씨 키우기 연습을 해볼까요? (클릭하면 시작 - 준비 중)";
+                 langPlanItem.style.cursor = "pointer";
+                 langPlanItem.onclick = () => {
+                     alert("말솜씨 키우기 연습 기능은 열심히 준비 중이에요! 조금만 기다려주세요 😊");
+                 };
+                 plans.push(langPlanItem);
+            }
+
+            if (plans.length > 0) {
+                plans.forEach(planElement => lozeePlansEl.appendChild(planElement));
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "아직 로지와의 특별한 약속은 없어요! 새로운 이야기를 시작해볼까요?";
+                li.style.color = "#777"; li.style.fontStyle = "italic";
+                lozeePlansEl.appendChild(li);
+            }
+        }
 
         async function displayRecentJournals() {
-            if (!recentJournalCardListEl) return;
+            if (!recentJournalCardListEl) { console.warn("Mypage: recentJournalCardListEl 요소를 찾을 수 없습니다."); return; }
             recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777;">최근 이야기 목록을 불러오는 중...</p>'; 
             const loggedInUserEmail = localStorage.getItem('cbtUserEmail');
             const userType = localStorage.getItem('lozee_userType');
@@ -360,20 +349,20 @@
                 if (querySnapshot.empty) {
                     recentJournalCardListEl.innerHTML = `<p style="text-align:center; color:#777; padding: 20px 0;">아직 로지와의 이야기가 충분히 쌓이지 않았나 봐요. 🤔</p>`;
                 } else {
-                    recentJournalCardListEl.innerHTML = ''; // 로딩 메시지 제거
+                    recentJournalCardListEl.innerHTML = ''; 
                     let sessionCounter = querySnapshot.size; 
                     querySnapshot.forEach((docSnap) => {
                         const journal = docSnap.data();
                         const card = document.createElement('div');
                         card.className = 'session-card-wide'; 
                         const dateStr = journal.createdAt?.toDate ? journal.createdAt.toDate().toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'}) : '날짜 없음';
-                        const title = journal.title || journal.topic || '제목 없는 이야기';
+                        const title = journal.title || journal.topic || '제목 없는 이야기'; // Firestore 'title' 필드 사용
                         const summaryPreview = journal.summary ? journal.summary.substring(0, 100) + (journal.summary.length > 100 ? '...' : '') : '요약이 없어요.';
                         let lozeeAnalysisHTML = "";
                         if(journal.detailedAnalysis && journal.detailedAnalysis.overallSentiment) { 
                             let sentimentText = ""; let sentimentClass = "neutral";
-                            if (journal.detailedAnalysis.overallSentiment === "positive") { sentimentText = "긍정적인 대화였어요 👍"; sentimentClass = "positive"; }
-                            else if (journal.detailedAnalysis.overallSentiment === "negative") { sentimentText = "조금 힘든 대화였나봐요 😟"; sentimentClass = "negative"; }
+                            if (journal.detailedAnalysis.overallSentiment.toLowerCase().includes("positive") || journal.detailedAnalysis.overallSentiment.toLowerCase().includes("긍정")) { sentimentText = "긍정적인 대화였어요 👍"; sentimentClass = "positive"; }
+                            else if (journal.detailedAnalysis.overallSentiment.toLowerCase().includes("negative") || journal.detailedAnalysis.overallSentiment.toLowerCase().includes("부정")) { sentimentText = "조금 힘든 대화였나봐요 😟"; sentimentClass = "negative"; }
                             else { sentimentText = "차분한 대화였어요 😌"; }
                             lozeeAnalysisHTML = `<div class="journal-analysis-banner ${sentimentClass}">${sentimentText}</div>`;
                         }
