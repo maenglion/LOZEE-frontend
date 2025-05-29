@@ -6,20 +6,25 @@
     <title id="pageTitle">마이 로지</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
     <link rel="stylesheet" href="gnb.css"> <style>
+        /* mypage.html 고유 스타일 */
         :root {
             --primary-color: #6e8efb;
             --secondary-color: #5a7edf;
             --background-color: #f4f6f8;
             --text-color: #333333;
             --card-bg: #ffffff;
-            --gnb-height: 56px; /* gnb.css와 일치해야 함 */
+            /* --gnb-height는 gnb.css에서 정의된 var(--gnb-height)를 사용합니다. */
+            /* 만약 gnb.css에 --gnb-height 변수가 없다면 여기에 정의해야 합니다: */
+            /* --gnb-height: 56px;  */
             --profile-placeholder-bg: #d0d9ff; 
             --light-blue-bg: #eef2f7;
             --action-button-bg: #6078ea;
         }
         body {
             margin: 0;
-            padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
+            /* gnb.css에서 body padding-top을 var(--gnb-height)로 설정해야 합니다. */
+            /* 만약 gnb.css에 없다면 아래 주석 해제: */
+            /* padding-top: var(--gnb-height);  */
             font-family: 'KoPub World Dotum', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
@@ -28,7 +33,17 @@
         .container { max-width: 800px; margin: 20px auto; padding: 20px; box-sizing: border-box; }
         .page-title { color: var(--primary-color); text-align: center; font-size: 2em; margin-bottom: 30px; font-weight: 700; }
         
-        .profile-section { display: grid; grid-template-columns: auto 1fr; gap: 20px; background-color: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; align-items: center; }
+        .profile-section { 
+            display: grid;
+            grid-template-columns: auto 1fr; 
+            gap: 20px;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            align-items: center;
+        }
         .profile-photo-container { display: flex; justify-content: center; align-items: center; }
         .profile-photo-placeholder { width: 100px; height: 100px; border-radius: 50%; background-color: var(--profile-placeholder-bg); display: flex; align-items: center; justify-content: center; font-size: 2em; color: white; font-weight: bold; }
         .profile-photo-placeholder img { width:100%; height:100%; border-radius:50%; object-fit:cover;}
@@ -87,14 +102,13 @@
 
         <div class="profile-section">
             <div class="profile-photo-container">
-                <div id="userPhotoPlaceholder" class="profile-photo-placeholder"></div>
-            </div>
+                <div id="userPhotoPlaceholder" class="profile-photo-placeholder">L</div> </div>
             <div class="profile-details">
-                <h2 id="userNameDisplay">정보 로딩 중...</h2>
-                <p id="userEmailDisplay" class="user-email">정보 로딩 중...</p>
-                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value">정보 로딩 중...</span></div>
-                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">정보 로딩 중...</span></div>
-                <div class="info-item"><span class="label" id="sessionCountLabel">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">정보 로딩 중...</span></div>
+                <h2 id="userNameDisplay">로딩 중...</h2>
+                <p id="userEmailDisplay" class="user-email">로딩 중...</p>
+                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value">로딩 중...</span></div>
+                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">로딩 중...</span></div>
+                <div class="info-item"><span class="label" id="sessionCountLabel">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">로딩 중...</span></div>
             </div>
         </div>
 
@@ -127,7 +141,7 @@
             <div class="info-card plans-card">
                 <h2>🤝 로지와의 약속! (로지 숙제)</h2>
                 <p class="module-explanation">로지랑 이런 이야기를 더 나누기로 했었지! 언제든 다시 시작할 수 있어.</p>
-                <ul id="lozeePlans"><li>내용을 불러오는 중...</li></ul>
+                <ul id="lozeePlans"><li>약속을 불러오는 중...</li></ul>
             </div>
         </div>
 
@@ -141,18 +155,19 @@
     </main>
 
     <script src="./js/gnb.js" defer></script> 
+    
     <script type="module">
         import { db } from './js/firebase-config.js';
         import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
         // --- DOM 요소 가져오기 ---
         const pageMainTitleEl = document.getElementById('pageMainTitle');
-        const pageTitleEl = document.querySelector('title');
+        const pageTitleEl = document.querySelector('title'); // <title> 태그
         const userPhotoPlaceholderEl = document.getElementById('userPhotoPlaceholder');
         const userNameDisplayEl = document.getElementById('userNameDisplay');
         const userEmailDisplayEl = document.getElementById('userEmailDisplay');
         const ageLabelEl = document.getElementById('ageLabel');
-        const userFullAgeEl = document.getElementById('userFullAge');
+        const userFullAgeEl = document.getElementById('userFullAge'); // 로그인한 사용자(당사자/보호자) 본인 나이
         const lastLoginDateEl = document.getElementById('lastLoginDate');
         const sessionCountLabelEl = document.getElementById('sessionCountLabel');
         const totalSessionsCountEl = document.getElementById('totalSessionsCount');
@@ -165,7 +180,7 @@
         
         const childInfoCardEl = document.getElementById('childInfoCard');
         const childNameDisplayEl = document.getElementById('childNameDisplay');
-        const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay');
+        const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay'); // 아이/가족 나이 표시용
         const childDiagnosesListEl = document.getElementById('childDiagnosesList');
         const childLozeeEmailDisplayEl = document.getElementById('childLozeeEmailDisplay');
         const childConnectionStatusEl = document.getElementById('childConnectionStatus');
@@ -177,13 +192,18 @@
         // --- 헬퍼 함수 ---
         function calculateAgeFromBirthDate(birthDateStr) {
             if (!birthDateStr || !/^\d{4}-\d{2}-\d{2}$/.test(birthDateStr)) return null;
-            const birthDate = new Date(birthDateStr);
-            if (isNaN(birthDate.getTime())) return null;
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
-            return age >= 0 ? age : null;
+            try {
+                const birthDate = new Date(birthDateStr);
+                if (isNaN(birthDate.getTime())) return null; 
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
+                return age >= 0 ? age : null;
+            } catch (e) {
+                console.error("calculateAgeFromBirthDate 오류:", e, "입력값:", birthDateStr);
+                return null;
+            }
         }
 
         function getNeurodiversityText(code) {
@@ -196,18 +216,25 @@
             let loggedInUserEmail = localStorage.getItem('cbtUserEmail') || '';
             let userType = localStorage.getItem('lozee_userType') || ''; 
 
-            if (loggedInUserEmail === 'unbearable_@naver.com') {
+            if (loggedInUserEmail === 'unbearable_@naver.com') { // 테스트 계정 처리
                 userType = 'caregiver';
-                // localStorage.setItem('lozee_userType', 'caregiver'); // 이메일 체크 후 로드하므로 불필요
             }
 
             if (!loggedInUserEmail) { 
-                if(pageMainTitleEl) pageMainTitleEl.textContent = '정보를 불러올 수 없어요';
-                if(userNameDisplayEl) userNameDisplayEl.textContent = '로그인 정보가 필요합니다.';
+                if(pageMainTitleEl) pageMainTitleEl.textContent = '로그인이 필요해요';
+                if(userNameDisplayEl) userNameDisplayEl.textContent = '로그인 정보 없음';
+                // 모든 정보 카드 숨김
+                if(directUserDiagnosisCardEl) directUserDiagnosisCardEl.style.display = 'none';
+                if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'none';
+                if(childInfoCardEl) childInfoCardEl.style.display = 'none';
                 return; 
             }
             if (!userType && loggedInUserEmail !== 'unbearable_@naver.com') {
                 if(pageMainTitleEl) pageMainTitleEl.textContent = '사용자 유형 정보가 없습니다.';
+                // 모든 정보 카드 숨김
+                if(directUserDiagnosisCardEl) directUserDiagnosisCardEl.style.display = 'none';
+                if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'none';
+                if(childInfoCardEl) childInfoCardEl.style.display = 'none';
                 return;
             }
 
@@ -220,7 +247,7 @@
                     const data = userSnap.data();
                     console.log("Mypage: Firestore 사용자 데이터:", data); 
                     
-                    const profileNameForCard = data.name || (userType === 'caregiver' ? '보호자' : '친구');
+                    const profileNameForCard = data.name || (userType === 'caregiver' ? '보호자님' : '친구'); // Firestore의 name 필드
                     const profileBirthDate = data.birthDate; 
                     const profileAge = profileBirthDate ? calculateAgeFromBirthDate(profileBirthDate) : (data.age !== undefined ? data.age : null);
 
@@ -236,7 +263,7 @@
                         else { userPhotoPlaceholderEl.textContent = profileNameForCard.charAt(0).toUpperCase() || '😊';}
                     }
                     if(lastLoginDateEl && data.lastLogin?.toDate) { 
-                        lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric'}); // 간략한 날짜 형식
+                        lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric'});
                     } else { if(lastLoginDateEl) lastLoginDateEl.textContent = '기록 없음';}
                     
                     let sessionCountToDisplay = 0;
@@ -268,7 +295,7 @@
                         } else { if(childDiagnosesListEl) childDiagnosesListEl.innerHTML = '<li>특별히 선택된 항목 없음</li>'; }
                         if(childLozeeEmailDisplayEl) childLozeeEmailDisplayEl.textContent = data.childLozeeEmail || '연결 안 됨';
                         if(childConnectionStatusEl) childConnectionStatusEl.innerHTML = data.childLozeeEmail ? '<span class="connected" title="연결됨">🔗</span>' : '<span class="disconnected" title="연결 안 됨">💔</span>';
-                    } else { 
+                    } else { // directUser (당사자)
                         if(directUserDiagnosisCardEl) directUserDiagnosisCardEl.style.display = 'block';
                         if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'none';
                         if(childInfoCardEl) childInfoCardEl.style.display = 'none';
@@ -280,6 +307,9 @@
                     if(userNameDisplayEl) userNameDisplayEl.textContent = '사용자 정보를 찾을 수 없어요.';
                     if(pageMainTitleEl) pageMainTitleEl.textContent = '내 정보';
                     console.warn(`Mypage: Firestore에 사용자 문서 없음 (${loggedInUserEmail})`);
+                    if(directUserDiagnosisCardEl) directUserDiagnosisCardEl.style.display = 'none';
+                    if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'none';
+                    if(childInfoCardEl) childInfoCardEl.style.display = 'none';
                 }
             } catch (error) { 
                 console.error("Mypage: 프로필 로드 중 오류:", error);
@@ -289,10 +319,9 @@
         
         function displayLozeePlans() {
             if (!lozeePlansEl) { console.warn("Mypage: lozeePlansEl 요소를 찾을 수 없습니다."); return; }
-            lozeePlansEl.innerHTML = ''; 
+            lozeePlansEl.innerHTML = '<li>로딩 중...</li>'; 
             const plans = []; 
             const userType = localStorage.getItem('lozee_userType') || '';
-
             const continueTopicDataString = localStorage.getItem('lozee_continue_topic');
             if (continueTopicDataString) {
                 try {
@@ -315,22 +344,21 @@
                  langPlanItem.style.cursor = "pointer";
                  langPlanItem.onclick = () => {
                      alert("말솜씨 키우기 연습 기능은 열심히 준비 중이에요! 조금만 기다려주세요 😊");
+                     // localStorage.removeItem('lozee_trigger_language_practice'); // 완료 시 제거
                  };
                  plans.push(langPlanItem);
             }
 
             if (plans.length > 0) {
+                lozeePlansEl.innerHTML = ''; // 로딩 메시지 제거
                 plans.forEach(planElement => lozeePlansEl.appendChild(planElement));
             } else {
-                const li = document.createElement('li');
-                li.textContent = "아직 로지와의 특별한 약속은 없어요! 새로운 이야기를 시작해볼까요?";
-                li.style.color = "#777"; li.style.fontStyle = "italic";
-                lozeePlansEl.appendChild(li);
+                lozeePlansEl.innerHTML = '<li style="color:#777; font-style:italic;">아직 로지와의 특별한 약속은 없어요!</li>';
             }
         }
 
         async function displayRecentJournals() {
-            if (!recentJournalCardListEl) { console.warn("Mypage: recentJournalCardListEl 요소를 찾을 수 없습니다."); return; }
+            if (!recentJournalCardListEl) { console.warn("Mypage: recentJournalCardListEl 요소를 찾을 수 없습니다."); return;}
             recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777;">최근 이야기 목록을 불러오는 중...</p>'; 
             const loggedInUserEmail = localStorage.getItem('cbtUserEmail');
             const userType = localStorage.getItem('lozee_userType');
@@ -343,9 +371,12 @@
             }
             if (!targetUserIdForJournals) { recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777; padding: 20px 0;">최근 대화를 불러올 사용자 정보가 없어요.</p>'; return; }
 
+            console.log("Mypage: 최근 저널 로드 시도 for userId -", targetUserIdForJournals);
             try {
                 const q = query( collection(db, 'journals'), where('userId', '==', targetUserIdForJournals), orderBy('createdAt', 'desc'), limit(10) );
                 const querySnapshot = await getDocs(q);
+                console.log("Mypage: 최근 저널 쿼리 결과 size -", querySnapshot.size);
+
                 if (querySnapshot.empty) {
                     recentJournalCardListEl.innerHTML = `<p style="text-align:center; color:#777; padding: 20px 0;">아직 로지와의 이야기가 충분히 쌓이지 않았나 봐요. 🤔</p>`;
                 } else {
@@ -353,16 +384,18 @@
                     let sessionCounter = querySnapshot.size; 
                     querySnapshot.forEach((docSnap) => {
                         const journal = docSnap.data();
+                        console.log("Mypage displayRecentJournals - 개별 저널 데이터:", journal); 
                         const card = document.createElement('div');
                         card.className = 'session-card-wide'; 
-                        const dateStr = journal.createdAt?.toDate ? journal.createdAt.toDate().toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'}) : '날짜 없음';
-                        const title = journal.title || journal.topic || '제목 없는 이야기'; // Firestore 'title' 필드 사용
+                        const dateStr = journal.createdAt?.toDate ? journal.createdAt.toDate().toLocaleDateString('ko-KR', {month: 'short', day: 'numeric'}) : '날짜 없음';
+                        const title = journal.title || journal.topic || '제목 없는 이야기';
                         const summaryPreview = journal.summary ? journal.summary.substring(0, 100) + (journal.summary.length > 100 ? '...' : '') : '요약이 없어요.';
                         let lozeeAnalysisHTML = "";
                         if(journal.detailedAnalysis && journal.detailedAnalysis.overallSentiment) { 
                             let sentimentText = ""; let sentimentClass = "neutral";
-                            if (journal.detailedAnalysis.overallSentiment.toLowerCase().includes("positive") || journal.detailedAnalysis.overallSentiment.toLowerCase().includes("긍정")) { sentimentText = "긍정적인 대화였어요 👍"; sentimentClass = "positive"; }
-                            else if (journal.detailedAnalysis.overallSentiment.toLowerCase().includes("negative") || journal.detailedAnalysis.overallSentiment.toLowerCase().includes("부정")) { sentimentText = "조금 힘든 대화였나봐요 😟"; sentimentClass = "negative"; }
+                            const sentiment = String(journal.detailedAnalysis.overallSentiment).toLowerCase();
+                            if (sentiment.includes("positive") || sentiment.includes("긍정")) { sentimentText = "긍정적인 대화였어요 👍"; sentimentClass = "positive"; }
+                            else if (sentiment.includes("negative") || sentiment.includes("부정")) { sentimentText = "조금 힘든 대화였나봐요 😟"; sentimentClass = "negative"; }
                             else { sentimentText = "차분한 대화였어요 😌"; }
                             lozeeAnalysisHTML = `<div class="journal-analysis-banner ${sentimentClass}">${sentimentText}</div>`;
                         }
@@ -384,10 +417,11 @@
                         sessionCounter--; 
                     });
                 }
-            } catch (error) { console.error("최근 저널 로드 중 오류:", error); recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:red; padding: 20px 0;">최근 대화를 불러오는 데 문제가 생겼어요. 😥</p>'; }
+            } catch (error) { console.error("Mypage: 최근 저널 로드 중 오류:", error); recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:red; padding: 20px 0;">최근 대화를 불러오는 데 문제가 생겼어요. 😥</p>'; }
         }
 
         if(goToJournalListBtn) { goToJournalListBtn.onclick = () => { window.location.href = 'journal-list.html'; }; }
+        else { console.warn("Mypage: goToJournalListBtn 요소를 찾을 수 없습니다.");}
         
         document.addEventListener('DOMContentLoaded', () => {
             console.log("Mypage: DOMContentLoaded");
@@ -396,5 +430,6 @@
             displayRecentJournals(); 
         });
     </script>
+    <script src="./js/gnb.js" defer></script> 
 </body>
 </html>
