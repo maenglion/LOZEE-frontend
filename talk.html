@@ -565,6 +565,10 @@
                 appendMessage(text, 'user');
             }
             chatHistory.push({ role: 'user', content: text }); 
+            // userTotalCharCount += text.length; // 현재 세션의 사용자 발화 글자 수 누적
+
+
+
             const currentUserEmail = localStorage.getItem('cbtUserEmail');
             if (chatInput) chatInput.value = '';
 
@@ -636,11 +640,16 @@
                     }
 
                     if(Object.keys(detailedAnalysisDataForStorage).length > 0) {
-                        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
-                            startTime: conversationStartTime, 
-                            analysisTime: Date.now(),
-                            accumulatedDurationMinutes: currentTotalConversationMinutes,
-                            results: detailedAnalysisDataForStorage
+                        // Firestore에서 사용자의 이전까지의 총 누적 글자 수를 가져와 더하거나,
+                        // 현재 세션의 글자 수만 저장할지 정책 결정 필요.
+                        // 여기서는 현재 세션의 사용자 발화 글자 수를 저장한다고 가정.
+                        // (또는 talk.html 로드 시 localStorage나 Firestore에서 이전 누적치 가져와 더하기)
+        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
+        startTime: conversationStartTime, 
+        analysisTime: Date.now(),
+        accumulatedDurationMinutes: currentTotalConversationMinutes,
+        accumulatedUserCharCount: userTotalCharCount, // 👈 사용자 총 발화 글자 수 추가
+        results: detailedAnalysisDataForStorage
                         }));
                         showAnalysis();
                     }
