@@ -35,6 +35,8 @@
             transition: background-color 0.2s;
             margin-top: 15px;
             cursor: pointer;
+            --gnb-height: 56px;
+
         }
         .analysis-view-button:hover { background-color: var(--secondary-color); }
         .pagination { /* ... */ }
@@ -42,8 +44,17 @@
     </style>
 </head>
 <body>
-    <nav id="gnb">
-        </nav> 
+      <nav id="gnb">
+        <div id="gnb-title">LOZEE</div>
+        <button id="menu-toggle">☰</button>
+        <div id="dropdown-menu">
+          <a href="mypage.html">🎨 내 정보 보기</a> 
+          <a href="index.html">✨ 새로운 이야기 시작!</a> 
+          <a href="analysis.html">📊 우리 이야기 분석</a> 
+          <a href="journal-list.html">📖 이야기 모음집</a> 
+          <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
+        </div>
+    </nav> 
 
     <main class="container">
         <div class="page-header">
@@ -174,5 +185,6 @@
             }
         });
     </script>
+     <script src="./js/gnb.js" defer></script> 
 </body>
 </html>
