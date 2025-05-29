@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
     <link rel="stylesheet" href="gnb.css">
     <style>
+        /* ... (이전 journal-list.html의 CSS 스타일 대부분 유지) ... */
         :root {
             --primary-color: #6e8efb;
             --secondary-color: #5a7edf;
@@ -14,69 +15,56 @@
             --text-color: #333333;
             --card-bg: #ffffff;
             --gnb-height: 56px;
-            --yellow-highlight: #fff9c4; /* 최근 업데이트, 진행된 세션 배경 */
-            --blue-button: #6e8efb; /* 분석 보기 버튼 배경 */
+            --yellow-highlight: #fff9c4; 
+            --blue-button: #6e8efb; 
         }
         body { margin: 0; padding-top: var(--gnb-height); font-family: 'KoPub World Dotum', sans-serif; background-color: var(--background-color); color: var(--text-color); line-height: 1.6; }
         .container { max-width: 1100px; margin: 20px auto; padding: 20px; box-sizing: border-box; }
         .page-title { color: var(--primary-color); text-align: center; font-size: 2em; margin-bottom: 30px; font-weight: 700; }
 
-        .topic-summary-card-list { display: grid; gap: 25px; }
-        .topic-summary-card {
+        .main-tags-area { background-color: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; text-align: center; }
+        .main-tags-area h2 { font-size: 1.2em; color: var(--primary-color); margin-top: 0; margin-bottom: 15px; border-bottom: none; }
+        .tag-button-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        .tag-filter-btn { padding: 8px 15px; background-color: #e8eaf6; color: #3f51b5; border: none; border-radius: 20px; cursor: pointer; font-size: 0.95em; font-weight: 500; transition: background-color 0.2s, transform 0.1s; }
+        .tag-filter-btn:hover { background-color: #c5cae9; transform: translateY(-1px); }
+        .tag-filter-btn.active { background-color: var(--primary-color); color: white; font-weight: bold; }
+
+        .topic-summary-card-list { display: grid; gap: 25px; } /* journal-list.html에서 topicCardListEl로 사용 */
+        .topic-summary-card { /* journal-list.html의 주제별 요약 카드 */
             background-color: var(--card-bg);
             border-radius: 12px;
-            padding: 25px;
+            padding: 20px; /* 패딩 일관성 */
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        .topic-main-title { /* 예: 학교생활 이야기 */
-            font-size: 1.4em;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-        .topic-sub-title { /* 예: "왜 나는 친구가 없을까?" */
-            font-size: 1.1em;
-            color: var(--text-color);
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        .topic-meta-info {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            flex-direction: column;
         }
-        .meta-item {
-            background-color: var(--yellow-highlight);
-            color: #5d4037;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-        .topic-overall-assessment { /* 총평 */
+        .topic-main-title { font-size: 1.4em; font-weight: bold; color: var(--primary-color); margin-bottom: 5px; }
+        .topic-sub-title { font-size: 1.1em; color: var(--text-color); margin-bottom: 15px; font-weight: 500; }
+        .topic-meta-info { display: flex; flex-wrap:wrap; gap: 10px; margin-bottom: 15px; }
+        .meta-item { background-color: var(--yellow-highlight); color: #5d4037; padding: 5px 12px; border-radius: 15px; font-size: 0.85em; font-weight: 500; }
+        
+        .journal-summary-preview { /* journal-list에서도 간단 요약 보여줄 때 사용 */
             font-size: 0.95em;
-            color: #555;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            line-height: 1.7;
+            color: #444;
+            margin-bottom: 12px;
+            flex-grow: 1; 
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* 요약 미리보기 줄 수 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 4.5em; /* 대략적인 높이 (0.95em * 1.6 * 3줄) */
         }
-        .view-sessions-button {
-            display: inline-block;
-            background-color: var(--blue-button);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 20px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 0.95em;
-            transition: background-color 0.2s;
+        .journal-analysis-banner { /* journal-list의 카드에도 적용 */
+            padding: 8px 12px; border-radius: 6px; margin-top: 12px; margin-bottom: 8px; font-size: 0.9em; text-align: center;
         }
+        .journal-analysis-banner.positive { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9;}
+        .journal-analysis-banner.neutral { background-color: #eceff1; color: #37474f; border: 1px solid #cfd8dc;}
+        .journal-analysis-banner.negative { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2;}
+
+        .view-sessions-button { display: inline-block; background-color: var(--blue-button); color: white; padding: 10px 20px; border: none; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 0.95em; transition: background-color 0.2s; margin-top: auto; /* 카드 하단 정렬 */ align-self: flex-start; /* 왼쪽 정렬 */}
         .view-sessions-button:hover { background-color: var(--secondary-color); }
 
-        /* 반응형 카드 레이아웃 */
         @media (min-width: 1024px) { .topic-summary-card-list { grid-template-columns: repeat(3, 1fr); } }
         @media (min-width: 601px) and (max-width: 1023px) { .topic-summary-card-list { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .topic-summary-card-list { grid-template-columns: 1fr; } }
@@ -89,100 +77,247 @@
     <main class="container">
         <h1 id="pageMainTitle" class="page-title">나의 이야기 모음집 📖</h1>
 
+        <div class="main-tags-area">
+            <h2>✨ 나의 주요 이야기 태그 ✨</h2>
+            <div id="mainTagButtons" class="tag-button-list">
+                </div>
+        </div>
+
         <div class="topic-summary-card-list" id="topicCardList">
+            </div>
+
+        <div class="pagination" style="display:none;"> 
             </div>
     </main>
 
     <script src="./js/gnb.js" defer></script> 
     <script type="module">
         import { db } from './js/firebase-config.js';
-        import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+        import { collection, query, where, getDocs, orderBy, doc, getDoc, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
         const topicCardListEl = document.getElementById('topicCardList');
         const pageMainTitleEl = document.getElementById('pageMainTitle');
         const pageTabTitleEl = document.querySelector('title');
+        const mainTagButtonsEl = document.getElementById('mainTagButtons');
 
         const userName = localStorage.getItem('lozee_username') || '나';
         if (pageMainTitleEl) pageMainTitleEl.textContent = `${userName}의 이야기 모음집 📖`;
         if (pageTabTitleEl) pageTabTitleEl.textContent = `${userName}의 이야기 모음집 - LOZEE`;
 
-        async function loadTopicSummaries() {
+        let allUserTopicStats = []; // 모든 주제 통계 데이터를 캐싱 (topicStats 문서들)
+        let allUserJournalsForTags = []; // 태그 추출을 위한 전체 저널 데이터 (간소화된 정보만)
+        let currentFilterTag = '전체보기';
+
+        // --- 예시 데이터 표시 함수 (신설) ---
+        function displaySampleJournalTopicCards() {
+            if (!topicCardListEl) return;
+            topicCardListEl.innerHTML = ''; // 기존 내용 비우기
+            
+            const sampleTopics = [
+                {
+                    topicDisplayName: "학교생활 이야기 🎒",
+                    latestSubTopicTitle: "짝꿍이랑 비밀 프로젝트 시작!",
+                    lastChattedAt: { toDate: () => new Date(Date.now() - 86400000 * 1) }, // 1일 전
+                    count: 5,
+                    overallAssessment: "친구와의 비밀 만들기는 정말 신나는 일이지! 로지도 궁금한걸? 😊",
+                    keywords: ["학교", "친구", "비밀"] // 태그 클라우드용 예시 키워드
+                },
+                {
+                    topicDisplayName: "가족 이야기 👨‍👩‍👧‍👦",
+                    latestSubTopicTitle: "엄마의 따뜻한 위로",
+                    lastChattedAt: { toDate: () => new Date(Date.now() - 86400000 * 3) }, // 3일 전
+                    count: 2,
+                    overallAssessment: "가족에게 위로받는 건 정말 큰 힘이 돼. 마음이 따뜻해지는 이야기였어. ❤️",
+                    keywords: ["가족", "엄마", "위로"]
+                },
+                {
+                    topicDisplayName: "내 마음 이야기 💭",
+                    latestSubTopicTitle: "롤러코스터 같은 내 기분",
+                    lastChattedAt: { toDate: () => new Date(Date.now() - 86400000 * 5) }, // 5일 전
+                    count: 1,
+                    overallAssessment: "마음이 여러 가지 색깔을 가지는 건 자연스러운 거야. 로지가 항상 네 마음을 살펴줄게! 👍",
+                    keywords: ["감정", "나", "기분"]
+                }
+            ];
+
+            if (mainTagButtonsEl) { // 샘플 태그 버튼 표시
+                const sampleKeywordsForTags = sampleTopics.reduce((acc, curr) => {
+                    if(curr.keywords) acc.push(...curr.keywords);
+                    return acc;
+                }, []);
+                const uniqueSampleKeywords = [...new Set(sampleKeywordsForTags)];
+                const journalsForSampleTags = uniqueSampleKeywords.map(kw => ({keywords: [kw]})); // displayMainTags 형식에 맞춤
+                displayMainTags(journalsForSampleTags.length > 0 ? journalsForSampleTags : [{keywords:['샘플태그']}]); // 태그가 하나라도 있도록
+            }
+
+
+            sampleTopics.forEach(topicData => {
+                const card = createTopicSummaryCard(topicData.topicDisplayName, topicData); // topicName은 topicDisplayName과 동일하게
+                topicCardListEl.appendChild(card);
+            });
+            updateTagButtonStates(); // "전체보기" 버튼 활성화
+        }
+        
+        // --- 주제별 요약 카드 생성 함수 (분리) ---
+        function createTopicSummaryCard(topicName, statData) {
+            const card = document.createElement('div');
+            card.className = 'topic-summary-card';
+
+            const mainTitle = statData.topicDisplayName || topicName;
+            // 소주제나 최근 저널 제목은 Firestore에 저장된 값을 사용하거나,
+            // topicStats에 latestJournalTitle 필드를 추가하는 것이 좋음. 여기서는 예시.
+            const subTitle = statData.latestSubTopicTitle || `"${mainTitle}"에 대한 최근 이야기`; 
+            const lastChattedDate = statData.lastChattedAt?.toDate 
+                ? statData.lastChattedAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric'}) 
+                : '알 수 없음';
+            const sessionCount = statData.count || 0;
+            const assessment = statData.overallAssessment || `이 주제로 ${sessionCount}번 이야기했어요.`;
+            
+            // 분석 배너 생성 (예시: 여기서는 간단히 텍스트로만)
+            // 실제로는 statData에 overallSentiment 같은 필드가 있어야 함
+            let analysisBannerHTML = '';
+            if (statData.sentimentExample) { // 예시로 sentimentExample 필드 사용
+                 let bannerClass = 'neutral';
+                 if (statData.sentimentExample === 'positive') bannerClass = 'positive';
+                 else if (statData.sentimentExample === 'negative') bannerClass = 'negative';
+                 analysisBannerHTML = `<div class="journal-analysis-banner ${bannerClass}">로지 생각: ${statData.sentimentExample} 느낌의 대화였어요.</div>`;
+            }
+
+
+            card.innerHTML = `
+                <div class="topic-main-title">${mainTitle}</div>
+                <div class="topic-sub-title">${subTitle}</div>
+                <div class="topic-meta-info">
+                    <span class="meta-item">최근 이야기: ${lastChattedDate}</span>
+                    <span class="meta-item">총 이야기: ${sessionCount}회</span>
+                </div>
+                <p class="journal-summary-preview">${assessment}</p> ${analysisBannerHTML}
+                <a href="journal.html?topic=${encodeURIComponent(topicName)}" class="view-sessions-button">${sessionCount}개의 이야기 자세히 보기</a>
+            `;
+            return card;
+        }
+
+
+        // --- 자주 사용된 태그 버튼 표시 함수 (수정) ---
+        function displayMainTags(journalsForTagExtraction) { // journals 배열을 인자로 받음
+            if (!mainTagButtonsEl) return;
+            mainTagButtonsEl.innerHTML = ''; 
+
+            const tagCounts = {};
+            journalsForTagExtraction.forEach(journal => {
+                if (journal.keywords && Array.isArray(journal.keywords)) {
+                    journal.keywords.forEach(tag => {
+                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                    });
+                }
+            });
+
+            const sortedTags = Object.entries(tagCounts)
+                .sort(([,a],[,b]) => b-a)
+                .slice(0, 5) 
+                .map(([tag]) => tag);
+
+            const allViewBtn = document.createElement('button');
+            allViewBtn.className = 'tag-filter-btn active'; 
+            allViewBtn.textContent = '✨ 전체 이야기';
+            allViewBtn.dataset.tag = '전체보기'; 
+            allViewBtn.onclick = () => {
+                currentFilterTag = '전체보기';
+                renderFilteredTopicCards(); 
+                updateTagButtonStates();
+            };
+            mainTagButtonsEl.appendChild(allViewBtn);
+
+            sortedTags.forEach(tag => {
+                const button = document.createElement('button');
+                button.className = 'tag-filter-btn';
+                button.textContent = `#${tag}`;
+                button.dataset.tag = tag;
+                button.onclick = () => {
+                    currentFilterTag = tag;
+                    renderFilteredTopicCards();
+                    updateTagButtonStates();
+                };
+                mainTagButtonsEl.appendChild(button);
+            });
+        }
+
+        function updateTagButtonStates() { /* ... 이전과 동일 ... */ }
+        
+        // --- 필터링된 주제 요약 카드를 화면에 렌더링하는 함수 ---
+        function renderFilteredTopicCards() {
+            if (!topicCardListEl) return;
+            topicCardListEl.innerHTML = ''; 
+
+            // allUserTopicStats는 { "주제명": {count, lastChattedAt, ... , keywords:[]}, ... } 형태라고 가정
+            const topicsToDisplay = currentFilterTag && currentFilterTag !== '전체보기'
+                ? allUserTopicStats.filter(stat => stat.keywords && stat.keywords.includes(currentFilterTag))
+                : allUserTopicStats;
+
+            if (topicsToDisplay.length === 0) {
+                topicCardListEl.innerHTML = currentFilterTag && currentFilterTag !== '전체보기'
+                    ? `<p>'#${currentFilterTag}' 태그가 포함된 주제의 이야기가 아직 없어요. 🧐</p>`
+                    : '<p>아직 로지랑 나눈 이야기가 없는 것 같아요. 대화를 시작해볼까요? 😊</p>';
+                return;
+            }
+            
+            // allUserTopicStats는 이미 lastChattedAt 기준으로 정렬되어 있다고 가정 (loadInitialPageData에서 처리)
+            topicsToDisplay.forEach(topicStatData => {
+                // topicStatData.id 가 주제명이라고 가정 (Firestore에서 doc.id를 주제명으로 사용)
+                const card = createTopicSummaryCard(topicStatData.id, topicStatData); 
+                topicCardListEl.appendChild(card);
+            });
+        }
+
+        // --- Firestore에서 초기 데이터 로드 함수 (수정) ---
+        async function loadInitialPageData() {
             const userId = localStorage.getItem('cbtUserEmail');
             if (!userId) {
-                if(topicCardListEl) topicCardListEl.innerHTML = '<p>사용자 정보를 찾을 수 없습니다.</p>';
+                if(topicCardListEl) topicCardListEl.innerHTML = '<p>사용자 정보를 찾을 수 없습니다. 먼저 로지와 이야기해주세요!</p>';
+                if(mainTagButtonsEl) mainTagButtonsEl.innerHTML = '';
+                console.log("사용자 ID 없음, 예시 데이터를 표시합니다.");
+                displaySampleJournalTopicCards(); // 사용자 ID 없을 때 예시 데이터 표시
                 return;
             }
 
-            topicCardListEl.innerHTML = ''; // 기존 목록 비우기
-
             try {
                 // 1. 사용자의 모든 topicStats를 가져옵니다 (lastChattedAt 기준으로 정렬).
+                // users/{userId}/topicStats/{주제명} 문서들
                 const statsQuery = query(collection(db, `users/${userId}/topicStats`), orderBy('lastChattedAt', 'desc'));
                 const statsSnapshot = await getDocs(statsQuery);
 
-                if (statsSnapshot.empty) {
-                    topicCardListEl.innerHTML = '<p style="text-align:center; padding:20px;">아직 로지와 나눈 이야기가 주제별로 정리되지 않았어요. <br>이야기를 시작하고 다시 방문해주세요! 😊</p>';
+                if (statsSnapshot.empty) { // Firestore에 topicStats 데이터가 없을 때
+                    console.log("Firestore에 topicStats 데이터 없음, 예시 데이터를 표시합니다.");
+                    if(mainTagButtonsEl) mainTagButtonsEl.innerHTML = '<p>이야기를 나누면 자주 나온 마음 조각들을 여기서 볼 수 있어요!</p>';
+                    displaySampleJournalTopicCards(); // 샘플 데이터 표시
                     return;
                 }
+                
+                // 실제 topicStats 데이터가 있을 경우
+                allUserTopicStats = statsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                for (const statDoc of statsSnapshot.docs) {
-                    const topicName = statDoc.id; // 주제명 (예: "학교생활 이야기")
-                    const statData = statDoc.data(); // { count, lastChattedAt, topicDisplayName, ... }
-
-                    // 2. 각 주제의 가장 최근 저널(세션) 정보를 가져옵니다 (세부 제목 및 요약용).
-                    //    (또는 topicStats에 latestJournalSummary, latestJournalTitle 같은 필드를 저장할 수도 있음)
-                    let latestJournalSummary = "요약을 불러오는 중...";
-                    let latestJournalSubTitle = `"${topicName}"에 대한 이야기`; // 기본 소주제
-                    
-                    const latestJournalQuery = query(
-                        collection(db, 'journals'),
-                        where('userId', '==', userId),
-                        where('topic', '==', topicName), // topicStats의 ID와 동일한 주제
-                        orderBy('createdAt', 'desc'),
-                        limit(1)
-                    );
-                    const latestJournalSnapshot = await getDocs(latestJournalQuery);
-                    if (!latestJournalSnapshot.empty) {
-                        const latestJournalData = latestJournalSnapshot.docs[0].data();
-                        latestJournalSummary = latestJournalData.summary ? latestJournalData.summary.substring(0, 100) + (latestJournalData.summary.length > 100 ? '...' : '') : "대화 요약이 아직 없어요.";
-                        latestJournalSubTitle = latestJournalData.title || latestJournalSubTitle; // Firestore에 title 필드가 있다면 사용
-                    }
-                    
-                    // 3. 총평 (이 부분은 로직이 복잡하므로, 간단한 메시지로 대체하거나 DB에 저장된 값 사용)
-                    // Firestore의 topicStats 문서에 'overallAssessment' 필드가 있다면 사용
-                    const overallAssessment = statData.overallAssessment || `이 주제로 ${statData.count || 0}번 이야기했어요. 꾸준히 마음을 표현하는 모습이 멋져요!`;
-
-
-                    const card = document.createElement('div');
-                    card.className = 'topic-summary-card';
-
-                    const lastChattedDate = statData.lastChattedAt?.toDate 
-                        ? statData.lastChattedAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric'}) 
-                        : '알 수 없음';
-
-                    card.innerHTML = `
-                        <div class="topic-main-title">${statData.topicDisplayName || topicName}</div>
-                        <div class="topic-sub-title">${latestJournalSubTitle}</div>
-                        <div class="topic-meta-info">
-                            <span class="meta-item">최근 이야기: ${lastChattedDate}</span>
-                            <span class="meta-item">총 이야기: ${statData.count || 0}회</span>
-                        </div>
-                        <p class="topic-overall-assessment">${overallAssessment}</p>
-                        <a href="journal.html?topic=${encodeURIComponent(topicName)}" class="view-sessions-button">${statData.count || 0}회차 이야기 자세히 보기</a>
-                    `;
-                    topicCardListEl.appendChild(card);
-                }
+                // 태그 추출을 위해 journals 데이터도 일부 가져오거나, topicStats에 keywords 요약 저장 필요
+                // 여기서는 topicStats에 keywords가 요약되어 있다고 가정하고, 없으면 빈 배열로 처리
+                allUserTopicStats.forEach(stat => {
+                    if (!stat.keywords) stat.keywords = []; 
+                });
+                
+                displayMainTags(allUserTopicStats); // topicStats에 있는 keywords로 태그 버튼 표시
+                currentFilterTag = '전체보기'; 
+                renderFilteredTopicCards(); 
 
             } catch (error) {
-                console.error("주제별 요약 로드 중 오류:", error);
-                topicCardListEl.innerHTML = '<p>이야기 모음집을 불러오는 데 문제가 발생했어요. 😭</p>';
+                console.error("초기 데이터 로드 중 오류:", error);
+                if(topicCardListEl) topicCardListEl.innerHTML = '<p>이야기 모음집을 불러오는 데 문제가 발생했어요. 😭 잠시 후 다시 시도해주세요.</p>';
+                console.log("오류 발생, 예시 데이터를 표시합니다.");
+                displaySampleJournalTopicCards(); // 오류 시에도 예시 데이터 표시
             }
         }
                 
+        // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', () => {
-            loadTopicSummaries(); 
+            loadInitialPageData(); 
         });
     </script>
-    <script src="./js/gnb.js" defer></script> 
 </body>
 </html>
