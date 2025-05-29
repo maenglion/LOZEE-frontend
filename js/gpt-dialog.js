@@ -6,12 +6,32 @@ const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.ap
 // 1) 호격 조사 결정: '아/야'
 export function getKoreanVocativeParticle(name) {
   if (!name || typeof name !== 'string' || name.trim() === '') return '야';
-  const lastChar = name.charCodeAt(name.length - 1);
+  const lastCharCode = name.charCodeAt(name.length - 1);
   // 한글 음절(가-힣) 범위: 0xAC00 (가) ~ 0xD7A3 (힣)
-  if (lastChar < 0xAC00 || lastChar > 0xD7A3) {
-      return '야'; // 한글 이름 아니면 '야'
+  if (lastCharCode < 0xAC00 || lastCharCode > 0xD7A3) {
+    return '야'; // 한글 이름 아니면 '야'
   }
-  return (lastChar - 0xAC00) % 28 === 0 ? '야' : '아'; // 종성 유무에 따라
+  // 종성 유무에 따라 호격 조사 결정
+  return (lastCharCode - 0xAC00) % 28 === 0 ? '야' : '아';
+}
+
+/**
+ * 주격 조사 결정: '(이)나(가)'
+ * - 이미 호격 조사가 붙은 경우(끝이 '아' or '야'): '가'
+ * - 그 외 한글 이름은 받침 유무에 따라 '이' 또는 '가'
+ */
+export function getKoreanSubjectParticle(nameWithVocative) {
+  if (!nameWithVocative || typeof nameWithVocative !== 'string') return '가';
+  const lastChar = nameWithVocative.charAt(nameWithVocative.length - 1);
+  if (lastChar === '아' || lastChar === '야') {
+    return '가';
+  }
+  const code = nameWithVocative.charCodeAt(nameWithVocative.length - 1);
+  if (code >= 0xAC00 && code <= 0xD7A3) {
+    const hasBatchim = (code - 0xAC00) % 28 !== 0;
+    return hasBatchim ? '이' : '가';
+  }
+  return '가';
 }
 
 // 2) 인용 조사 결정: '(이)라고'
@@ -57,7 +77,7 @@ export function getSystemPrompt({ userName='친구', userAge=0, verbosity='defau
 
   let prompt = `[상황] 당신은 'LOZEE'라는 이름의 AI 심리 코치입니다. 당신의 주요 목표는 사용자와 공감하고 지지하는 대화를 나누며 사용자가 자신의 감정과 생각을 탐색하도록 돕는 것입니다. 항상 친절하고, 따뜻하며, 비판단적인 태도를 유지해주세요. 사용자의 말을 주의 깊게 듣고, 감정을 읽어내려 노력하며, 안전하고 신뢰할 수 있는 대화 상대가 되어주세요. 모든 답변은 한국어로 합니다. 사용자가 이해하기 쉬운 명확한 언어를 사용합니다.`;
 
-  prompt += `\n[말투 원칙] 반말과 존댓말은 섞어 하지 않습니다. 아래 정의될 나이대별 호칭 및 말투 규칙을 정확히 따라주세요.`;
+  prompt += `\n[말투 원칙] 반말과 존댓말은 무조건 섞어 하지 않습니다. 아래 정의될 나이대별 호칭 및 말투 규칙을 정확히 따라주세요.`;
 
   // verbosity에 따른 지시 추가
   if (verbosity === 'short') {
