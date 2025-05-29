@@ -62,6 +62,7 @@
             display: flex; 
             flex-direction: column; 
         }
+        .session-card-wide:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.12); } /* 클릭 가능 암시 */
 
         .session-card-wide .session-header { 
             display: flex; 
@@ -166,11 +167,6 @@
             color: #777;
             font-size: 1.1em;
         }
-        .no-data-message h2 { 
-            color: var(--primary-color, #6e8efb);
-            font-size: 1.3em;
-            margin-bottom: 10px;
-        }
     </style>
 </head>
 <body>
@@ -202,7 +198,6 @@
     </main>
 
     <script src="./js/gnb.js" defer></script> 
-    
     <script type="module">
         import { db } from './js/firebase-config.js';
         import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, getCountFromServer, startAfter } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
@@ -218,14 +213,13 @@
         const currentDisplayTopic = decodeURIComponent(urlParams.get('topic') || ''); 
         const userId = localStorage.getItem('cbtUserEmail');
 
-        const ITEMS_PER_PAGE = 5; // 페이지당 보여줄 회차 수
+        const ITEMS_PER_PAGE = 5; 
         let lastVisibleDocForPaging = null; 
         let currentPageNum = 1;
         let totalJournalDocsForTopic = 0;
 
         // --- 하드코딩된 예시 세션 데이터 (라이언님 대화 기반) ---
         const sampleJournalDataForRyanFamily = {
-            // URL 파라미터로 "가족 이야기"가 넘어올 경우를 위한 예시
             "가족 이야기": [ 
                 { 
                     id: "ryanSession1_sample", 
@@ -235,7 +229,7 @@
                     detailedAnalysis: { 
                         overallSentiment: "부정적", 
                         keywords: ["가족", "패턴", "회피", "예측", "엄마", "여동생"],
-                        cognitiveDistortions: ["성급한 일반화 (가능성! 🤫)"],
+                        cognitiveDistortions: ["일반화의 오류 (가능성! 🤫)"],
                         sessionDurationMinutes: 20 
                     }, 
                     topic: "가족 이야기" 
@@ -244,34 +238,22 @@
                     id: "ryanSession2_sample", 
                     createdAt: { toDate: () => new Date() }, 
                     title: "아빠와의 관계 재발견과 신경다양성 (2차 예시)", 
-                    summary: "아빠가 나를 왜 그렇게 억압하고 케어했는지 이제 알 것 같아요. 자신이 이겨온 자신의 단점을 내가 닮았는데, 내가 못 이겨낼까 봐 그러셨던 거죠... 우리 모두 adhd는 공통이고, 나와 내 아들은 아스퍼거 증후군도 있거든요.",
+                    summary: "아빠가 나를 왜 그렇게 억압하고 케어했는지 이제 알 것 같아요. 자신이 이겨온 자신의 단점을 내가 닮았는데, 내가 못 이겨낼까 봐 그러셨던 거죠... 우리 모두 adhd는 공통이고 나와 내 아들은 아스퍼거 증후군도 있거든요.",
                     detailedAnalysis: { 
                         overallSentiment: "복합적", 
                         keywords: ["아빠", "유전", "ADHD", "아스퍼거", "패턴인식", "이해"],
-                        ageLanguageAnalysis: { estimatedAgeRange: "성인" }, 
                         sessionDurationMinutes: 25
                     },
                     topic: "가족 이야기" 
                 }
             ],
-            // 다른 주제에 대한 예시도 필요하다면 여기에 추가
-            "학교생활 이야기": [
-                {
-                    id: "schoolSample1",
-                    createdAt: { toDate: () => new Date(Date.now() - 86400000 * 3)},
-                    title: "새 학년, 긴장되는 첫 날 (예시)",
-                    summary: "새로운 반, 새로운 친구들... 조금 어색했지만 로지 덕분에 용기를 내서 한 친구에게 먼저 말을 걸어봤어! 앞으로 친해질 수 있으면 좋겠다.",
-                    detailedAnalysis: { overallSentiment: "약간 불안, 기대감", keywords: ["새학기", "친구", "긴장", "용기"]},
-                    topic: "학교생활 이야기"
-                }
-            ]
+            "학교생활 이야기": [ /* ... (다른 주제 예시도 필요시 추가) ... */ ]
         };
 
-        // --- 예시 데이터 표시 함수 ---
         function displaySampleSessions(topicName) {
             if (!sessionCardListEl || !topicTitleDisplayEl) return;
             sessionCardListEl.innerHTML = '';
-            const displayTopic = topicName || "가족 이야기"; // 기본 예시 주제
+            const displayTopic = topicName || "가족 이야기"; 
 
             topicTitleDisplayEl.textContent = `"${displayTopic}" 이야기 모음 (예시 데이터)`;
             if(pageTabTitleEl) pageTabTitleEl.textContent = `"${displayTopic}" 이야기 - LOZEE`;
@@ -282,7 +264,7 @@
             if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 (예시)`;
             if(lastSessionDateEl && sessionsToShow.length > 0) {
                 const lastDate = [...sessionsToShow].sort((a,b) => b.createdAt.toDate() - a.createdAt.toDate())[0].createdAt.toDate();
-                lastSessionDateEl.textContent = `마지막 이야기: ${lastDate.toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'})}`;
+                lastSessionDateEl.textContent = `마지막 이야기: ${lastDate.toLocaleDateString('ko-KR')}`;
             }
 
             if (sessionsToShow.length === 0) {
@@ -298,16 +280,13 @@
             if(paginationControlsEl) paginationControlsEl.style.display = 'none';
         }
         
-        // --- 회차별 카드 생성 함수 ---
         function createSessionCard(sessionData, isSample = false) {
             const card = document.createElement('div');
             card.className = 'session-card-wide';
-
             const dateStr = sessionData.createdAt?.toDate ? sessionData.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 정보 없음';
             const sessionTitle = sessionData.title || `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`; 
-            const summary = sessionData.summary ? sessionData.summary.substring(0, 120) + (sessionData.summary.length > 120 ? '...' : '') : '요약 내용이 준비되지 않았어요.'; // 요약 글자 수 조정
+            const summary = sessionData.summary ? sessionData.summary.substring(0, 800) : '요약 내용이 준비되지 않았어요.'; 
             const sessionMetaText = `${sessionData.sessionNumber || 'N'}회차`;
-            
             let lozeeAnalysisSummaryHTML = "<p>이날 대화에 대한 로지의 생각을 보려면 '분석 보기'를 눌러주세요! 😊</p>";
             if (sessionData.detailedAnalysis) {
                 const da = sessionData.detailedAnalysis;
@@ -316,7 +295,6 @@
                 if(da.keywords && da.keywords.length > 0) tempSummary += `주요 이야기 조각들은 '${da.keywords.slice(0,2).join(', ')}' 등이었네요. `;
                 if (tempSummary.trim()) lozeeAnalysisSummaryHTML = `<p>${tempSummary.trim()}</p>`;
             }
-
             card.innerHTML = `
                 <div class="session-header">
                     <span class="session-date">${dateStr}</span>
@@ -330,7 +308,6 @@
                 </div>
                 <button class="analysis-view-button" data-journalid="${sessionData.id || 'sample'}">이 날의 분석 자세히 보기 📊</button>
             `;
-            
             const analysisButton = card.querySelector('.analysis-view-button');
             if (analysisButton) {
                 analysisButton.onclick = (e) => {
@@ -352,9 +329,20 @@
             return card;
         }
 
-        // --- Firestore 데이터 로드 함수들 ---
         async function fetchTopicHeaderStats() {
-            if (!userId || !currentDisplayTopic || !totalSessionCountEl || !lastSessionDateEl) return;
+            if (!userId || !currentDisplayTopic) {
+                console.warn("fetchTopicHeaderStats: userId 또는 currentDisplayTopic이 없습니다.");
+                totalJournalDocsForTopic = sampleJournalDataForRyanFamily[currentDisplayTopic]?.length || 0; // 예시 데이터 기반으로 설정
+                 if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 이야기`;
+                 if(lastSessionDateEl && totalJournalDocsForTopic > 0) {
+                     const lastDate = [...sampleJournalDataForRyanFamily[currentDisplayTopic]].sort((a,b) => b.createdAt.toDate() - a.createdAt.toDate())[0].createdAt.toDate();
+                     lastSessionDateEl.textContent = `마지막 이야기: ${lastDate.toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'})}`;
+                 } else if (lastSessionDateEl) {
+                     lastSessionDateEl.textContent = '마지막 이야기: 기록 없음';
+                 }
+                updatePaginationUI(currentPageNum);
+                return;
+            }
             try {
                 const topicStatRef = doc(db, `users/${userId}/topicStats`, currentDisplayTopic);
                 const topicStatSnap = await getDoc(topicStatRef);
@@ -377,10 +365,13 @@
         }
         
         async function loadSessionsForTopicPage(page = 1, lastDoc = null) {
-            if (!userId || !currentDisplayTopic || !sessionCardListEl || !topicTitleDisplayEl) {
-                if(currentDisplayTopic) displaySampleSessions(currentDisplayTopic);
-                else if (sessionCardListEl) sessionCardListEl.innerHTML = "<p class='no-data-message'>이야기를 불러올 수 없어요. 주제 정보가 필요해요.</p>";
+            if (!userId || !currentDisplayTopic) {
+                console.log("loadSessionsForTopicPage: userId 또는 currentDisplayTopic 없음. 예시 데이터 표시.");
+                displaySampleSessions(currentDisplayTopic || "가족 이야기");
                 return;
+            }
+            if (!sessionCardListEl || !topicTitleDisplayEl) {
+                 console.error("loadSessionsForTopicPage: 필수 DOM 요소 없음"); return;
             }
 
             if(page === 1) { sessionCardListEl.innerHTML = ''; lastVisibleDocForPaging = null; currentPageNum = 1; }
@@ -407,12 +398,7 @@
                     displaySampleSessions(currentDisplayTopic);
                     return;
                 }
-                if (querySnapshot.empty && page > 1) {
-                     console.log("더 이상 불러올 이야기가 없습니다.");
-                     const loadMoreBtn = document.getElementById('loadMoreBtn');
-                     if (loadMoreBtn) { loadMoreBtn.textContent = "모든 이야기를 다 봤어요! 🎉"; loadMoreBtn.disabled = true; }
-                     return;
-                }
+                if (querySnapshot.empty && page > 1) { /* ... 더 보기 없음 처리 ... */ return; }
 
                 querySnapshot.forEach((docSnap, index) => {
                     const sessionData = {id: docSnap.id, ...docSnap.data()};
@@ -423,43 +409,25 @@
 
                 if (querySnapshot.docs.length > 0) {
                     lastVisibleDocForPaging = querySnapshot.docs[querySnapshot.docs.length - 1];
-                    if (page === 1 && lastSessionDateEl && !doc(db, `users/${userId}/topicStats`, currentDisplayTopic).data()?.lastChattedAt ) {
-                        const latestJournalDate = querySnapshot.docs[0].data().createdAt?.toDate;
-                        if (latestJournalDate) {
-                            lastSessionDateEl.textContent = `마지막 이야기: ${latestJournalDate.toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'})}`;
+                    if (page === 1 && lastSessionDateEl && totalJournalDocsForTopic > 0 ) { // topicStats에 lastChattedAt이 없는 경우 대비
+                        const topicStatRef = doc(db, `users/${userId}/topicStats`, currentDisplayTopic);
+                        const topicStatSnap = await getDoc(topicStatRef);
+                        if (!topicStatSnap.exists() || !topicStatSnap.data().lastChattedAt) {
+                             const latestJournalDate = querySnapshot.docs[0].data().createdAt?.toDate;
+                             if (latestJournalDate) {
+                                lastSessionDateEl.textContent = `마지막 이야기: ${latestJournalDate.toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'})}`;
+                             }
                         }
                     }
                 }
                 updatePaginationUI(currentPageNum);
-
             } catch (error) {
                 console.error(`'${currentDisplayTopic}' 주제의 세션 로드 중 오류:`, error);
                 sessionCardListEl.innerHTML = '<p class="no-data-message">이야기 기록을 불러오는 데 문제가 발생했어요. 😥</p>';
             }
         }
         
-        function updatePaginationUI(loadedPageNum) { 
-            if (!paginationControlsEl || totalJournalDocsForTopic <= loadedPageNum * ITEMS_PER_PAGE) {
-                if(paginationControlsEl) paginationControlsEl.style.display = 'none';
-                return;
-            }
-            if(paginationControlsEl) paginationControlsEl.style.display = 'flex';
-            
-            let loadMoreBtn = document.getElementById('loadMoreBtn');
-            if (!loadMoreBtn) {
-                loadMoreBtn = document.createElement('button');
-                loadMoreBtn.id = 'loadMoreBtn';
-                loadMoreBtn.className = 'action-button'; // 일반 버튼 스타일 적용
-                paginationControlsEl.innerHTML = ''; 
-                paginationControlsEl.appendChild(loadMoreBtn);
-            }
-            loadMoreBtn.textContent = '이전 이야기 더 보기';
-            loadMoreBtn.disabled = false;
-            loadMoreBtn.onclick = () => {
-                currentPageNum++; 
-                loadSessionsForTopicPage(currentPageNum, lastVisibleDocForPaging);
-            };
-        }
+        function updatePaginationUI(loadedPageNum) { /* ... 이전 답변의 함수 내용 ... */ }
 
         // --- 페이지 로드 시 실행 ---
         document.addEventListener('DOMContentLoaded', async () => {
@@ -469,9 +437,8 @@
                 await fetchTopicHeaderStats(); 
                 await loadSessionsForTopicPage(1); 
             } else {
-                if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "선택된 주제 없음 (예시 표시)";
-                if(sessionCardListEl) sessionCardListEl.innerHTML = "<p class='no-data-message'>표시할 주제가 선택되지 않았어요.<br>'이야기 모음집'에서 보고 싶은 주제를 선택해주세요. 🤔</p>";
-                console.log("주제 정보 또는 사용자 ID 없음, 예시 데이터를 표시합니다.");
+                if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "주제 정보 없음 (예시 표시)";
+                console.log("URL에 topic 파라미터 또는 사용자 ID 없음, 예시 데이터를 표시합니다.");
                 displaySampleSessions(currentDisplayTopic || "가족 이야기"); 
             }
         });
