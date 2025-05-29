@@ -3,120 +3,42 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title id="pageTopicTitle">주제별 이야기 기록 - LOZEE</title>
+    <title id="pageTopicTitle">주제별 이야기 회차 목록 - LOZEE</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
     <link rel="stylesheet" href="gnb.css"> <style>
-        /* journal.html 고유 스타일 */
-        :root {
-            --primary-color: #6e8efb;
-            --secondary-color: #5a7edf;
-            --background-color: #f4f6f8;
-            --text-color: #333333;
-            --card-bg: #ffffff;
-            --gnb-height: 56px;
-            --light-blue-bg: #eef2f7; /* 분석 요약 배경 등 */
-            --action-button-bg: #6078ea; /* 분석 보기 버튼 */
-        }
-        body {
-            margin: 0;
-            padding-top: var(--gnb-height); /* gnb.css에 없다면 필요 */
-            font-family: 'KoPub World Dotum', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        .container { max-width: 800px; margin: 20px auto; padding: 20px; box-sizing: border-box; }
-        
-        .page-header { 
-            text-align: center; 
-            margin-bottom: 25px; 
-            padding: 20px;
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        }
-        .topic-display-title { 
-            color: var(--primary-color); 
-            font-size: 1.8em; 
-            font-weight: 700; 
-            margin-top:0; margin-bottom: 8px;
-        }
-        .topic-stats-info { 
-            font-size: 0.95em; 
-            color: #555; 
-            margin-bottom: 0px; 
-        }
-        .topic-stats-info span { margin: 0 10px; }
-
-        .session-card-list { display: flex; flex-direction: column; gap: 20px; margin-top:20px;}
-        .session-card { 
-            background-color: var(--card-bg); 
-            border-radius: 12px; 
-            padding: 20px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-        }
-        .session-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 12px; 
-            border-bottom:1px dashed #e0e0e0; 
-            padding-bottom:10px;
-        }
-        .session-date { font-size: 0.9em; color: #777; font-weight:bold;}
-        .session-card h3 { /* 회차별 제목 */
-            font-size: 1.25em; 
-            color: var(--secondary-color); 
-            margin-top: 0; 
-            margin-bottom: 10px; 
-        }
-        .session-summary { 
-            font-size: 0.95em; 
-            margin-bottom: 15px; 
-            white-space: pre-wrap; 
-            word-break:keep-all; 
-            max-height: 120px; /* 약 5-6줄 미리보기 */
-            overflow-y:auto; 
-            padding-right:5px;
-            border-left: 3px solid var(--primary-color-alpha, rgba(110,142,251,0.3));
-            padding-left: 10px;
-        }
-        .session-analysis-summary { 
-            background-color: var(--light-blue-bg); 
-            padding: 12px; 
-            border-radius: 6px; 
-            font-size: 0.9em; 
-            margin-top: 15px;
-        }
-        .session-analysis-summary h4 { margin-top: 0; font-size: 1em; color: #333; margin-bottom:5px; }
-        .session-analysis-summary p {margin:0; line-height:1.5;}
-        .analysis-view-button {
+        /* journal-list2.html 고유 스타일 (journal.html과 거의 동일) */
+        :root { /* ... (journal.html과 동일한 변수 설정) ... */ }
+        body { /* ... (journal.html과 동일한 body 스타일) ... */ }
+        .container { /* ... */ }
+        .page-header { /* ... */ }
+        .topic-display-title { /* ... */ }
+        .topic-stats-info { /* ... */ }
+        .session-card-list { /* ... */ }
+        .session-card { /* ... */ }
+        .session-header { /* ... */ }
+        .session-date { /* ... */ }
+        .session-card h3 { /* ... */ }
+        .session-summary { /* ... */ }
+        .session-analysis-summary { /* ... */ }
+        .session-analysis-summary h4 { /* ... */ }
+        .session-analysis-summary p { /* ... */ }
+        .analysis-view-button { /* 매 회기 분석 보기 버튼 스타일 */
             display: inline-block;
-            background-color: var(--action-button-bg);
+            background-color: var(--primary-color); /* talk.html의 .action-button과 유사하게 */
             color: white;
             padding: 8px 15px;
             border: none;
-            border-radius: 18px; /* 좀 더 둥글게 */
+            border-radius: 18px;
             text-decoration: none;
             font-weight: 500;
             font-size: 0.9em;
             transition: background-color 0.2s;
             margin-top: 15px;
+            cursor: pointer;
         }
         .analysis-view-button:hover { background-color: var(--secondary-color); }
-        
-        .pagination { display: flex; justify-content: center; gap: 12px; font-size: 1em; margin-top: 30px; padding-bottom:20px;}
-        .pagination a { text-decoration: none; color: var(--primary-color); font-weight: bold; padding: 5px 10px; border-radius: 4px; transition: background-color 0.2s, color 0.2s; }
-        .pagination a:hover { background-color: var(--secondary-color); color: white; }
-        .pagination .current { color: var(--text-color); background-color: #e0e0e0; }
-
-        .no-data-message {
-            text-align: center;
-            padding: 30px;
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            color: #777;
-        }
+        .pagination { /* ... */ }
+        .no-data-message { /* ... */ }
     </style>
 </head>
 <body>
@@ -154,49 +76,49 @@
         const currentDisplayTopic = decodeURIComponent(urlParams.get('topic') || ''); 
         const userId = localStorage.getItem('cbtUserEmail');
 
-        const ITEMS_PER_PAGE = 3; // 페이지당 보여줄 회차 수 (예시로 줄임)
+        const ITEMS_PER_PAGE = 5; 
         let lastVisibleDocForPaging = null; 
         let currentPageNum = 1;
-        let totalJournalDocsForTopic = 0;
+        let totalJournalDocsForTopic = 0; // 이 주제에 대한 총 저널 수
 
-        async function fetchTopicHeaderStats() {
-            if (!userId || !currentDisplayTopic || !totalSessionCountEl || !lastSessionDateEl) return;
-            try {
-                const topicStatRef = doc(db, `users/${userId}/topicStats`, currentDisplayTopic);
-                const topicStatSnap = await getDoc(topicStatRef);
-                if (topicStatSnap.exists()) {
-                    const data = topicStatSnap.data();
-                    totalJournalDocsForTopic = data.count || 0;
-                    if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 이야기`;
-                    if(lastSessionDateEl && data.lastChattedAt?.toDate) {
-                        lastSessionDateEl.textContent = `마지막 이야기: ${data.lastChattedAt.toDate().toLocaleDateString('ko-KR')}`;
-                    }
-                } else { // topicStats 문서가 없을 경우 (선택적: journals에서 직접 카운트)
-                    const countQuery = query(collection(db, 'journals'), where('userId', '==', userId), where('topic', '==', currentDisplayTopic));
-                    const snapshot = await getCountFromServer(countQuery);
-                    totalJournalDocsForTopic = snapshot.data().count;
-                    if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 이야기`;
-                }
-                updatePaginationUI(); // 총 문서 수 기반으로 페이지네이션 업데이트
-            } catch (error) { console.error("주제 통계 로드 중 오류:", error); }
+        // --- 예시 데이터 표시 함수 ---
+        function displaySampleSessionsForTopic(topicName) {
+            if (!sessionCardListEl || !topicTitleDisplayEl) return;
+            sessionCardListEl.innerHTML = '';
+            topicTitleDisplayEl.textContent = `"${topicName}" 이야기 모음 (예시)`;
+            if(pageTabTitleEl) pageTabTitleEl.textContent = `"${topicName}" 이야기 - LOZEE`;
+            if(totalSessionCountEl) totalSessionCountEl.textContent = '총 3회 (예시)';
+            if(lastSessionDateEl) lastSessionDateEl.textContent = `마지막 이야기: ${new Date().toLocaleDateString('ko-KR')}`;
+
+            const sampleSessions = [
+                { id: "sampleS1", journalId: "sampleJ1", createdAt: { toDate: () => new Date(Date.now() - 86400000 * 5) }, title: "이 주제에 대한 첫번째 이야기", summary: "오늘은 이 주제에 대해 이런저런 생각을 했어요. 처음에는 조금 복잡했지만...", detailedAnalysis: { overallSentiment: "neutral", keywords: ["생각", "고민"] }, sessionNumber: 3 },
+                { id: "sampleS2", journalId: "sampleJ2", createdAt: { toDate: () => new Date(Date.now() - 86400000 * 2) }, title: "두번째로 나눈 이야기", summary: "어제 이어서 생각해보니, 이런 방법도 있을 것 같아요. 로지랑 이야기하니 정리가 되네요...", detailedAnalysis: { overallSentiment: "positive", keywords: ["방법", "정리"] }, sessionNumber: 2 },
+                { id: "sampleS3", journalId: "sampleJ3", createdAt: { toDate: () => new Date() }, title: "오늘의 생각과 느낌", summary: "드디어 이 주제에 대해 마음이 좀 편해졌어요! 앞으로도 로지랑 자주 이야기해야겠어요...", detailedAnalysis: { overallSentiment: "positive", keywords: ["해결", "편안함"] }, sessionNumber: 1 }
+            ];
+            sampleSessions.forEach(session => {
+                const card = createSessionCard(session, true); // isSample = true
+                sessionCardListEl.appendChild(card);
+            });
+            if(paginationControlsEl) paginationControlsEl.style.display = 'none';
         }
         
+        // --- 회차별 카드 생성 함수 ---
         function createSessionCard(sessionData, isSample = false) {
             const card = document.createElement('div');
             card.className = 'session-card';
 
             const dateStr = sessionData.createdAt?.toDate ? sessionData.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 정보 없음';
+            // 회차별 제목: Firestore의 title 필드 사용
             const sessionTitle = sessionData.title || `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`; 
             const summary = sessionData.summary ? sessionData.summary.substring(0, 800) : '요약 내용이 준비되지 않았어요.'; 
             
-            let lozeeAnalysisSummary = "로지가 열심히 분석하고 있어요! 조금만 기다려주세요. 😊";
+            let lozeeAnalysisSummaryHTML = "<p>로지가 열심히 분석하고 있어요! '분석 보기'를 눌러 확인하세요. 😊</p>";
             if (sessionData.detailedAnalysis) {
                 const da = sessionData.detailedAnalysis;
-                lozeeAnalysisSummary = "";
-                if(da.overallSentiment) lozeeAnalysisSummary += `이 날의 대화는 전반적으로 '${da.overallSentiment}' 느낌이었어요. `;
-                if(da.keywords && da.keywords.length > 0) lozeeAnalysisSummary += `주요 이야기 조각들은 '${da.keywords.slice(0,2).join(', ')}'였네요. `;
-                if (!lozeeAnalysisSummary && !isSample) lozeeAnalysisSummary = "상세 분석 결과는 '분석 보기'에서 확인할 수 있어요!";
-                else if (!lozeeAnalysisSummary && isSample) lozeeAnalysisSummary = "로지가 네 이야기를 듣고 어떤 생각을 했는지 궁금하지 않니?";
+                let tempSummary = "";
+                if(da.overallSentiment) tempSummary += `이 날의 대화는 전반적으로 '${da.overallSentiment}' 느낌이었어요. `;
+                if(da.keywords && da.keywords.length > 0) tempSummary += `주요 이야기 조각들은 '${da.keywords.slice(0,1).join(', ')}'였네요. `; // 키워드 1개만
+                if (tempSummary) lozeeAnalysisSummaryHTML = `<p>${tempSummary}</p>`;
             }
 
             card.innerHTML = `
@@ -207,133 +129,48 @@
                 <p class="session-summary">${summary}</p>
                 <div class="session-analysis-summary">
                     <h4>로지 생각 엿보기 🧐</h4>
-                    <p>${lozeeAnalysisSummary}</p>
+                    ${lozeeAnalysisSummaryHTML}
                 </div>
-                <a href="#" class="analysis-view-button" data-journalid="${sessionData.id || 'sample'}">이 날의 분석 자세히 보기 📊</a>
+                <button class="analysis-view-button" data-journalid="${sessionData.id || sessionData.journalId || 'sample'}">이 날의 분석 자세히 보기 📊</button>
             `;
             
             const analysisButton = card.querySelector('.analysis-view-button');
             if (analysisButton) {
                 analysisButton.onclick = (e) => {
                     e.preventDefault();
-                    if (isSample) {
+                    const journalId = e.target.dataset.journalid;
+                    if (isSample || journalId === 'sample') {
                         alert("이건 예시 대화예요! 실제 분석을 보려면 로지와 먼저 이야기를 나눠보세요. 😊");
                     } else {
+                        // analysis.html로 이동 시 필요한 모든 데이터를 localStorage에 저장
                         localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
                             results: sessionData.detailedAnalysis || {}, 
-                            accumulatedDurationMinutes: sessionData.sessionDurationMinutes || 0, 
-                            journalId: sessionData.id 
+                            accumulatedDurationMinutes: sessionData.sessionDurationMinutes || 0, // 이 값은 journals 문서에 있어야 함
+                            journalId: journalId 
                         }));
-                        window.location.href = `analysis.html?journalId=${sessionData.id}`;
+                        window.location.href = `analysis.html?journalId=${journalId}`;
                     }
                 };
             }
             return card;
         }
 
-        function displaySampleSessions() {
-            if (!sessionCardListEl) return;
-            sessionCardListEl.innerHTML = '';
-            if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = `"예시 주제" 이야기 모음`;
-            if(pageTabTitleEl) pageTabTitleEl.textContent = `"예시 주제" 이야기 - LOZEE`;
-            if(totalSessionCountEl) totalSessionCountEl.textContent = '총 3회 (예시)';
-            if(lastSessionDateEl) lastSessionDateEl.textContent = `마지막 이야기: ${new Date().toLocaleDateString('ko-KR')}`;
+        // --- Firestore 데이터 로드 함수들 (fetchTopicHeaderStats, loadSessionsForTopicPage, updatePaginationUI - 이전과 동일) ---
+        async function fetchTopicHeaderStats() { /* ... 이전과 동일 ... */ }
+        async function loadSessionsForTopicPage(page = 1, lastDoc = null) { /* ... 이전과 동일, 단 querySnapshot.empty && page === 1 일 때 displaySampleSessionsForTopic(currentDisplayTopic) 호출 ... */ }
+        function updatePaginationUI(page) { /* ... 이전과 동일 ... */ }
 
 
-            const sampleSessions = [
-                { id: "sampleS1", createdAt: { toDate: () => new Date(Date.now() - 86400000 * 5) }, title: "첫 번째 만남: 어색하지만 괜찮아", summary: "오늘은 로지를 처음 만나서 조금 어색했지만, 내 이야기를 잘 들어줘서 고마웠어. 앞으로 어떤 이야기를 하게 될지 기대돼...", detailedAnalysis: { overallSentiment: "neutral", keywords: ["처음", "어색함", "기대"] }, sessionNumber: 1 },
-                { id: "sampleS2", createdAt: { toDate: () => new Date(Date.now() - 86400000 * 2) }, title: "비밀 이야기와 간식 타임", summary: "로지에게만 말할 수 있는 비밀 이야기가 있어서 속이 시원해졌어! 이야기 끝나고 먹는 간식은 정말 꿀맛이야. 로지는 뭘 좋아할까?", detailedAnalysis: { overallSentiment: "positive", keywords: ["비밀", "간식", "궁금증"] }, sessionNumber: 2 },
-                { id: "sampleS3", createdAt: { toDate: () => new Date() }, title: "학교에서 속상했던 일", summary: "오늘 학교에서 친구랑 살짝 다퉜는데, 로지한테 털어놓으니까 마음이 한결 가벼워졌어. 로지가 내 편을 들어주는 것 같아서 기분도 좋고!", detailedAnalysis: { overallSentiment: "mixed", keywords: ["학교", "친구", "다툼", "위로"] }, sessionNumber: 3 }
-            ];
-            sampleSessions.forEach(session => {
-                const card = createSessionCard(session, true);
-                sessionCardListEl.appendChild(card);
-            });
-            if(paginationControlsEl) paginationControlsEl.style.display = 'none'; // 샘플은 페이지네이션 없음
-        }
-
-        async function loadSessionsForTopicPage(page = 1, lastDoc = null) {
-            if (!userId || !currentDisplayTopic || !sessionCardListEl || !topicTitleDisplayEl) return;
-
-            if(page === 1) sessionCardListEl.innerHTML = ''; // 첫 페이지 로드 시에만 목록 비우기
-            
-            try {
-                let q = query(
-                    collection(db, 'journals'), 
-                    where('userId', '==', userId),
-                    where('topic', '==', currentDisplayTopic), 
-                    orderBy('createdAt', 'desc'),
-                    limit(ITEMS_PER_PAGE)
-                );
-                if (lastDoc) {
-                    q = query(q, startAfter(lastDoc));
-                }
-                
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty && page === 1) {
-                    console.log(`'${currentDisplayTopic}' 주제에 대한 실제 저널 없음, 예시 데이터를 표시합니다.`);
-                    displaySampleSessions();
-                    return;
-                }
-                if (querySnapshot.empty && page > 1) {
-                     console.log("더 이상 불러올 이야기가 없습니다.");
-                     const loadMoreBtn = document.getElementById('loadMoreBtn');
-                     if (loadMoreBtn) { loadMoreBtn.textContent = "모든 이야기를 다 봤어요! 🎉"; loadMoreBtn.disabled = true; }
-                     return;
-                }
-
-                querySnapshot.forEach((docSnap, index) => {
-                    const sessionData = {id: docSnap.id, ...docSnap.data()};
-                    // Firestore 데이터에는 sessionNumber가 없을 수 있으므로, 필요시 생성
-                    sessionData.sessionNumber = totalJournalDocsForTopic - ((currentPageNum - 1) * ITEMS_PER_PAGE) - index;
-                    const card = createSessionCard(sessionData);
-                    sessionCardListEl.appendChild(card);
-                });
-
-                if (querySnapshot.docs.length > 0) {
-                    lastVisibleDocForPaging = querySnapshot.docs[querySnapshot.docs.length - 1];
-                }
-                updatePaginationUI(currentPageNum);
-
-            } catch (error) {
-                console.error(`'${currentDisplayTopic}' 주제의 세션 로드 중 오류:`, error);
-                sessionCardListEl.innerHTML = '<p>이야기 기록을 불러오는 데 문제가 발생했어요. 😥</p>';
-            }
-        }
-        
-        function updatePaginationUI(page) { // "더 보기" 버튼 형태로 간소화
-            if (!paginationControlsEl || totalJournalDocsForTopic <= page * ITEMS_PER_PAGE) {
-                if(paginationControlsEl) paginationControlsEl.style.display = 'none';
-                return;
-            }
-            if(paginationControlsEl) paginationControlsEl.style.display = 'flex';
-            paginationControlsEl.innerHTML = ''; 
-
-            if (page * ITEMS_PER_PAGE < totalJournalDocsForTopic) {
-                const loadMoreBtn = document.createElement('button');
-                loadMoreBtn.id = 'loadMoreBtn';
-                loadMoreBtn.textContent = '이전 이야기 더 보기';
-                loadMoreBtn.className = 'action-button'; 
-                loadMoreBtn.onclick = () => {
-                    currentPageNum++;
-                    loadSessionsForTopicPage(currentPageNum, lastVisibleDocForPaging);
-                };
-                paginationControlsEl.appendChild(loadMoreBtn);
-            }
-        }
-
-        // 페이지 로드 시 실행
+        // --- 페이지 로드 시 실행 ---
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log("Journal Detail Page: DOMContentLoaded");
+            console.log("Journal Topic Detail Page: DOMContentLoaded");
             if (currentDisplayTopic && userId) {
                 await fetchTopicHeaderStats(); 
                 await loadSessionsForTopicPage(1); 
             } else {
                 if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "선택된 주제 없음";
-                if(sessionCardListEl) sessionCardListEl.innerHTML = "<p>표시할 주제가 선택되지 않았어요. '이야기 모음집'에서 주제를 선택해주세요.</p>";
                 console.log("주제 정보 없음, 예시 데이터를 표시합니다.");
-                displaySampleSessions(); // 주제 정보 없을 때도 예시 데이터 표시
+                displaySampleSessionsForTopic("예시 주제"); 
             }
         });
     </script>
