@@ -15,19 +15,46 @@
     <style>
         /* analysis.html 페이지 고유 스타일 */
         :root {
-            --primary-color-analysis: #6078ea;
-            --card-bg-analysis: #ffffff;
-            --text-color-analysis: #333333;
-            --explanation-bg-analysis: #eef2f7;
-        
-        }
-        body, html { 
-            margin:0; 
-            padding:0; 
-            font-family:'KoPub World Dotum', sans-serif; 
-            background:#f4f6f8; 
-            color: var(--text-color-analysis); 
-        }
+      --primary-color: #6e8efb;
+      --secondary-color: #5a7edf;
+      --background-color: #ffffff;
+      --text-color: #333333;
+      
+      --user-bubble-bg: var(--primary-color);
+      --user-bubble-text: #ffffff;
+      --assistant-bubble-bg: #F5E7A1; /* 로지 말풍선 배경색 */
+      --assistant-bubble-text: #333333;
+
+      --input-area-bg: #f8f9fa;
+      --chat-input-bg: #ffffff;
+      --chat-input-text-color: #333333;
+      --chat-input-border-color: #ced4da;
+      --chat-input-placeholder-color: #777777;
+
+      --button-bg: var(--primary-color);
+      --button-text-color: #ffffff;
+      --button-hover-bg: var(--secondary-color);
+
+      --volume-meter-container-bg: #e9ecef;
+      --volume-meter-level-bg: var(--primary-color);
+      --meter-height: 6px;
+      --meter-top-margin: 8px;
+
+      --analysis-notification-bg: #fff3cd;
+      --analysis-notification-text: #856404;
+
+      --gnb-height: 56px; 
+      --chat-input-area-height: 70px;
+        } 
+
+        body {
+            margin: 0;
+            padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
+            font-family: 'KoPub World Dotum', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }   
     
         .container { 
             max-width:900px; 

@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // 만약 드롭다운 메뉴 내부의 링크를 클릭했을 때도 메뉴가 닫히게 하려면,
             // 드롭다운 메뉴 링크들에 대한 이벤트 리스너를 추가하고 거기서도 remove('show')를 호출할 수 있습니다.
             // 하지만 일반적으로 링크 클릭 시 페이지가 이동하므로 필수적이지 않을 수 있습니다.
+
+       const dropdownLinks = dropdownMenu.querySelectorAll('a');
+        dropdownLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                dropdownMenu.classList.remove('show'); // 링크 클릭 시 메뉴 닫기
+            });
+        });
+
         });
     } else {
         // 하나라도 요소를 찾지 못하면 콘솔에 경고를 남겨 디버깅 용이하게 함
