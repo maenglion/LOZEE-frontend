@@ -3,40 +3,35 @@
 // 0) GPT 백엔드 URL 정의 (Railway 프로덕션 서버)
 const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat';
 
-// 1) 호격 조사 결정: '아/야'
+// (getKoreanVocativeParticle 함수는 이전과 동일)
 export function getKoreanVocativeParticle(name) {
   if (!name || typeof name !== 'string' || name.trim() === '') return '야';
   const lastCharCode = name.charCodeAt(name.length - 1);
-  // 한글 음절(가-힣) 범위: 0xAC00 (가) ~ 0xD7A3 (힣)
   if (lastCharCode < 0xAC00 || lastCharCode > 0xD7A3) {
-    return '야'; // 한글 이름 아니면 '야'
+    return '야';
   }
-  // 종성 유무에 따라 호격 조사 결정
   return (lastCharCode - 0xAC00) % 28 === 0 ? '야' : '아';
 }
 
 /**
  * 주격 조사 결정: '(이)나(가)'
- * - 이미 호격 조사가 붙은 경우(끝이 '아' or '야'): '가'
- * - 그 외 한글 이름은 받침 유무에 따라 '이' 또는 '가'
+ * - 이름의 마지막 글자에 받침 유무에 따라 '이' 또는 '가'를 반환합니다.
  */
-export function getKoreanSubjectParticle(name) { // name은 조사가 붙지 않은 순수 이름이어야 함
-  if (!nameWithVocative || typeof nameWithVocative !== 'string') return '가';
-  const lastChar = nameWithVocative.charAt(nameWithVocative.length - 1);
-  if (lastChar === '아' || lastChar === '야') {
-    return '가';
+export function getKoreanSubjectParticle(name) { // name은 조사가 붙지 않은 순수 이름이어야 합니다.
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    return '가'; // 이름이 없거나 유효하지 않으면 기본값 '가'
   }
- // 👇 새로 추가하거나 수정한 주격 조사 함수
-if (!name || typeof name !== 'string' || name.trim() === '') return '가'; // 이름이 없으면 기본값 '가'
   
-  const lastChar = name.charCodeAt(name.length - 1);
+  const lastChar = name.charCodeAt(name.length - 1); // 'name'의 마지막 글자 코드를 가져옵니다.
+  
   // 한글 음절(가-힣) 범위 확인
   if (lastChar >= 0xAC00 && lastChar <= 0xD7A3) {
     const hasBatchim = (lastChar - 0xAC00) % 28 !== 0; // 마지막 글자에 받침 유무 확인
     return hasBatchim ? '이' : '가'; // 받침 있으면 '이', 없으면 '가'
   }
+  
   // 한글 이름이 아니면 기본적으로 '가' 반환 (또는 다른 처리)
-  return '가';
+  return '가'; 
 }
 
 
