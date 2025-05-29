@@ -5,13 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageSessionTitle">로지와의 이야기 상세보기 - LOZEE</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-    <link rel="stylesheet" href="gnb.css"> <link rel="stylesheet" href="analysis.css"> <style>
+    <link rel="stylesheet" href="gnb.css"> <link rel="stylesheet" href="analysis.css"> 
+    <style>
         /* journal.html 고유 스타일 추가 (필요시) */
-
- body {
-          padding-top: var(--gnb-height);  
-          -- gnb-height: 56px;}
-
+ 
+        :root {
+            /* ... (journal.html용 변수들) ... */
+            --gnb-height: 56px; /* gnb.css의 값과 일치 또는 gnb.css 변수 사용 */
+        }
+        body { 
+            /* padding-top: var(--gnb-height); */ /* gnb.css에서 body 스타일을 관리한다면 이 줄은 주석 처리 또는 삭제 */
+            /* font-family:'KoPub World Dotum', sans-serif; */ /* gnb.css에서 관리 시 주석 처리 */
+            margin:0;
+            background-color: #f4f6f8;
+            /* ... (나머지 journal.html body 스타일) ... */
+        }
         .session-summary-section {
             background-color: var(--card-bg-analysis, #ffffff);
             padding: 25px;
