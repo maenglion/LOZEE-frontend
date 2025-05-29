@@ -287,7 +287,8 @@
         import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
         import { playTTSFromText, stopCurrentTTS } from './js/tts.js';
         import LOZEE_ANALYSIS from './js/lozee-analysis.js';
-        import { saveSessionLog, updateTopicStats } from './js/firebase-utils.js'; 
+        // firebase-utils.js에서 saveJournalEntry, updateTopicStats, logSessionStart, logSessionEnd를 export 한다고 가정
+        import { saveJournalEntry, updateTopicStats, logSessionStart, logSessionEnd } from './js/firebase-utils.js'; 
         import { counselingTopicsByAge } from './js/counseling_topics.js';
 
         // --- 상태 변수 ---
@@ -296,20 +297,26 @@
         let isProcessing = false;
         let chatHistory = [];
         let selectedMain = null; 
-        let meta = { lastInputTimestamp: Date.now(), fillerCount: 0, clickedOption: false, presentedIndices:[] };
+        // let meta = { lastInputTimestamp: Date.now(), fillerCount: 0, clickedOption: false, presentedIndices:[] }; // detectStuck 사용 안 함
         let isPlayingTTS = false; 
         let conversationStartTime = null;
         let analysisNotificationShown = false;
         
+        let sessionTimeoutId = null;
+        const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000; // 5분
+        let currentSessionId = null; 
+        let lastAiAnalysisData = null; 
+        let userTotalCharCount = 0; // 현재 세션의 사용자 총 발화 글자 수
+
         let assistantMessageCount = 0; 
         let gptVerbosityPreference = 'default'; 
         let lastVerbosityPromptTime = 0; 
         let verbosityPromptCount = 0; 
-        const PREFERENCE_PROMPT_INTERVAL = 10 * 60 * 1000; // 10분
+        const PREFERENCE_PROMPT_INTERVAL = 10 * 60 * 1000; 
 
         // --- UI 요소 ---
         const chatWindow = document.getElementById('chat-window');
-        const topicArea = document.getElementById('topic-area'); // HTML에서 삭제했거나 display:none!important; 처리
+        const topicArea = document.getElementById('topic-area'); 
         const inputArea = document.getElementById('input-area');
         const chatInput = document.getElementById('chat-input');
         const sendBtn = document.getElementById('send-btn');
@@ -339,12 +346,21 @@
 
         // --- 초기화 로직 ---
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('✅ js/firebase-config.js 모듈 로드됨');
-            console.log('DOMContentLoaded 이벤트 발생');
+            console.log('talk.html: ✅ js/firebase-config.js 모듈 로드됨');
+            console.log('talk.html: DOMContentLoaded 이벤트 발생');
             conversationStartTime = Date.now(); 
+            
+            const currentUserEmailForLog = localStorage.getItem('cbtUserEmail');
+            // selectedMain은 아직 null이므로, 초기 주제는 여기서 설정하지 않음
+            // if (currentUserEmailForLog) { 
+            //    currentSessionId = await logSessionStart(currentUserEmailForLog, "초기 대화");
+            // }
+            
+            resetSessionTimeout(); 
+
             const greeting = getInitialGreeting(userName + voc, hasGreeted);
             appendMessage(greeting, 'assistant');
-            console.log("첫 인사 TTS는 사용자 인터랙션(예: 시작 버튼) 후 재생하는 것을 권장합니다. (현재 자동 재생 안 함)");
+            console.log("talk.html: 첫 인사 TTS는 사용자 인터랙션(예: 시작 버튼) 후 재생하는 것을 권장합니다. (현재 자동 재생 안 함)");
             hasGreeted = true;
             showMainTopics();
         });
@@ -354,8 +370,12 @@
             const bubble = document.createElement('div');
             bubble.className = 'bubble ' + role; 
             bubble.textContent = text;
-            if(chatWindow) chatWindow.appendChild(bubble); // chatWindow null 체크
-            if(chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+            if(chatWindow) {
+                chatWindow.appendChild(bubble);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            } else {
+                console.error("appendMessage: chatWindow 요소를 찾을 수 없습니다.");
+            }
         }
 
         function showAnalysis() {
@@ -363,126 +383,93 @@
             const notification = document.createElement('div');
             notification.className = 'analysis-notification';
             notification.textContent = '🟡분석 결과 보기'; 
-            notification.onclick = () => {
-                location.href = 'analysis.html';
+            notification.onclick = () => { location.href = 'analysis.html'; };
+            if(chatWindow) {
+                chatWindow.appendChild(notification);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
-            if(chatWindow) chatWindow.appendChild(notification);
-            if(chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
             analysisNotificationShown = true; 
         }
 
         // --- TTS 제어 재생 함수 ---
         async function playTTSWithControl(txt) {
-            if (isRec && recog) { 
+            if (isRec && recog && typeof recog.stop === 'function') { 
                  console.log("TTS 재생 전 STT 명시적 중지 (playTTSWithControl)");
-                 if (typeof recog.stop === 'function') recog.stop(); 
+                 recog.stop(); 
             }
             if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
+            else console.warn("stopCurrentTTS 함수를 찾을 수 없습니다.");
             
-            if (skipTTS) {
-                skipTTS = false;
-                return Promise.resolve(); 
-            }
+            if (skipTTS) { skipTTS = false; return Promise.resolve(); }
             isPlayingTTS = true;
             try {
                 if (typeof playTTSFromText === 'function') {
                     await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
-                } else {
-                    console.warn("playTTSFromText 함수를 찾을 수 없습니다.");
-                }
-            } catch (error) {
-                console.error("playTTSWithControl 내 TTS 재생 오류:", error);
-            } finally {
-                isPlayingTTS = false;
-            }
+                } else { console.warn("playTTSFromText 함수를 찾을 수 없습니다.");}
+            } catch (error) { console.error("playTTSWithControl 내 TTS 재생 오류:", error); } 
+            finally { isPlayingTTS = false; }
         }
 
         // --- 오디오 분석 관련 ---
         let audioContext, analyser, source, dataArray, animId, streamRef;
         const LOW = { r:0, g:200, b:0 }; const MID = { r:255, g:200, b:0 }; const HIGH = { r:255, g:69, b:0 };
         function interp(c1, c2, f) { return `rgb(${Math.round(c1.r + f * (c2.r - c1.r))},${Math.round(c1.g + f * (c2.g - c1.g))},${Math.round(c1.b + f * (c2.b - c1.b))})`;}
-        function setupAudioAnalysis(stream) { if (audioContext && audioContext.state !== 'closed') {audioContext.close().catch(e => console.warn("이전 AudioContext 닫기 오류(무시 가능):", e));} audioContext = new AudioContext(); analyser = audioContext.createAnalyser(); analyser.fftSize = 256; source = audioContext.createMediaStreamSource(stream); source.connect(analyser); dataArray = new Uint8Array(analyser.frequencyBinCount); streamRef = stream; draw(); }
-        function draw() { animId = requestAnimationFrame(draw); if (!analyser || !dataArray) return; analyser.getByteFrequencyData(dataArray); let sum = dataArray.reduce((a, v) => a + v, 0); let avg = sum / dataArray.length; let norm = Math.min(100, Math.max(0, (avg / 140) * 100)); if(meterLevel) meterLevel.style.width = norm + '%'; if(meterLevel) meterLevel.style.background = `linear-gradient(to right, var(--background-color), ${norm <= 50 ? interp(LOW, MID, norm / 50) : interp(MID, HIGH, (norm - 50) / 50)})`; if (norm > 10 && isRec && isPlayingTTS && !skipTTS) { console.log("사용자 음성 감지, TTS 중단 시도"); if (typeof stopCurrentTTS === 'function') stopCurrentTTS(); skipTTS = true; } }
-        function stopAudio() { if (animId) cancelAnimationFrame(animId); if (source) source.disconnect(); if (streamRef) streamRef.getTracks().forEach(track => track.stop()); if (audioContext && audioContext.state !== 'closed') { audioContext.close().catch(e => console.warn("AudioContext 닫기 오류(무시 가능):", e)); } audioContext = null; if(meterLevel) { meterLevel.style.width = '0%'; meterLevel.style.background = getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-container-bg'); } }
+        function setupAudioAnalysis(stream) { if (audioContext && audioContext.state !== 'closed') {audioContext.close().catch(e=>console.warn("이전 AudioContext 닫기 오류(무시 가능):", e));} audioContext = new AudioContext(); analyser = audioContext.createAnalyser(); analyser.fftSize = 256; source = audioContext.createMediaStreamSource(stream); source.connect(analyser); dataArray = new Uint8Array(analyser.frequencyBinCount); streamRef = stream; draw(); }
+        function draw() { animId = requestAnimationFrame(draw); if (!analyser || !dataArray) return; analyser.getByteFrequencyData(dataArray); let sum = dataArray.reduce((a, v) => a + v, 0); let avg = dataArray.length > 0 ? sum / dataArray.length : 0; let norm = Math.min(100, Math.max(0, (avg / 140) * 100)); if(meterLevel) {meterLevel.style.width = norm + '%'; meterLevel.style.background = `linear-gradient(to right, var(--background-color), ${norm <= 50 ? interp(LOW, MID, norm / 50) : interp(MID, HIGH, (norm - 50) / 50)})`;} if (norm > 10 && isRec && isPlayingTTS && !skipTTS) { console.log("사용자 음성 감지, TTS 중단 시도"); if (typeof stopCurrentTTS === 'function') stopCurrentTTS(); skipTTS = true; } }
+        function stopAudio() { if (animId) cancelAnimationFrame(animId); if (source) source.disconnect(); if (streamRef) streamRef.getTracks().forEach(track => track.stop()); if (audioContext && audioContext.state !== 'closed') { audioContext.close().catch(e=>console.warn("AudioContext 닫기 오류(무시 가능):", e)); } audioContext = null; if(meterLevel) { meterLevel.style.width = '0%'; meterLevel.style.background = getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-container-bg'); } }
 
         // --- STT (Web Speech API) ---
         const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recog, isRec = false;
         if (SpeechRecognitionAPI) {
             recog = new SpeechRecognitionAPI(); 
-            recog.continuous = true; // 사용자가 길게 말할 수 있도록 true로 변경
-            recog.interimResults = true; // 중간 결과 받기
+            recog.continuous = true; 
+            recog.interimResults = true; 
             recog.lang = 'ko-KR';
             recog.onstart = () => { isRec = true; if(micButton) micButton.classList.add('recording'); };
             recog.onend = () => { isRec = false; if(micButton) micButton.classList.remove('recording'); stopAudio(); };
             recog.onresult = event => { 
-                let interim_transcript = '';
-                let final_transcript = '';
+                resetSessionTimeout(); // 음성 입력 감지 시 타임아웃 리셋
+                let interim_transcript = ''; let final_transcript = '';
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        final_transcript += event.results[i][0].transcript;
-                    } else {
-                        interim_transcript += event.results[i][0].transcript;
-                    }
+                    if (event.results[i].isFinal) { final_transcript += event.results[i][0].transcript; } 
+                    else { interim_transcript += event.results[i][0].transcript; }
                 }
-                // (선택 사항) 중간 결과를 chatInput에 임시로 표시:
-                // if (chatInput) chatInput.value = final_transcript + interim_transcript;
-                
+                // if (chatInput && interim_transcript) chatInput.value = interim_transcript; 
                 if (final_transcript) { 
                     console.log("STT 최종 결과:", final_transcript); 
-                    // if (chatInput) chatInput.value = ''; // 최종 결과 전송 후 입력창 비울지 여부
                     sendMessage(final_transcript.trim(), 'stt'); 
                 } 
             };
-            recog.onerror = event => { console.error('Speech recognition error:', event.error); appendMessage('음성 인식 오류: ' + event.error, 'assistant_feedback'); if(isRec && recog){ try{recog.stop();}catch(e){console.warn("recog.stop() 오류(무시 가능):",e)}} isRec = false; if(micButton) micButton.classList.remove('recording'); stopAudio(); };
-            
-            if(micButton) micButton.onclick = async () => { 
-                if (isRec) { 
-                    if(recog) recog.stop(); 
-                } else { 
-                    if (typeof stopCurrentTTS === 'function') stopCurrentTTS(); 
-                    skipTTS = true;   
-                    try { 
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
-                        setupAudioAnalysis(stream); 
-                        if(recog) recog.start(); 
-                    } catch (e) { 
-                        console.error('마이크 접근 오류:', e); 
-                        appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback'); 
-                    } 
-                } 
-            };
+            recog.onerror = event => { console.error('Speech recognition error:', event.error); appendMessage('음성 인식 오류: ' + event.error, 'assistant_feedback'); if(isRec && recog){ try{recog.stop();}catch(e){console.warn("recog.stop() 오류:",e)}} isRec = false; if(micButton) micButton.classList.remove('recording'); stopAudio(); };
+            if(micButton) micButton.onclick = async () => { if (isRec) { if(recog) recog.stop(); } else { if (typeof stopCurrentTTS === 'function') stopCurrentTTS(); skipTTS = true; try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); setupAudioAnalysis(stream); if(recog) recog.start(); } catch (e) { console.error('마이크 접근 오류:', e); appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback'); } } };
         } else { if(micButton) micButton.disabled = true; appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'assistant_feedback'); }
 
-        // --- 토픽 플로우 - 선택창 ---
+        // --- 토픽 플로우 ---
         function getTopicsForCurrentUser() {
             const userType = localStorage.getItem('lozee_userType'); 
-            // userAge는 talk.html 상단에서 이미 파싱됨
             const ageForTopicGetter = userType === 'caregiver' 
-                ? (parseInt(localStorage.getItem('lozee_child_age') || userAge.toString(), 10)) // 자녀 나이 없으면 보호자 나이로 대체 (임시)
+                ? (parseInt(localStorage.getItem('lozee_child_age') || userAge.toString(), 10)) 
                 : userAge; 
-
+            if (!counselingTopicsByAge) { console.error("counselingTopicsByAge가 정의되지 않았습니다."); return {}; }
             if (userType === 'directUser') {
-                if (ageForTopicGetter < 11) return counselingTopicsByAge.directUser['10세미만'];
-                if (ageForTopicGetter >= 11 && ageForTopicGetter <= 15) return counselingTopicsByAge.directUser['11-15세'];
-                if (ageForTopicGetter >= 16 && ageForTopicGetter <= 29) return counselingTopicsByAge.directUser['16-29세'];
-                return counselingTopicsByAge.directUser['16-29세']; // 기본값
+                if (ageForTopicGetter < 11) return counselingTopicsByAge.directUser['10세미만'] || {};
+                if (ageForTopicGetter >= 11 && ageForTopicGetter <= 15) return counselingTopicsByAge.directUser['11-15세'] || {};
+                if (ageForTopicGetter >= 16 && ageForTopicGetter <= 29) return counselingTopicsByAge.directUser['16-29세'] || {};
+                return counselingTopicsByAge.directUser['16-29세'] || {}; 
             } else if (userType === 'caregiver') {
-                return counselingTopicsByAge.caregiver;
+                return counselingTopicsByAge.caregiver || {};
             } else {
-                console.warn("알 수 없는 사용자 유형:", userType, "기본 주제(directUser 11-15세)를 표시합니다.");
-                return counselingTopicsByAge.directUser['11-15세']; 
+                console.warn("알 수 없는 사용자 유형:", userType);
+                return counselingTopicsByAge.directUser['11-15세'] || {}; 
             }
         }
                 
         function displayOptionsInChat(optionsArray, onSelectCallback) { 
-            console.log("displayOptionsInChat 함수 시작됨, 옵션 배열:", optionsArray); 
+            if (!chatWindow) { console.error("displayOptionsInChat: chatWindow 요소를 찾을 수 없습니다."); return; }
             const optionsContainer = document.createElement('div'); optionsContainer.className = 'chat-options-container'; 
             const buttons = []; 
-            if (!optionsArray || !Array.isArray(optionsArray)) {
-                console.error("displayOptionsInChat: optionsArray가 유효한 배열이 아닙니다.", optionsArray);
-                return;
-            }
+            if (!optionsArray || !Array.isArray(optionsArray)) { console.error("displayOptionsInChat: optionsArray가 유효한 배열이 아닙니다."); return; }
             optionsArray.forEach(optionObject => { 
                 let buttonText; let valueToCallback; 
                 if (typeof optionObject === 'string') { buttonText = optionObject; valueToCallback = optionObject;} 
@@ -493,11 +480,10 @@
                 button.onclick = () => { buttons.forEach(btn => { btn.disabled = true; if (btn === button) { btn.classList.add('selected'); } }); onSelectCallback(valueToCallback, optionObject); }; 
                 optionsContainer.appendChild(button); buttons.push(button); 
             }); 
-            if(chatWindow) chatWindow.appendChild(optionsContainer); 
-            if(chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight; 
+            chatWindow.appendChild(optionsContainer); 
+            chatWindow.scrollTop = chatWindow.scrollHeight; 
         }
 
-        // --- 토픽 플로우 - 주제 ---
         function showMainTopics() { 
             console.log("showMainTopics 함수 시작됨"); 
             appendMessage('어떤 이야기를 나눠볼까?', 'assistant'); 
@@ -508,14 +494,14 @@
             if (currentUserTopics && typeof currentUserTopics === 'object' && Object.keys(currentUserTopics).length > 0) { const categoryNames = Object.keys(currentUserTopics); const categoryOptions = categoryNames.map(categoryName => { let icon = '💬'; if (currentUserTopics[categoryName] && Array.isArray(currentUserTopics[categoryName]) && currentUserTopics[categoryName].length > 0 && currentUserTopics[categoryName][0].icon) { icon = currentUserTopics[categoryName][0].icon; } return { icon: icon, displayText: categoryName, isContinuation: false }; }); topicsWithOptions.push(...categoryOptions); } 
             else { console.warn(`현재 사용자에 맞는 주제 카테고리를 찾을 수 없거나 비어있습니다.`, currentUserTopics); } 
             topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제', isContinuation: false }); 
-            console.log("displayOptionsInChat에 전달될 배열:", topicsWithOptions); 
             displayOptionsInChat(topicsWithOptions, (selectedText, fullOptionObject) => { 
-                selectedMain = selectedText; appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
+                selectedMain = selectedText; // 현재 선택된 대주제 저장
+                appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
                 if (fullOptionObject && fullOptionObject.isContinuation) { localStorage.removeItem('lozee_continue_topic'); const continueMessage = fullOptionObject.continueDetails && fullOptionObject.continueDetails.details ? `저번에 이야기했던 '${fullOptionObject.continueDetails.details}'에 대해 계속 이야기해보자.` : "저번에 나누던 이야기, 계속해볼까?"; startChat(continueMessage, 'topic_selection_init'); } 
                 else if (selectedMain === '자유주제') { const message = '네가 정하면 돼. 어떤 이야기가 하고 싶어?'; appendMessage(message, 'assistant'); if(inputArea) inputArea.style.display = 'flex'; if(chatInput) chatInput.focus();  } 
                 else { setTimeout(showSubTopics, 300); } 
             }); 
-            if (topicArea) { topicArea.style.display = 'none !important'; }
+            if (topicArea && typeof topicArea.style !== 'undefined') { topicArea.style.display = 'none !important'; }
         }
            
         function showSubTopics() { 
@@ -531,8 +517,13 @@
 
         function startChat(initText, inputMethod = 'topic_selection_init') { 
             console.log("startChat 함수 시작됨, 초기 메시지:", initText, "입력방식:", inputMethod); 
-            if (topicArea) topicArea.style.display = 'none !important'; 
+            if (topicArea && typeof topicArea.style !== 'undefined') topicArea.style.display = 'none !important'; 
             if (inputArea) inputArea.style.display = 'flex'; 
+            // 세션 시작 로그는 여기서, selectedMain이 확정된 후에
+            const currentUserEmailForLog = localStorage.getItem('cbtUserEmail');
+            if(currentUserEmailForLog && selectedMain && !currentSessionId && typeof logSessionStart === 'function'){ // currentSessionId가 없을 때만 새로 시작
+                logSessionStart(currentUserEmailForLog, selectedMain).then(id => currentSessionId = id);
+            }
             if (initText && String(initText).trim() !== '') { sendMessage(initText, inputMethod); } 
             else { if (chatInput) chatInput.focus(); }
         }   
@@ -552,22 +543,65 @@
                 appendMessage(followupMessage, 'assistant');
             });
         }
+        
+        // --- 세션 타임아웃 관련 함수 ---
+        function resetSessionTimeout() {
+            if (sessionTimeoutId) clearTimeout(sessionTimeoutId);
+            sessionTimeoutId = setTimeout(async () => {
+                console.log("5분 이상 대화 없음. 세션 종료 및 저널 저장 시도.");
+                const currentUserEmail = localStorage.getItem('cbtUserEmail');
+                if (currentUserEmail && selectedMain && chatHistory.length > 1) { 
+                    if (typeof saveJournalEntry === 'function') {
+                        // 저널 저장 시 현재 세션의 지속 시간과 사용자 발화량 전달
+                        const sessionDurationForJournal = Math.round((Date.now() - conversationStartTime) / (1000 * 60));
+                        lastAiAnalysisData = { 
+                            ...(lastAiAnalysisData || {}), 
+                            sessionDurationMinutes: sessionDurationForJournal,
+                            userCharCountForThisSession: userTotalCharCount
+                        };
+                        await saveJournalEntry(currentUserEmail, selectedMain, chatHistory, lastAiAnalysisData);
+                    } else { console.warn("saveJournalEntry 함수를 찾을 수 없습니다.");}
+                    if (typeof updateTopicStats === 'function') {
+                        await updateTopicStats(currentUserEmail, selectedMain); 
+                    } else { console.warn("updateTopicStats 함수를 찾을 수 없습니다.");}
+                    
+                    if (currentSessionId && typeof logSessionEnd === 'function') {
+                        await logSessionEnd(currentSessionId); 
+                        currentSessionId = null; 
+                    }
+                    
+                    chatHistory = []; 
+                    lastAiAnalysisData = null;
+                    userTotalCharCount = 0; 
+                    analysisNotificationShown = false; // 다음 세션 위해 리셋
+                    assistantMessageCount = 0; // 다음 세션 위해 리셋
+                    verbosityPromptCount = 0; // 다음 세션 위해 리셋
+                    appendMessage("긴 시간 대화가 없어서 이번 이야기는 마무리할게! 언제든 다시 이야기하고 싶으면 새로운 주제를 선택하거나 말을 걸어줘. 😊", "assistant_feedback");
+                    if(inputArea) inputArea.style.display = 'none'; 
+                    showMainTopics(); 
+                } else {
+                    console.log("저장할 대화 내용이 없거나 필수 정보 부족으로 세션 종료 처리 안 함.");
+                }
+            }, SESSION_TIMEOUT_DURATION);
+        }
 
         // --- 메시지 전송 함수 ---
         async function sendMessage(text, inputMethod = 'text') { 
             if (!text || String(text).trim() === '' || isProcessing) return;
+            resetSessionTimeout(); 
             isProcessing = true;
             if(sendBtn) sendBtn.classList.add('loading');
+            else console.warn("sendMessage: sendBtn 요소를 찾을 수 없습니다.");
 
-            if (!conversationStartTime) conversationStartTime = Date.now();
+            if (!conversationStartTime) conversationStartTime = Date.now(); // 방어 코드
 
             if (inputMethod !== 'topic_selection_init') { 
                 appendMessage(text, 'user');
             }
             chatHistory.push({ role: 'user', content: text }); 
-            // userTotalCharCount += text.length; // 현재 세션의 사용자 발화 글자 수 누적
-
-
+            if (inputMethod !== 'topic_selection_init') { // 주제 선택으로 시작된 메시지는 사용자 발화량에 포함 안 함
+                 userTotalCharCount += text.length;
+            }
 
             const currentUserEmail = localStorage.getItem('cbtUserEmail');
             if (chatInput) chatInput.value = '';
@@ -575,8 +609,9 @@
             const thinkingBubble = document.createElement('div');
             thinkingBubble.className = 'bubble assistant thinking'; 
             thinkingBubble.textContent = '생각중이야...'; 
-            if (chatWindow) chatWindow.appendChild(thinkingBubble);
-            if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+            if (chatWindow) { chatWindow.appendChild(thinkingBubble); chatWindow.scrollTop = chatWindow.scrollHeight; }
+            else { console.warn("sendMessage: chatWindow 요소를 찾을 수 없습니다.");}
+            
 
             try {
                 const elapsedTimeInMinutesForGPT = (Date.now() - conversationStartTime) / (1000 * 60);
@@ -595,9 +630,11 @@
                     const errorData = await res.text();
                     console.error(`GPT API 응답 오류 ${res.status}: ${errorData}`);
                     appendMessage("미안, 지금은 답변하기 조금 어려워. (서버 응답 오류)", "assistant_feedback");
+                    isProcessing = false; if(sendBtn) sendBtn.classList.remove('loading'); // finally로 옮기기 전 임시
                     return; 
                 }
                 const d = await res.json();
+                lastAiAnalysisData = d.analysis || {}; 
                 const cut = d.text.indexOf('{'); 
                 const clean = cut >= 0 ? d.text.slice(0, cut).trim() : d.text.trim();
                     
@@ -615,46 +652,47 @@
                 chatHistory.push({ role: 'assistant', content: clean });
                 assistantMessageCount++; 
 
-                if (currentUserEmail && selectedMain) {
-                    await saveSessionLog(text, clean, d.analysis || {}, selectedMain, currentUserEmail); 
-                    await updateTopicStats(currentUserEmail, selectedMain); 
-                }
-
+                // 분석 알림 로직 (15분 기준)
                 const elapsedTimeInMinutesForAnalysis = (Date.now() - conversationStartTime) / (1000 * 60);
-                if (elapsedTimeInMinutesForAnalysis >= 15 && !analysisNotificationShown) { 
+                // 실제 배포 시 15분으로: if (elapsedTimeInMinutesForAnalysis >= 15 && !analysisNotificationShown) 
+                if (elapsedTimeInMinutesForAnalysis >= 0.2 && !analysisNotificationShown) { // 테스트용 0.2분 (12초)
                     console.log(`${elapsedTimeInMinutesForAnalysis.toFixed(1)}분 경과, 상세 분석 시도`);
+                    
                     let detailedAnalysisDataForStorage = {};
-                    let currentTotalConversationMinutes = elapsedTimeInMinutesForAnalysis; 
+                    // Firestore에서 사용자의 이전까지의 총 누적 대화 시간/글자 수를 가져와 더하는 것이 이상적
+                    let currentSessionDurationMinutes = Math.round(elapsedTimeInMinutesForAnalysis);
+                    let currentSessionUserCharCount = userTotalCharCount; 
 
-                    if (LOZEE_ANALYSIS && LOZEE_ANALYSIS.inferAgeAndLanguage) { 
+                    if (LOZEE_ANALYSIS && typeof LOZEE_ANALYSIS.inferAgeAndLanguage === 'function') { 
                         try { 
                             const langAgeResult = await LOZEE_ANALYSIS.inferAgeAndLanguage(chatHistory.map(m=>`${m.role}: ${m.content}`).join('\n')); 
                             detailedAnalysisDataForStorage.ageLanguageAnalysis = langAgeResult; 
                         } catch (e) { console.error("inferAgeAndLanguage 오류:", e); } 
                     }
-                    if (d.analysis) { 
+                    if (d.analysis) { // GPT 실시간 분석 결과 사용
                         detailedAnalysisDataForStorage.gptRealtimeAnalysis = d.analysis; 
                         if(d.analysis.keywords) detailedAnalysisDataForStorage.keywords = d.analysis.keywords; 
                         if(d.analysis.overallSentiment) detailedAnalysisDataForStorage.overallSentiment = d.analysis.overallSentiment; 
                         if(d.analysis.cognitiveDistortions) detailedAnalysisDataForStorage.cognitiveDistortions = d.analysis.cognitiveDistortions; 
+                        // 기타 필요한 분석 결과들 추가
                     }
+                    // 추가적으로 LOZEE_ANALYSIS의 다른 함수들을 호출하여 results 객체 채우기
+                    // 예: detailedAnalysisDataForStorage.patterns = LOZEE_ANALYSIS.findPatterns(chatHistory);
+
 
                     if(Object.keys(detailedAnalysisDataForStorage).length > 0) {
-                        // Firestore에서 사용자의 이전까지의 총 누적 글자 수를 가져와 더하거나,
-                        // 현재 세션의 글자 수만 저장할지 정책 결정 필요.
-                        // 여기서는 현재 세션의 사용자 발화 글자 수를 저장한다고 가정.
-                        // (또는 talk.html 로드 시 localStorage나 Firestore에서 이전 누적치 가져와 더하기)
-        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
-        startTime: conversationStartTime, 
-        analysisTime: Date.now(),
-        accumulatedDurationMinutes: currentTotalConversationMinutes,
-        accumulatedUserCharCount: userTotalCharCount, // 👈 사용자 총 발화 글자 수 추가
-        results: detailedAnalysisDataForStorage
+                        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
+                            startTime: conversationStartTime, 
+                            analysisTime: Date.now(),
+                            accumulatedDurationMinutes: currentSessionDurationMinutes, 
+                            accumulatedUserCharCount: currentSessionUserCharCount, 
+                            results: detailedAnalysisDataForStorage
                         }));
                         showAnalysis();
                     }
                 }
 
+                // 말 길이 선호도 질문 로직
                 if (verbosityPromptCount === 0 && assistantMessageCount >= 5) {
                   askForVerbosityPreference();
                 } else if (verbosityPromptCount === 1 && (Date.now() - lastVerbosityPromptTime > PREFERENCE_PROMPT_INTERVAL)) {
@@ -672,11 +710,12 @@
 
         // --- 이벤트 바인딩 ---
         if(sendBtn) sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text')); 
+        else console.error("sendBtn 요소를 찾을 수 없습니다.");
+
         if(chatInput) chatInput.addEventListener('keydown', e => { 
-            meta.lastInputTimestamp = Date.now();
-            meta.clickedOption = false;
-            // const fillers = ['음','…','어','글쎄','모르겠어요','잘 모르겠어']; 
-            // meta.fillerCount = fillers.some(f => chatInput.value.includes(f)) ? meta.fillerCount + 1 : 0;
+            resetSessionTimeout(); // 타이핑 시 타임아웃 리셋
+            // meta.lastInputTimestamp = Date.now(); // meta 객체 사용 시 필요
+            // meta.clickedOption = false;
             
             if (isPlayingTTS) { 
                 if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
@@ -687,6 +726,8 @@
                 sendMessage(chatInput.value, 'text'); 
             }
         });
+        else console.error("chatInput 요소를 찾을 수 없습니다.");
+
     </script>
 </body>
 </html>
