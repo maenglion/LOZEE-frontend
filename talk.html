@@ -373,11 +373,12 @@
 
         // --- TTS 제어 재생 함수 ---
         async function playTTSWithControl(txt) {
-            if (isRec) { 
-                 console.log("TTS 재생 전 STT 중지 시도 (playTTSWithControl)");
-                 if (recog && typeof recog.stop === 'function') recog.stop(); 
+            if (isRec && recog) { // STT가 활성화 상태이고 recog 객체가 존재한다면
+            console.log("TTS 재생 전 STT 명시적 중지 (playTTSWithControl)");
+            recog.stop(); // STT를 명시적으로 중지
             }
-            stopCurrentTTS();
+            stopCurrentTTS(); // 기존 TTS 중지
+           
             if (skipTTS) {
                 skipTTS = false;
                 return Promise.resolve(); 
@@ -405,13 +406,34 @@
         let recog, isRec = false;
         if (SpeechRecognitionAPI) {
             recog = new SpeechRecognitionAPI(); 
-            recog.continuous = false; 
-            recog.interimResults = false; 
+            recog.continuous = true; 
+            recog.interimResults = true; 
             recog.lang = 'ko-KR';
             recog.onstart = () => { isRec = true; micButton.classList.add('recording'); };
             recog.onend = () => { isRec = false; micButton.classList.remove('recording'); stopAudio(); };
-            recog.onresult = event => { let transcript = ''; for (let i = event.resultIndex; i < event.results.length; i++) { if (event.results[i].isFinal) { transcript += event.results[i][0].transcript; } } if (transcript) { console.log("STT 결과:", transcript); sendMessage(transcript, 'stt'); } };
-            recog.onerror = event => { console.error('Speech recognition error:', event.error); appendMessage('음성 인식 오류: ' + event.error, 'assistant_feedback'); if(isRec && recog){ recog.stop(); } isRec = false; micButton.classList.remove('recording'); stopAudio(); };
+            recog.onresult = event => { 
+                let interim_transcript = '';
+                let final_transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                final_transcript += event.results[i][0].transcript;
+            } else {
+                interim_transcript += event.results[i][0].transcript;
+            }
+        }
+        // (선택 사항) 중간 결과를 실시간으로 입력창에 보여주거나 다른 UI에 표시할 수 있습니다.
+        // 예: chatInput.value = final_transcript + interim_transcript; (실제 입력창에 바로 반영)
+        // 또는 console.log("중간:", interim_transcript);   
+        
+        if (final_transcript) { 
+            console.log("STT 최종 결과:", final_transcript); 
+            // chatInput.value = ''; // 최종 결과 전송 후 입력창 비우기 (선택 사항)
+            sendMessage(final_transcript.trim(), 'stt'); 
+        } 
+       };
+
+        
+        recog.onerror = event => { console.error('Speech recognition error:', event.error); appendMessage('음성 인식 오류: ' + event.error, 'assistant_feedback'); if(isRec && recog){ recog.stop(); } isRec = false; micButton.classList.remove('recording'); stopAudio(); };
             micButton.onclick = async () => { 
                 if (isRec) { 
                     if(recog) recog.stop(); 
