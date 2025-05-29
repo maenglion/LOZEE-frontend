@@ -98,7 +98,7 @@ export function getSystemPrompt({ userName='친구', userAge=0, verbosity='defau
   if (userAge >= 56) {
     prompt += `\n[사용자 호칭] 사용자는 ${userName}님 (56세 이상)입니다. 항상 존댓말을 사용하고, '${userName}님'으로 호칭하세요.`;
   } else {
-    prompt += `\n[사용자 호칭] 사용자는 ${nameVoc} (56세 미만)입니다. 편안한 반말을 사용하고, '${nameVoc}' 또는 '${userName}${naming}'으로 호칭하세요.`;
+  prompt += `\n[사용자 호칭] 사용자는 ${nameVoc} (56세 미만)입니다. 편안한 반말을 사용하고, '${nameVoc}' 또는 '${userName}${naming}'으로 호칭하세요.`;
   }
 
  // 대화 시간에 따른 상호작용 변화
