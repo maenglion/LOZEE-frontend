@@ -44,6 +44,26 @@
             margin-bottom: 30px;
             align-items: center;
         }
+       
+       .diagnosis-options-modal button { /* 모달 내 선택 버튼 스타일 */
+    display: inline-block; /* 가로로 배치되도록 */
+    margin: 5px;
+    padding: 8px 12px;
+    font-size: 0.9em;
+    /* .diagnosis-btn 스타일과 유사하게 또는 동일하게 적용 */
+    background-color: #e8eaf6; color: #3f51b5; border: 1px solid #c5cae9;
+    border-radius: 15px; cursor: pointer;
+}
+.diagnosis-options-modal button.selected {
+    background-color: var(--primary-color); color: white;
+    border-color: var(--primary-color);
+}
+.input-group { margin-bottom: 15px; } /* 스타일 일관성 */
+.input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555;}
+.input-group input, .input-group .select-row select { width: 100%; box-sizing: border-box; }
+       
+       
+       
         .profile-photo-container { display: flex; justify-content: center; align-items: center; }
         .profile-photo-placeholder { width: 100px; height: 100px; border-radius: 50%; background-color: var(--profile-placeholder-bg); display: flex; align-items: center; justify-content: center; font-size: 2em; color: white; font-weight: bold; }
         .profile-photo-placeholder img { width:100%; height:100%; border-radius:50%; object-fit:cover;}
@@ -100,43 +120,58 @@
     <main class="container">
         <h1 id="pageMainTitle" class="page-title">🎨 마이 로지</h1>
 
-        <div class="profile-section">
-            <div class="profile-photo-container">
-                <div id="userPhotoPlaceholder" class="profile-photo-placeholder">L</div> </div>
-            <div class="profile-details">
-                <h2 id="userNameDisplay">로딩 중...</h2>
-                <p id="userEmailDisplay" class="user-email">로딩 중...</p>
-                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value">로딩 중...</span></div>
-                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">로딩 중...</span></div>
-                <div class="info-item"><span class="label" id="sessionCountLabel">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">로딩 중...</span></div>
+<div class="profile-section">
+    <button id="editProfileBtn" class="action-button" style="margin-top: 15px; grid-column: 1 / -1; justify-self: center;">프로필 정보 수정</button>
+</div>
+
+<div id="profileEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1001; align-items:center; justify-content:center; display:none;">
+    <div style="background:white; padding:30px; border-radius:10px; width:90%; max-width:500px; color: #333;">
+        <h2 id="modalTitle">프로필 정보 수정</h2>
+        
+        <div class="input-group">
+            <label for="editNameInput">닉네임:</label>
+            <input type="text" id="editNameInput" placeholder="새 닉네임">
+        </div>
+
+        <div id="editDirectUserNDSection" style="display:none;">
+            <p>나의 신경다양성 특성 (중복 선택 가능):</p>
+            <div id="editUserDiagnosesOptions" class="diagnosis-options-modal">
+                </div>
+        </div>
+
+        <div id="editCaregiverInfoSection" style="display:none;">
+            <p>보호자님 본인 또는 배우자/관계인의 신경다양성 특성:</p>
+            <div id="editCaregiverNDOptions" class="diagnosis-options-modal">
+                </div>
+            <hr style="margin: 20px 0;">
+            <h4>아이/가족 정보 수정</h4>
+            <div class="input-group">
+                <label for="editChildNameInput">아이/가족 이름:</label>
+                <input type="text" id="editChildNameInput" placeholder="아이/가족 새 닉네임">
+            </div>
+            <div class="input-group">
+                <label>아이/가족 생년월일:</label>
+                <div class="select-row">
+                    <select id="editChildBirthYear"><option value="">년</option></select>
+                    <select id="editChildBirthMonth"><option value="">월</option></select>
+                    <select id="editChildBirthDay"><option value="">일</option></select>
+                </div>
+            </div>
+            <p>아이/가족의 신경다양성 특성 (중복 선택 가능):</p>
+            <div id="editChildDiagnosesOptions" class="diagnosis-options-modal">
+                </div>
+             <div class="input-group" style="margin-top:15px;">
+                <label for="editChildLozeeEmailInput">연결된 로지 계정 (아이/가족):</label>
+                <input type="email" id="editChildLozeeEmailInput" placeholder="아이/가족 로지 이메일">
             </div>
         </div>
 
-        <div class="info-grid">
-            <div class="info-card neurodiversity-info" id="directUserDiagnosisCard" style="display:none;">
-                <h2>✨ 나의 특성 이해하기</h2>
-                <p class="module-explanation">내가 선택했던 나의 특성들이야. 이 특성들은 로지와의 대화에 참고될 수 있어!</p>
-                <ul id="userDiagnosesList"><li>정보를 불러오는 중...</li></ul>
-            </div>
-            
-            <div class="info-card neurodiversity-info" id="caregiverPersonalNDCard" style="display:none;">
-                <h2>🙋‍♀️ 보호자님 특성 이해</h2>
-                <p class="module-explanation">보호자님 또는 배우자님의 신경다양성 특성을 이해하는 것은 양육과 관계에 중요한 첫걸음이 될 수 있어요.</p>
-                <ul id="caregiverPersonalNeurodiversityList"><li>정보를 불러오는 중...</li></ul>
-            </div>
-
-            <div class="info-card child-info-card" id="childInfoCard" style="display:none;">
-                <h2>🧸 아이/가족 정보</h2>
-                <p class="info-item"><span class="label">이름:</span> <span id="childNameDisplay" class="value">로딩 중...</span></p>
-                <p class="info-item"><span class="label">만 나이:</span> <span id="childFullAgeDisplay" class="value">로딩 중...</span></p> 
-                <p class="info-item"><span class="label">특성 이해:</span></p>
-                <ul id="childDiagnosesList" style="margin-top: -5px; margin-bottom:10px; text-align:left;"><li>정보 없음</li></ul>
-                <p class="info-item" style="margin-top:15px;">
-                    <span class="label">연결된 로지 계정:</span> 
-                    <span id="childLozeeEmailDisplay" class="value">정보 없음</span>
-                    <span id="childConnectionStatus" class="connection-status"></span>
-                </p>
-            </div>
+        <div style="text-align:right; margin-top:20px;">
+            <button id="saveProfileChangesBtn" class="action-button">저장하기</button>
+            <button id="cancelProfileEditBtn" class="secondary-btn" style="margin-left:10px;">취소</button>
+        </div>
+    </div>
+</div>
             
             <div class="info-card plans-card">
                 <h2>🤝 로지와의 약속! (로지 숙제)</h2>
@@ -188,6 +223,27 @@
         const lozeePlansEl = document.getElementById('lozeePlans');
         const recentJournalCardListEl = document.getElementById('recentJournalCardList');
         const goToJournalListBtn = document.getElementById('goToJournalListBtn');
+
+        const editProfileBtn = document.getElementById('editProfileBtn');
+const profileEditModal = document.getElementById('profileEditModal');
+const modalTitleEl = document.getElementById('modalTitle');
+
+const editNameInput = document.getElementById('editNameInput');
+
+const editDirectUserNDSection = document.getElementById('editDirectUserNDSection');
+const editUserDiagnosesOptionsEl = document.getElementById('editUserDiagnosesOptions');
+
+const editCaregiverInfoSection = document.getElementById('editCaregiverInfoSection');
+const editCaregiverNDOptionsEl = document.getElementById('editCaregiverNDOptions');
+const editChildNameInput = document.getElementById('editChildNameInput');
+const editChildBirthYear = document.getElementById('editChildBirthYear');
+const editChildBirthMonth = document.getElementById('editChildBirthMonth');
+const editChildBirthDay = document.getElementById('editChildBirthDay');
+const editChildDiagnosesOptionsEl = document.getElementById('editChildDiagnosesOptions');
+const editChildLozeeEmailInput = document.getElementById('editChildLozeeEmailInput');
+
+const saveProfileChangesBtn = document.getElementById('saveProfileChangesBtn');
+const cancelProfileEditBtn = document.getElementById('cancelProfileEditBtn');
 
         // --- 헬퍼 함수 ---
         function calculateAgeFromBirthDate(birthDateStr) {
@@ -263,8 +319,14 @@
                         else { userPhotoPlaceholderEl.textContent = profileNameForCard.charAt(0).toUpperCase() || '😊';}
                     }
                     if(lastLoginDateEl && data.lastLogin?.toDate) { 
-                        lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric'});
-                    } else { if(lastLoginDateEl) lastLoginDateEl.textContent = '기록 없음';}
+                    lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleString('ko-KR', { 
+                     year: 'numeric',  month: 'short', day: 'numeric', hour: 'numeric', // 시간 추가
+                     minute: '2-digit', // 분 추가 (두 자리로)
+                     hour12: true // true 또는 false로 오전/오후 표시 여부 결정
+                     });
+                     } else { 
+                     if(lastLoginDateEl) lastLoginDateEl.textContent = '기록 없음';
+                     }
                     
                     let sessionCountToDisplay = 0;
                     if (userType === 'caregiver') {
@@ -317,6 +379,212 @@
             }
         }
         
+
+// 신경다양성 선택 옵션 (index.html과 동일한 옵션 사용)
+const neurodiversityOptions = [
+    { text: "자폐 스펙트럼 (ASD)", value: "ASD" },
+    { text: "주의력 결핍 과잉행동 장애 (ADHD)", value: "ADHD" },
+    { text: "아스퍼거 증후군 (고기능 자폐)", value: "Asperger" },
+    { text: "틱 장애", value: "Tic" },
+    { text: "학습 장애", value: "LD" },
+    { text: "기타 어려움 또는 궁금증", value: "Else" },
+    { text: "아직 잘 모르겠어요 / 진단 없음", value: "Unsure" },
+    { text: "특별히 해당 없음", value: "NotApplicable" }
+];
+const caregiverNDOptionsList = [ // 보호자 본인/배우자용
+    { text: "저(보호자 본인): 자폐 스펙트럼(ASD) 성향", value: "self_asd"},
+    { text: "저(보호자 본인): ADHD 성향", value: "self_adhd"},
+    { text: "배우자/관계인: 자폐 스펙트럼(ASD) 성향", value: "spouse_asd"},
+    // ... (index.html의 caregiver-nd-btn 옵션과 동일하게)
+    { text: "잘 모르거나 해당 사항 없어요.", value: "unsure_or_none"}
+];
+
+let currentEditingUserType = '';
+let currentSelectedDiagnoses = [];
+let currentSelectedCaregiverND = [];
+let currentSelectedChildDiagnoses = [];
+
+
+
+// --- 모달 내 선택 옵션 버튼 생성 함수 ---
+function createOptionButtons(containerEl, options, currentSelectedArray, arrayToUpdate) {
+    if (!containerEl) return;
+    containerEl.innerHTML = '';
+    options.forEach(opt => {
+        const button = document.createElement('button');
+        button.textContent = opt.text;
+        button.dataset.value = opt.value;
+        if (currentSelectedArray && currentSelectedArray.includes(opt.value)) {
+            button.classList.add('selected');
+        }
+        button.onclick = () => {
+            // 단독 선택 옵션 (NotApplicable, Unsure, unsure_or_none) 처리
+            const isExclusive = (opt.value === 'NotApplicable' || opt.value === 'Unsure' || opt.value === 'unsure_or_none');
+            if (isExclusive) {
+                if (button.classList.contains('selected')) {
+                    button.classList.remove('selected');
+                    arrayToUpdate.length = 0; // 배열 비우기
+                } else {
+                    containerEl.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    arrayToUpdate.length = 0; // 배열 비우고
+                    arrayToUpdate.push(opt.value); // 현재 옵션만 추가
+                }
+            } else { // 중복 선택 가능 옵션
+                // 단독 선택 옵션이 눌려있었다면 해제
+                containerEl.querySelectorAll('button').forEach(btn => {
+                    if (btn.dataset.value === 'NotApplicable' || btn.dataset.value === 'Unsure' || btn.dataset.value === 'unsure_or_none') {
+                        btn.classList.remove('selected');
+                    }
+                });
+                const indexInExclusive = arrayToUpdate.findIndex(val => val === 'NotApplicable' || val === 'Unsure' || val === 'unsure_or_none');
+                if (indexInExclusive > -1) arrayToUpdate.splice(indexInExclusive, 1);
+
+
+                button.classList.toggle('selected');
+                const index = arrayToUpdate.indexOf(opt.value);
+                if (index > -1) {
+                    arrayToUpdate.splice(index, 1);
+                } else {
+                    arrayToUpdate.push(opt.value);
+                }
+            }
+            console.log("Updated selection:", arrayToUpdate);
+        };
+        containerEl.appendChild(button);
+    });
+}
+
+// --- 프로필 수정 모달 열기 ---
+if (editProfileBtn) {
+    editProfileBtn.onclick = async () => {
+        const loggedInUserEmail = localStorage.getItem('cbtUserEmail');
+        currentEditingUserType = localStorage.getItem('lozee_userType') || '';
+        if (loggedInUserEmail === 'unbearable_@naver.com') { currentEditingUserType = 'caregiver'; }
+
+
+        if (!loggedInUserEmail || !currentEditingUserType) {
+            alert("로그인 정보 또는 사용자 유형 정보가 없습니다.");
+            return;
+        }
+
+        const userRef = doc(db, 'users', loggedInUserEmail);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+            const data = userSnap.data();
+            
+            // 공통: 닉네임 채우기 (Firestore의 최상위 name 필드 사용)
+            if(editNameInput) editNameInput.value = data.name || '';
+
+            if (currentEditingUserType === 'directUser') {
+                if(modalTitleEl) modalTitleEl.textContent = "나의 정보 수정";
+                if(editDirectUserNDSection) editDirectUserNDSection.style.display = 'block';
+                if(editCaregiverInfoSection) editCaregiverInfoSection.style.display = 'none';
+                
+                currentSelectedDiagnoses = data.directUser?.diagnoses || data.diagnoses || []; // 최상위 diagnoses도 고려
+                if(editUserDiagnosesOptionsEl) createOptionButtons(editUserDiagnosesOptionsEl, neurodiversityOptions, currentSelectedDiagnoses, currentSelectedDiagnoses);
+
+            } else if (currentEditingUserType === 'caregiver') {
+                if(modalTitleEl) modalTitleEl.textContent = "보호자 및 아이/가족 정보 수정";
+                if(editDirectUserNDSection) editDirectUserNDSection.style.display = 'none';
+                if(editCaregiverInfoSection) editCaregiverInfoSection.style.display = 'block';
+
+                // 보호자 본인 특성
+                currentSelectedCaregiverND = data.caregiver?.caregiverNeurodiversity || data.caregiverNeurodiversity || [];
+                if(editCaregiverNDOptionsEl) createOptionButtons(editCaregiverNDOptionsEl, caregiverNDOptionsList, currentSelectedCaregiverND, currentSelectedCaregiverND);
+                
+                // 아이/가족 정보 채우기
+                const childData = data.caregiver || {}; // caregiver 맵 안에 child 정보가 있다고 가정
+                if(editChildNameInput) editChildNameInput.value = childData.childName || '';
+                
+                if(editChildBirthYear && editChildBirthMonth && editChildBirthDay){
+                    populateBirthSelects(editChildBirthYear, editChildBirthMonth, editChildBirthDay, 0, 20); // 자녀 나이 범위
+                    if (childData.childBirthDate) {
+                        const [year, month, day] = childData.childBirthDate.split('-');
+                        editChildBirthYear.value = year;
+                        editChildBirthMonth.value = parseInt(month, 10);
+                        editChildBirthDay.value = parseInt(day, 10);
+                    }
+                }
+                currentSelectedChildDiagnoses = childData.childDiagnoses || [];
+                if(editChildDiagnosesOptionsEl) createOptionButtons(editChildDiagnosesOptionsEl, neurodiversityOptions, currentSelectedChildDiagnoses, currentSelectedChildDiagnoses);
+                if(editChildLozeeEmailInput) editChildLozeeEmailInput.value = childData.childLozeeEmail || '';
+            }
+            if(profileEditModal) profileEditModal.style.display = 'flex';
+        } else {
+            alert("사용자 정보를 불러올 수 없습니다.");
+        }
+    };
+}
+
+// --- 프로필 변경사항 저장 ---
+if (saveProfileChangesBtn) {
+    saveProfileChangesBtn.onclick = async () => {
+        const loggedInUserEmail = localStorage.getItem('cbtUserEmail');
+        if (!loggedInUserEmail || !currentEditingUserType) {
+            alert("오류: 사용자 정보가 없습니다.");
+            return;
+        }
+
+        const userDocRef = doc(db, "users", loggedInUserEmail);
+        const updatedData = {};
+
+        // 공통: 닉네임 업데이트 (Firestore 최상위 name 필드)
+        if (editNameInput && editNameInput.value.trim() !== '') {
+            updatedData.name = editNameInput.value.trim();
+        }
+
+        if (currentEditingUserType === 'directUser') {
+            // 당사자 맵 안에 저장하거나, Firestore 구조에 따라 최상위 필드로 저장
+            // 스크린샷 구조를 따른다면:
+            updatedData['directUser.name'] = editNameInput.value.trim() || (await getDoc(userDocRef)).data()?.directUser?.name; // 기존 이름 유지
+            updatedData['directUser.diagnoses'] = currentSelectedDiagnoses;
+            // 만약 name, age, birthDate가 directUser 맵 안에 있다면 여기서 함께 업데이트
+            // updatedData['directUser.birthDate'] = ...
+            // updatedData['directUser.age'] = ...
+        } else if (currentEditingUserType === 'caregiver') {
+            // 보호자 본인 정보 (Firestore 최상위 name 필드 또는 caregiver 맵 내부 name)
+            updatedData['caregiver.name'] = editNameInput.value.trim() || (await getDoc(userDocRef)).data()?.caregiver?.name;
+            updatedData['caregiver.caregiverNeurodiversity'] = currentSelectedCaregiverND;
+            
+            // 아이/가족 정보 (caregiver 맵 내부)
+            if(editChildNameInput) updatedData['caregiver.childName'] = editChildNameInput.value.trim();
+            if(editChildBirthYear && editChildBirthYear.value) {
+                const y = editChildBirthYear.value;
+                const m = editChildBirthMonth.value;
+                const d = editChildBirthDay.value;
+                if (y && m && d) {
+                    updatedData['caregiver.childBirthDate'] = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    updatedData['caregiver.childAge'] = calculateAge(y,m,d);
+                }
+            }
+            updatedData['caregiver.childDiagnoses'] = currentSelectedChildDiagnoses;
+            if(editChildLozeeEmailInput) updatedData['caregiver.childLozeeEmail'] = editChildLozeeEmailInput.value.trim();
+        }
+
+        try {
+            await setDoc(userDocRef, updatedData, { merge: true }); // 점 표기법 사용 시 mergeFields도 가능
+            alert("프로필 정보가 성공적으로 업데이트되었습니다!");
+            if(profileEditModal) profileEditModal.style.display = 'none';
+            loadUserProfile(); // 변경된 정보 다시 로드
+        } catch (error) {
+            console.error("프로필 정보 업데이트 중 오류:", error);
+            alert("프로필 정보 업데이트에 실패했습니다.");
+        }
+    };
+}
+
+// --- 프로필 수정 취소 ---
+if (cancelProfileEditBtn) {
+    cancelProfileEditBtn.onclick = () => {
+        if(profileEditModal) profileEditModal.style.display = 'none';
+    };
+}
+
+
+
+
         function displayLozeePlans() {
             if (!lozeePlansEl) { console.warn("Mypage: lozeePlansEl 요소를 찾을 수 없습니다."); return; }
             lozeePlansEl.innerHTML = '<li>로딩 중...</li>'; 
