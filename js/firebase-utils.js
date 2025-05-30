@@ -1,17 +1,37 @@
 // js/firebase-utils.js
-// Firestore 유틸리티 모듈: db 인스턴스와 저장 함수 모아두기
-
-import { db } from './firebase-config.js';
-import { collection, addDoc, doc, runTransaction, serverTimestamp, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
+import { db } from './firebase-config.js'; // db 인스턴스 import
+import { 
+    collection, 
+    addDoc, 
+    doc, 
+    runTransaction, 
+    serverTimestamp, 
+    getDoc, 
+    setDoc, 
+    updateDoc, // Firestore v9+ 에서는 setDoc({ merge: true }) 또는 updateDoc 사용
+    query, 
+    orderBy, 
+    limit, 
+    getDocs 
+} from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+import { 
+    getStorage, 
+    ref as storageRef, 
+    uploadBytes, 
+    getDownloadURL 
+} from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
 
 /**
- * 세션 로그를 Firestore의 sessions 컬렉션에 저장합니다.
+ * 세션 시작 로그를 Firestore의 sessions 컬렉션에 저장합니다.
+ * @param {string} userId 현재 사용자 이메일
+ * @param {string} topicName 현재 대화 주제
+ * @returns {Promise<string|null>} 저장된 세션 문서 ID 또는 null
  */
-// sessions 컬렉션은 이제 간단한 로그 또는 생략 가능
-// 만약 세션 시작/종료 시간만 기록하고 싶다면:
 export async function logSessionStart(userId, topicName) {
-    if (!db || !userId || !topicName) return null;
+    if (!db || !userId || !topicName) {
+        console.warn("[Firebase Utils] logSessionStart: db, userId 또는 topicName이 없습니다.");
+        return null;
+    }
     try {
         const sessionRef = await addDoc(collection(db, 'sessions'), {
             userId: userId,
@@ -19,162 +39,231 @@ export async function logSessionStart(userId, topicName) {
             startedAt: serverTimestamp(),
             status: "active"
         });
-        console.log('✅ 세션 시작 로그 저장 완료, ID:', sessionRef.id);
+        console.log('[Firebase Utils] ✅ 세션 시작 로그 저장 완료, ID:', sessionRef.id);
         return sessionRef.id; // 세션 ID 반환
-    } catch (err) { console.error('❌ 세션 시작 로그 저장 중 오류:', err); return null; }
+    } catch (err) {
+        console.error('[Firebase Utils] ❌ 세션 시작 로그 저장 중 오류:', err);
+        return null;
+    }
 }
+
+/**
+ * 세션 종료 로그를 Firestore의 sessions 컬렉션에 업데이트합니다.
+ * @param {string} sessionId 종료할 세션의 문서 ID
+ */
 export async function logSessionEnd(sessionId) {
-    if (!db || !sessionId) return;
+    if (!db || !sessionId) {
+        console.warn("[Firebase Utils] logSessionEnd: db 또는 sessionId가 없습니다.");
+        return;
+    }
     try {
         const sessionRef = doc(db, 'sessions', sessionId);
-        await setDoc(sessionRef, { endedAt: serverTimestamp(), status: "ended" }, { merge: true });
-        console.log('✅ 세션 종료 로그 저장 완료, ID:', sessionId);
-    } catch (err) { console.error('❌ 세션 종료 로그 저장 중 오류:', err); }
+        await setDoc(sessionRef, { 
+            endedAt: serverTimestamp(), 
+            status: "ended" 
+        }, { merge: true });
+        console.log('[Firebase Utils] ✅ 세션 종료 로그 저장 완료, ID:', sessionId);
+    } catch (err) {
+        console.error('[Firebase Utils] ❌ 세션 종료 로그 저장 중 오류:', err);
+    }
 }
-
-
 
 /**
  * 대화 내용을 바탕으로 journals 컬렉션에 요약된 저널 항목을 저장합니다.
- * talk.html에서 GPT로부터 받은 최종 분석 결과(d.analysis)를 활용합니다.
+ * @param {string} userId 현재 사용자 이메일
+ * @param {string} currentTopic 현재 대화 주제
+ * @param {Array} chatHistory 전체 대화 기록 배열 (메시지 객체 포함)
+ * @param {object} analysisDataFromGpt GPT로부터 받은 분석 JSON 객체 
+ * (내부에 summaryTitle, conversationSummary, keywords, overallSentiment, 
+ * sessionDurationMinutes, userCharCountForThisSession 등 포함)
+ * @returns {Promise<string|null>} 저장된 저널 문서 ID 또는 null
  */
-export async function saveJournalEntry(userId, currentTopic, chatHistory, lastAiAnalysis) {
+export async function saveJournalEntry(userId, currentTopic, chatHistory, analysisDataFromGpt) {
     if (!userId || !currentTopic || !chatHistory || chatHistory.length === 0) {
-        console.warn("[Firebase Utils] saveJournalEntry: 필수 정보 부족으로 저널 저장 건너뜀.");
+        console.warn("[Firebase Utils] saveJournalEntry: 필수 정보 부족 (userId, currentTopic, chatHistory). 저널 저장 건너뜀.");
         return null;
     }
+    const safeAnalysisData = analysisDataFromGpt || {};
 
-    // 마지막 사용자 메시지와 AI 응답 (요약 생성에 필요할 수 있음)
-    const lastUserMessage = chatHistory.filter(m => m.role === 'user').pop()?.content || "";
-    const lastAiMessage = chatHistory.filter(m => m.role === 'assistant').pop()?.content || "";
+    const userMessages = chatHistory.filter(m => m.role === 'user');
+    const assistantMessages = chatHistory.filter(m => m.role === 'assistant');
+    const lastUserContent = userMessages.length > 0 ? userMessages[userMessages.length - 1].content : "내용 없음";
+    const lastAssistantContent = assistantMessages.length > 0 ? assistantMessages[assistantMessages.length - 1].content : "내용 없음";
 
-    // lastAiAnalysis 객체에서 필요한 정보 추출 (GPT 프롬프트에서 반환된 JSON)
-    const analysisData = lastAiAnalysis || {};
-    const title = analysisData.summaryTitle || `${currentTopic}에 대한 대화 (${new Date().toLocaleDateString('ko-KR', {month:'short', day:'numeric'})})`;
-    const summary = analysisData.conversationSummary || `사용자: ${lastUserMessage.substring(0,50)}...\n로지: ${lastAiMessage.substring(0,50)}...`; // GPT 요약이 없으면 간단히 생성
-    const keywords = analysisData.keywords || [];
-    const overallSentiment = analysisData.overallSentiment || "neutral";
-    // sessionDurationMinutes, userCharCountForThisSession 등도 analysisData에서 가져오거나 talk.html에서 계산해서 전달
-
+    const title = safeAnalysisData.summaryTitle || `${currentTopic} 대화 (${new Date().toLocaleDateString('ko-KR', {month:'short', day:'numeric'})})`;
+    const summary = safeAnalysisData.conversationSummary || `사용자: ${lastUserContent.substring(0,100)}...\n로지: ${lastAssistantContent.substring(0,100)}...`;
+    
     const journalEntry = {
         userId: userId,
         topic: currentTopic,
         title: title,
-        summary: summary, // 800자 이내로 GPT가 요약한 내용
-        mood: analysisData.mood || overallSentiment, // GPT가 판단한 주요 감정
-        keywords: keywords,
-        detailedAnalysis: analysisData, // GPT가 반환한 전체 분석 JSON 객체
+        summary: summary,
+        mood: safeAnalysisData.overallSentiment || "neutral",
+        keywords: safeAnalysisData.keywords || [],
+        detailedAnalysis: safeAnalysisData, // 전체 분석 객체 저장
         createdAt: serverTimestamp(),
         entryType: "conversation_summary_ai",
-        // 실제 대화 내용을 chatHistory 그대로 저장할 수도 있지만, 요약본만 저장하는 것이 효율적
-        // fullChatHistory: chatHistory, // 필요시 저장 (용량 주의)
-        sessionDurationMinutes: analysisData.sessionDurationMinutes || 0, // 세션 지속 시간
-        userCharCountForThisSession: analysisData.userCharCountForThisSession || 0 // 사용자 발화 글자 수
+        sessionDurationMinutes: safeAnalysisData.sessionDurationMinutes || 0,
+        userCharCountForThisSession: safeAnalysisData.userCharCountForThisSession || 0
+        // fullChatHistory: chatHistory, // 매우 큰 데이터가 될 수 있으므로 주석 처리
     };
 
     try {
         const journalRef = await addDoc(collection(db, 'journals'), journalEntry);
-        console.log(`[Firebase Utils] 새 저널 저장 완료, ID: ${journalRef.id}. 주제: ${currentTopic}`);
-        return journalRef.id; // 저장된 저널 ID 반환
+        console.log(`[Firebase Utils] ✅ 새 저널 저장 완료, ID: ${journalRef.id}. 주제: ${currentTopic}`);
+        return journalRef.id;
     } catch (error) {
-        console.error("[Firebase Utils] 저널 저장 중 오류:", error);
+        console.error("[Firebase Utils] ❌ 저널 저장 중 오류:", error);
         return null;
     }
 }
 
-
+/**
+ * 특정 주제에 대한 사용자 통계를 업데이트합니다.
+ * @param {string} userId 현재 사용자 이메일
+ * @param {string} topicName 현재 대화 주제
+ */
 export async function updateTopicStats(userId, topicName) {
-  if (!userId || !topicName) {
-    console.warn("[Firebase Utils] updateTopicStats: userId 또는 topicName이 없습니다.");
-    return;
-  }
+    if (!userId || !topicName) {
+        console.warn("[Firebase Utils] updateTopicStats: userId 또는 topicName이 없습니다.");
+        return;
+    }
+    const topicStatRef = doc(db, `users/${userId}/topicStats`, topicName); 
+    try {
+        // 가장 최근 저널의 제목을 가져오기 위한 쿼리
+        let latestTitleForTopic = `${topicName} 관련 최근 대화`; // 기본값
+        const journalsQuery = query(
+            collection(db, 'journals'),
+            where('userId', '==', userId),
+            where('topic', '==', topicName),
+            orderBy('createdAt', 'desc'),
+            limit(1)
+        );
+        const latestJournalSnapshot = await getDocs(journalsQuery);
+        if (!latestJournalSnapshot.empty) {
+            const latestJournalData = latestJournalSnapshot.docs[0].data();
+            if (latestJournalData && latestJournalData.title) {
+                 latestTitleForTopic = latestJournalData.title;
+            }
+        }
 
-  // users 컬렉션의 특정 사용자 문서 아래에 topicStats 하위 컬렉션을 사용한다고 가정
-  const topicStatRef = doc(db, `users/${userId}/topicStats`, topicName); 
+        await runTransaction(db, async (transaction) => {
+            const topicStatDoc = await transaction.get(topicStatRef);
+            if (!topicStatDoc.exists()) {
+                transaction.set(topicStatRef, {
+                    count: 1,
+                    lastChattedAt: serverTimestamp(),
+                    firstChattedAt: serverTimestamp(),
+                    topicDisplayName: topicName,
+                    latestJournalTitle: latestTitleForTopic 
+                });
+            } else {
+                const newCount = (topicStatDoc.data().count || 0) + 1;
+                transaction.update(topicStatRef, {
+                    count: newCount,
+                    lastChattedAt: serverTimestamp(),
+                    latestJournalTitle: latestTitleForTopic
+                });
+            }
+        });
+        console.log(`[Firebase Utils] ✅ '${topicName}' 주제 통계 업데이트 완료.`);
+    } catch (error) {
+        console.error(`[Firebase Utils] ❌ '${topicName}' 주제 통계 업데이트 중 오류:`, error);
+    }
+}
 
-  try {
-    await runTransaction(db, async (transaction) => {
-      const topicStatDoc = await transaction.get(topicStatRef);
-      
-      if (!topicStatDoc.exists()) {
-        // 해당 주제에 대한 통계 문서가 없으면 새로 생성
-        transaction.set(topicStatRef, {
-          count: 1, // 첫 대화이므로 횟수는 1
-          lastChattedAt: serverTimestamp(), // Firestore 서버 타임스탬프
-          firstChattedAt: serverTimestamp(), // 첫 대화 시간이므로 동일
-          topicDisplayName: topicName // 실제 주제 표시명 (선택 사항)
-        });
-      } else {
-        // 기존 통계 문서가 있으면 count를 1 증가시키고 lastChattedAt 업데이트
-        const newCount = (topicStatDoc.data().count || 0) + 1;
-        transaction.update(topicStatRef, {
-          count: newCount,
-          lastChattedAt: serverTimestamp()
-        });
-      }
-    });
-    console.log(`[Firebase Utils] '${topicName}' 주제 통계 업데이트 완료.`);
-  } catch (error) {
-    console.error(`[Firebase Utils] '${topicName}' 주제 통계 업데이트 중 오류:`, error);
-  }
+/**
+ * Firestore users 문서에 사용자의 전체 누적 대화 통계를 업데이트합니다.
+ * @param {string} userId 현재 사용자 이메일
+ * @param {string} userType 사용자 유형 ("directUser" 또는 "caregiver")
+ * @param {number} totalUserCharsToSave 이번 세션까지의 총 누적 발화 글자 수
+ */
+export async function updateUserOverallStats(userId, userType, totalUserCharsToSave) {
+    if (!userId || !userType) {
+        console.warn("[Firebase Utils] updateUserOverallStats: userId 또는 userType이 없습니다.");
+        return;
+    }
+    try {
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef); // 현재 세션 카운트 가져오기 위해 읽기
+
+        let updates = { 
+            totalUserCharCount: totalUserCharsToSave,
+            lastLogin: serverTimestamp() 
+        };
+
+        if (userSnap.exists()) {
+            const userData = userSnap.data();
+            if (userType === 'directUser') {
+                // users 문서의 최상위 totalSessionCount 또는 directUser.totalSessionCount 업데이트
+                const currentCount = userData.totalSessionCount || (userData.directUser ? userData.directUser.totalSessionCount : 0) || 0;
+                updates.totalSessionCount = currentCount + 1;
+            } else if (userType === 'caregiver') {
+                 // users 문서의 최상위 childTotalSessionCount 또는 caregiver.childTotalSessionCount 업데이트
+                const currentCount = userData.childTotalSessionCount || (userData.caregiver ? userData.caregiver.childTotalSessionCount : 0) || 0;
+                updates.childTotalSessionCount = currentCount + 1;
+            }
+        } else { // 사용자가 없으면 (이론상 발생하면 안됨, index.html에서 생성하므로)
+            if (userType === 'directUser') updates.totalSessionCount = 1;
+            else if (userType === 'caregiver') updates.childTotalSessionCount = 1;
+        }
+        
+        await setDoc(userRef, updates, { merge: true });
+        console.log(`[Firebase Utils] ✅ 사용자(${userId}) 전체 통계 업데이트 완료:`, updates);
+    } catch (error) {
+        console.error(`[Firebase Utils] ❌ 사용자(${userId}) 전체 통계 업데이트 중 오류:`, error);
+    }
 }
 
 /**
  * 사용자 프로필을 Firestore의 users 컬렉션에 저장/업데이트합니다.
- * 저장 항목: 이름, 나이, 사진 URL, 음성 설정, 테마, 선호 주제, 대화 요약 히스토리
+ * (이 함수는 mypage.html에서 '프로필 수정' 시 사용)
  */
-export async function saveUserProfile() {
-  const userId = localStorage.getItem('cbtUserEmail');
-  if (!userId) return;
-
-  const name = localStorage.getItem('lozee_username') || '';
-  const age = parseInt(localStorage.getItem('lozee_userage') || '0', 10);
-  const photoURL = localStorage.getItem('lozee_photoURL') || '';
-  const voicePreference = {
-    voiceId: localStorage.getItem('lozee_voice') || '',
-    volume: Number(localStorage.getItem('lozee_voice_volume') || 1),
-    rate: Number(localStorage.getItem('lozee_voice_rate') || 1)
-  };
-  const theme = localStorage.getItem('lozee_theme') || 'light';
-  const preferredTopics = JSON.parse(localStorage.getItem('lozee_preferredTopics') || '[]');
-  const sessionHistorySummary = JSON.parse(localStorage.getItem('lozee_sessionHistorySummary') || '[]');
-
-  try {
-    await setDoc(doc(db, 'users', userId), {
-      name,
-      age,
-      photoURL,
-      voicePreference,
-      theme,
-      preferredTopics,
-      sessionHistorySummary,
-      lastUpdate: serverTimestamp()
-    }, { merge: true });
-    console.log('✅ 사용자 프로필 저장/업데이트 완료');
-  } catch (err) {
-    console.error('❌ 사용자 프로필 저장 오류:', err);
-  }
+export async function saveUserProfileData(userId, profileDataToSave) {
+    if (!userId || !profileDataToSave || Object.keys(profileDataToSave).length === 0) {
+        console.warn("[Firebase Utils] saveUserProfileData: 저장할 데이터가 없거나 사용자 ID가 없습니다.");
+        return;
+    }
+    try {
+        const userDocRef = doc(db, 'users', userId);
+        // Firestore 필드 경로에 점(.)이 포함된 경우, 직접 객체로 만들거나 updateDoc을 사용해야 합니다.
+        // 여기서는 profileDataToSave가 이미 점 표기법을 사용한 키를 포함하지 않는다고 가정하고 setDoc으로 병합합니다.
+        // 만약 profileDataToSave가 {'directUser.diagnoses': [...]} 형태라면, setDoc(..., {merge:true})이 아닌
+        // updateDoc(userDocRef, profileDataToSave)를 사용하거나, 중첩된 객체로 만들어야 합니다.
+        // 현재는 mypage.html에서 최상위 필드 또는 caregiver 맵 내부 필드를 업데이트하는 것으로 가정합니다.
+        await setDoc(userDocRef, {
+            ...profileDataToSave,
+            lastUpdate: serverTimestamp() 
+        }, { merge: true });
+        console.log(`[Firebase Utils] ✅ 사용자(${userId}) 프로필 정보 업데이트 완료.`);
+    } catch (err) {
+        console.error(`[Firebase Utils] ❌ 사용자(${userId}) 프로필 정보 업데이트 오류:`, err);
+    }
 }
 
 /**
  * Firebase Storage에 프로필 사진을 업로드하고 URL을 반환합니다.
- * 업로드 후 saveUserProfile()를 호출해 Firestore에 URL 저장
+ * (이 함수는 mypage.html에서 사진 업로드 시 사용)
  */
-export async function uploadUserPhoto(file) {
-  const userId = localStorage.getItem('cbtUserEmail');
-  if (!userId || !file) return null;
-
-  const storage = getStorage();
-  const photoRef = storageRef(storage, `profilePhotos/${userId}`);
-  try {
-    await uploadBytes(photoRef, file);
-    const url = await getDownloadURL(photoRef);
-    localStorage.setItem('lozee_photoURL', url);
-    await saveUserProfile();
-    console.log('✅ 프로필 사진 업로드 및 저장 완료');
-    return url;
-  } catch (err) {
-    console.error('❌ 프로필 사진 업로드 오류:', err);
-    return null;
-  }
+export async function uploadUserPhoto(userId, file) {
+    if (!userId || !file) {
+        console.warn("[Firebase Utils] uploadUserPhoto: userId 또는 파일이 없습니다.");
+        return null;
+    }
+    const storage = getStorage(); // getStorage() 호출
+    const photoRef = storageRef(storage, `profilePhotos/${userId}/${file.name}`);
+    try {
+        const snapshot = await uploadBytes(photoRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        console.log('[Firebase Utils] ✅ 프로필 사진 업로드 성공, URL:', url);
+        
+        const userDocRef = doc(db, 'users', userId);
+        await setDoc(userDocRef, { photoURL: url, lastUpdate: serverTimestamp() }, { merge: true });
+        console.log('[Firebase Utils] ✅ Firestore에 photoURL 업데이트 완료.');
+        localStorage.setItem('lozee_photoURL', url);
+        return url;
+    } catch (err) {
+        console.error('[Firebase Utils] ❌ 프로필 사진 업로드 또는 Firestore 업데이트 오류:', err);
+        return null;
+    }
 }
