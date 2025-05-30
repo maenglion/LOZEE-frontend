@@ -364,7 +364,41 @@
             console.log("talk.html: 첫 인사 TTS는 사용자 인터랙션 후 재생 권장 (현재 자동 재생 안 함)");
             hasGreeted = true;
             showMainTopics();
-        });
+       
+
+ const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
+    if (initTopicDataString) {
+        try {
+            const initTopic = JSON.parse(initTopicDataString);
+            localStorage.removeItem('lozee_talk_init_topic'); // 한 번 사용 후 제거
+
+            if (initTopic.type === 'continue_specific_topic' && initTopic.details) {
+                selectedMain = initTopic.details; // 이어갈 주제로 설정
+                appendMessage(`'${selectedMain}'에 대해 계속 이야기해볼까? ${initTopic.prompt || ''}`, 'assistant');
+                // 바로 입력창을 활성화하거나, 하위 주제 선택으로 넘어갈 수도 있음
+                startChat(initTopic.prompt || `'${selectedMain}'에 대해 어떤 점이 더 궁금해?`, 'topic_selection_init');
+                return; // 일반적인 주제 선택 흐름은 여기서 중단
+            }
+        } catch (e) {
+            console.error("이어하기 주제(lozee_talk_init_topic) 파싱 오류:", e);
+            localStorage.removeItem('lozee_talk_init_topic');
+        }
+    }
+
+    // initTopicDataString이 없거나 처리가 안 된 경우에만 일반적인 주제 선택 흐름 진행
+    // const greeting = getInitialGreeting(userName + voc, hasGreeted);
+    // appendMessage(greeting, 'assistant');
+    // hasGreeted = true;
+    // showMainTopics(); // 이 부분은 initTopicDataString 처리 후 또는 없을 때 실행
+    if (!initTopicDataString) { // 이어하기 주제가 없을 때만 일반적인 인사 및 주제 선택
+        const greeting = getInitialGreeting(userName + voc, hasGreeted);
+        appendMessage(greeting, 'assistant');
+        hasGreeted = true;
+        showMainTopics();
+    }
+});
+
+
 
         // --- 메시지 관련 함수 ---
         function appendMessage(text, role) {
