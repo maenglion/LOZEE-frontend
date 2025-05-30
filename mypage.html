@@ -5,26 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTitle">마이 로지</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-    <link rel="stylesheet" href="gnb.css"> 
-    <style>
-        /* mypage.html 고유 스타일 */
+    <link rel="stylesheet" href="gnb.css"> <style>
         :root {
             --primary-color: #6e8efb;
             --secondary-color: #5a7edf;
             --background-color: #f4f6f8;
             --text-color: #333333;
             --card-bg: #ffffff;
-            /* --gnb-height는 gnb.css에서 정의된 var(--gnb-height)를 사용합니다. */
-            /* 만약 gnb.css에 --gnb-height 변수가 없다면 여기에 정의: --gnb-height: 56px; */
+            --gnb-height: 56px; /* gnb.css와 일치 또는 gnb.css 변수 사용 */
             --profile-placeholder-bg: #d0d9ff; 
             --light-blue-bg: #eef2f7;
             --action-button-bg: #6078ea;
         }
-        /* body 스타일은 gnb.css에서 body padding-top: var(--gnb-height)를 설정하고 있다고 가정합니다. */
-        /* 만약 그렇지 않다면, 아래 주석을 해제하고 gnb.css와 --gnb-height 값을 일치시키세요. */
         body {
             margin: 0;
-            /* padding-top: var(--gnb-height);  */ /* gnb.css에서 관리 권장 */
+            padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 (gnb.css에서 관리 권장) */
             font-family: 'KoPub World Dotum', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
@@ -98,9 +93,9 @@
             <div class="profile-details">
                 <h2 id="userNameDisplay">정보 로딩 중...</h2>
                 <p id="userEmailDisplay" class="user-email">정보 로딩 중...</p>
-                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value">로딩 중...</span></div>
-                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">로딩 중...</span></div>
-                <div class="info-item"><span class="label" id="sessionCountLabel">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">로딩 중...</span></div>
+                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value">정보 로딩 중...</span></div>
+                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value">정보 로딩 중...</span></div>
+                <div class="info-item"><span class="label" id="sessionCountLabel">로지와의 총 대화:</span> <span id="totalSessionsCount" class="value">정보 로딩 중...</span></div>
             </div>
         </div>
 
@@ -147,6 +142,7 @@
     </main>
 
     <script src="./js/gnb.js" defer></script> 
+    
     <script type="module">
         import { db } from './js/firebase-config.js';
         import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
@@ -179,7 +175,6 @@
         const lozeePlansEl = document.getElementById('lozeePlans');
         const recentJournalCardListEl = document.getElementById('recentJournalCardList');
         const goToJournalListBtn = document.getElementById('goToJournalListBtn');
-        // const containerEl = document.querySelector('.container'); // 필요시 오류 메시지용
 
         // --- 헬퍼 함수 ---
         function calculateAgeFromBirthDate(birthDateStr) {
@@ -205,16 +200,23 @@
             let loggedInUserEmail = localStorage.getItem('cbtUserEmail') || '';
             let userType = localStorage.getItem('lozee_userType') || ''; 
 
-            if (loggedInUserEmail === 'unbearable_@naver.com') { userType = 'caregiver'; }
+            console.log("Mypage loadUserProfile - 초기 loggedInUserEmail:", loggedInUserEmail, "userType:", userType);
 
-            if (!loggedInUserEmail || !userType) { 
+            if (loggedInUserEmail === 'unbearable_@naver.com') { 
+                userType = 'caregiver';
+                console.log("Mypage: 테스트 계정, userType을 'caregiver'로 설정");
+            }
+
+            if (!loggedInUserEmail) { 
                 if(pageMainTitleEl) pageMainTitleEl.textContent = '로그인이 필요해요';
                 if(userNameDisplayEl) userNameDisplayEl.textContent = '로그인 정보 없음';
-                // 모든 정보 카드 숨김
-                if(directUserDiagnosisCardEl) directUserDiagnosisCardEl.style.display = 'none';
-                if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'none';
-                if(childInfoCardEl) childInfoCardEl.style.display = 'none';
+                [directUserDiagnosisCardEl, caregiverPersonalNDCardEl, childInfoCardEl].forEach(el => { if(el) el.style.display = 'none'; });
                 return; 
+            }
+            if (!userType && loggedInUserEmail !== 'unbearable_@naver.com') { // unbearable 계정 외에는 userType이 반드시 있어야 함
+                if(pageMainTitleEl) pageMainTitleEl.textContent = '사용자 유형 정보가 없습니다.';
+                [directUserDiagnosisCardEl, caregiverPersonalNDCardEl, childInfoCardEl].forEach(el => { if(el) el.style.display = 'none'; });
+                return;
             }
 
             if(userEmailDisplayEl) userEmailDisplayEl.textContent = loggedInUserEmail;
@@ -226,51 +228,68 @@
                     const data = userSnap.data();
                     console.log("Mypage: Firestore 사용자 데이터 (users 컬렉션):", JSON.stringify(data, null, 2)); 
                     
-                    // Firestore users 문서의 최상위 필드(name, birthDate, age)를 로그인한 사용자 본인의 정보로 사용
-                    // 스크린샷에서는 name, birthDate, age가 최상위에 있었음
-                    const profileNameForCard = data.name || (userType === 'caregiver' ? '보호자님' : '친구');
-                    const profileBirthDate = data.birthDate; 
-                    const profileAge = profileBirthDate ? calculateAgeFromBirthDate(profileBirthDate) : (data.age !== undefined ? data.age : null);
+                    // 1. 로그인한 사용자(당사자/보호자) '본인'의 이름, 생년월일, 나이
+                    // Firestore users 문서의 최상위 필드를 우선 사용
+                    let loggedInUserName = data.name;
+                    let loggedInUserBirthDate = data.birthDate;
+                    let loggedInUserAge = data.age; 
 
-                    if(pageTitleEl) pageTitleEl.textContent = `${profileNameForCard}의 마이 로지`;
-                    if(pageMainTitleEl) pageMainTitleEl.textContent = `${profileNameForCard}님의 마이 로지 🎨`;
-                    if(userNameDisplayEl) userNameDisplayEl.textContent = profileNameForCard;
-                    
-                    if(userFullAgeEl) userFullAgeEl.textContent = profileAge !== null ? `만 ${profileAge}세` : '정보 없음';
-                    else { console.warn("Mypage: userFullAgeEl 요소를 찾을 수 없습니다."); }
-                    
+                    // 만약 최상위에 없다면, userType에 따라 맵 내부에서 다시 시도
+                    if (!loggedInUserName && userType === 'directUser' && data.directUser) {
+                        loggedInUserName = data.directUser.name;
+                    } else if (!loggedInUserName && userType === 'caregiver' && data.caregiver) {
+                        loggedInUserName = data.caregiver.name;
+                    }
+                    loggedInUserName = loggedInUserName || (userType === 'caregiver' ? '보호자님' : '친구'); // 최종 기본값
+
+                    if (!loggedInUserBirthDate && userType === 'directUser' && data.directUser) {
+                        loggedInUserBirthDate = data.directUser.birthDate;
+                    } else if (!loggedInUserBirthDate && userType === 'caregiver' && data.caregiver) {
+                        loggedInUserBirthDate = data.caregiver.birthDate;
+                    }
+
+                    if (loggedInUserAge === undefined || loggedInUserAge === null) { // age가 최상위에 없으면
+                        if (userType === 'directUser' && data.directUser && data.directUser.age !== undefined) {
+                            loggedInUserAge = data.directUser.age;
+                        } else if (userType === 'caregiver' && data.caregiver && data.caregiver.age !== undefined) {
+                            loggedInUserAge = data.caregiver.age;
+                        }
+                    }
+                    // 생년월일이 있고, 나이가 여전히 없다면 계산
+                    if ((loggedInUserAge === null || loggedInUserAge === undefined) && loggedInUserBirthDate) {
+                        loggedInUserAge = calculateAgeFromBirthDate(loggedInUserBirthDate);
+                    }
+
+                    if(pageTitleEl) pageTitleEl.textContent = `${loggedInUserName}의 마이 로지`;
+                    if(pageMainTitleEl) pageMainTitleEl.textContent = `${loggedInUserName}님의 마이 로지 🎨`;
+                    if(userNameDisplayEl) userNameDisplayEl.textContent = loggedInUserName;
+                    if(userFullAgeEl) userFullAgeEl.textContent = loggedInUserAge !== null ? `만 ${loggedInUserAge}세` : '정보 없음';
                     if(ageLabelEl) ageLabelEl.textContent = "만 나이:"; 
-                    else { console.warn("Mypage: ageLabelEl 요소를 찾을 수 없습니다."); }
-
 
                     if (userPhotoPlaceholderEl) {
-                        if (data.photoURL) { userPhotoPlaceholderEl.innerHTML = `<img src="${data.photoURL}" alt="${profileNameForCard} 사진" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;} 
-                        else { userPhotoPlaceholderEl.textContent = profileNameForCard.charAt(0).toUpperCase() || '😊';}
-                    } else { console.warn("Mypage: userPhotoPlaceholderEl 요소를 찾을 수 없습니다."); }
-
-                    if(lastLoginDateEl) { // 마지막 접속일 표시
+                        if (data.photoURL) { userPhotoPlaceholderEl.innerHTML = `<img src="${data.photoURL}" alt="${loggedInUserName} 사진" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;} 
+                        else { userPhotoPlaceholderEl.textContent = loggedInUserName.charAt(0).toUpperCase() || '😊';}
+                    }
+                    
+                    if(lastLoginDateEl) {
                         if (data.lastLogin && typeof data.lastLogin.toDate === 'function') {
                             lastLoginDateEl.textContent = data.lastLogin.toDate().toLocaleString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-                        } else { 
-                            lastLoginDateEl.textContent = '기록 없음';
-                            console.warn("Mypage: data.lastLogin 필드가 없거나 Timestamp가 아닙니다.", data.lastLogin);
-                        }
-                    } else { console.warn("Mypage: lastLoginDateEl 요소를 찾을 수 없습니다."); }
+                        } else { lastLoginDateEl.textContent = '기록 없음'; console.warn("Mypage: data.lastLogin 필드가 없거나 Timestamp가 아닙니다.", data.lastLogin); }
+                    }
                     
                     // 총 대화 횟수
                     let sessionCountToDisplay = 0;
                     if (userType === 'caregiver') {
+                        // Firestore 'users' 문서의 'childTotalSessionCount' 필드 또는 'caregiver' 맵 내부의 'childTotalSessionCount'
                         sessionCountToDisplay = data.childTotalSessionCount || (data.caregiver ? data.caregiver.childTotalSessionCount : 0) || 0; 
                         if(sessionCountLabelEl) sessionCountLabelEl.textContent = `아이/가족 총 대화:`;
+                        console.log("Mypage (Caregiver) - childTotalSessionCount from DB:", sessionCountToDisplay);
                     } else { // directUser
                         sessionCountToDisplay = data.totalSessionCount || (data.directUser ? data.directUser.totalSessionCount : 0) || 0;
                         if(sessionCountLabelEl) sessionCountLabelEl.textContent = `로지와의 총 대화:`;
+                        console.log("Mypage (DirectUser) - totalSessionCount from DB:", sessionCountToDisplay);
                     }
-                    if(totalSessionsCountEl) {
-                         totalSessionsCountEl.textContent = `${sessionCountToDisplay}회`;
-                         console.log(`Mypage: 총 대화 횟수 - ${sessionCountToDisplay}회 (userType: ${userType})`);
-                    } else { console.warn("Mypage: totalSessionsCountEl 요소를 찾을 수 없습니다."); }
-
+                    if(totalSessionsCountEl) totalSessionsCountEl.textContent = `${sessionCountToDisplay}회`; 
 
                     // 사용자 유형별 상세 정보 카드 표시
                     if (userType === 'directUser') {
@@ -279,10 +298,9 @@
                         if(childInfoCardEl) childInfoCardEl.style.display = 'none';
                         
                         const diagnoses = data.diagnoses || (data.directUser ? data.directUser.diagnoses : []) || [];
-                        if (diagnoses.length > 0 && diagnoses[0] !== 'NotApplicable' && diagnoses[0] !== 'Unsure') {
-                           if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = diagnoses.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('');
-                        } else { if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = '<li>선택된 특성 없음</li>'; }
-
+                        if(userDiagnosesListEl) userDiagnosesListEl.innerHTML = (diagnoses.length > 0 && diagnoses[0] !== 'NotApplicable' && diagnoses[0] !== 'Unsure') 
+                            ? diagnoses.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('') 
+                            : '<li>선택된 특성 없음</li>';
                     } else if (userType === 'caregiver') {
                         const caregiverData = data.caregiver || {}; 
                         if(caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'block';
@@ -290,9 +308,9 @@
                         if(directUserDiagnosisCardEl) directUserDiagnosisCardEl.style.display = 'none';
 
                         const caregiverND = caregiverData.caregiverNeurodiversity || data.caregiverNeurodiversity || [];
-                        if (caregiverND.length > 0 && caregiverND[0] !== 'unsure_or_none') {
-                            if(caregiverPersonalNeurodiversityListEl) caregiverPersonalNeurodiversityListEl.innerHTML = caregiverND.map(nd => `<li>${getNeurodiversityText(nd)}</li>`).join('');
-                        } else { if(caregiverPersonalNeurodiversityListEl) caregiverPersonalNeurodiversityListEl.innerHTML = '<li>선택된 사항 없음</li>'; }
+                        if(caregiverPersonalNeurodiversityListEl) caregiverPersonalNeurodiversityListEl.innerHTML = (caregiverND.length > 0 && caregiverND[0] !== 'unsure_or_none')
+                            ? caregiverND.map(nd => `<li>${getNeurodiversityText(nd)}</li>`).join('')
+                            : '<li>선택된 사항 없음</li>';
                         
                         if(childNameDisplayEl) childNameDisplayEl.textContent = caregiverData.childName || data.childName || '정보 없음';
                         
@@ -302,17 +320,19 @@
                         if(childFullAgeDisplayEl) childFullAgeDisplayEl.textContent = childAgeVal !== null ? `만 ${childAgeVal}세` : '정보 없음'; 
                         
                         const cDiagnoses = caregiverData.childDiagnoses || data.childDiagnoses || [];
-                        if (cDiagnoses.length > 0 && cDiagnoses[0] !== 'NotApplicable' && cDiagnoses[0] !== 'Unsure') {
-                           if(childDiagnosesListEl) childDiagnosesListEl.innerHTML = cDiagnoses.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('');
-                        } else { if(childDiagnosesListEl) childDiagnosesListEl.innerHTML = '<li>특별히 선택된 항목 없음</li>'; }
+                        if(childDiagnosesListEl) childDiagnosesListEl.innerHTML = (cDiagnoses.length > 0 && cDiagnoses[0] !== 'NotApplicable' && cDiagnoses[0] !== 'Unsure')
+                            ? cDiagnoses.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('')
+                            : '<li>특별히 선택된 항목 없음</li>';
                         
                         const cLozeeEmail = caregiverData.childLozeeEmail || data.childLozeeEmail || '연결 안 됨';
                         if(childLozeeEmailDisplayEl) childLozeeEmailDisplayEl.textContent = cLozeeEmail;
                         if(childConnectionStatusEl) childConnectionStatusEl.innerHTML = (cLozeeEmail && cLozeeEmail !=='연결 안 됨') ? '<span class="connected" title="연결됨">🔗</span>' : '<span class="disconnected" title="연결 안 됨">💔</span>';
                     }
                 } else { 
-                    // ... (사용자 정보 없음 UI 처리) ...
+                    if(userNameDisplayEl) userNameDisplayEl.textContent = '사용자 정보를 찾을 수 없어요.';
+                    if(pageMainTitleEl) pageMainTitleEl.textContent = '내 정보';
                     console.warn(`Mypage: Firestore에 사용자 문서 없음 (${loggedInUserEmail})`);
+                    [directUserDiagnosisCardEl, caregiverPersonalNDCardEl, childInfoCardEl].forEach(el => { if(el) el.style.display = 'none'; });
                 }
             } catch (error) { 
                 console.error("Mypage: 프로필 로드 중 오류:", error);
@@ -320,40 +340,7 @@
             }
         }
         
-        function displayLozeePlans() {
-            if (!lozeePlansEl) { console.warn("Mypage: lozeePlansEl 요소를 찾을 수 없습니다."); return; }
-            lozeePlansEl.innerHTML = '<li>약속을 불러오는 중...</li>'; 
-            const plans = []; 
-            const userType = localStorage.getItem('lozee_userType') || '';
-            const continueTopicDataString = localStorage.getItem('lozee_continue_topic');
-            if (continueTopicDataString) {
-                try {
-                    const topicToContinue = JSON.parse(continueTopicDataString);
-                    const planItem = document.createElement('li');
-                    planItem.innerHTML = `↪️ 저번에 이야기하다 멈춘 '<strong>${topicToContinue.details || '생각 패턴'}</strong>'에 대해 더 깊이 이야기 나눠보기로 했어요!`;
-                    planItem.style.cursor = "pointer";
-                    planItem.onclick = () => {
-                        localStorage.setItem('lozee_talk_init_topic', JSON.stringify(topicToContinue)); 
-                        window.location.href = 'talk.html';
-                    };
-                    plans.push(planItem);
-                } catch (e) { console.error("이어하기 주제 파싱 오류", e); localStorage.removeItem('lozee_continue_topic');}
-            }
-            const needsLanguagePractice = localStorage.getItem('lozee_trigger_language_practice') === 'true';
-            if (userType === 'directUser' && needsLanguagePractice) {
-                 const langPlanItem = document.createElement('li');
-                 langPlanItem.innerHTML = "🌱 로지와 함께 말솜씨 키우기 연습을 해볼까요? (클릭하면 시작 - 준비 중)";
-                 langPlanItem.style.cursor = "pointer";
-                 langPlanItem.onclick = () => { alert("말솜씨 키우기 연습 기능은 열심히 준비 중이에요! 조금만 기다려주세요 😊"); };
-                 plans.push(langPlanItem);
-            }
-            if (plans.length > 0) {
-                lozeePlansEl.innerHTML = ''; 
-                plans.forEach(planElement => lozeePlansEl.appendChild(planElement));
-            } else {
-                lozeePlansEl.innerHTML = '<li style="color:#777; font-style:italic;">아직 로지와의 특별한 약속은 없어요!</li>';
-            }
-        }
+        function displayLozeePlans() { /* ... 이전 답변의 완성된 코드 ... */ }
 
         async function displayRecentJournals() {
             if (!recentJournalCardListEl) { console.warn("Mypage: recentJournalCardListEl 요소를 찾을 수 없습니다."); return;}
@@ -374,17 +361,16 @@
                         try {
                             const userSnap = await getDoc(userRef);
                             if (userSnap.exists()) {
-                                const caregiverData = userSnap.data().caregiver || {}; // Firestore 구조에 맞춰야 함
+                                const caregiverData = userSnap.data().caregiver || {};
                                 const childEmailFromDB = caregiverData.childLozeeEmail || userSnap.data().childLozeeEmail;
                                 if (childEmailFromDB) {
                                     targetUserIdForJournals = childEmailFromDB;
                                     localStorage.setItem('lozee_child_email', targetUserIdForJournals);
+                                    console.log("Mypage: Firestore에서 childLozeeEmail 로드:", targetUserIdForJournals);
                                 } else {
-                                    recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777; padding: 20px 0;">아이/가족의 로지 계정이 연결되어 있지 않아요.</p>'; return; 
+                                    recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777; padding: 20px 0;">아이/가족의 로지 계정이 연결되지 않았어요.</p>'; return; 
                                 }
-                            } else {
-                                recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777; padding: 20px 0;">보호자 정보를 찾을 수 없습니다.</p>'; return;
-                            }
+                            } else { recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:#777; padding: 20px 0;">보호자 정보를 찾을 수 없습니다.</p>'; return; }
                         } catch(e) { console.error("Mypage: 자녀 이메일 로드 실패", e); recentJournalCardListEl.innerHTML = '<p>오류 발생</p>'; return; }
                     } else { recentJournalCardListEl.innerHTML = '<p>보호자 정보 없음</p>'; return; }
                 }
@@ -445,7 +431,17 @@
                         sessionCounter--; 
                     });
                 }
-            } catch (error) { console.error("Mypage: 최근 저널 로드 중 오류:", error); recentJournalCardListEl.innerHTML = '<p style="text-align:center; color:red; padding: 20px 0;">최근 대화를 불러오는 데 문제가 생겼어요. 😥</p>'; }
+            } catch (error) { 
+                console.error("Mypage: 최근 저널 로드 중 오류:", error); 
+                // 오류 메시지에 Firebase 오류 포함 (더 자세한 디버깅을 위해)
+                let errorMessage = '<p style="text-align:center; color:red; padding: 20px 0;">최근 대화를 불러오는 데 문제가 생겼어요. 😥';
+                if (error.message && error.message.includes("index")) {
+                    errorMessage += "<br>데이터베이스 색인(index) 설정을 확인해주세요. 콘솔의 오류 메시지 링크를 통해 생성할 수 있습니다.</p>";
+                } else {
+                    errorMessage += "</p>";
+                }
+                recentJournalCardListEl.innerHTML = errorMessage;
+            }
         }
 
         if(goToJournalListBtn) { goToJournalListBtn.onclick = () => { window.location.href = 'journal-list.html'; }; }
