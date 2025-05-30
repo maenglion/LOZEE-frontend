@@ -208,6 +208,7 @@
         const sessionCardListEl = document.getElementById('sessionCardList');
         const paginationControlsEl = document.getElementById('paginationControls');
         const pageTabTitleEl = document.querySelector('title');
+        const containerEl = document.querySelector('.container'); // 버튼 추가 위치 기준으로 사용
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentDisplayTopic = decodeURIComponent(urlParams.get('topic') || ''); 
@@ -218,39 +219,8 @@
         let currentPageNum = 1;
         let totalJournalDocsForTopic = 0;
 
-        // --- 하드코딩된 예시 세션 데이터 (라이언님 대화 기반) ---
-        const sampleJournalDataForRyanFamily = {
-            "가족 이야기": [ 
-                { 
-                    id: "ryanSession1_sample", 
-                    createdAt: { toDate: () => new Date(Date.now() - 86400000 * 1) }, 
-                    title: "가족 내 반복되는 패턴과 나의 대처 (1차 예시)", 
-                    summary: "우리 가족 중 한 명은 매번 똑같은 상황을 만들고, 그 상황을 지적하면 오히려 더 불편해해요. 저는 이전의 비슷한 상황들을 전부 도표로 만들어서 이것이 반복되는 패턴이라는 것을 보여 줬지. 하지만 이번에도 회피했어요...",
-                    detailedAnalysis: { 
-                        overallSentiment: "부정적", 
-                        keywords: ["가족", "패턴", "회피", "예측", "엄마", "여동생"],
-                        cognitiveDistortions: ["일반화의 오류 (가능성! 🤫)"],
-                        sessionDurationMinutes: 20 
-                    }, 
-                    topic: "가족 이야기" 
-                },
-                { 
-                    id: "ryanSession2_sample", 
-                    createdAt: { toDate: () => new Date() }, 
-                    title: "아빠와의 관계 재발견과 신경다양성 (2차 예시)", 
-                    summary: "아빠가 나를 왜 그렇게 억압하고 케어했는지 이제 알 것 같아요. 자신이 이겨온 자신의 단점을 내가 닮았는데, 내가 못 이겨낼까 봐 그러셨던 거죠... 우리 모두 adhd는 공통이고 나와 내 아들은 아스퍼거 증후군도 있거든요.",
-                    detailedAnalysis: { 
-                        overallSentiment: "복합적", 
-                        keywords: ["아빠", "유전", "ADHD", "아스퍼거", "패턴인식", "이해"],
-                        sessionDurationMinutes: 25
-                    },
-                    topic: "가족 이야기" 
-                }
-            ],
-            "학교생활 이야기": [ /* ... (다른 주제 예시도 필요시 추가) ... */ ]
-        };
-
-        function displaySampleSessions(topicName) {
+        
+               function displaySampleSessions(topicName) {
             if (!sessionCardListEl || !topicTitleDisplayEl) return;
             sessionCardListEl.innerHTML = '';
             const displayTopic = topicName || "가족 이야기"; 
@@ -284,10 +254,11 @@
             const card = document.createElement('div');
             card.className = 'session-card-wide';
             const dateStr = sessionData.createdAt?.toDate ? sessionData.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 정보 없음';
-            const sessionTitle = sessionData.title || `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`; 
+            //const sessionTitle = sessionData.title || `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`; 
             const summary = sessionData.summary ? sessionData.summary.substring(0, 800) : '요약 내용이 준비되지 않았어요.'; 
-            const sessionMetaText = `${sessionData.sessionNumber || 'N'}회차`;
+            //const sessionMetaText = `${sessionData.sessionNumber || 'N'}회차`;
             let lozeeAnalysisSummaryHTML = "<p>이날 대화에 대한 로지의 생각을 보려면 '분석 보기'를 눌러주세요! 😊</p>";
+            
             if (sessionData.detailedAnalysis) {
                 const da = sessionData.detailedAnalysis;
                 let tempSummary = "";
@@ -429,19 +400,66 @@
         
         function updatePaginationUI(loadedPageNum) { /* ... 이전 답변의 함수 내용 ... */ }
 
-        // --- 페이지 로드 시 실행 ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("Journal Topic Detail Page (journal-list2.html): DOMContentLoaded");
+    // --- 페이지 로드 시 실행 ---
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("Journal Topic Detail Page (journal-list2.html): DOMContentLoaded");
+    
+    if (currentDisplayTopic && userId) {
+        await fetchTopicHeaderStats(); 
+        await loadSessionsForTopicPage(1); 
+
+        // --- ✨ "<이 주제로 이어 말하기>" 버튼 생성 및 추가 ✨ ---
+        if (topicTitleDisplayEl && containerEl) { // 페이지 헤더 다음에 버튼 추가
+            const continueTopicButton = document.createElement('button');
+            continueTopicButton.className = 'action-button'; // 기존 .action-button 스타일 활용
+            continueTopicButton.style.display = 'block';
+            continueTopicButton.style.margin = '10px auto 25px auto'; // 위아래 여백 및 가운데 정렬
+            continueTopicButton.style.fontSize = '1em';
+            continueTopicButton.innerHTML = `"${currentDisplayTopic}" 주제로 이어 말하기 🗣️`;
             
-            if (currentDisplayTopic && userId) {
-                await fetchTopicHeaderStats(); 
-                await loadSessionsForTopicPage(1); 
-            } else {
-                if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "주제 정보 없음 (예시 표시)";
-                console.log("URL에 topic 파라미터 또는 사용자 ID 없음, 예시 데이터를 표시합니다.");
-                displaySampleSessions(currentDisplayTopic || "가족 이야기"); 
+            continueTopicButton.onclick = () => {
+                // talk.html로 이어하기 정보 전달
+                localStorage.setItem('lozee_talk_init_topic', JSON.stringify({
+                    type: 'continue_specific_topic', // 이어하기 유형
+                    details: currentDisplayTopic,    // 이어갈 주제명
+                    prompt: `'${currentDisplayTopic}'에 대해서 어떤 이야기를 더 하고 싶어?` // talk.html 초기 메시지
+                }));
+                window.location.href = 'talk.html';
+            };
+            // 페이지 헤더(.page-header) 다음에 버튼 삽입
+            const pageHeaderEl = document.querySelector('.page-header');
+            if (pageHeaderEl && pageHeaderEl.parentElement === containerEl) {
+                pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
+            } else { // 적절한 위치 못 찾으면 컨테이너 상단에 추가
+                containerEl.insertBefore(continueTopicButton, sessionCardListEl);
             }
-        });
+        }
+        // --- ✨ 버튼 생성 끝 ✨ ---
+
+    } else {
+        // ... (주제 정보 없음 또는 사용자 ID 없음 처리, 예시 데이터 표시 등) ...
+        if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "선택된 주제 없음";
+        displaySampleSessions(currentDisplayTopic || "예시 주제"); 
+         // 예시 데이터 표시 시에도 "이어 말하기" 버튼은 currentDisplayTopic 기반으로 생성 가능
+        if (currentDisplayTopic && containerEl) {
+            const sampleContinueButton = document.createElement('button');
+            sampleContinueButton.className = 'action-button';
+            sampleContinueButton.style.display = 'block';
+            sampleContinueButton.style.margin = '10px auto 25px auto';
+            sampleContinueButton.style.fontSize = '1em';
+            sampleContinueButton.innerHTML = `"${currentDisplayTopic || '예시 주제'}" 이어 말하기 (샘플)`;
+            sampleContinueButton.onclick = () => alert("실제 데이터가 있을 때 작동하는 기능입니다! 😊");
+            const pageHeaderEl = document.querySelector('.page-header');
+            if (pageHeaderEl && pageHeaderEl.parentElement === containerEl) {
+                pageHeaderEl.insertAdjacentElement('afterend', sampleContinueButton);
+            } else {
+                containerEl.insertBefore(sampleContinueButton, sessionCardListEl);
+            }
+        }
+    }
+});
+
+
     </script>
 </body>
 </html>
