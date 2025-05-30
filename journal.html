@@ -196,6 +196,18 @@
         
         const containerEl = document.querySelector('.container');
 
+        const editJournalBtn = document.getElementById('editJournalBtn');
+const journalEditArea = document.getElementById('journalEditArea');
+const editJournalTitleInput = document.getElementById('editJournalTitleInput');
+const editJournalSummaryTextarea = document.getElementById('editJournalSummaryTextarea');
+const saveJournalChangesBtn = document.getElementById('saveJournalChangesBtn');
+const cancelJournalEditBtn = document.getElementById('cancelJournalEditBtn');
+
+let currentJournalId = null; // 현재 보고 있는 저널 ID 저장용
+let currentJournalData = null; // 현재 로드된 저널 데이터 저장용
+
+
+
 
         // --- 하드코딩된 예시 저널 상세 데이터 ---
         const sampleJournalDetail = {
@@ -283,37 +295,93 @@
         // (위 함수들의 본문은 analysis.html 최종본에서 복사해오세요)
 
 
-        async function loadJournalDetail() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const journalId = urlParams.get('journalId'); 
-            const userId = localStorage.getItem('cbtUserEmail'); 
+ // --- 저널 상세 로드 함수 수정 (또는 renderPageWithData 내) ---
+function renderPageWithData(journalData) {
+    // ... (기존 페이지 제목, 날짜, 요약 내용 표시 로직) ...
+    currentJournalData = journalData; // 로드된 저널 데이터 저장
 
-            if (!journalId || !userId) { 
-                console.log("journalId 또는 userId 없음. 예시 데이터를 표시합니다.");
-                renderPageWithData(sampleJournalDetail);
-                return;
-            }
-            // --- 실제 데이터 로드 로직 (주석 해제 후 사용) ---
-            /*
-            try {
-                const journalRef = doc(db, 'journals', journalId);
-                const journalSnap = await getDoc(journalRef);
-                if (journalSnap.exists() && journalSnap.data().userId === userId) { // 사용자 본인의 저널인지 확인
-                    const journalData = {id: journalSnap.id, ...journalSnap.data()};
-                    // journalData.userAgeForAnalysis = parseInt(localStorage.getItem('lozee_userage'), 10) || 0; // 필요시
-                    renderPageWithData(journalData);
-                } else {
-                    if(containerEl) containerEl.innerHTML = '<h1>해당 이야기 기록을 찾을 수 없거나 접근 권한이 없어요. 😥</h1>';
-                }
-            } catch (error) {
-                console.error("저널 상세 정보 로드 중 오류:", error);
-                if(containerEl) containerEl.innerHTML = '<h1>이야기를 불러오는 데 문제가 생겼어요. 😥</h1>';
-            }
-            */
-            // 지금은 항상 예시 데이터를 사용
-            console.log("실제 데이터 로드 로직은 주석 처리됨. 예시 데이터를 표시합니다.");
-            renderPageWithData(sampleJournalDetail);
+    // 수정 버튼 표시
+    if(editJournalBtn) editJournalBtn.style.display = 'inline-block';
+    if(journalEditArea) journalEditArea.style.display = 'none'; // 수정 영역은 기본 숨김
+
+    // ... (나머지 분석 섹션 렌더링 로직) ...
+}
+
+// --- "이야기 수정" 버튼 클릭 이벤트 ---
+if (editJournalBtn) {
+    editJournalBtn.onclick = () => {
+        if (!currentJournalData) {
+            alert("먼저 이야기 내용을 불러와주세요.");
+            return;
         }
+        if(editJournalTitleInput) editJournalTitleInput.value = currentJournalData.title || '';
+        if(editJournalSummaryTextarea) editJournalSummaryTextarea.value = currentJournalData.summary || '';
+        if(sessionSummaryContentEl) sessionSummaryContentEl.style.display = 'none'; // 기존 요약 숨김
+        if(journalEditArea) journalEditArea.style.display = 'block'; // 수정 영역 표시
+        editJournalBtn.style.display = 'none'; // 수정 버튼 숨김
+    };
+}
+
+// --- 저널 수정 내용 저장 ---
+if (saveJournalChangesBtn) {
+    saveJournalChangesBtn.onclick = async () => {
+        if (!currentJournalId || !userId) { // userId는 전역 또는 loadJournalDetail에서 설정된 값 사용
+            alert("오류: 사용자 또는 저널 정보가 없습니다.");
+            return;
+        }
+        const newTitle = editJournalTitleInput.value.trim();
+        const newSummary = editJournalSummaryTextarea.value.trim();
+
+        if (!newTitle || !newSummary) {
+            alert("제목과 요약 내용을 모두 입력해주세요.");
+            return;
+        }
+
+        const journalDocRef = doc(db, "journals", currentJournalId);
+        try {
+            await setDoc(journalDocRef, {
+                title: newTitle,
+                summary: newSummary,
+                updatedAt: serverTimestamp() // 수정 시간 기록 (선택 사항)
+            }, { merge: true });
+
+            alert("이야기 내용이 성공적으로 수정되었습니다!");
+            // UI 업데이트
+            if(sessionSummaryContentEl) {
+                sessionSummaryContentEl.textContent = newSummary;
+                sessionSummaryContentEl.style.display = 'block';
+            }
+            if(journalPageTitleEl && (currentJournalData.title !== newTitle) ) journalPageTitleEl.textContent = newTitle; // 페이지 제목도 업데이트
+            if(pageTabTitleEl && (currentJournalData.title !== newTitle) ) pageTabTitleEl.textContent = `${newTitle} 상세보기 - LOZEE`;
+            
+            currentJournalData.title = newTitle; // 로컬 데이터도 업데이트
+            currentJournalData.summary = newSummary;
+
+            if(journalEditArea) journalEditArea.style.display = 'none';
+            if(editJournalBtn) editJournalBtn.style.display = 'inline-block';
+
+        } catch (error) {
+            console.error("저널 업데이트 중 오류:", error);
+            alert("이야기 내용 수정에 실패했습니다.");
+        }
+    };
+}
+
+// --- 저널 수정 취소 ---
+if (cancelJournalEditBtn) {
+    cancelJournalEditBtn.onclick = () => {
+        if(sessionSummaryContentEl) sessionSummaryContentEl.style.display = 'block'; // 기존 요약 다시 표시
+        if(journalEditArea) journalEditArea.style.display = 'none';
+        if(editJournalBtn) editJournalBtn.style.display = 'inline-block';
+    };
+}
+
+// loadJournalDetail 함수에서 currentJournalId 설정
+async function loadJournalDetail() {
+    // ... (URL 파라미터에서 journalId 가져오는 로직) ...
+    currentJournalId = journalId; // 전역 변수에 할당
+    // ... (Firestore에서 데이터 가져오고 renderPageWithData 호출) ...
+}
                 
         document.addEventListener('DOMContentLoaded', () => {
             console.log("Journal Detail Page (journal.html): DOMContentLoaded");
