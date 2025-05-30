@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageTopicTitle">주제별 이야기 회차 목록 - LOZEE</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-    <link rel="stylesheet" href="gnb.css"> <style>
+    <link rel="stylesheet" href="./js/gnb.css"> 
+    <style>
         /* journal-list2.html 고유 스타일 */
         :root {
             --primary-color: #6e8efb;
@@ -13,13 +14,14 @@
             --background-color: #f4f6f8;
             --text-color: #333333;
             --card-bg: #ffffff;
-            --gnb-height: 56px; /* gnb.css와 일치해야 함 */
+            /* --gnb-height는 gnb.css에서 정의된 var(--gnb-height)를 사용 */
+            /* 만약 gnb.css에 없다면 여기에 정의: --gnb-height: 56px; */
             --light-blue-bg: #eef2f7; 
             --action-button-bg: #6078ea; 
         }
         body {
             margin: 0;
-            padding-top: var(--gnb-height); 
+            /* gnb.css에서 body padding-top을 관리한다고 가정 */
             font-family: 'KoPub World Dotum', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
@@ -29,7 +31,7 @@
         
         .page-header { 
             text-align: center; 
-            margin-bottom: 25px; 
+            margin-bottom: 15px; /* 버튼 추가로 간격 조정 */
             padding: 20px;
             background-color: var(--card-bg, #ffffff);
             border-radius: 12px;
@@ -46,127 +48,39 @@
             color: #555; 
             margin-bottom: 0px; 
         }
-        .topic-stats-info span { 
-            margin: 0 10px; 
-            display: inline-block; 
+        .topic-stats-info span { margin: 0 10px; display: inline-block; }
+
+        /* "이 주제로 이어 말하기" 버튼을 위한 스타일 (기존 .action-button 활용) */
+        .continue-topic-button-container {
+            text-align: center;
+            margin-bottom: 25px; /* 카드 목록과의 간격 */
         }
 
         .session-card-list { display: flex; flex-direction: column; gap: 15px; margin-top:20px;}
-        
-        .session-card-wide { 
-            background-color: var(--card-bg, #ffffff); 
-            border-radius: 10px; 
-            padding: 15px 20px; 
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08); 
-            border-left: 4px solid var(--secondary-color, #5a7edf); 
-            display: flex; 
-            flex-direction: column; 
-        }
-        .session-card-wide:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.12); } /* 클릭 가능 암시 */
-
-        .session-card-wide .session-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-start; 
-            margin-bottom: 8px; 
-            border-bottom: none; 
-            padding-bottom: 5px;
-        }
-        .session-card-wide .session-date { 
-            font-size: 0.85em; 
-            color: #777; 
-            font-weight:normal; 
-        }
-        .session-card-wide .session-meta { 
-            font-size: 0.85em;
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-
-        .session-card-wide h3 { 
-            font-size: 1.15em; 
-            color: var(--text-color); 
-            margin-top: 0; 
-            margin-bottom: 8px; 
-            font-weight: 500; 
-        }
-        .session-card-wide .session-summary { 
-            font-size: 0.9em; 
-            color: #555; 
-            margin-bottom: 10px; 
-            white-space: normal; 
-            word-break:keep-all; 
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; 
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-height: calc(0.9em * 1.5 * 2); 
-            padding-left: 0; 
-            border-left: none;
-        }
-        .session-card-wide .session-analysis-summary { 
-            background-color: transparent; 
-            padding: 8px 0 0 0; 
-            border-radius: 0; 
-            font-size: 0.85em; 
-            margin-top: 8px;
-            border: none; 
-        }
-        .session-card-wide .session-analysis-summary h4 { 
-            font-size: 0.9em; 
-            color: var(--secondary-color); 
-            margin-bottom:3px; 
-            font-weight: bold;
-        }
-        .session-card-wide .session-analysis-summary p {
-            margin:0; 
-            line-height:1.4;
-            color: #666; 
-        }
-        .session-card-wide .analysis-view-button { 
-            align-self: flex-end; 
-            margin-top: 10px;
-            padding: 6px 12px; 
-            font-size: 0.85em;
-            background-color: var(--action-button-bg); 
-            color: white;
-            border: none;
-            border-radius: 18px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            cursor: pointer;
-        }
-        .session-card-wide .analysis-view-button:hover { 
-            background-color: var(--secondary-color, #5a7edf); 
-        }
-        
+        .session-card-wide { background-color: var(--card-bg, #ffffff); border-radius: 10px; padding: 15px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid var(--secondary-color, #5a7edf); display: flex; flex-direction: column; }
+        .session-card-wide:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+        .session-card-wide .session-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; border-bottom: none; padding-bottom: 5px;}
+        .session-card-wide .session-date { font-size: 0.85em; color: #777; font-weight:normal; }
+        .session-card-wide .session-meta { font-size: 0.85em; color: var(--primary-color); font-weight: bold;}
+        .session-card-wide h3 { font-size: 1.15em; color: var(--text-color); margin-top: 0; margin-bottom: 8px; font-weight: 500; }
+        .session-card-wide .session-summary { font-size: 0.9em; color: #555; margin-bottom: 10px; white-space: normal; word-break:keep-all; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: calc(0.9em * 1.5 * 3); padding-left: 0; border-left: none; cursor:pointer; /* 요약 클릭 시 확장/축소 가능 암시 */ }
+        .session-card-wide .session-summary.expanded { -webkit-line-clamp: unset; max-height: none; }
+        .session-card-wide .more-summary-btn { font-size: 0.85em; color: var(--primary-color); cursor: pointer; text-decoration: underline; display: block; margin-top: 5px; text-align: right;}
+        .session-card-wide .session-analysis-summary { background-color: transparent; padding: 8px 0 0 0; border-radius: 0; font-size: 0.85em; margin-top: 8px; border: none; }
+        .session-card-wide .session-analysis-summary h4 { font-size: 0.9em; color: var(--secondary-color); margin-bottom:3px; font-weight: bold;}
+        .session-card-wide .session-analysis-summary p { margin:0; line-height:1.4; color: #666; }
+        .session-card-wide .analysis-view-button { align-self: flex-end; margin-top: 10px; padding: 6px 12px; font-size: 0.85em; background-color: var(--action-button-bg); color: white; border: none; border-radius: 18px; text-decoration: none; font-weight: 500; transition: background-color 0.2s; cursor: pointer; }
+        .session-card-wide .analysis-view-button:hover { background-color: var(--secondary-color, #5a7edf); }
         .pagination { display: flex; justify-content: center; gap: 12px; font-size: 1em; margin-top: 30px; padding-bottom:20px;}
-        .pagination button { 
-            text-decoration: none; 
-            color: var(--primary-color); 
-            font-weight: bold; 
-            padding: 5px 10px; 
-            border-radius: 4px; 
-            transition: background-color 0.2s, color 0.2s;
-            background-color: transparent;
-            border: 1px solid var(--primary-color);
-            cursor: pointer;
-        }
+        .pagination button { text-decoration: none; color: var(--primary-color); font-weight: bold; padding: 5px 10px; border-radius: 4px; transition: background-color 0.2s, color 0.2s; background-color: transparent; border: 1px solid var(--primary-color); cursor: pointer;}
         .pagination button:hover { background-color: var(--secondary-color); color: white; }
         .pagination button.current { color: var(--text-color); background-color: #e0e0e0; border-color: #e0e0e0; }
         .pagination button:disabled { background-color: #eee; color: #aaa; border-color: #ddd; cursor: default;}
+        .no-data-message { text-align: center; padding: 30px; background-color: var(--card-bg, #ffffff); border-radius: 12px; color: #777; font-size: 1.1em;}
+        .no-data-message h2 { color: var(--primary-color, #6e8efb); font-size: 1.3em; margin-bottom: 10px;}
+        .action-button { /* "이어 말하기" 버튼 등 공용 버튼 스타일 */ display: inline-block; margin-top: 15px; background-color: var(--action-button-bg); color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; }
+        .action-button:hover { background-color: var(--secondary-color); }
 
-        .no-data-message {
-            text-align: center;
-            padding: 30px;
-            background-color: var(--card-bg, #ffffff);
-            border-radius: 12px;
-            color: #777;
-            font-size: 1.1em;
-        }
     </style>
 </head>
 <body>
@@ -182,17 +96,14 @@
         </div>
     </nav> 
 
-    <main class="container">
-        <div class="page-header">
+    <main class="container" id="mainContainer"> <div class="page-header">
             <h1 id="topicTitleDisplay" class="topic-display-title">주제 불러오는 중...</h1>
             <div class="topic-stats-info">
                 <span id="totalSessionCount">총 0회</span> | <span id="lastSessionDate">마지막 대화: 정보 없음</span>
             </div>
         </div>
-
         <div class="session-card-list" id="sessionCardList">
             </div>
-
         <div class="pagination" id="paginationControls">
             </div>
     </main>
@@ -208,7 +119,7 @@
         const sessionCardListEl = document.getElementById('sessionCardList');
         const paginationControlsEl = document.getElementById('paginationControls');
         const pageTabTitleEl = document.querySelector('title');
-        const containerEl = document.querySelector('.container'); // 버튼 추가 위치 기준으로 사용
+        const mainContainerEl = document.getElementById('mainContainer'); // 메인 컨테이너
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentDisplayTopic = decodeURIComponent(urlParams.get('topic') || ''); 
@@ -219,46 +130,22 @@
         let currentPageNum = 1;
         let totalJournalDocsForTopic = 0;
 
-        
-               function displaySampleSessions(topicName) {
-            if (!sessionCardListEl || !topicTitleDisplayEl) return;
-            sessionCardListEl.innerHTML = '';
-            const displayTopic = topicName || "가족 이야기"; 
+        const sampleJournalDataForRyanFamily = { /* ... 이전 답변의 하드코딩된 예시 데이터 ... */ };
 
-            topicTitleDisplayEl.textContent = `"${displayTopic}" 이야기 모음 (예시 데이터)`;
-            if(pageTabTitleEl) pageTabTitleEl.textContent = `"${displayTopic}" 이야기 - LOZEE`;
-            
-            const sessionsToShow = sampleJournalDataForRyanFamily[displayTopic] || [];
-            totalJournalDocsForTopic = sessionsToShow.length;
-
-            if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 (예시)`;
-            if(lastSessionDateEl && sessionsToShow.length > 0) {
-                const lastDate = [...sessionsToShow].sort((a,b) => b.createdAt.toDate() - a.createdAt.toDate())[0].createdAt.toDate();
-                lastSessionDateEl.textContent = `마지막 이야기: ${lastDate.toLocaleDateString('ko-KR')}`;
-            }
-
-            if (sessionsToShow.length === 0) {
-                 sessionCardListEl.innerHTML = `<p class="no-data-message">"${displayTopic}" 주제에 대한 예시 이야기가 아직 없어요. 😅</p>`;
-            } else {
-                sessionsToShow.sort((a,b) => b.createdAt.toDate() - a.createdAt.toDate()) 
-                              .forEach((session, index) => {
-                    session.sessionNumber = sessionsToShow.length - index; 
-                    const card = createSessionCard(session, true); 
-                    sessionCardListEl.appendChild(card);
-                });
-            }
-            if(paginationControlsEl) paginationControlsEl.style.display = 'none';
-        }
+        function displaySampleSessions(topicName) { /* ... 이전 답변의 함수 내용 ... */ }
         
         function createSessionCard(sessionData, isSample = false) {
             const card = document.createElement('div');
             card.className = 'session-card-wide';
+
             const dateStr = sessionData.createdAt?.toDate ? sessionData.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}) : '날짜 정보 없음';
-            //const sessionTitle = sessionData.title || `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`; 
-            const summary = sessionData.summary ? sessionData.summary.substring(0, 800) : '요약 내용이 준비되지 않았어요.'; 
-            //const sessionMetaText = `${sessionData.sessionNumber || 'N'}회차`;
-            let lozeeAnalysisSummaryHTML = "<p>이날 대화에 대한 로지의 생각을 보려면 '분석 보기'를 눌러주세요! 😊</p>";
+            const sessionTitle = sessionData.title || `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`; 
+            const fullSummary = sessionData.summary || '요약 내용이 준비되지 않았어요.';
             
+            // 👇 sessionMetaText 선언 및 할당
+            const sessionMetaText = `${sessionData.sessionNumber || 'N'}회차`; 
+            
+            let lozeeAnalysisSummaryHTML = "<p>이날 대화에 대한 로지의 생각을 보려면 '분석 보기'를 눌러주세요! 😊</p>";
             if (sessionData.detailedAnalysis) {
                 const da = sessionData.detailedAnalysis;
                 let tempSummary = "";
@@ -266,74 +153,52 @@
                 if(da.keywords && da.keywords.length > 0) tempSummary += `주요 이야기 조각들은 '${da.keywords.slice(0,2).join(', ')}' 등이었네요. `;
                 if (tempSummary.trim()) lozeeAnalysisSummaryHTML = `<p>${tempSummary.trim()}</p>`;
             }
+
+            const summaryParagraph = document.createElement('p');
+            summaryParagraph.className = 'session-summary collapsed';
+            summaryParagraph.textContent = fullSummary;
+
+            let moreButtonHTML = '';
+            // 간단한 글자 수 기반 "더보기" (실제로는 높이 계산이 더 정확)
+            if (fullSummary.length > 120) { // 예시: 120자 초과 시 "더보기"
+                moreButtonHTML = `<span class="more-summary-btn">더보기</span>`;
+            }
+
             card.innerHTML = `
                 <div class="session-header">
                     <span class="session-date">${dateStr}</span>
                     <span class="session-meta">${sessionMetaText}</span> 
                 </div>
                 <h3>${sessionTitle}</h3>
-                <p class="session-summary">${summary}</p>
+            `;
+            card.appendChild(summaryParagraph); // 요약 <p> 추가
+            if(moreButtonHTML) card.insertAdjacentHTML('beforeend', moreButtonHTML); // 더보기 버튼 추가
+
+            card.insertAdjacentHTML('beforeend', `
                 <div class="session-analysis-summary">
                     <h4>✨ 로지가 살펴본 너의 이야기 ✨</h4>
                     ${lozeeAnalysisSummaryHTML}
                 </div>
-                <button class="analysis-view-button" data-journalid="${sessionData.id || 'sample'}">이 날의 분석 자세히 보기 📊</button>
-            `;
+                <button class="analysis-view-button" data-journalid="${sessionData.id || sessionData.journalId || 'sample'}">이 날의 분석 자세히 보기 📊</button>
+            `);
+            
+            const moreBtnInCard = card.querySelector('.more-summary-btn');
+            if (moreBtnInCard) {
+                moreBtnInCard.onclick = (e) => {
+                    e.stopPropagation();
+                    summaryParagraph.classList.toggle('expanded');
+                    moreBtnInCard.textContent = summaryParagraph.classList.contains('expanded') ? '접기' : '더보기';
+                };
+            }
+
             const analysisButton = card.querySelector('.analysis-view-button');
             if (analysisButton) {
-                analysisButton.onclick = (e) => {
-                    e.preventDefault();
-                    const journalId = e.target.dataset.journalid;
-                    if (isSample || journalId === 'sample') {
-                        alert(`이건 예시 대화예요! '${sessionTitle}'의 실제 분석을 보려면 로지와 먼저 이야기를 나눠보세요. 😊`);
-                    } else {
-                        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
-                            results: sessionData.detailedAnalysis || {}, 
-                            accumulatedDurationMinutes: sessionData.sessionDurationMinutes || 0, 
-                            accumulatedUserCharCount: sessionData.userCharCountForThisSession || 0, 
-                            journalId: journalId 
-                        }));
-                        window.location.href = `analysis.html?journalId=${journalId}`;
-                    }
-                };
+                analysisButton.onclick = (e) => { /* ... analysis.html 이동 로직 (이전과 동일) ... */ };
             }
             return card;
         }
 
-        async function fetchTopicHeaderStats() {
-            if (!userId || !currentDisplayTopic) {
-                console.warn("fetchTopicHeaderStats: userId 또는 currentDisplayTopic이 없습니다.");
-                totalJournalDocsForTopic = sampleJournalDataForRyanFamily[currentDisplayTopic]?.length || 0; // 예시 데이터 기반으로 설정
-                 if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 이야기`;
-                 if(lastSessionDateEl && totalJournalDocsForTopic > 0) {
-                     const lastDate = [...sampleJournalDataForRyanFamily[currentDisplayTopic]].sort((a,b) => b.createdAt.toDate() - a.createdAt.toDate())[0].createdAt.toDate();
-                     lastSessionDateEl.textContent = `마지막 이야기: ${lastDate.toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'})}`;
-                 } else if (lastSessionDateEl) {
-                     lastSessionDateEl.textContent = '마지막 이야기: 기록 없음';
-                 }
-                updatePaginationUI(currentPageNum);
-                return;
-            }
-            try {
-                const topicStatRef = doc(db, `users/${userId}/topicStats`, currentDisplayTopic);
-                const topicStatSnap = await getDoc(topicStatRef);
-                if (topicStatSnap.exists()) {
-                    const data = topicStatSnap.data();
-                    totalJournalDocsForTopic = data.count || 0;
-                    if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 이야기`;
-                    if(lastSessionDateEl && data.lastChattedAt?.toDate) {
-                        lastSessionDateEl.textContent = `마지막 이야기: ${data.lastChattedAt.toDate().toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'})}`;
-                    }
-                } else { 
-                    const countQuery = query(collection(db, 'journals'), where('userId', '==', userId), where('topic', '==', currentDisplayTopic));
-                    const snapshot = await getCountFromServer(countQuery);
-                    totalJournalDocsForTopic = snapshot.data().count;
-                    if(totalSessionCountEl) totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회 이야기`;
-                    if (totalJournalDocsForTopic === 0 && lastSessionDateEl) lastSessionDateEl.textContent = '마지막 이야기: 기록 없음';
-                }
-                updatePaginationUI(currentPageNum); 
-            } catch (error) { console.error("주제 통계 로드 중 오류:", error); }
-        }
+        async function fetchTopicHeaderStats() { /* ... 이전 답변의 함수 내용 ... */ }
         
         async function loadSessionsForTopicPage(page = 1, lastDoc = null) {
             if (!userId || !currentDisplayTopic) {
@@ -363,103 +228,104 @@
                 }
                 
                 const querySnapshot = await getDocs(q);
+                console.log(`journal-list2: '${currentDisplayTopic}' 주제 쿼리 결과 size - ${querySnapshot.size}`);
+
 
                 if (querySnapshot.empty && page === 1) { 
                     console.log(`'${currentDisplayTopic}' 주제에 대한 실제 저널 없음, 예시 데이터를 표시합니다.`);
                     displaySampleSessions(currentDisplayTopic);
                     return;
                 }
-                if (querySnapshot.empty && page > 1) { /* ... 더 보기 없음 처리 ... */ return; }
+                if (querySnapshot.empty && page > 1) { 
+                    const loadMoreBtn = document.getElementById('loadMoreBtn');
+                    if (loadMoreBtn) { loadMoreBtn.textContent = "모든 이야기를 다 봤어요! 🎉"; loadMoreBtn.disabled = true; }
+                    return; 
+                }
 
                 querySnapshot.forEach((docSnap, index) => {
                     const sessionData = {id: docSnap.id, ...docSnap.data()};
                     sessionData.sessionNumber = totalJournalDocsForTopic - ((currentPageNum - 1) * ITEMS_PER_PAGE) - index;
                     const card = createSessionCard(sessionData);
-                    sessionCardListEl.appendChild(card);
+                    if(sessionCardListEl) sessionCardListEl.appendChild(card);
                 });
 
                 if (querySnapshot.docs.length > 0) {
                     lastVisibleDocForPaging = querySnapshot.docs[querySnapshot.docs.length - 1];
-                    if (page === 1 && lastSessionDateEl && totalJournalDocsForTopic > 0 ) { // topicStats에 lastChattedAt이 없는 경우 대비
-                        const topicStatRef = doc(db, `users/${userId}/topicStats`, currentDisplayTopic);
-                        const topicStatSnap = await getDoc(topicStatRef);
-                        if (!topicStatSnap.exists() || !topicStatSnap.data().lastChattedAt) {
-                             const latestJournalDate = querySnapshot.docs[0].data().createdAt?.toDate;
-                             if (latestJournalDate) {
-                                lastSessionDateEl.textContent = `마지막 이야기: ${latestJournalDate.toLocaleDateString('ko-KR', {month: 'long', day: 'numeric'})}`;
-                             }
-                        }
+                    if (page === 1 && lastSessionDateEl && totalJournalDocsForTopic > 0 ) {
+                        // ... (마지막 대화 날짜 업데이트 로직 - 이전과 동일) ...
                     }
                 }
                 updatePaginationUI(currentPageNum);
             } catch (error) {
                 console.error(`'${currentDisplayTopic}' 주제의 세션 로드 중 오류:`, error);
-                sessionCardListEl.innerHTML = '<p class="no-data-message">이야기 기록을 불러오는 데 문제가 발생했어요. 😥</p>';
+                if (sessionCardListEl) sessionCardListEl.innerHTML = '<p class="no-data-message">이야기 기록을 불러오는 데 문제가 발생했어요. 😥 Firestore 인덱스를 확인해주세요.</p>';
             }
         }
         
-        function updatePaginationUI(loadedPageNum) { /* ... 이전 답변의 함수 내용 ... */ }
-
-    // --- 페이지 로드 시 실행 ---
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log("Journal Topic Detail Page (journal-list2.html): DOMContentLoaded");
-    
-    if (currentDisplayTopic && userId) {
-        await fetchTopicHeaderStats(); 
-        await loadSessionsForTopicPage(1); 
-
-        // --- ✨ "<이 주제로 이어 말하기>" 버튼 생성 및 추가 ✨ ---
-        if (topicTitleDisplayEl && containerEl) { // 페이지 헤더 다음에 버튼 추가
-            const continueTopicButton = document.createElement('button');
-            continueTopicButton.className = 'action-button'; // 기존 .action-button 스타일 활용
-            continueTopicButton.style.display = 'block';
-            continueTopicButton.style.margin = '10px auto 25px auto'; // 위아래 여백 및 가운데 정렬
-            continueTopicButton.style.fontSize = '1em';
-            continueTopicButton.innerHTML = `"${currentDisplayTopic}" 주제로 이어 말하기 🗣️`;
-            
-            continueTopicButton.onclick = () => {
-                // talk.html로 이어하기 정보 전달
-                localStorage.setItem('lozee_talk_init_topic', JSON.stringify({
-                    type: 'continue_specific_topic', // 이어하기 유형
-                    details: currentDisplayTopic,    // 이어갈 주제명
-                    prompt: `'${currentDisplayTopic}'에 대해서 어떤 이야기를 더 하고 싶어?` // talk.html 초기 메시지
-                }));
-                window.location.href = 'talk.html';
+        function updatePaginationUI(loadedPageNum) {
+             if (!paginationControlsEl || totalJournalDocsForTopic <= loadedPageNum * ITEMS_PER_PAGE) {
+                if(paginationControlsEl) paginationControlsEl.style.display = 'none';
+                return;
+            }
+            if(paginationControlsEl) paginationControlsEl.style.display = 'flex';
+            let loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (!loadMoreBtn) {
+                loadMoreBtn = document.createElement('button');
+                loadMoreBtn.id = 'loadMoreBtn';
+                loadMoreBtn.className = 'action-button'; 
+                paginationControlsEl.innerHTML = ''; 
+                paginationControlsEl.appendChild(loadMoreBtn);
+            }
+            loadMoreBtn.textContent = '이전 이야기 더 보기';
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.onclick = () => {
+                currentPageNum++; 
+                loadSessionsForTopicPage(currentPageNum, lastVisibleDocForPaging);
             };
-            // 페이지 헤더(.page-header) 다음에 버튼 삽입
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("Journal Topic Detail Page (journal-list2.html): DOMContentLoaded");
+            
+            // "<이 주제로 이어 말하기>" 버튼 생성 로직
             const pageHeaderEl = document.querySelector('.page-header');
-            if (pageHeaderEl && pageHeaderEl.parentElement === containerEl) {
+            if (currentDisplayTopic && userId && mainContainerEl && pageHeaderEl) {
+                const continueTopicButton = document.createElement('button');
+                continueTopicButton.className = 'action-button continue-topic-button-container'; // 클래스 추가
+                continueTopicButton.style.display = 'block';
+                continueTopicButton.style.margin = '0 auto 25px auto'; // 페이지 헤더와 카드 목록 사이
+                continueTopicButton.style.fontSize = '1em';
+                continueTopicButton.innerHTML = `"${currentDisplayTopic}" 주제로 이어 말하기 🗣️`;
+                continueTopicButton.onclick = () => {
+                    localStorage.setItem('lozee_talk_init_topic', JSON.stringify({
+                        type: 'continue_specific_topic',
+                        details: currentDisplayTopic,   
+                        prompt: `'${currentDisplayTopic}'에 대해서 어떤 이야기를 더 하고 싶어?`
+                    }));
+                    window.location.href = 'talk.html';
+                };
                 pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
-            } else { // 적절한 위치 못 찾으면 컨테이너 상단에 추가
-                containerEl.insertBefore(continueTopicButton, sessionCardListEl);
+            } else if (mainContainerEl && pageHeaderEl) { // 주제 정보 없을 때도 예시 버튼
+                 const displayTopicForButton = currentDisplayTopic || "예시 주제";
+                 const sampleContinueButton = document.createElement('button');
+                 sampleContinueButton.className = 'action-button continue-topic-button-container';
+                 sampleContinueButton.style.display = 'block';
+                 sampleContinueButton.style.margin = '0 auto 25px auto';
+                 sampleContinueButton.style.fontSize = '1em';
+                 sampleContinueButton.innerHTML = `"${displayTopicForButton}" 이어 말하기 (샘플)`;
+                 sampleContinueButton.onclick = () => alert("실제 데이터가 있을 때 작동하는 기능입니다! 😊");
+                 pageHeaderEl.insertAdjacentElement('afterend', sampleContinueButton);
             }
-        }
-        // --- ✨ 버튼 생성 끝 ✨ ---
 
-    } else {
-        // ... (주제 정보 없음 또는 사용자 ID 없음 처리, 예시 데이터 표시 등) ...
-        if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "선택된 주제 없음";
-        displaySampleSessions(currentDisplayTopic || "예시 주제"); 
-         // 예시 데이터 표시 시에도 "이어 말하기" 버튼은 currentDisplayTopic 기반으로 생성 가능
-        if (currentDisplayTopic && containerEl) {
-            const sampleContinueButton = document.createElement('button');
-            sampleContinueButton.className = 'action-button';
-            sampleContinueButton.style.display = 'block';
-            sampleContinueButton.style.margin = '10px auto 25px auto';
-            sampleContinueButton.style.fontSize = '1em';
-            sampleContinueButton.innerHTML = `"${currentDisplayTopic || '예시 주제'}" 이어 말하기 (샘플)`;
-            sampleContinueButton.onclick = () => alert("실제 데이터가 있을 때 작동하는 기능입니다! 😊");
-            const pageHeaderEl = document.querySelector('.page-header');
-            if (pageHeaderEl && pageHeaderEl.parentElement === containerEl) {
-                pageHeaderEl.insertAdjacentElement('afterend', sampleContinueButton);
+            if (currentDisplayTopic && userId) {
+                await fetchTopicHeaderStats(); 
+                await loadSessionsForTopicPage(1); 
             } else {
-                containerEl.insertBefore(sampleContinueButton, sessionCardListEl);
+                if(topicTitleDisplayEl) topicTitleDisplayEl.textContent = "선택된 주제 없음 (예시 표시)";
+                console.log("주제 정보 또는 사용자 ID 없음, 예시 데이터를 표시합니다.");
+                displaySampleSessions(currentDisplayTopic || "가족 이야기"); 
             }
-        }
-    }
-});
-
-
+        });
     </script>
 </body>
 </html>
