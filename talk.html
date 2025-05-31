@@ -383,43 +383,74 @@
         // --- 초기화 로직 ---
 document.addEventListener('DOMContentLoaded', async () => {
             console.log('talk.html: DOMContentLoaded 이벤트 발생');
-            if (!currentUserEmail) {
-                alert("사용자 정보가 없습니다. 다시 로그인해주세요.");
-                window.location.href = 'index.html'; return;
-            }
-            conversationStartTime = Date.now(); 
-            previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
-            resetSessionTimeout(); 
+             // (1) 사용자 정보 체크
+  if (!currentUserEmail) {
+    alert("로그인 정보가 없습니다. 메인 화면으로 돌아갑니다.");
+    window.location.href = 'index.html';
+    return;
+  }
 
-            let startedWithInitTopic = false; // 이어하기로 시작했는지 여부 플래그
-            const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
-            if (initTopicDataString) {
-                try {
-                    const initTopic = JSON.parse(initTopicDataString);
-                    localStorage.removeItem('lozee_talk_init_topic'); 
-                    if (initTopic.details) { 
-                        selectedMain = initTopic.details; // ⭐ 이어갈 주제로 selectedMain 설정
-                        const initialMessageFromLozee = initTopic.prompt || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까?`;
-                        appendMessage(initialMessageFromLozee, 'assistant');
-                        console.log(`talk.html: "${selectedMain}" 주제 이어하기 시작.`);
-                        startChat(initialMessageFromLozee, 'topic_selection_init'); 
-                        hasGreeted = true; 
-                        startedWithInitTopic = true; 
-                    }
-                } catch (e) { 
-                    console.error("이어하기 주제(lozee_talk_init_topic) 파싱 오류:", e); 
-                    localStorage.removeItem('lozee_talk_init_topic');
-                }
-            }
+  conversationStartTime = Date.now();
+  previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
+  resetSessionTimeout();
 
-            // ⭐ 이어하기로 시작하지 않은 경우에만 일반적인 첫인사 및 주제 선택 표시 ⭐
-            if (!startedWithInitTopic) {
-                const greeting = getInitialGreeting(userName + voc, hasGreeted);
-                appendMessage(greeting, 'assistant');
-                hasGreeted = true;
-                showMainTopics(); // 주제 선택 버튼 표시
-            }
-        });
+  // (2) **initTopicDataString 가져오기 + 파싱 시도**
+  let initTopic = null;
+  const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
+  if (initTopicDataString) {
+    try {
+      initTopic = JSON.parse(initTopicDataString);
+    } catch (e) {
+      console.warn("initTopicDataString 파싱 오류:", e);
+      localStorage.removeItem('lozee_talk_init_topic');
+      initTopic = null;
+    }
+  }
+
+  // (3) “이어하기 모드”인지, “처음 모드”인지 구분
+  if (initTopic && initTopic.type === 'continue_specific_topic' && initTopic.details) {
+    // → ‘이어하기 모드’라면, 계속할지 토픽을 다시 선택할지 물어보는 화면 보여주기
+
+    // (3-1) 상담 주제 대신 “OOO 주제 이어하기 옵션”만 먼저 보여주고, 
+    //         사용자가 ‘이어하기’ 버튼을 누르면 startChat() 호출
+    appendMessage(`저번에 '${initTopic.details}' 주제로 대화하셨어요. 이어서 이야기해볼까요?`, 'assistant');
+    
+    // 이어하기 혹은 토픽 재선택 버튼 두 가지 선택지 제공
+    const optionsForContinue = [
+      { displayText: "네, 이어서 대화하기" },
+      { displayText: "다른 주제로 시작하기" }
+    ];
+    displayOptionsInChat(optionsForContinue, (selectedOption) => {
+      appendMessage(selectedOption, 'user');
+
+      if (selectedOption === "네, 이어서 대화하기") {
+        // A) 바로 이어서 startChat() → 기존 prompt 그대로 사용
+        selectedMain = initTopic.details;
+        const continueMsg = initTopic.prompt 
+                              ? initTopic.prompt 
+                              : `'${selectedMain}' 주제에 대해 이어서 어떤 점이 더 궁금하신가요?`;
+        startChat(continueMsg, 'topic_selection_init');
+
+        // 이어하기 정보는 한 번 사용했으니 삭제
+        localStorage.removeItem('lozee_talk_init_topic');
+      } else {
+        // B) 다른 주제로 새로 시작하기 → 토픽 메뉴 보여주기
+        localStorage.removeItem('lozee_talk_init_topic');
+        const greeting = getInitialGreeting(userName + voc, hasGreeted);
+        appendMessage(greeting, 'assistant');
+        hasGreeted = true;
+        showMainTopics();
+      }
+    });
+
+  } else {
+    // (4) “처음 모드” → 기본 인사 + 토픽 메뉴
+    const greeting = getInitialGreeting(userName + voc, hasGreeted);
+    appendMessage(greeting, 'assistant');
+    hasGreeted = true;
+    showMainTopics();
+  }
+});
 
 
         // --- 메시지 관련 함수 ---
