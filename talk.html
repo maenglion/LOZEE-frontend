@@ -385,53 +385,63 @@
             console.log('talk.html: ✅ js/firebase-config.js 모듈 로드됨');
             console.log('talk.html: DOMContentLoaded 이벤트 발생');
 
- if (!currentUserEmail) {
-                alert("사용자 정보가 없습니다. 다시 로그인해주세요.");
-                window.location.href = 'index.html'; return;
-            }
-            conversationStartTime = Date.now(); 
+         // 1) 사용자 정보 유효성
+      if (!currentUserEmail) {
+        alert("🛑 사용자 정보가 없습니다. 다시 로그인해주세요.");
+        window.location.href = 'index.html';
+        return;
+      }
+           
+       // 2) 세션 타이머 시작
+      
+      conversationStartTime = Date.now(); 
             previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
             resetSessionTimeout(); 
 
-            const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
-            if (initTopicDataString) {
-                try {
-                    const initTopic = JSON.parse(initTopicDataString);
-                    localStorage.removeItem('lozee_talk_init_topic'); // 사용 후 즉시 제거
 
-                    if (initTopic.details) { // type 필드 대신 details 유무로 판단 (더 일반적)
-                        selectedMain = initTopic.details; // 이어갈 주제명으로 selectedMain 설정
-                        const initialMessageFromLozee = initTopic.prompt || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까? 어떤 점이 궁금하거나 더 이야기하고 싶어?`;
-                        
-                        appendMessage(initialMessageFromLozee, 'assistant');
-                        console.log(`talk.html: "${selectedMain}" 주제 이어하기 시작. 초기 프롬프트: "${initialMessageFromLozee}"`);
-                        // playTTSWithControl(initialMessageFromLozee); // 첫 AI 메시지 TTS (선택 사항)
-                        
-                        // 대화 입력창을 바로 활성화하고, 사용자의 다음 입력을 기다림
-                        if(inputArea) inputArea.style.display = 'flex';
-                        if(chatInput) chatInput.focus();
-                        hasGreeted = true; // 이미 인사는 한 것으로 간주 (또는 이어하기용 별도 인사)
-                        
-                        // Firestore에 세션 시작 로그 (selectedMain이 설정된 후)
-                        if(currentUserEmail && selectedMain && !currentFirestoreSessionId && typeof logSessionStart === 'function'){ 
-                            logSessionStart(currentUserEmail, selectedMain).then(id => {
-                                if (id) currentFirestoreSessionId = id;
-                            });
-                        }
-                        return; // 일반적인 첫인사 및 주제 선택 흐름은 여기서 중단
-                    }
+     // 3) 로컬스토리지에 남아있는 “이어하기” 정보가 있는지 검사
+      const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
+      if (initTopicDataString) {
+        try {
+          const initTopic = JSON.parse(initTopicDataString);
+          // 사용 후 즉시 제거
+          localStorage.removeItem('lozee_talk_init_topic');
+          // 만약 details 속성이 존재하면 “이어하기” 흐름으로 분기
+          if (initTopic.details) {
+            selectedMain = initTopic.details;
+            const initialMessage = initTopic.prompt 
+              || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까? 어떤 점이 궁금해?`;
+
+            appendMessage(initialMessage, 'assistant');
+            // TTS로도 재생할 경우: await playTTSWithControl(initialMessage);
+
+            // 입력창을 켜서 사용자의 다음 입력을 받을 준비
+            if (inputArea) inputArea.style.display = 'flex';
+            if (chatInput) chatInput.focus();
+            hasGreeted = true; // 이미 첫인사를 한 것으로 간주
+
+            // Firestore에 새 세션 기록
+            if (typeof logSessionStart === 'function') {
+              logSessionStart(currentUserEmail, selectedMain)
+                .then(id => currentFirestoreSessionId = id)
+                .catch(err => console.error("logSessionStart 오류:", err));
+            }
+            // 이어하기 흐름으로 빠졌으므로, 아래 일반 첫인사/주제선택은 실행하지 않음
+            return;
+          }
+
                 } catch (e) { 
                     console.error("이어하기 주제(lozee_talk_init_topic) 파싱 오류:", e); 
                     localStorage.removeItem('lozee_talk_init_topic');
                 }
             }
 
-            // 이어하기 주제가 없거나 처리에 실패한 경우에만 일반적인 첫인사 및 주제 선택 표시
-            const greeting = getInitialGreeting(userName + voc, hasGreeted);
-            appendMessage(greeting, 'assistant');
-            hasGreeted = true;
-            showMainTopics(); // 주제 선택 버튼 표시
-        });
+      // 4) 이어하기 정보가 없거나 파싱에 실패한 경우: 일반 첫인사 + 주제선택
+      const greeting = getInitialGreeting(userName + voc, hasGreeted);
+      appendMessage(greeting, 'assistant');
+      hasGreeted = true;
+      showMainTopics();
+    });
 
 
 
@@ -450,36 +460,6 @@
             showMainTopics();
        
 
- const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
-    if (initTopicDataString) {
-        try {
-            const initTopic = JSON.parse(initTopicDataString);
-            localStorage.removeItem('lozee_talk_init_topic'); // 한 번 사용 후 제거
-
-            if (initTopic.type === 'continue_specific_topic' && initTopic.details) {
-                selectedMain = initTopic.details; // 이어갈 주제로 설정
-                appendMessage(`'${selectedMain}'에 대해 계속 이야기해볼까? ${initTopic.prompt || ''}`, 'assistant');
-                // 바로 입력창을 활성화하거나, 하위 주제 선택으로 넘어갈 수도 있음
-                startChat(initTopic.prompt || `'${selectedMain}'에 대해 어떤 점이 더 궁금해?`, 'topic_selection_init');
-                return; // 일반적인 주제 선택 흐름은 여기서 중단
-            }
-        } catch (e) {
-            console.error("이어하기 주제(lozee_talk_init_topic) 파싱 오류:", e);
-            localStorage.removeItem('lozee_talk_init_topic');
-        }
-    }
-
-    // initTopicDataString이 없거나 처리가 안 된 경우에만 일반적인 주제 선택 흐름 진행
-    // const greeting = getInitialGreeting(userName + voc, hasGreeted);
-    // appendMessage(greeting, 'assistant');
-    // hasGreeted = true;
-    // showMainTopics(); // 이 부분은 initTopicDataString 처리 후 또는 없을 때 실행
-    //if (!initTopicDataString) { // 이어하기 주제가 없을 때만 일반적인 인사 및 주제 선택
-       // const greeting = getInitialGreeting(userName + voc, hasGreeted);
-        //appendMessage(greeting, 'assistant');
-       // hasGreeted = true;
-       // showMainTopics();
-  //  }
 
 
 
