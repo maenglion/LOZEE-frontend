@@ -110,7 +110,7 @@
 
     <script src="./js/gnb.js" defer></script>
     <script type="module">
-        import { db } from './js/firebase-config.js';
+       import { db } from './js/firebase-config.js';
         import {
             collection,
             query,
@@ -118,14 +118,14 @@
             getDocs,
             orderBy,
             limit,
-            doc,
-            getDoc,
+            // doc, // doc was imported but not used, can be removed if not needed elsewhere
+            // getDoc, // getDoc was imported but not used, can be removed if not needed elsewhere
             getCountFromServer,
             startAfter
         } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
-        // 추가로 counseling_topics.js를 import하여 “키 → 화면명” 매핑을 가져옵니다.
-        import counselingTopics from './js/counseling_topics.js';
+        // Corrected import: Use named import for counselingTopicsByAge
+        import { counselingTopicsByAge } from './js/counseling_topics.js';
 
         const topicTitleDisplayEl = document.getElementById('topicTitleDisplay');
         const totalSessionCountEl = document.getElementById('totalSessionCount');
@@ -133,46 +133,51 @@
         const sessionCardListEl = document.getElementById('sessionCardList');
         const paginationControlsEl = document.getElementById('paginationControls');
         const pageTabTitleEl = document.querySelector('title');
-        const mainContainerEl = document.getElementById('mainContainer');
+        // const mainContainerEl = document.getElementById('mainContainer'); // Not used in the provided script logic
 
-        // URL 파라미터로 넘어온 “토픽 키” (예: “family_conflict_pattern”)
         const urlParams = new URLSearchParams(window.location.search);
-        const topicKeyFromUrl = urlParams.get('topic') || '';
+        const topicKeyFromUrl = urlParams.get('topic') || ''; // This will be a displayText like "거절을 받아들이기 어려워"
         const userId = localStorage.getItem('cbtUserEmail');
 
-        // 페이지당 아이템 수
         const ITEMS_PER_PAGE = 5;
         let lastVisibleDocForPaging = null;
         let currentPageNum = 1;
         let totalJournalDocsForTopic = 0;
 
         // ——————————————————————————————————————————————
-        // 1) counseling_topics.js에서 해당 키(topicKeyFromUrl)에 대응하는 displayName(화면용 이름)을 가져오는 헬퍼
-        function getDisplayNameOfTopic(topicKey) {
-            // counselingTopics 객체의 구조가 { key1: [ { displayText, icon, … }, … ], key2: … } 라고 가정
-            for (const categoryName in counselingTopics) {
-                const arr = counselingTopics[categoryName];
-                if (!Array.isArray(arr)) continue;
-                // 각 배열 요소 객체 중 value(토픽 키)나 displayText가 topicKey와 동일한지 확인
-                for (const opt of arr) {
-                    if (opt.value === topicKey || opt.displayText === topicKey) {
-                        return opt.displayText; // 화면 표시용 이름
+        // 1) Helper to get the displayText for a topicKey (which is itself a displayText in this case)
+        //    This function now correctly iterates through the nested structure.
+        function getDisplayNameOfTopic(topicKey, topicsData) {
+            for (const userType in topicsData) { // e.g., 'directUser', 'caregiver'
+                const ageGroups = topicsData[userType];
+                for (const ageGroup in ageGroups) { // e.g., '10세미만', '11-15세'
+                    const mainTopicCategories = ageGroups[ageGroup];
+                    for (const mainTopicName in mainTopicCategories) { // e.g., "감정 이야기", "친구 이야기"
+                        const subTopicsArray = mainTopicCategories[mainTopicName];
+                        for (const subTopic of subTopicsArray) {
+                            // Assuming topicKey from URL is one of the displayText values
+                            if (subTopic.displayText === topicKey) {
+                                return subTopic.displayText; // Found the matching displayText
+                            }
+                            // If you had an internal 'value' or 'id' distinct from displayText,
+                            // you would check it here: else if (subTopic.value === topicKey) return subTopic.displayText;
+                        }
                     }
                 }
             }
-            // 매핑이 없으면, 키를 그대로 반환
-            return topicKey;
+            return topicKey; // Fallback if not found (should ideally always be found)
         }
-        // 페이지에 실제로 보여줄 “화면용 이름”
-        const topicDisplayName = getDisplayNameOfTopic(topicKeyFromUrl);
+
+        // Use counselingTopicsByAge here
+        const topicDisplayName = getDisplayNameOfTopic(topicKeyFromUrl, counselingTopicsByAge);
+
 
         // ——————————————————————————————————————————————
-        // 2) 카드 생성 함수 (기존 createSessionCard)
+        // 2) 카드 생성 함수 (createSessionCard) - No changes needed to its internal logic based on the fix
         function createSessionCard(sessionData) {
             const card = document.createElement('div');
             card.className = 'session-card-wide';
 
-            // (가) 날짜: Firebase timestamp → 한국어 로컬 문자열로 포맷
             const dateStr = sessionData.createdAt?.toDate
                 ? sessionData.createdAt.toDate().toLocaleDateString('ko-KR', {
                       year: 'numeric',
@@ -182,19 +187,13 @@
                   })
                 : '날짜 정보 없음';
 
-            // (나) 실제 세션 제목: sessionData.title (GPT가 세션 저장 시 주는 요약 제목)
-            //     필드가 없으면 “로지와의 N 번째 이야기” 형태로 기본값을 사용
             const sessionTitle = sessionData.title
                 ? sessionData.title
                 : `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`;
 
-            // (다) 세션 요약(본문): sessionData.summary 필드
             const fullSummary = sessionData.summary || '요약 내용이 준비되지 않았어요.';
-
-            // (라) 회차 표시: 총 문서 수에서 현재 페이지, index 기반으로 계산
             const sessionMetaText = `${sessionData.sessionNumber || 'N'}회차`;
 
-            // (마) “로지가 살펴본 요약” 영역: detailedAnalysis가 있으면 감정/키워드 일부 노출
             let lozeeAnalysisSummaryHTML = "<p>이날 대화에 대한 로지의 생각을 보려면 '분석 보기'를 눌러주세요! 😊</p>";
             if (sessionData.detailedAnalysis) {
                 const da = sessionData.detailedAnalysis;
@@ -210,7 +209,6 @@
                 }
             }
 
-            // (바) 카드 내부 HTML 구조
             card.innerHTML = `
                 <div class="session-header">
                     <span class="session-date">${dateStr}</span>
@@ -219,14 +217,12 @@
                 <h3>${sessionTitle}</h3>
             `;
 
-            // 요약 <p>
             const summaryParagraph = document.createElement('p');
             summaryParagraph.className = 'session-summary collapsed';
             summaryParagraph.textContent = fullSummary;
             card.appendChild(summaryParagraph);
 
-            // 요약이 너무 길면 “더보기” 버튼 삽입
-            if (fullSummary.length > 120) {
+            if (fullSummary.length > 120) { // Or some other sensible length
                 const moreBtn = document.createElement('span');
                 moreBtn.className = 'more-summary-btn';
                 moreBtn.textContent = '더보기';
@@ -238,37 +234,35 @@
                 card.appendChild(moreBtn);
             }
 
-            // 로지 분석 요약 (detailedAnalysis)
             card.insertAdjacentHTML(
                 'beforeend',
                 `
                 <div class="session-analysis-summary">
                     <h4>✨ 로지가 살펴본 이야기 ✨</h4>
-                    ${lozeAnalysisSummaryHTML}
+                    ${lozeeAnalysisSummaryHTML}
                 </div>
             `
             );
 
-            // (사) “분석 보기” 버튼: detailedAnalysis가 있을 때만 노출
+            // "분석 보기" 버튼: detailedAnalysis가 있을 때만 노출
+            // This correctly links to journal.html which should display the analysis for that specific journalId
             if (sessionData.detailedAnalysis) {
                 const analysisBtn = document.createElement('button');
                 analysisBtn.className = 'analysis-view-button';
                 analysisBtn.textContent = '이 날의 분석 자세히 보기 📊';
-                analysisBtn.dataset.journalid = sessionData.id; // 클릭 시 해당 journalId를 넘기도록
+                analysisBtn.dataset.journalid = sessionData.id;
                 analysisBtn.onclick = (e) => {
                     window.location.href = `journal.html?journalId=${e.currentTarget.dataset.journalid}`;
                 };
                 card.appendChild(analysisBtn);
             }
-
             return card;
         }
 
         // ——————————————————————————————————————————————
-        // 3) 페이징 UI 업데이트 함수: “더 보기” 버튼 생성
+        // 3) 페이징 UI 업데이트 함수 (updatePaginationUI) - No changes needed
         function updatePaginationUI(loadedPageNum) {
             if (!paginationControlsEl) return;
-            // 마지막 페이지(불러올 문서가 없으면) 페이징 영역 숨김
             if (totalJournalDocsForTopic <= loadedPageNum * ITEMS_PER_PAGE) {
                 paginationControlsEl.style.display = 'none';
                 return;
@@ -279,7 +273,7 @@
             if (!loadMoreBtn) {
                 loadMoreBtn = document.createElement('button');
                 loadMoreBtn.id = 'loadMoreBtn';
-                loadMoreBtn.className = 'action-button';
+                loadMoreBtn.className = 'action-button'; // Using existing class for styling
                 paginationControlsEl.innerHTML = '';
                 paginationControlsEl.appendChild(loadMoreBtn);
             }
@@ -292,25 +286,22 @@
         }
 
         // ——————————————————————————————————————————————
-        // 4) Firestore에서 ‘topic = 현재 페이지 토픽’인 문서 개수를 미리 카운트
+        // 4) Firestore에서 ‘topic = 현재 페이지 토픽’인 문서 개수를 미리 카운트 (fetchTopicHeaderStats) - No changes needed
         async function fetchTopicHeaderStats() {
             if (!topicKeyFromUrl || !userId) return;
             try {
-                // 사람 수가 많을 때 getCountFromServer를 쓰면 페이징 없이 총 개수만 반환
                 const countQuery = query(
                     collection(db, 'journals'),
                     where('userId', '==', userId),
-                    where('topic', '==', topicKeyFromUrl)
+                    where('topic', '==', topicKeyFromUrl) // topicKeyFromUrl is the displayText
                 );
                 const snapshot = await getCountFromServer(countQuery);
                 totalJournalDocsForTopic = snapshot.data().count;
 
-                // 총 개수 → 페이지 헤더에 표시
                 if (totalSessionCountEl) {
                     totalSessionCountEl.textContent = `총 ${totalJournalDocsForTopic}회`;
                 }
 
-                // 마지막 대화 날짜: 가장 최신 생성일 하나를 가져와서 표시
                 if (totalJournalDocsForTopic > 0) {
                     const lastDocQuery = query(
                         collection(db, 'journals'),
@@ -331,35 +322,41 @@
                                       day: 'numeric'
                                   })
                             : '날짜 정보 없음';
-                        lastSessionDateEl.textContent = `마지막 대화: ${dateStr}`;
+                        if (lastSessionDateEl) {
+                            lastSessionDateEl.textContent = `마지막 대화: ${dateStr}`;
+                        }
                     }
+                } else {
+                     if (lastSessionDateEl) {
+                        lastSessionDateEl.textContent = `마지막 대화: 정보 없음`;
+                     }
                 }
             } catch (error) {
                 console.error(`fetchTopicHeaderStats 오류: ${error}`);
+                if (totalSessionCountEl) totalSessionCountEl.textContent = `총 ?회`;
+                if (lastSessionDateEl) lastSessionDateEl.textContent = `마지막 대화: 정보 없음`;
             }
         }
 
         // ——————————————————————————————————————————————
-        // 5) 실제 Firestore에서 페이지별로 저널 문서 가져오기
+        // 5) 실제 Firestore에서 페이지별로 저널 문서 가져오기 (loadSessionsForTopicPage) - No changes needed
         async function loadSessionsForTopicPage(page = 1, lastDoc = null) {
             if (!userId || !topicKeyFromUrl) {
-                console.log('loadSessionsForTopicPage: userId 또는 topicKeyFromUrl 없음. 예시 데이터 표시.');
+                // This case should ideally be handled by the DOMContentLoaded check earlier
+                console.warn('loadSessionsForTopicPage: userId 또는 topicKeyFromUrl 없음.');
                 return;
             }
             if (!sessionCardListEl || !topicTitleDisplayEl) return;
 
-            // 첫 페이지일 때는 기존 내용 초기화
             if (page === 1) {
                 sessionCardListEl.innerHTML = '';
                 lastVisibleDocForPaging = null;
                 currentPageNum = 1;
             }
 
-            // (가) 페이지 헤더: “{화면용 이름} 이야기 모음”으로 표기
             if (topicTitleDisplayEl) {
                 topicTitleDisplayEl.textContent = `"${topicDisplayName}" 이야기 모음`;
             }
-            // (나) HTML <title> 태그도 함께 설정
             if (pageTabTitleEl) {
                 pageTabTitleEl.textContent = `"${topicDisplayName}" 이야기 - LOZEE`;
             }
@@ -368,7 +365,7 @@
                 let q = query(
                     collection(db, 'journals'),
                     where('userId', '==', userId),
-                    where('topic', '==', topicKeyFromUrl),
+                    where('topic', '==', topicKeyFromUrl), // Querying by the displayText
                     orderBy('createdAt', 'desc'),
                     limit(ITEMS_PER_PAGE)
                 );
@@ -382,36 +379,31 @@
                     querySnapshot.size
                 );
 
-                // (가) 첫 페이지인데 문서가 한 건도 없으면 → “아직 대화가 없습니다” 안내문만 띄우고 리턴
                 if (querySnapshot.empty && page === 1) {
                     sessionCardListEl.innerHTML =
-                        `<p class="no-data-message">“${topicDisplayName}” 주제로 나눈 이야기가 아직 없어요. 대화를 시작해보세요! 😊</p>`;
-                    paginationControlsEl.style.display = 'none';
+                        `<div class="no-data-message"><h2>“${topicDisplayName}” 주제로 나눈 이야기가 아직 없어요.</h2><p>대화를 시작해보세요! 😊</p></div>`;
+                    if (paginationControlsEl) paginationControlsEl.style.display = 'none';
                     return;
                 }
 
-                // (나) 페이지별로 세션 카드 추가
                 querySnapshot.forEach((docSnap, index) => {
                     const sessionData = { id: docSnap.id, ...docSnap.data() };
-                    // 회차를 “총개수 − ((현재페이지−1)×페이지당개수) − index” 방식으로 계산
                     sessionData.sessionNumber =
                         totalJournalDocsForTopic - ((page - 1) * ITEMS_PER_PAGE) - index;
                     const card = createSessionCard(sessionData);
                     sessionCardListEl.appendChild(card);
                 });
 
-                // (다) 페이징을 위해 마지막 문서 객체 저장
                 if (querySnapshot.docs.length > 0) {
                     lastVisibleDocForPaging = querySnapshot.docs[querySnapshot.docs.length - 1];
                 }
-
-                // (라) 페이지 UI 업데이트
                 updatePaginationUI(currentPageNum);
+
             } catch (error) {
                 console.error(`'${topicKeyFromUrl}' 주제 로드 중 오류:`, error);
                 sessionCardListEl.innerHTML =
                     '<p class="no-data-message">이야기 기록을 불러오는 중 문제가 발생했어요. 😥</p>';
-                paginationControlsEl.style.display = 'none';
+                if (paginationControlsEl) paginationControlsEl.style.display = 'none';
             }
         }
 
@@ -419,45 +411,50 @@
         // 6) 페이지 로드시 실행되는 초기 로직
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('Journal Topic Detail Page (journal-list2.html): DOMContentLoaded');
-
-            // “이 주제로 이어 말하기” 버튼 생성 (화면 표시용 이름을 사용)
             const pageHeaderEl = document.querySelector('.page-header');
-            if (topicKeyFromUrl && userId && pageHeaderEl) {
+
+            if (!userId || !topicKeyFromUrl) {
+                if (topicTitleDisplayEl) {
+                    topicTitleDisplayEl.textContent = '주제 정보를 불러올 수 없습니다.';
+                }
+                if (sessionCardListEl) {
+                    sessionCardListEl.innerHTML =
+                        '<p class="no-data-message">선택된 주제가 없거나 사용자 정보를 찾을 수 없어요. 이전 페이지로 돌아가 다시 시도해 주세요.</p>';
+                }
+                if (paginationControlsEl) paginationControlsEl.style.display = 'none';
+                return; // Stop further execution if essential params are missing
+            }
+            
+            // "이 주제로 이어 말하기" 버튼 생성
+            // topicDisplayName should be correctly resolved by getDisplayNameOfTopic at this point
+            if (pageHeaderEl) { // Ensure pageHeaderEl exists
                 const continueTopicButton = document.createElement('button');
-                continueTopicButton.className = 'action-button continue-topic-button-container';
-                continueTopicButton.style.display = 'block';
-                continueTopicButton.style.margin = '10px auto 25px auto';
+                continueTopicButton.className = 'action-button'; // Use the general action-button style
+                // Custom styles for this specific button if needed, or add a new class
+                continueTopicButton.style.display = 'block'; 
+                continueTopicButton.style.margin = '10px auto 25px auto'; // Center it
                 continueTopicButton.style.fontSize = '1em';
                 continueTopicButton.innerHTML = `"${topicDisplayName}" 주제로 이어 말하기 🗣️`;
 
                 continueTopicButton.onclick = () => {
-                    // localStorage에 이어 말할 토픽 정보를 담아 talk.html로 이동
                     localStorage.setItem(
                         'lozee_talk_init_topic',
                         JSON.stringify({
                             type: 'continue_specific_topic',
-                            details: topicKeyFromUrl,
+                            details: topicKeyFromUrl, // This is the displayText, e.g., "거절을 받아들이기 어려워"
                             prompt: `'${topicDisplayName}'에 대해 어떤 점이 더 이야기하고 싶으세요?`
                         })
                     );
                     window.location.href = 'talk.html';
                 };
+                // Insert after the page-header, but before the session-card-list
                 pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
             }
 
-            // (가) Firestore에서 총 문서 개수 및 헤더 정보 가져오기
-            if (topicKeyFromUrl && userId) {
-                await fetchTopicHeaderStats();
-                await loadSessionsForTopicPage(1);
-            } else {
-                // 파라미터가 비어 있으면 안내 문구만 보여줌
-                if (topicTitleDisplayEl) {
-                    topicTitleDisplayEl.textContent = '선택된 주제가 없습니다.';
-                }
-                sessionCardListEl.innerHTML =
-                    '<p class="no-data-message">URL에 주제 키가 누락되었거나, 사용자 ID가 없습니다.</p>';
-                paginationControlsEl.style.display = 'none';
-            }
+
+            await fetchTopicHeaderStats(); // Fetch count and last date first
+            await loadSessionsForTopicPage(1); // Then load the first page of sessions
+
         });
     </script>
 </body>
