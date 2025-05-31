@@ -95,6 +95,7 @@
             margin-top: 0;
             margin-bottom: 8px;
             font-weight: 500;
+            cursor: pointer;
         }
         .session-card-wide .session-summary {
             font-size: 0.9em;
@@ -324,7 +325,7 @@
         const topicDisplayName = getDisplayNameOfTopic(topicKeyFromUrl, counselingTopicsByAge);
 
         // ——————————————————————————————————————————————
-        // 세션 카드 생성: “대분류 – GPT 요약” 형태로 제목 구성, “회차” 정보 제거
+        // 세션 카드 생성: “기본은 sessionData.title(로그) → 없으면 대분류 – GPT 요약” 형태로 제목 구성
         function createSessionCard(sessionData) {
             const card = document.createElement('div');
             card.className = 'session-card-wide';
@@ -339,33 +340,37 @@
                   })
                 : '날짜 정보 없음';
 
-            // 2) 대분류(메인토픽) 찾기 (예: “감정 이야기”)
-            const mainCategory = findMainCategoryOfTopic(topicKeyFromUrl, counselingTopicsByAge) || '주제';
-
-            // 3) GPT 요약의 첫 번째 문장만 뽑기
+            // 2) GPT 요약의 첫 번째 문장만 추출
             const gptSummary = sessionData.summary
                 ? sessionData.summary.split('\n')[0]
                 : '요약 내용이 준비되지 않았어요.';
 
-            // 4) 카드 제목: “감정 이야기 – [GPT 요약 첫 문장]”
-            const sessionTitle = `${mainCategory} – ${gptSummary}`;
+            // 3) 대분류(메인토픽) 찾기 (예: “감정 이야기”)
+            const mainCategory = findMainCategoryOfTopic(topicKeyFromUrl, counselingTopicsByAge) || '주제';
 
-            // 5) 카드 헤더: 날짜만 노출
+            // 4) 최종 카드 제목: 
+            //    (1) sessionData.title이 있으면 “로그 기반 제목”을 우선 사용하고,
+            //    (2) 없으면 “대분류 – GPT 요약 첫 문장”으로 표시
+            const sessionTitle = sessionData.title && sessionData.title.trim()
+                ? sessionData.title
+                : `${mainCategory} – ${gptSummary}`;
+
+            // 5) 카드 HTML 생성 (헤더: 날짜 + 제목)
             card.innerHTML = `
                 <div class="session-header">
                     <span class="session-date">${dateStr}</span>
                 </div>
-                <h3>${sessionTitle}</h3>
+                <h3 class="session-title" data-journalid="${sessionData.id}">${sessionTitle}</h3>
             `;
 
-            // 6) 세션 요약(첫 3줄까지 보여주고 접기/펼치기 가능)
+            // 6) 세션 요약(첫 줄 요약 본문) 생성 (최대 300자까지 노출, 클릭 시 확장)
             const fullSummary = sessionData.summary || '요약 내용이 준비되지 않았어요.';
             const summaryParagraph = document.createElement('p');
             summaryParagraph.className = 'session-summary collapsed';
             summaryParagraph.textContent = fullSummary;
             card.appendChild(summaryParagraph);
 
-            if (fullSummary.length > 120) {
+            if (fullSummary.length > 300) {
                 const moreBtn = document.createElement('span');
                 moreBtn.className = 'more-summary-btn';
                 moreBtn.textContent = '더보기';
@@ -396,23 +401,35 @@
                 'beforeend',
                 `
                 <div class="session-analysis-summary">
-                    <h4>✨ 로지가 살펴본 이야기 ✨</h4>
-                    ${lozeeAnalysisSummaryHTML}
+                  <h4>✨ 로지가 살펴본 이야기 ✨</h4>
+                  ${lozeeAnalysisSummaryHTML}
                 </div>
             `
             );
 
-            // 8) “이 날의 분석 보기” 버튼 (detailedAnalysis 유무에 따라 노출)
+            // 8) “이 날의 분석 자세히 보기” 버튼 (detailedAnalysis 유무에 따라 노출)
             if (sessionData.detailedAnalysis) {
                 const analysisBtn = document.createElement('button');
                 analysisBtn.className = 'analysis-view-button';
                 analysisBtn.textContent = '이 날의 분석 자세히 보기 📊';
                 analysisBtn.dataset.journalid = sessionData.id;
                 analysisBtn.onclick = (e) => {
+                    e.preventDefault();
                     const journalId = e.currentTarget.dataset.journalid;
-                    window.location.href = `journal.html?journalId=${journalId}`;
+                    window.location.href = `analysis.html?journalId=${journalId}`;
                 };
                 card.appendChild(analysisBtn);
+            }
+
+            // 9) 제목 클릭 시 journal.html로 이동
+            const titleEl = card.querySelector('.session-title');
+            if (titleEl) {
+                titleEl.onclick = (e) => {
+                    const journalId = e.currentTarget.dataset.journalid;
+                    if (journalId) {
+                        window.location.href = `journal.html?journalId=${journalId}`;
+                    }
+                };
             }
 
             return card;
@@ -512,7 +529,7 @@
 
                 querySnapshot.forEach((docSnap, index) => {
                     const sessionData = { id: docSnap.id, ...docSnap.data() };
-                    // Firestore 문서 순서대로 불러와, 세션 번호는 사용하지 않지만 필요할 경우 다음처럼 계산할 수 있음
+                    // Firestore 문서 순서대로 불러와, 세션 번호는 현재 사용하지 않지만 필요 시 계산 가능
                     sessionData.sessionNumber =
                         totalJournalDocsForTopic - ((page - 1) * ITEMS_PER_PAGE) - index;
                     const card = createSessionCard(sessionData);
