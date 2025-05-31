@@ -448,8 +448,8 @@
 
             conversationStartTime = Date.now(); 
             
-            previousTotalUserCharCount = await fetchPreviousUserCharCount();
-            console.log("talk.html: 이전 누적 사용자 발화 글자 수:", previousTotalUserCharCount);
+            previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
+            console.log("talk.html: 이전 누적 사용자 발화 글자 수:", previousTotalUserCharCountOverall);
             
             resetSessionTimeout(); 
 
