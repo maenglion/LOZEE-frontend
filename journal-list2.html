@@ -127,6 +127,26 @@
         // Corrected import: Use named import for counselingTopicsByAge
         import { counselingTopicsByAge } from './js/counseling_topics.js';
 
+        /** * 주어진 서브토픽(topicKey)이 속한 대분류(mainTopicName)를 찾아서 반환 */
+function findMainCategoryOfTopic(topicKey, topicsData) {
+    for (const userType in topicsData) {
+        const ageGroups = topicsData[userType];
+        for (const ageGroup in ageGroups) {
+            const mainTopicCategories = ageGroups[ageGroup];
+            for (const mainTopicName in mainTopicCategories) {
+                const subTopicsArray = mainTopicCategories[mainTopicName];
+                if (!Array.isArray(subTopicsArray)) continue;
+                for (const subTopic of subTopicsArray) {
+                    if (subTopic.displayText === topicKey) {
+                        return mainTopicName;
+                    }
+                }
+            }
+        }
+    }
+    return '';
+}
+
         const topicTitleDisplayEl = document.getElementById('topicTitleDisplay');
         const totalSessionCountEl = document.getElementById('totalSessionCount');
         const lastSessionDateEl = document.getElementById('lastSessionDate');
@@ -143,6 +163,29 @@
         let lastVisibleDocForPaging = null;
         let currentPageNum = 1;
         let totalJournalDocsForTopic = 0;
+
+        function findMainCategoryOfTopic(topicKey, topicsData) {
+    for (const userType in topicsData) {
+        const ageGroups = topicsData[userType];
+        for (const ageGroup in ageGroups) {
+            const mainTopicCategories = ageGroups[ageGroup];
+            for (const mainTopicName in mainTopicCategories) {
+                const subTopicsArray = mainTopicCategories[mainTopicName];
+                // subTopicsArray가 배열이 아닌 경우는 건너뛰기
+                if (!Array.isArray(subTopicsArray)) continue;
+
+                for (const subTopic of subTopicsArray) {
+                    if (subTopic.displayText === topicKey) {
+                        // 이 서브토픽이 속한 대분류(=mainTopicName)를 발견
+                        return mainTopicName;
+                    }
+                }
+            }
+        }
+    }
+    // 찾지 못하면 빈 문자열 반환
+    return '';
+}
 
         // ——————————————————————————————————————————————
         // 1) Helper to get the displayText for a topicKey (which is itself a displayText in this case)
@@ -188,13 +231,27 @@
                   })
                 : '날짜 정보 없음';
 
-            const sessionTitle = sessionData.title
-                ? sessionData.title
-                : `로지와의 ${sessionData.sessionNumber || '?'}번째 이야기`;
+   // [변경] "대분류 – GPT 요약" 형태로 카드 제목 생성
+   // ① 현재 페이지에서 사용 중인 topicKeyFromUrl은 '엄마의 행동으로 인한 분노' 같은 서브토픽
+   //     // ② findMainCategoryOfTopic()를 통해, 해당 서브토픽의 대분류(예: "감정 이야기")를 찾는다
+    const mainCategory = findMainCategoryOfTopic(topicKeyFromUrl, counselingTopicsByAge) || '주제';
+    // ③ sessionData.summary에 저장된 GPT 요약(예: "엄마가 놀랄 만한 행동 때문에…")을 사용
+    const gptSummary = sessionData.summary
+        ? sessionData.summary.split('\n')[0] // 줄바꿈 전 첫 문장만 가져오도록 처리 (필요 시 조정)
+        : '요약 내용이 준비되지 않았어요.';
+    const sessionTitle = `${mainCategory} – ${gptSummary}`;
 
             const fullSummary = sessionData.summary || '요약 내용이 준비되지 않았어요.';
-            const sessionMetaText = `${sessionData.sessionNumber || 'N'}회차`;
 
+           // “N회차” 라벨 없이, 날짜만 보여 줌
+       card.innerHTML = `
+      <div class="session-header">
+            <span class="session-date">${dateStr}</span>
+        </div>
+        <h3>${sessionTitle}</h3>
+    `;
+    
+         
             let lozeeAnalysisSummaryHTML = "<p>이날 대화에 대한 로지의 생각을 보려면 '분석 보기'를 눌러주세요! 😊</p>";
             if (sessionData.detailedAnalysis) {
                 const da = sessionData.detailedAnalysis;
@@ -210,13 +267,6 @@
                 }
             }
 
-            card.innerHTML = `
-                <div class="session-header">
-                    <span class="session-date">${dateStr}</span>
-                    <span class="session-meta">${sessionMetaText}</span>
-                </div>
-                <h3>${sessionTitle}</h3>
-            `;
 
             const summaryParagraph = document.createElement('p');
             summaryParagraph.className = 'session-summary collapsed';

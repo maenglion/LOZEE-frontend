@@ -5,34 +5,29 @@ export const counselingTopicsByAge = {
   directUser: { // 당사자가 직접 상담받는 경우
     '10세미만': { // 7-10세 대상 (신경다양성 아동 포함)
       "감정 이야기": [
-        { icon: "😡", displayText: "나 엄청 화나가!", tags: ["감정조절 어려움", "분노"], type: "emotion_intensity" },
+        { icon: "😡", displayText: "나 엄청 화나!", tags: ["감정조절 어려움", "분노"], type: "emotion_intensity" },
         { icon: "😭", displayText: "뭐든지 참을 수는 없을까? 마음을 조절하기 어려워", tags: ["감정조절 어려움", "충동성"], type: "else" },
         { icon: "😢", displayText: "나 요즘 속상한 일이 있어.", tags: ["슬픔", "우울감"], type: "else" },
-        { icon: "🎢", displayText: "내 기분은 이랬다 저랬다 해", tags: ["감정조절 어려움", "감정기복"], type: "else" },
         { icon: "😟", displayText: "무서워서 밤에 잠을 못자.", tags: ["불안감", "수면 문제", "악몽"], type: "situation" },
-        { icon: "😥", displayText: "작은 일에도 쉽게 속상하고 울어", tags: ["예민함", "슬픔", "감정기복"], type: "else" },
+        { icon: "😥", displayText: "작은 일에도 쉽게 속상해.", tags: ["예민함", "소심함", "감정기복"], type: "else" },
         { icon: "🎉", displayText: "한번 화가나면 멈출 수 없어. 나중에 후회가 돼", tags: ["감정조절 어려움", "분노", "충동성", "후회"], type: "situation" },
         { icon: "😒", displayText: "자꾸 혼나니까 나쁜 마음이 생겨", tags: ["반항심", "분노", "억울함"], type: "emotion_intensity" },
         { icon: "🤫", displayText: "내 감정을 말로 하기 어려워", tags: ["감정표현 어려움", "소통"], type: "situation" },
-        { icon: "💔", displayText: "내 마음 몰라줘서 속상해", tags: ["소외감", "서운함", "이해받고 싶은 마음"], type: "situation" },
-        { icon: "💬", displayText: "거절을 받아들이기 어려워", tags: ["감정조절 어려움", "사회적 상호작용", "떼쓰기"], type: "emotion_intensity" }
+        { icon: "💬", displayText: "거절을 받아들이기 어려워", tags: ["감정조절 어려움", "사회적 상호작용", "떼쓰기","회피"], type: "emotion_intensity" }
       ],
       "친구 이야기": [
-        { icon: "😔", displayText: "친구들이 날 피하는 것 같아", tags: ["친구 관계 어려움", "소외감", "따돌림 우려"], type: "situation" },
         { icon: "🥺", displayText: "친구를 사귀려면 어떻게 말 걸어?", tags: ["친구 관계 어려움", "사회성", "소심함"], type: "situation" },
         { icon: "😠", displayText: "내가 특이한 거야?", tags: ["친구 관계 어려움", "소외감", "자기 인식"], type: "situation" },
         { icon: "🤦", displayText: "친구들이 내 의도를 몰라줘", tags: ["친구 관계 어려움", "오해", "서운함"], type: "situation" },
         { icon: "🧐", displayText: "자꾸 나한테 눈치가 없대", tags: ["사회적 의사소통 어려움", "눈치", "비언어적 단서"], type: "situation" },
         { icon: "🤝", displayText: "친구랑 싸웠는데 누가 잘못한거야?", tags: ["친구 관계 어려움", "갈등 해결"], type: "situation" },
         { icon: "😨", displayText: "난 변화가 너무 불편해", tags: ["강박적 성향", "변화저항", "불안감"], type: "situation" },
-        { icon: "😵", displayText: "다른 사람 표정/말투로 그 사람의 기분을 잘 모르겠어", tags: ["사회적 의사소통 어려움", "공감하기", "비언어적 단서"], type: "situation" },
         { icon: "👀", displayText: "눈 마주치기 너무 부담스러워", tags: ["사회적 의사소통 어려움", "시선 회피", "불안감"], type: "situation" },
         { icon: "😳", displayText: "사실을 말한 건데, 잘못된 걸까?", tags: ["사회적 의사소통 어려움", "상황 이해", "눈치"], type: "situation" },
         { icon: "⁉️", displayText: "농담인지 진담인지 헷갈려", tags: ["사회적 의사소통 어려움", "상황 이해", "유머 이해"], type: "situation" },
         { icon: "🥊", displayText: "친구가 놀릴 때 어떻게 해야 해?", tags: ["친구 관계 어려움", "괴롭힘 대처", "자기보호"], type: "situation" },
         { icon: "🫂", displayText: "다른 사람과 몸이 닿으면 너무 불편해", tags: ["감각 민감성", "촉각 방어"], type: "situation" },
-        { icon: "👨‍👩‍👧‍👦", displayText: "여러명이 같이 하는 일은 너무 불편해", tags: ["사회성", "그룹 활동 어려움"], type: "situation" },
-        { icon: "😤", displayText: "내 말을 오해해서 너무 억울해", tags: ["친구 관계 어려움", "오해", "억울함"], type: "situation" },
+
       ],
       "학교생활 이야기": [
         { icon: "😫", displayText: "학교(유치원) 가기 너무 싫어", tags: ["등교 거부", "학교 부적응", "분리 불안"], type: "situation" },
