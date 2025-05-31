@@ -144,8 +144,12 @@
     <script src="./js/gnb.js" defer></script> 
     
     <script type="module">
-        import { db } from './js/firebase-config.js';
-        import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+     import { db } from './js/firebase-config.js';
+  import {
+    doc, getDoc,
+    collection, query, where, orderBy, limit,
+    getDocs, getCountFromServer
+  } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
         // --- DOM 요소 가져오기 ---
         const pageMainTitleEl = document.getElementById('pageMainTitle');
@@ -277,19 +281,54 @@
                         } else { lastLoginDateEl.textContent = '기록 없음'; console.warn("Mypage: data.lastLogin 필드가 없거나 Timestamp가 아닙니다.", data.lastLogin); }
                     }
                     
-                    // 총 대화 횟수
-                    let sessionCountToDisplay = 0;
-                    if (userType === 'caregiver') {
-                        // Firestore 'users' 문서의 'childTotalSessionCount' 필드 또는 'caregiver' 맵 내부의 'childTotalSessionCount'
-                        sessionCountToDisplay = data.childTotalSessionCount || (data.caregiver ? data.caregiver.childTotalSessionCount : 0) || 0; 
-                        if(sessionCountLabelEl) sessionCountLabelEl.textContent = `아이/가족 총 대화:`;
-                        console.log("Mypage (Caregiver) - childTotalSessionCount from DB:", sessionCountToDisplay);
-                    } else { // directUser
-                        sessionCountToDisplay = data.totalSessionCount || (data.directUser ? data.directUser.totalSessionCount : 0) || 0;
-                        if(sessionCountLabelEl) sessionCountLabelEl.textContent = `로지와의 총 대화:`;
-                        console.log("Mypage (DirectUser) - totalSessionCount from DB:", sessionCountToDisplay);
-                    }
-                    if(totalSessionsCountEl) totalSessionsCountEl.textContent = `${sessionCountToDisplay}회`; 
+                   // ————————————— “총 대화 횟수” 계산 & 표시 로직 ─────────────────
+      // 기존: users/{userId}.totalSessionCount 또는 childTotalSessionCount 필드만 읽어서 표시하던 부분을,
+      //       직접 journals 컬렉션에서 count를 가져오는 방식으로 변경합니다.
+
+      // (1) count를 가져올 Firestore 쿼리 문서들
+      let journalsCollectionRef;
+      if (userType === 'caregiver') {
+        // 보호자일 때, “childLozeeEmail”에서 자녀 이메일을 확보해야만 count를 셀 수 있습니다.
+        // 만약 localStorage에도, Firestore에도 자녀 이메일이 없으면 “0회”로 처리
+        let targetChildEmail =
+          localStorage.getItem('lozee_child_email') ||
+          data.caregiver?.childLozeeEmail ||
+          data.childLozeeEmail ||
+          '';
+        if (targetChildEmail) {
+          journalsCollectionRef = query(
+            collection(db, 'journals'),
+            where('userId', '==', targetChildEmail)
+          );
+          sessionCountLabelEl.textContent = `아이/가족 총 대화:`;
+        } else {
+          // 자녀 이메일 정보가 없으면, 카운트 없이 일단 “0회”로 초기 표시
+          totalSessionsCountEl.textContent = `0회`;
+          sessionCountLabelEl.textContent = `아이/가족 총 대화:`;
+          console.warn("Mypage: 보호자, 자녀 이메일을 찾을 수 없으므로 Total Count 0회로 표시합니다.");
+          // 보호자 진단/자녀 섹션은 계속해서 표시해 줍니다.
+        }
+      } else { // directUser
+        journalsCollectionRef = query(
+          collection(db, 'journals'),
+          where('userId', '==', loggedInUserEmail)
+        );
+        sessionCountLabelEl.textContent = `로지와의 총 대화:`;
+      }
+
+      // (2) 실제 count를 가져와서 화면에 표시
+      if (journalsCollectionRef) {
+        try {
+          const snapshot = await getCountFromServer(journalsCollectionRef);
+          const totalCount = snapshot.data().count || 0;
+          totalSessionsCountEl.textContent = `${totalCount}회`;
+        } catch (countError) {
+          console.error("Mypage: journals count 가져오던 중 오류:", countError);
+          // 오류 시 여전히 0으로 표시하되, 로그를 남깁니다.
+          totalSessionsCountEl.textContent = `0회`;
+        }
+      }
+
 
                     // 사용자 유형별 상세 정보 카드 표시
                     if (userType === 'directUser') {
