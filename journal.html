@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageSessionTitle">로지와의 이야기 상세보기 - LOZEE</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
-    <link rel="stylesheet" href="gnb.css"> <style>
+    <link rel="stylesheet" href="gnb.css">
+    <style>
         :root {
             --primary-color: #6e8efb;
-            --secondary-color: #5a7edf;
             --background-color: #f4f6f8;
             --text-color: #333333;
             --card-bg: #ffffff;
-            --primary-color-analysis: #6078ea; /* analysis.html과 동일하게 */
-            --card-bg-analysis: #ffffff;
-            --text-color-analysis: #333333;
-            --explanation-bg-analysis: #eef2f7;
         }
         body {
             margin: 0;
@@ -24,8 +20,12 @@
             color: var(--text-color);
             line-height: 1.6;
         }
-        .container { max-width: 800px; margin: 20px auto; padding: 20px; box-sizing: border-box; }
-        
+        .container { 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
         .page-header { 
             text-align: center; 
             margin-bottom: 25px; 
@@ -34,25 +34,25 @@
             color: var(--primary-color); 
             font-size: 1.8em; 
             font-weight: 700; 
-            margin-top:0; margin-bottom: 8px;
+            margin-top: 0; 
+            margin-bottom: 8px;
         }
         .session-date-display { 
             font-size: 0.95em; 
             color: #555; 
             margin-bottom: 20px; 
         }
-
         .session-summary-section {
-            background-color: var(--card-bg-analysis);
+            background-color: var(--card-bg);
             padding: 25px;
             margin-bottom: 25px; 
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        .session-summary-section h2 { /* 섹션 제목 스타일 */
-            color: var(--primary-color-analysis);
+        .session-summary-section h2 { 
+            color: var(--primary-color);
             font-size: 1.5em;
-            margin-top:0;
+            margin-top: 0;
             border-bottom: 2px solid #e0e0e0;
             padding-bottom: 10px;
             margin-bottom: 15px;
@@ -61,35 +61,38 @@
             white-space: pre-wrap; 
             line-height: 1.7;
             font-size: 1em;
-            color: #444; /* 요약 내용 글자색 약간 진하게 */
+            color: #444;
         }
-
-        /* analysis.html의 .section, h2, .module-explanation, .feedback 등 스타일 재사용 */
-        h2.analysis-section-title { 
-            margin-top:0; margin-bottom: 8px; font-size:1.5em; color:#34495e; 
-            border-bottom: 2px solid #e0e0e0; padding-bottom: 12px;
+        #tagCloud {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed #cccccc;
+            border-radius: 8px;
+            min-height: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: start;
         }
-        .section { background:var(--card-bg-analysis); padding:25px; margin-top:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-        .section p { color: #555555; line-height: 1.7; font-size: 1em; }
-        .section p span { color: #2c3e50; font-weight: bold; }
-        .module-explanation { font-size:0.9em; color:#555; margin-bottom:15px; padding: 10px; background-color: var(--explanation-bg-analysis); border-radius: 6px; line-height: 1.6; }
-        .feedback { margin-top:15px; padding:12px 18px; border-left-width:5px; border-left-style:solid; border-radius:8px; font-size: 0.95em; line-height: 1.6; }
-        .feedback.negative { background:#ffebee; border-left-color: #c62828; color:#c62828; }
-        .feedback.positive { background:#e8f5e9; border-left-color: #2e7d32; color:#2e7d32; }
-        .feedback.neutral { background:#eceff1; border-left-color: #546e7a; color:#37474f; }
-        #emotionChartContainer { position: relative; max-width: 450px; min-height:100px; height: auto; margin: 20px auto 0; display:flex; align-items:center; justify-content:center;}
-        #emotionChart { width:100% !important; height:auto !important; aspect-ratio: 1 / 1; background-color: #fdfdfd; border-radius: 8px; border: 1px solid #e0e0e0; padding: 15px; box-sizing: border-box; display: none; }
-        #tagCloud { min-height:100px; border:1px dashed #cccccc; padding:15px; margin-top: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
-        .badge { display:inline-block; margin:4px; padding:8px 12px; background:#e8eaf6; color: #3f51b5; border-radius:16px; font-size:0.9em; font-weight: 500; }
-        #patternDashboard { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px; color: #444; min-height:50px; }
-        #patternDashboard p { color: #444; margin-bottom: 8px; }
-        #situationAlerts { margin-top: 15px; min-height:50px; }
-        #situationAlerts .cognitive-distortion-item { background:#fff3cd; border-left: 5px solid #ffc107; color: #856404; padding: 10px 15px; margin-bottom: 10px; border-radius: 4px; font-size: 0.9em; }
-        .action-button { display: inline-block; margin-top: 15px; background-color: #6e8efb; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; }
-        .footer-assistant-notice { text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.8em; color: #78909c; }
-        
-        @media (max-width: 768px) { /* ... analysis.html과 유사한 반응형 스타일 ... */ }
-        @media (max-width: 480px) { /* ... analysis.html과 유사한 반응형 스타일 ... */ }
+        .badge {
+            display: inline-block;
+            margin: 4px;
+            padding: 8px 12px;
+            background: #e8eaf6;
+            color: #3f51b5;
+            border-radius: 16px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        @media (max-width: 768px) {
+            .session-main-title { font-size: 1.6em; }
+            .session-summary-section { padding: 20px; }
+        }
+        @media (max-width: 480px) {
+            .session-main-title { font-size: 1.4em; }
+            .session-summary-section { padding: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -107,297 +110,138 @@
 
     <main class="container">
         <div class="page-header">
-            <h1 id="journalPageTitle" class="session-main-title">로지와의 소중한 이야기 (예시)</h1>
-            <p id="sessionDateDisplay" class="session-date-display">대화 날짜: 예시 날짜</p>
+            <!-- 1) 제목: journal.js에서 dynamic하게 채워줌 -->
+            <h1 id="journalPageTitle" class="session-main-title">로지와의 소중한 이야기</h1>
+            <!-- 2) 날짜: journal.js에서 dynamic하게 채워줌 -->
+            <p id="sessionDateDisplay" class="session-date-display">대화 날짜: 불러오는 중...</p>
         </div>
 
+        <!-- 3) 요약 섹션: journal.js에서 dynamic하게 채워줌 -->
         <div class="session-summary-section">
-            <h2>✨ 로지가 기억하는 우리 이야기 ✨</h2>
-            <p id="sessionSummaryContent" class="session-summary-content">예시 요약 내용을 불러오는 중입니다...</p>
+            <h2>✨ 오늘의 요약 ✨</h2>
+            <p id="sessionSummaryContent" class="session-summary-content">
+                요약된 내용이 없습니다.
+            </p>
         </div>
 
-        <div id="analysisSectionsContainer">
-            <div class="section" id="languageAgeSection" style="display:none;"> 
-                <h2 class="analysis-section-title">🗣️ 내 말솜씨 나이는 몇 살일까?</h2>
-                <p class="module-explanation">로지와 이야기하면서 네가 사용한 말들을 보고, 네 말솜씨가 몇 살 친구랑 비슷한지 알려줄게! 실제 나이랑 달라도 괜찮아, 함께 더 멋지게 말하는 법을 배우면 되니까! 😉</p>
-                <p class="module-explanation" style="font-size: 0.85em; background-color: #e3f2fd; color: #1e88e5;">
-                    <strong>[로지의 약속!]</strong> 언어 분석은 총 3단계로 점점 더 정확해져! <br>
-                    <strong>1단계(30분~)</strong>: 우리가 처음 만나서 나눈 이야기로 살짝 엿보기! <br>
-                    <strong>2단계(2시간~)</strong>: 좀 더 많은 이야기를 나누면 로지가 너를 더 잘 알게 돼! <br>
-                    <strong>3단계(6시간~)</strong>: 와! 이제 정말 너의 멋진 말솜씨를 잘 알 것 같아! (가장 정확한 분석)
-                </p>
-                <p>내 진짜 나이: <span id="realAge"></span>살</p>
-                <p>내 말솜씨 나이 (로지의 생각): <span id="predictedLangAge"></span> <span id="ageDifferenceVisual"></span></p>
-                <div id="ageFeedback" class="feedback" style="display:none;"></div>
-                <button id="languagePracticeBtn" class="action-button" style="display:none;">로지와 함께 말솜씨 키우기 쑥쑥! 🌱 (준비 중)</button>
-            </div>
-
-            <div class="section" id="emotionToneSection">
-                <h2 class="analysis-section-title">🌈 내 마음 색깔은 뭘까? (감정 변화)</h2>
-                <p class="module-explanation">우리가 나눈 이야기에서 어떤 느낌들이 많았는지, 또 어떤 단어들을 자주 사용했는지 보여줄게! 네 마음속 날씨를 함께 알아보자! ☀️🌧️</p>
-                <div id="emotionChartContainer"><canvas id="emotionChart"></canvas></div>
-                <p id="empathyMessage" class="feedback" style="display:none; margin-top:15px;"></p> 
-                <div id="tagCloud"></div>
-            </div>
-
-            <div class="section" id="patternSection">
-                <h2 class="analysis-section-title">🔍 자주 나타나는 내 마음 & 단어</h2>
-                <p class="module-explanation">이야기하다 보면 나도 모르게 자주 쓰는 말이나 비슷한 느낌을 표현할 때가 있어. 로지가 그런 부분을 찾아봤어!</p>
-                <div id="patternDashboard"></div>
-            </div>
-
-            <div class="section" id="situationSection">
-                <h2 class="analysis-section-title">🧐 생각 탐험! (나의 생각 습관)</h2>
-                <p class="module-explanation">여기는 우리가 나눈 이야기를 요약하고, 혹시 네 생각이 한쪽으로만 기울어지지는 않았는지(이걸 '생각 습관'이라고 불러볼까?), 어떤 특별한 점이 있는지 살펴보는 곳이야. 특별한 생각 습관이 보여도 걱정하지 마! 누구나 그럴 수 있고, 우리는 이야기하면서 함께 더 유연하게 생각하는 방법을 찾을 수 있어! 💪</p>
-                <canvas id="situationChart" style="display:none;"></canvas> 
-                <div id="situationAlerts" style="margin-top:15px;"></div>
-                <button id="continueDistortionTalkBtn" class="action-button" style="display:none;">이 생각에 대해 다음에 더 이야기 나눠볼까? 🤔</button>
-            </div>
+        <!-- 4) 태그 클라우드(키워드): journal.js에서 renderKeywordCloud로 채워줌 -->
+        <div>
+            <h2 style="color: var(--primary-color); font-size: 1.2em; margin: 0 0 10px 0;">
+                🔖 키워드
+            </h2>
+            <div id="tagCloud"></div>
         </div>
-        
-        <p class="footer-assistant-notice">본 분석은 로지 AI가 마음을 담아 준비했어요.</p>
     </main>
 
     <script src="./js/gnb.js" defer></script> 
-    <script type="module" src="./js/journal.js"></script>
-    <script type="module" src="./js/chart.js"></script>
-    <script type="module" src="./js/keywordCloud.js"></script>
+    <!-- keywordCloud.js를 import 해서 tagCloud에 키워드 뱃지를 렌더링 -->
     <script type="module">
         import { db } from './js/firebase-config.js';
         import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-        // Chart.js는 <head>에서 UMD 버전으로 로드됨
+        import { renderKeywordCloud } from './js/keywordCloud.js';
+        import { counselingTopicsByAge } from './js/counseling_topics.js';
 
-      // 2) entryType이 'manual_save'라면, 분석 섹션 전체 숨기기 (2025sus 0531 추가)
-  if (journalData.entryType === "manual_save") {
-    const analysisContainer = document.getElementById('analysisSectionsContainer');
-    if (analysisContainer) {
-      analysisContainer.style.display = 'none';
-    }
-    return; // 여기서 종료하여, AI 분석 섹션 로직은 실행하지 않음
-  } 
+        // URL 쿼리 파라미터로부터 journalId 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const journalId = urlParams.get("journalId") || "";
 
-        let chartLibraryInitialized = false;
-
-        function initializeChartJsGlobal() { /* ... (analysis.html과 동일한 내용) ... */ }
-
-        // --- DOM 요소 가져오기 (analysis.html과 거의 동일) ---
-        const pageTabTitleEl = document.querySelector('title');
-        const journalPageTitleEl = document.getElementById('journalPageTitle');
+        // DOM 요소들
+        const pageTabTitleEl       = document.querySelector('title');
+        const journalPageTitleEl   = document.getElementById('journalPageTitle');
         const sessionDateDisplayEl = document.getElementById('sessionDateDisplay');
-        const sessionSummaryContentEl = document.getElementById('sessionSummaryContent');
-        
-        const languageAgeSection = document.getElementById('languageAgeSection');
-        const realAgeEl = document.getElementById('realAge');
-        const predictedLangAgeEl = document.getElementById('predictedLangAge');
-        const ageFeedbackEl = document.getElementById('ageFeedback');
-        const ageDifferenceVisualEl = document.getElementById('ageDifferenceVisual');
-        const languagePracticeBtn = document.getElementById('languagePracticeBtn');
-        
-        const emotionToneSection = document.getElementById('emotionToneSection');
-        const emotionChartEl = document.getElementById('emotionChart');
-        const emotionChartContainerEl = document.getElementById('emotionChartContainer');
-        const empathyMessageEl = document.getElementById('empathyMessage');
-        const tagCloudEl = document.getElementById('tagCloud');
-        
-        const patternSection = document.getElementById('patternSection');
-        const patternDashboardEl = document.getElementById('patternDashboard');
-        
-        const situationSection = document.getElementById('situationSection');
-        const situationAlertsEl = document.getElementById('situationAlerts');
-        const continueDistortionTalkBtn = document.getElementById('continueDistortionTalkBtn');
-        
-        const containerEl = document.querySelector('.container');
+        const sessionSummaryEl     = document.getElementById('sessionSummaryContent');
+        const tagCloudEl           = document.getElementById('tagCloud');
 
-        const editJournalBtn = document.getElementById('editJournalBtn');
-const journalEditArea = document.getElementById('journalEditArea');
-const editJournalTitleInput = document.getElementById('editJournalTitleInput');
-const editJournalSummaryTextarea = document.getElementById('editJournalSummaryTextarea');
-const saveJournalChangesBtn = document.getElementById('saveJournalChangesBtn');
-const cancelJournalEditBtn = document.getElementById('cancelJournalEditBtn');
+        // 깊이: “대분류 → 서브토픽” 매핑
+        function findMainCategoryOfTopic(topicKey, topicsData) {
+            for (const userType in topicsData) {
+                const ageGroups = topicsData[userType];
+                for (const ageGroup in ageGroups) {
+                    const mainTopicCategories = ageGroups[ageGroup];
+                    for (const mainTopicName in mainTopicCategories) {
+                        const subTopicsArray = mainTopicCategories[mainTopicName];
+                        if (!Array.isArray(subTopicsArray)) continue;
+                        for (const subTopic of subTopicsArray) {
+                            if (subTopic.displayText === topicKey) {
+                                return mainTopicName;
+                            }
+                        }
+                    }
+                }
+            }
+            return '';
+        }
 
-let currentJournalId = null; // 현재 보고 있는 저널 ID 저장용
-let currentJournalData = null; // 현재 로드된 저널 데이터 저장용
-
-
-
-
-        // --- 하드코딩된 예시 저널 상세 데이터 ---
-        const sampleJournalDetail = {
-            title: "로지와 나눈 비밀 프로젝트 이야기 (예시)",
-            createdAt: { toDate: () => new Date(Date.now() - 86400000 * 2) }, // 2일 전
-            summary: "오늘은 학교에서 짝꿍이랑 몰래 비밀 프로젝트를 시작했어! 아무도 모르게 우리 둘만 아는 특별한 일이라니, 생각만 해도 두근거리고 너무 신나! 로지한테만 살짝 말해주는 거야. 우리가 뭘 만들고 있는지는 아직 비밀이지만, 완성되면 로지한테 제일 먼저 보여줄게! 이 프로젝트 때문에 학교 가는 길이 더 즐거워졌어. 빨리 내일이 왔으면 좋겠다!\n\n로지: 정말 신나는 계획이구나! 비밀 프로젝트라니, 듣기만 해도 설렌다! 😊 그 과정에서 어려운 점이나 재미있는 일이 생기면 언제든 나에게 이야기해줘. 항상 응원할게!",
-            detailedAnalysis: {
-                ageLanguageAnalysis: { estimatedAgeRange: "7-8세" }, // 예시: 실제 나이에 맞춰 조정
-                emotionToneData: { '신남': 6, '기대감': 5, '비밀스러움': 3, '즐거움': 4 },
-                keywords: ["비밀", "프로젝트", "짝꿍", "학교", "신남", "기대"],
-                patterns: ["긍정적 감정 표현이 두드러짐", "친구와의 협력에 대한 기대감 표현"],
-                cognitiveDistortions: [], // 예시에서는 인지왜곡 없음
-                overallSentiment: "positive",
-                sessionDurationMinutes: 20, // 예시
-                accumulatedUserCharCount: 1800 // 예시
-            },
-            userId: "sampleUser", // 예시
-            topic: "친구 이야기" // 예시
-        };
-
-
-        function renderPageWithData(journalData) {
-            if (!journalData) {
-                if(containerEl) containerEl.innerHTML = '<h1>표시할 이야기 내용이 없어요.</h1>';
+        async function loadJournalDetail() {
+            if (!journalId) {
+                journalPageTitleEl.innerText = "잘못된 접근: journalId가 없습니다.";
+                sessionDateDisplayEl.innerText = "";
                 return;
             }
 
-            // 페이지 제목 및 상단 정보 업데이트
-            if(pageTabTitleEl) pageTabTitleEl.textContent = `${journalData.title || '이야기'} 상세보기 - LOZEE`;
-            if(journalPageTitleEl) journalPageTitleEl.textContent = journalData.title || '로지와의 소중한 이야기';
-            if(sessionDateDisplayEl && journalData.createdAt?.toDate) {
-                sessionDateDisplayEl.textContent = `대화 나눈 날: ${journalData.createdAt.toDate().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'})}`;
-            }
-            if(sessionSummaryContentEl) sessionSummaryContentEl.textContent = journalData.summary || '요약된 내용이 없습니다.';
-
-            const analysisResults = journalData.detailedAnalysis || {};
-            const userAge = parseInt(localStorage.getItem('lozee_userage'), 10) || (journalData.userAgeForAnalysis || 7); // DB에 userAgeForAnalysis가 있다면 사용
-            const accumulatedDurationMinutes = parseFloat(journalData.sessionDurationMinutes || (analysisResults.accumulatedDurationMinutes || 0));
-            const accumulatedUserCharCount = parseInt(journalData.userCharCountForThisSession || (analysisResults.accumulatedUserCharCount || 0));
-
-
-            // --- 각 분석 섹션 렌더링 (analysis.html과 동일한 로직 사용) ---
-            // 1. 언어·나이 분석
-            if (languageAgeSection) {
-                if (userAge > 12 || !analysisResults.ageLanguageAnalysis) { 
-                    languageAgeSection.style.display = 'none';
-                } else {
-                    languageAgeSection.style.display = 'block'; 
-                    if(realAgeEl) realAgeEl.textContent = userAge;
-                    // ... (이하 analysis.html의 언어 연령 피드백 및 버튼 표시 로직 그대로 복사)
-                    // (accuracyIcon, visualText, feedbackMsg 설정 등)
+            try {
+                const journalRef = doc(db, "journals", journalId);
+                const journalSnap = await getDoc(journalRef);
+                if (!journalSnap.exists()) {
+                    journalPageTitleEl.innerText = "해당 저널을 찾을 수 없습니다.";
+                    sessionDateDisplayEl.innerText = "";
+                    return;
                 }
-            }
 
-            // 2. 감정 어조 및 태그 클라우드
-            if (emotionToneSection) {
-                if (chartLibraryInitialized && analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
-                    // ... (analysis.html의 차트 및 공감 메시지 표시 로직 그대로 복사) ...
-                } else { /* 차트 데이터 없음 처리 */ }
-                if (analysisResults.keywords && analysisResults.keywords.length > 0) {
-                    // ... (analysis.html의 태그 클라우드 로직 그대로 복사) ...
-                } else { /* 태그 데이터 없음 처리 */ }
-            }
-            
-            // 3. 반복 패턴
-            if (patternSection) {
-                if (analysisResults.patterns && analysisResults.patterns.length > 0) {
-                    // ... (analysis.html의 반복 패턴 로직 그대로 복사) ...
-                } else { /* 패턴 데이터 없음 처리 */ }
-            }
+                const data = journalSnap.data();
+                // ─────────────────────────────────────────────────────────────────
+                // 1) 제목(title) 렌더링
+                //    - data.title이 있으면 그대로 사용
+                //    - 없으면: “대분류 – GPT 요약 첫 문장” 꼴로 생성
+                let titleText = "";
+                if (data.title && data.title.trim()) {
+                    titleText = data.title;
+                } else {
+                    // 대분류 찾기
+                    const mainCategory = findMainCategoryOfTopic(
+                        data.topic || "", 
+                        counselingTopicsByAge
+                    ) || "주제";
+                    // GPT 요약 첫 문장
+                    const gptSummary = data.summary 
+                        ? data.summary.split('\n')[0] 
+                        : "요약 내용이 없습니다.";
+                    titleText = `${mainCategory} – ${gptSummary}`;
+                }
+                document.title = `${titleText} – LOZEE`; // 탭 제목
+                journalPageTitleEl.innerText = titleText;
 
-            // 4. 상황 분석 (인지왜곡)
-            if (situationSection) {
-                // ... (analysis.html의 상황 분석 및 이어하기 버튼 로직 그대로 복사, charCount에 accumulatedUserCharCount 전달) ...
+                // 2) 날짜 렌더링
+                if (data.createdAt?.toDate) {
+                    sessionDateDisplayEl.innerText = `대화 날짜: ${
+                        data.createdAt.toDate().toLocaleDateString('ko-KR', {
+                            year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+                        })
+                    }`;
+                } else {
+                    sessionDateDisplayEl.innerText = "대화 날짜: 정보 없음";
+                }
+
+                // 3) 요약(summary) 렌더링
+                sessionSummaryEl.innerText = data.summary || "요약된 내용이 없습니다.";
+
+                // 4) 키워드(tags) 렌더링
+                //    - 상세 분석(detailedAnalysis) 안에 keywords가 들어있다면 그것을 사용
+                const keywords = (data.detailedAnalysis && data.detailedAnalysis.keywords) 
+                    ? data.detailedAnalysis.keywords 
+                    : [];
+                renderKeywordCloud(keywords);
+
+            } catch (error) {
+                console.error("저널 로드 중 오류:", error);
+                journalPageTitleEl.innerText = "오류가 발생했습니다.";
+                sessionDateDisplayEl.innerText = "";
+                sessionSummaryEl.innerText = "";
+                tagCloudEl.innerHTML = `<p style="color: #666;">키워드를 불러오는 데 실패했습니다.</p>`;
             }
         }
-        
-        // analysis.html에서 가져온 모든 렌더링 함수들
-        // function renderTagCloud(elementId, tags) { /* ... */ }
-        // function renderPatternDashboard(elementId, patterns) { /* ... */ }
-        // function alertCognitiveDistortions(elementId, distortions, charCount) { /* ... */ }
-        // function renderEmotionChart(canvasId, emotionData) { /* ... */ }
-        // function displayEmpathyMessage(emotionData) { /* ... */ }
-        // function getKoreanVocativeParticle(name) { /* ... */ }
-        // (위 함수들의 본문은 analysis.html 최종본에서 복사해오세요)
 
-
- // --- 저널 상세 로드 함수 수정 (또는 renderPageWithData 내) ---
-function renderPageWithData(journalData) {
-    // ... (기존 페이지 제목, 날짜, 요약 내용 표시 로직) ...
-    currentJournalData = journalData; // 로드된 저널 데이터 저장
-
-    // 수정 버튼 표시
-    if(editJournalBtn) editJournalBtn.style.display = 'inline-block';
-    if(journalEditArea) journalEditArea.style.display = 'none'; // 수정 영역은 기본 숨김
-
-    // ... (나머지 분석 섹션 렌더링 로직) ...
-}
-
-// --- "이야기 수정" 버튼 클릭 이벤트 ---
-if (editJournalBtn) {
-    editJournalBtn.onclick = () => {
-        if (!currentJournalData) {
-            alert("먼저 이야기 내용을 불러와주세요.");
-            return;
-        }
-        if(editJournalTitleInput) editJournalTitleInput.value = currentJournalData.title || '';
-        if(editJournalSummaryTextarea) editJournalSummaryTextarea.value = currentJournalData.summary || '';
-        if(sessionSummaryContentEl) sessionSummaryContentEl.style.display = 'none'; // 기존 요약 숨김
-        if(journalEditArea) journalEditArea.style.display = 'block'; // 수정 영역 표시
-        editJournalBtn.style.display = 'none'; // 수정 버튼 숨김
-    };
-}
-
-// --- 저널 수정 내용 저장 ---
-if (saveJournalChangesBtn) {
-    saveJournalChangesBtn.onclick = async () => {
-        if (!currentJournalId || !userId) { // userId는 전역 또는 loadJournalDetail에서 설정된 값 사용
-            alert("오류: 사용자 또는 저널 정보가 없습니다.");
-            return;
-        }
-        const newTitle = editJournalTitleInput.value.trim();
-        const newSummary = editJournalSummaryTextarea.value.trim();
-
-        if (!newTitle || !newSummary) {
-            alert("제목과 요약 내용을 모두 입력해주세요.");
-            return;
-        }
-
-        const journalDocRef = doc(db, "journals", currentJournalId);
-        try {
-            await setDoc(journalDocRef, {
-                title: newTitle,
-                summary: newSummary,
-                updatedAt: serverTimestamp() // 수정 시간 기록 (선택 사항)
-            }, { merge: true });
-
-            alert("이야기 내용이 성공적으로 수정되었습니다!");
-            // UI 업데이트
-            if(sessionSummaryContentEl) {
-                sessionSummaryContentEl.textContent = newSummary;
-                sessionSummaryContentEl.style.display = 'block';
-            }
-            if(journalPageTitleEl && (currentJournalData.title !== newTitle) ) journalPageTitleEl.textContent = newTitle; // 페이지 제목도 업데이트
-            if(pageTabTitleEl && (currentJournalData.title !== newTitle) ) pageTabTitleEl.textContent = `${newTitle} 상세보기 - LOZEE`;
-            
-            currentJournalData.title = newTitle; // 로컬 데이터도 업데이트
-            currentJournalData.summary = newSummary;
-
-            if(journalEditArea) journalEditArea.style.display = 'none';
-            if(editJournalBtn) editJournalBtn.style.display = 'inline-block';
-
-        } catch (error) {
-            console.error("저널 업데이트 중 오류:", error);
-            alert("이야기 내용 수정에 실패했습니다.");
-        }
-    };
-}
-
-// --- 저널 수정 취소 ---
-if (cancelJournalEditBtn) {
-    cancelJournalEditBtn.onclick = () => {
-        if(sessionSummaryContentEl) sessionSummaryContentEl.style.display = 'block'; // 기존 요약 다시 표시
-        if(journalEditArea) journalEditArea.style.display = 'none';
-        if(editJournalBtn) editJournalBtn.style.display = 'inline-block';
-    };
-}
-
-// loadJournalDetail 함수에서 currentJournalId 설정
-async function loadJournalDetail() {
-    // ... (URL 파라미터에서 journalId 가져오는 로직) ...
-    currentJournalId = journalId; // 전역 변수에 할당
-    // ... (Firestore에서 데이터 가져오고 renderPageWithData 호출) ...
-}
-                
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("Journal Detail Page (journal.html): DOMContentLoaded");
-            initializeChartJsGlobal(); // UMD 버전 Chart.js 초기화
+        document.addEventListener("DOMContentLoaded", () => {
             loadJournalDetail();
         });
     </script>
