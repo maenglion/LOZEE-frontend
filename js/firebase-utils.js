@@ -25,6 +25,7 @@ import {
  * 세션 시작 로그를 Firestore의 sessions 컬렉션에 저장합니다.
  * @param {string} userId 현재 사용자 이메일
  * @param {string} topicName 현재 대화 주제
+ * @param {string} content 저장할 텍스트 (Assistant가 실제로 설명한 “방법” 텍스트)
  * @returns {Promise<string|null>} 저장된 세션 문서 ID 또는 null
  */
 export async function logSessionStart(userId, topicName) {
@@ -116,6 +117,32 @@ export async function saveJournalEntry(userId, currentTopic, chatHistory, analys
         console.error("[Firebase Utils] ❌ 저널 저장 중 오류:", error);
         return null;
     }
+}
+
+export async function saveManualJournalEntry(userId, topic, content) {
+  if (!userId || !topic || !content) {
+    console.warn("[Firebase Utils] saveManualJournalEntry: 필수 정보 누락. 저장 건너뜀.");
+    return null;
+  }
+
+  const manualEntry = {
+    userId: userId,
+    topic: topic,
+    // title은 “{topic} – 수동 저장 (MM월 DD일)” 형태 예시
+    title: `${topic} – 수동 저장 (${new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })})`,
+    summary: content,
+    entryType: "manual_save",
+    createdAt: serverTimestamp()
+  };
+
+  try {
+    const docRef = await addDoc(collection(db, 'journals'), manualEntry);
+    console.log(`[Firebase Utils] ✅ 수동 저장 완료: ID=${docRef.id}, 토픽=${topic}`);
+    return docRef.id;
+  } catch (error) {
+    console.error("[Firebase Utils] ❌ 수동 저장 중 오류:", error);
+    return null;
+  }
 }
 
 /**

@@ -164,6 +164,15 @@
         import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
         // Chart.js는 <head>에서 UMD 버전으로 로드됨
 
+      // 2) entryType이 'manual_save'라면, 분석 섹션 전체 숨기기 (2025sus 0531 추가)
+  if (journalData.entryType === "manual_save") {
+    const analysisContainer = document.getElementById('analysisSectionsContainer');
+    if (analysisContainer) {
+      analysisContainer.style.display = 'none';
+    }
+    return; // 여기서 종료하여, AI 분석 섹션 로직은 실행하지 않음
+  } 
+
         let chartLibraryInitialized = false;
 
         function initializeChartJsGlobal() { /* ... (analysis.html과 동일한 내용) ... */ }

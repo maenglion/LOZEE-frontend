@@ -259,6 +259,11 @@
       cursor: not-allowed;
       opacity: 0.7;
     }
+    .chat-option-btn.manual-save-btn {
+     background-color: #ff7f7f;
+     color: #ffffff;
+     border-color: #4f69ff;
+     }
 </style>
 </head>
 <body>
@@ -289,7 +294,8 @@
         import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './js/gpt-dialog.js';
         import { playTTSFromText, stopCurrentTTS } from './js/tts.js';
         import LOZEE_ANALYSIS from './js/lozee-analysis.js';
-        import { saveJournalEntry, updateTopicStats, logSessionStart, logSessionEnd } from './js/firebase-utils.js'; 
+        // 기능 추가에 따른 firebase-utils 수정 
+        import { saveJournalEntry, saveManualJournalEntry, updateTopicStats, logSessionStart, logSessionEnd } from './js/firebase-utils.js';
         import { counselingTopicsByAge } from './js/counseling_topics.js';
 
         // --- 상태 변수 ---
@@ -316,6 +322,12 @@
         let lastVerbosityPromptTime = 0; 
         let verbosityPromptCount = 0; 
         const PREFERENCE_PROMPT_INTERVAL = 10 * 60 * 1000;
+
+        // ─── 추가된 상태 변수: 수동 저장 대기/확정 플래그 ─────────────────────
+        let awaitManualSave = false;         // Assistant가 “방법을 알려줄까?” 라고 물었을 때 true로 설정
+        let manualSaveConfirmed = false;     // 사용자가 “방법을 알려줘.” 선택 시 true로 설정
+
+
 
         // --- UI 요소 ---
         const chatWindow = document.getElementById('chat-window');
@@ -405,7 +417,9 @@
             const bubble = document.createElement('div');
             bubble.className = 'bubble ' + role; 
             bubble.textContent = text;
-            if(chatWindow) { chatWindow.appendChild(bubble); chatWindow.scrollTop = chatWindow.scrollHeight; } 
+            if(chatWindow) { 
+            chatWindow.appendChild(bubble); 
+            chatWindow.scrollTop = chatWindow.scrollHeight; } 
             else { console.error("appendMessage: chatWindow 요소를 찾을 수 없습니다."); }
         }
 
@@ -539,19 +553,43 @@
         }
                 
         function displayOptionsInChat(optionsArray, onSelectCallback) { 
-            if (!chatWindow) { console.error("displayOptionsInChat: chatWindow 요소를 찾을 수 없습니다."); return; }
-            const optionsContainer = document.createElement('div'); optionsContainer.className = 'chat-options-container'; 
+            if (!chatWindow) { 
+                console.error("displayOptionsInChat: chatWindow 요소를 찾을 수 없습니다."); return; }
+            const optionsContainer = document.createElement('div'); 
+            optionsContainer.className = 'chat-options-container'; 
             const buttons = []; 
-            if (!optionsArray || !Array.isArray(optionsArray)) { console.error("displayOptionsInChat: optionsArray가 유효한 배열이 아닙니다."); return; }
+            if (!optionsArray || !Array.isArray(optionsArray)) { console.error("displayOptionsInChat: optionsArray가 유효한 배열이 아닙니다."); 
+            return; }
             optionsArray.forEach(optionObject => { 
                 let buttonText; let valueToCallback; 
-                if (typeof optionObject === 'string') { buttonText = optionObject; valueToCallback = optionObject;} 
-                else if (optionObject && typeof optionObject.displayText !== 'undefined') { buttonText = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : optionObject.displayText; valueToCallback = optionObject.displayText; } 
-                else { console.warn("displayOptionsInChat: 잘못된 형식의 옵션:", optionObject); return; } 
-                const button = document.createElement('button'); button.className = 'chat-option-btn'; button.textContent = buttonText; 
+                if (typeof optionObject === 'string') { 
+                    buttonText = optionObject; valueToCallback = optionObject;} 
+                else if (optionObject && typeof optionObject.displayText !== 'undefined') { 
+                    buttonText = optionObject.icon ? `${optionObject.icon} ${optionObject.displayText}` : 
+                    optionObject.displayText; valueToCallback = optionObject.displayText; 
+                } else { console.warn("displayOptionsInChat: 잘못된 형식의 옵션:", 
+                optionObject); 
+                return; 
+            } 
+
+                const button = document.createElement('button');
+                button.className = 'chat-option-btn'; 
+                button.textContent = buttonText; 
                 if (optionObject && optionObject.isContinuation) { button.classList.add('continue-topic-btn'); }
-                button.onclick = () => { buttons.forEach(btn => { btn.disabled = true; if (btn === button) { btn.classList.add('selected'); } }); onSelectCallback(valueToCallback, optionObject); }; 
-                optionsContainer.appendChild(button); buttons.push(button); 
+                if (optionObject && optionObject.isManualSave) { button.classList.add('manual-save-btn');
+        }
+                
+                button.onclick = () => { 
+                    buttons.forEach(btn => { 
+                        btn.disabled = true; 
+                        if (btn === button) { 
+                            btn.classList.add('selected'); 
+                        } 
+                    }); 
+                        onSelectCallback(valueToCallback); 
+                    }; 
+                optionsContainer.appendChild(button); 
+                buttons.push(button); 
             }); 
             chatWindow.appendChild(optionsContainer); 
             chatWindow.scrollTop = chatWindow.scrollHeight; 
@@ -715,10 +753,59 @@
                 // --- AI 응답 말풍선 표시 ---
                 appendMessage(clean, 'assistant');
 
+// ─── “방법을 알려줄까?” 문구가 포함된 경우에만 선택박스 띄우기 ─────────────────
+        if (clean.includes("방법을 알려줄까")) {
+          // 다음 Assistant 응답을 저장 대기 상태로 설정
+          awaitManualSave = false;      // 아직 “방법을 알려줘.” 선택 전이므로 false
+          manualSaveConfirmed = false;
+
+          // 2가지 선택 버튼: “방법을 알려줘.”, “알려주지 않아도 돼.”
+          const optionsForManual = [
+            { displayText: "방법을 알려줘." },
+            { displayText: "알려주지 않아도 돼." }
+          ];
+          displayOptionsInChat(optionsForManual, (selectedOption) => {
+            appendMessage(selectedOption, 'user');
+            if (selectedOption === "방법을 알려줘.") {
+              // “방법을 알려줘.” 선택 → 다음 Assistant 응답을 저장 대기
+              awaitManualSave = true;
+              manualSaveConfirmed = true;
+              // AI가 실제로 “방법”을 설명 이어서 보내도록 별도 호출할 수 있음
+              // 예: sendMessage("방법을 설명해줘.", 'text');
+      
+              // ─── “awaitManualSave && manualSaveConfirmed”이 true인 상태에서 (다음번에 오는) Assistant 답변을 자동 저장 ───
+              if (awaitManualSave && manualSaveConfirmed) {
+          try {
+            const userId = localStorage.getItem('cbtUserEmail');
+            const currentTopic = selectedMain || "제목없음";
+            const contentToSave = clean; // 이 턴의 Assistant 메시지를 저장
+            await saveManualJournalEntry(userId, currentTopic, contentToSave);
+            appendMessage("✅ 방법 설명을 이야기로 저장했어!", 'assistant');
+          } catch (err) {
+            console.error("Manual 저장 오류:", err);
+            appendMessage("⚠️ 저장 실패했어. 나중에 다시 시도해봐.", 'assistant_feedback');
+          }
+          // 저장이 끝났으므로 플래그 초기화
+          awaitManualSave = false;
+          manualSaveConfirmed = false;
+        }
+
+            } else {
+              // “알려주지 않아도 돼.” 선택 → 저장 프로세스 취소
+              awaitManualSave = false;
+              manualSaveConfirmed = false;
+              appendMessage("알겠어, 저장하지 않을게!", 'assistant');
+            }
+          });
+        }
+
+
+
                 // ───────── 수정된 부분 ─────────
                 // skipTTS가 false인 경우에는 어떤 입력 방식(text, topic_selection_init, stt)이든
                 // 무조건 TTS 재생을 시도하도록 변경
 
+                
         // ─────────── 수정된 TTS 로직 ───────────
         // 1) 기존 재생 중인 TTS가 있다면 중단
         if (typeof stopCurrentTTS === 'function') {
