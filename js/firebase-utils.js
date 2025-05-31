@@ -125,24 +125,26 @@ export async function saveManualJournalEntry(userId, topic, content) {
     return null;
   }
 
-  const manualEntry = {
-    userId: userId,
-    topic: topic,
-    // title은 “{topic} – 수동 저장 (MM월 DD일)” 형태 예시
-    title: `${topic} – 수동 저장 (${new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })})`,
-    summary: content,
-    entryType: "manual_save",
-    createdAt: serverTimestamp()
-  };
+     const journalEntry = {
+        userId: userId,
+        topic: topic, // "수동 저장" 또는 사용자가 선택한 현재 주제
+        title: `${topic} - 로지의 설명 (수동 저장)`, // 임시 제목
+        summary: content, // AI의 설명을 요약으로 저장
+        mood: "neutral", // 또는 "informative"
+        keywords: ["수동저장", topic], // 간단한 키워드
+        detailedAnalysis: { overallSentiment: "neutral", conversationSummary: content.substring(0,200) }, // 간단한 분석
+        createdAt: serverTimestamp(),
+        entryType: "manual_save_explanation", // 새로운 타입 정의
 
-  try {
-    const docRef = await addDoc(collection(db, 'journals'), manualEntry);
-    console.log(`[Firebase Utils] ✅ 수동 저장 완료: ID=${docRef.id}, 토픽=${topic}`);
-    return docRef.id;
-  } catch (error) {
-    console.error("[Firebase Utils] ❌ 수동 저장 중 오류:", error);
-    return null;
-  }
+  };
+    try {
+        const journalRef = await addDoc(collection(db, 'journals'), journalEntry);
+        console.log(`[Firebase Utils] 수동 저장 저널 생성 완료, ID: ${journalRef.id}`);
+        return journalRef.id;
+    } catch (error) {
+        console.error("[Firebase Utils] 수동 저장 저널 생성 오류:", error);
+        throw error; // 오류를 다시 throw하여 sendMessage에서 잡도록 함
+    }
 }
 
 /**

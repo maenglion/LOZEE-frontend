@@ -774,20 +774,26 @@
               // 예: sendMessage("방법을 설명해줘.", 'text');
       
               // ─── “awaitManualSave && manualSaveConfirmed”이 true인 상태에서 (다음번에 오는) Assistant 답변을 자동 저장 ───
-              if (awaitManualSave && manualSaveConfirmed) {
-          try {
-            const userId = localStorage.getItem('cbtUserEmail');
-            const currentTopic = selectedMain || "제목없음";
-            const contentToSave = clean; // 이 턴의 Assistant 메시지를 저장
-            await saveManualJournalEntry(userId, currentTopic, contentToSave);
-            appendMessage("✅ 방법 설명을 이야기로 저장했어!", 'assistant');
-          } catch (err) {
-            console.error("Manual 저장 오류:", err);
-            appendMessage("⚠️ 저장 실패했어. 나중에 다시 시도해봐.", 'assistant_feedback');
-          }
-          // 저장이 끝났으므로 플래그 초기화
-          awaitManualSave = false;
-          manualSaveConfirmed = false;
+               if (awaitManualSave && manualSaveConfirmed) {
+            try {
+                const userId = localStorage.getItem('cbtUserEmail');
+                const currentTopic = selectedMain || "수동 저장"; // selectedMain이 없을 경우 기본값
+                // const contentToSave = clean; // AI의 현재 응답(clean)을 저장
+                
+                // 만약 "방법을 알려줘"에 대한 AI의 이전 턴 응답을 저장하고 싶다면,
+                // chatHistory에서 해당 응답을 찾아야 합니다.
+                // 여기서는 현재 AI 응답(clean)을 저장한다고 가정합니다.
+                if (clean) { // 저장할 내용이 있을 때만
+                    await saveManualJournalEntry(userId, currentTopic, clean); // clean: AI의 "방법 설명" 내용
+                    appendMessage("✅ 로지의 설명을 이야기로 잘 저장했어!", 'assistant_feedback');
+                }
+            } catch (err) {
+                console.error("수동 저장 오류 (sendMessage 내):", err);
+                appendMessage("⚠️ 저장이 잘 안 된 것 같아. 다시 시도해 줄래?", 'assistant_feedback');
+            } finally {
+                awaitManualSave = false; // 플래그 리셋
+                manualSaveConfirmed = false;
+            }
         }
 
             } else {
