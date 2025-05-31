@@ -213,10 +213,19 @@
                 <strong>2단계(2시간~)</strong>: 좀 더 많은 이야기를 나누면 로지가 너를 더 잘 알게 돼! <br>
                 <strong>3단계(6시간~)</strong>: 와! 이제 정말 너의 멋진 말솜씨를 잘 알 것 같아! (가장 정확한 분석)
             </p>
-            <p>내 진짜 나이: <span id="realAge"></span>살</p>
-            <p>내 말솜씨 나이 (로지의 생각): <span id="predictedLangAge"></span> <span id="ageDifferenceVisual" style="font-weight:normal; margin-left: 8px;"></span></p>
-            <div id="ageFeedback" class="feedback" style="display:none;"></div>
-            <button id="languagePracticeBtn" class="action-button" style="display:none;">로지와 함께 말솜씨 키우기 쑥쑥! 🌱 (준비 중)</button>
+
+             <!-- 실제 예측 결과 영역 -->
+    <p>내 진짜 나이: <span id="realAge"></span>살</p>
+    <p>내 말솜씨 나이 (로지의 생각): <span id="predictedLangAge"></span> <span id="ageDifferenceVisual" style="font-weight:normal; margin-left: 8px;"></span></p>
+    
+    <!-- 분석 전 안내 또는 단계별 메시지를 담을 영역 -->
+    <div id="ageFeedback" class="feedback" style="display:none;"></div>
+    
+    <!-- (선택) 언어 연습 버튼 -->
+    <button id="languagePracticeBtn" class="action-button" style="display:none;">
+        로지와 함께 말솜씨 키우기 쑥쑥! 🌱 (준비 중)
+    </button>
+
         </div>
 
         <div class="section" id="analysisMethodologySection">
@@ -321,45 +330,32 @@
             const reportShareButton = document.getElementById('reportShareButton');
             const containerEl = document.querySelector('.container');
 
-            // --- 데이터 로드 ---
-            const userAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 0; 
-            if(realAgeEl) realAgeEl.textContent = userAge || "정보 없음";
-            console.log("Analysis Page - User Age:", userAge);
+            // 사용자 나이 표시
+            const userAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 0;
+           if (realAgeEl) realAgeEl.textContent = userAge || "정보 없음";
+
+           // 로컬스토리지에서 분석 데이터 불러오기
 
             const analysisDataString = localStorage.getItem('lozee_conversation_analysis');
-            let analysisResults = null;
-            let accumulatedDurationMinutes = 0;
+                    if (!analysisDataString) {
+            // 분석 결과 자체가 없으면 언어분석 섹션을 숨기고 종료
+            if (languageAgeSection) languageAgeSection.style.display = 'none';
+            // (추가로 “계속 대화를 통해 분석을 받을 수 있습니다” 같은 안내를 별도 섹션에 삽입해도 좋음)
+            return;
+        }
 
-            if (!analysisDataString) {
-                console.warn("Analysis Page: localStorage에 'lozee_conversation_analysis' 데이터가 없습니다.");
-                if (containerEl) {
-                    document.querySelectorAll('.section:not(#analysisMethodologySection)').forEach(sec => {
-                        if(sec) sec.style.display = 'none'; 
-                    });
-                    if (!containerEl.querySelector('.no-data-message')) {
-                        const noDataMsgDiv = document.createElement('div');
-                        noDataMsgDiv.className = 'feedback neutral no-data-message';
-                        noDataMsgDiv.style.textAlign = 'center';
-                        noDataMsgDiv.style.marginTop = '20px';
-                        noDataMsgDiv.innerHTML = '<h2>아직 로지와 나눈 이야기가 충분하지 않나 봐요! 😮</h2><p>먼저 로지와 신나게 이야기하고 분석 결과를 확인해보세요!</p>';
-                        const methodologySection = document.getElementById('analysisMethodologySection');
-                        let referenceNodeForMessage = methodologySection;
-                        if (!referenceNodeForMessage && containerEl.firstChild) {
-                             referenceNodeForMessage = containerEl.querySelector('h1')?.nextElementSibling || containerEl.firstChild.nextSibling;
-                        } else if (!referenceNodeForMessage) {
-                            referenceNodeForMessage = containerEl.firstChild;
-                        }
-                        if (referenceNodeForMessage && referenceNodeForMessage.parentElement === containerEl) {
-                            referenceNodeForMessage.insertAdjacentElement('afterend', noDataMsgDiv);
-                        } else if(containerEl.firstChild) {
-                             containerEl.insertBefore(noDataMsgDiv, containerEl.children[1] || null);
-                        } else {
-                            containerEl.appendChild(noDataMsgDiv);
-                        }
-                    }
-                }
-                return; 
-            }
+
+
+        let analysisResults, accumulatedDurationMinutes;
+        try {
+            const fullAnalysis = JSON.parse(analysisDataString);
+            analysisResults = fullAnalysis.results;
+            accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0;
+        } catch (e) {
+            console.error("저장된 분석 결과 파싱 오류:", e);
+            if (languageAgeSection) languageAgeSection.style.display = 'none';
+            return;
+        }
 
             try {
                 const fullAnalysis = JSON.parse(analysisDataString);
@@ -377,43 +373,96 @@
                 return;
             }
 
+
             // --- 각 분석 섹션 렌더링 ---
             // 1. 언어·나이 분석
-if (languageAgeSection) {
-    // 섹션 자체를 표시하거나 숨기는 조건
-    if (userAge > 12 || !analysisResults.ageLanguageAnalysis || accumulatedDurationMinutes < 1) { // 예: 최소 1분 대화 필요
-        languageAgeSection.style.display = 'none';
-    } else {
-        languageAgeSection.style.display = 'block';
+ // 4) 언어분석 섹션 항상 노출 (단, 13세 이상이면 숨김)
+        if (!languageAgeSection) return;
+        if (userAge > 12 || !analysisResults.ageLanguageAnalysis) {
+            // 13세 이상이거나, ageLanguageAnalysis 데이터가 없으면 아예 숨김
+            languageAgeSection.style.display = 'none';
+            return;
+        } else {
+            // 나이가 12세 이하이고, 분석 데이터가 있으면 섹션을 노출
+            languageAgeSection.style.display = 'block';
+        }
+
+        // 5) 누적 대화 시간에 따른 분기 처리
         const langAnalysis = analysisResults.ageLanguageAnalysis;
-
-        if (predictedLangAgeEl) {
-            predictedLangAgeEl.textContent = langAnalysis.predictedAge || "분석 중...";
+        if (accumulatedDurationMinutes < 30) {
+            // ——————————————————————————————
+            // [30분 미만 안내]
+            // 30분을 못 채웠다면, 분석 결과 대신 안내 메시지만 보여줌
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = "..."; 
+            }
+            if (ageDifferenceVisualEl) {
+                ageDifferenceVisualEl.textContent = "";
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = "언어 분석을 받으려면 누적 30분 이상 대화해야 합니다 😊";
+                ageFeedbackEl.className = 'feedback neutral';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'none';
+            }
         }
-
-        if (ageDifferenceVisualEl && langAnalysis.differenceSymbol && langAnalysis.differenceText) {
-            ageDifferenceVisualEl.innerHTML = `${langAnalysis.differenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.differenceText})</span>`;
-        } else if (ageDifferenceVisualEl) {
-            ageDifferenceVisualEl.textContent = '';
+        else if (accumulatedDurationMinutes < 120) {
+            // ——————————————————————————————
+            // [1단계: 누적 30분 이상 ~ 2시간 미만]
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = langAnalysis.stage1PredictedAge || "분석 준비 중";
+            }
+            if (ageDifferenceVisualEl && langAnalysis.stage1DifferenceSymbol && langAnalysis.stage1DifferenceText) {
+                ageDifferenceVisualEl.innerHTML = `${langAnalysis.stage1DifferenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.stage1DifferenceText})</span>`;
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = langAnalysis.stage1Feedback || "30분 넘게 이야기해줘서 고마워! 언어 분석을 시작할게.";
+                ageFeedbackEl.className = 'feedback positive';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'none';
+            }
         }
-
-        if (ageFeedbackEl && langAnalysis.feedback) {
-            ageFeedbackEl.textContent = langAnalysis.feedback;
-            ageFeedbackEl.className = 'feedback neutral'; // 피드백 유형에 따라 클래스 조정 가능
-            ageFeedbackEl.style.display = 'block';
-        } else if (ageFeedbackEl) {
-            ageFeedbackEl.style.display = 'none';
+        else if (accumulatedDurationMinutes < 300) {
+            // ——————————————————————————————
+            // [2단계: 누적 2시간 이상 ~ 5시간 미만]
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = langAnalysis.stage2PredictedAge || "분석 준비 중";
+            }
+            if (ageDifferenceVisualEl && langAnalysis.stage2DifferenceSymbol && langAnalysis.stage2DifferenceText) {
+                ageDifferenceVisualEl.innerHTML = `${langAnalysis.stage2DifferenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.stage2DifferenceText})</span>`;
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = langAnalysis.stage2Feedback || "2시간 넘게 이야기했네! 더 깊은 분석 결과를 보여줄게.";
+                ageFeedbackEl.className = 'feedback neutral';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'block'; 
+                // (예시) 2단계 이후부터는 언어 연습 버튼을 노출할 수도 있음
+            }
         }
- 
-
-        // 연습 버튼 표시/숨기기 (현재 "준비 중")
-        if (languagePracticeBtn) {
-            // 여기에 특정 추천이 있을 경우 등의 조건을 추가할 수 있습니다.
-            // languagePracticeBtn.style.display = langAnalysis.needsPractice ? 'inline-block' : 'none';
-            languagePracticeBtn.style.display = 'none'; // 현재는 "준비 중"으로 유지
+        else {
+            // ——————————————————————————————
+            // [3단계: 누적 5시간 이상]
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = langAnalysis.stage3PredictedAge || "분석 준비 중";
+            }
+            if (ageDifferenceVisualEl && langAnalysis.stage3DifferenceSymbol && langAnalysis.stage3DifferenceText) {
+                ageDifferenceVisualEl.innerHTML = `${langAnalysis.stage3DifferenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.stage3DifferenceText})</span>`;
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = langAnalysis.stage3Feedback || "5시간 넘게 이야기해줘서 정말 고마워! 가장 정확한 분석을 보여줄게.";
+                ageFeedbackEl.className = 'feedback positive';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'block';
+            }
         }
-    }
-}
           
 
             // 2. 감정 어조 및 태그 클라우드
