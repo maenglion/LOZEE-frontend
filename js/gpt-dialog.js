@@ -44,21 +44,21 @@ export function detectIntent(text) {
 
 // 5) 추천 주제 목록
 export const preferenceTopics = [
-  name => `${name}, 네가 가장 좋아하는 사람 3명은 누구야? 1등부터 3등까지 말해줄 수 있어?`,
-  name => `${name}, 그럼 반대로 혹시 네가 별로 좋아하지 않거나 불편하게 느끼는 사람 3명이 있다면 알려줄 수 있을까?`,
-  name => `${name}, 너는 누구와 새로운 것들을 배우고 즐기는 걸 좋아해? (최대 3명)`,
-  name => `${name}, 네가 정말 좋아하는 것과 정말 싫어하는 것을 각각 3개씩 말해줄 수 있을까?`,
-  name => `${name}, 혹시 '이런 사람처럼 되고 싶다!' 하고 닮고 싶은 사람이 있어? 있다면 누구야?`,
-  name => `${name}, 가장 행복했던 기억 하나만 살짝 들려줄 수 있을까?`,
-  name => `${name}, '이 사람이랑 이야기하면 시간 가는 줄 모르겠다!' 하는 친구가 있다면 소개해 줄 수 있어?`,
-  name => `${name}, 너의 소중한 가족들을 소개해 줄 수 있을까?`,
-  name => `${name}, 혹시 요즘 '아, 이 친구랑 좀 더 친해지고 싶다!' 하는 사람이 있어? 있다면 누구인지, 왜 그런지 알려줄 수 있니?`
+  username => `${username}, 네가 가장 좋아하는 사람 3명은 누구야? 1등부터 3등까지 말해줄 수 있어?`,
+  username => `${username}, 그럼 반대로 혹시 네가 별로 좋아하지 않거나 불편하게 느끼는 사람 3명이 있다면 알려줄 수 있을까?`,
+  username => `${username}, 너는 누구와 새로운 것들을 배우고 즐기는 걸 좋아해? (최대 3명)`,
+  username => `${username}, 네가 정말 좋아하는 것과 정말 싫어하는 것을 각각 3개씩 말해줄 수 있을까?`,
+  username => `${username}, 혹시 '이런 사람처럼 되고 싶다!' 하고 닮고 싶은 사람이 있어? 있다면 누구야?`,
+  username => `${username}, 가장 행복했던 기억 하나만 살짝 들려줄 수 있을까?`,
+  username => `${username}, '이 사람이랑 이야기하면 시간 가는 줄 모르겠다!' 하는 친구가 있다면 소개해 줄 수 있어?`,
+  username => `${username}, 너의 소중한 가족들을 소개해 줄 수 있을까?`,
+  username => `${username}, 혹시 요즘 '아, 이 친구랑 좀 더 친해지고 싶다!' 하는 사람이 있어? 있다면 누구인지, 왜 그런지 알려줄 수 있니?`
 ];
 
 // 6) 시스템 프롬프트 생성
 export function getSystemPrompt({ userName='친구', userAge=0, verbosity='default', elapsedTime=0, userTraits=[] }={}, intent='fact') {
   const voc = getKoreanVocativeParticle(userName);
-  const nameVoc = `${userName}${voc}`; 
+  const nameVoc = `${userName}${voc}`; // 예: "라이언아"
   const subjectParticle = getKoreanSubjectParticle(userName);
   const nameWithSubjectParticle = `${userName}${subjectParticle}`;
   const namingParticle = getKoreanNamingParticle(userName);
