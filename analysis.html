@@ -510,7 +510,24 @@
             }
 
             // 공유 버튼 로직
-            if(reportShareButton) { reportShareButton.onclick = () => { /* ... 기존 공유 로직 ... */ }; }
+            if(reportShareButton) { reportShareButton.onclick = () => { 
+                const reportId = localStorage.getItem('lozee_username') + "_" + new Date().getTime();
+        const shareableLink = `${window.location.origin}${window.location.pathname}?report_id=${reportId}`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareableLink)
+                .then(() => {
+                    alert('공유 링크가 복사되었습니다!\n' + shareableLink);
+                })
+                .catch(err => {
+                    console.error('클립보드 복사 실패:', err);
+                    alert('링크 복사에 실패했어요. 수동으로 복사해주세요:\n' + shareableLink);
+                });
+        } else {
+            prompt('아래 링크를 복사하여 공유하세요:', shareableLink);
+        } 
+    }; 
+    }
         });
 
         // --- 데이터 렌더링 함수들 (본문 내용 포함) ---
@@ -585,7 +602,36 @@
             });
         }
 
-        function displayEmpathyMessage(emotionData) { /* ... 이전 답변의 완성된 코드 ... */ }
+        function displayEmpathyMessage(emotionData) { // emotionData 예시: { 기쁨: 0.6, 슬픔: 0.1, 분노: 0.05, … }
+    const empathyMessageEl = document.getElementById('empathyMessage');
+    if (!empathyMessageEl || !emotionData) return;
+
+    // 가장 수치가 높은 감정 구하기
+    const entries = Object.entries(emotionData);
+    entries.sort((a, b) => b[1] - a[1]);
+    const [dominantEmotion, score] = entries[0]; // 예: ["기쁨", 0.6]
+
+    let msg = '';
+    switch (dominantEmotion) {
+        case '기쁨':
+            msg = '지금 기분이 좋아 보이네요! 😊';
+            break;
+        case '슬픔':
+            msg = '조금 슬퍼 보이네요. 괜찮아요?';
+            break;
+        case '분노':
+            msg = '화가 나 있는 것 같아요. 무슨 일이 있었나요?';
+            break;
+        case '불안':
+            msg = '불안한 기분이 드나 봐요. 함께 이야기해요.';
+            break;
+        default:
+            msg = '지금 어떤 기분인지 궁금해요. 언제든 말해 주세요!';
+    }
+    empathyMessageEl.textContent = msg;
+    empathyMessageEl.className = 'feedback neutral';
+    empathyMessageEl.style.display = 'block';
+}
         function getKoreanVocativeParticle(name) { /* ... 이전 답변의 완성된 코드 ... */ }
     </script>
     <script src="./js/gnb.js" defer></script> 
