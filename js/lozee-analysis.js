@@ -97,6 +97,59 @@ export async function inferAgeAndLanguage(conversationText) {
   }
 }
 
+/**
+ * conversationText(전체 대화 로그 문자열)에서
+ * “인물(사람)”과 “감정” 페어 태그를 추출하는 예시 함수.
+ * (실제 프로젝트에 맞춰서 형태소 분석기나 GPT 호출로 대체 가능)
+ */
+export function extractEntityEmotionPairs(conversationText) {
+  // ① “인물 키워드” 목록 예시 (필요에 따라 더 늘려 주세요)
+  const personKeywords = ["엄마", "아빠", "형", "동생", "친구", "선생님", "아스퍼거", "형아"];
+  // ② “감정 키워드” 목록 예시
+  const emotionKeywords = ["기쁨", "슬픔", "속상", "화남", "불안", "우울", "당황", "신남", "후회"];
+  
+  const tags = [];
+  
+  // (1) 단순히 “문장 단위로” split
+  const sentences = conversationText.split(/[\n\.!?]+/);
+  
+  for (const sentence of sentences) {
+    const trimmed = sentence.trim();
+    if (!trimmed) continue;
+    
+    // 1) 이 문장 안에 어떤 인물이 있는지 체크
+    const foundPersons = personKeywords.filter(p => trimmed.includes(p));
+    // 2) 이 문장 안에 어떤 감정 단어가 있는지 체크
+    const foundEmotions = emotionKeywords.filter(e => trimmed.includes(e));
+    
+    // 3) 인물과 감정이 둘 다 발견되면, 모든 조합을 태그로 추가
+    if (foundPersons.length > 0 && foundEmotions.length > 0) {
+      for (const person of foundPersons) {
+        for (const emo of foundEmotions) {
+          tags.push({ entity: person, emotion: emo });
+        }
+      }
+    }
+  }
+  
+  // 중복 제거: 동일한 {entity,emotion} 쌍이 여러 문장에서 반복될 수 있으므로
+  const unique = [];
+  const seen = new Set();
+  for (const t of tags) {
+    const key = `${t.entity}___${t.emotion}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(t);
+    }
+  }
+  
+  return unique;
+}
+
+
+
+
+
 // talk.html에서 import LOZEE_ANALYSIS from ... 로 사용하기 위해
 // 필요한 함수들을 모아 객체로 만들고 default export 합니다.
 const LOZEE_ANALYSIS = {
