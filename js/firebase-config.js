@@ -18,3 +18,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);  // 추가함
+
+ // ★ 기본 내보내기 추가 ★
+export default firebaseConfig;
