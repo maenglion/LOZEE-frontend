@@ -764,7 +764,7 @@
             { displayText: "방법을 알려줘." },
             { displayText: "알려주지 않아도 돼." }
           ];
-          displayOptionsInChat(optionsForManual, (selectedOption) => {
+          displayOptionsInChat(optionsForManual, async (selectedOption) => {
             appendMessage(selectedOption, 'user');
             if (selectedOption === "방법을 알려줘.") {
               // “방법을 알려줘.” 선택 → 다음 Assistant 응답을 저장 대기
