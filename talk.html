@@ -381,87 +381,45 @@
         }
 
         // --- 초기화 로직 ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('talk.html: ✅ js/firebase-config.js 모듈 로드됨');
+document.addEventListener('DOMContentLoaded', async () => {
             console.log('talk.html: DOMContentLoaded 이벤트 발생');
-
-         // 1) 사용자 정보 유효성
-      if (!currentUserEmail) {
-        alert("🛑 사용자 정보가 없습니다. 다시 로그인해주세요.");
-        window.location.href = 'index.html';
-        return;
-      }
-           
-       // 2) 세션 타이머 시작
-      
-      conversationStartTime = Date.now(); 
+            if (!currentUserEmail) {
+                alert("사용자 정보가 없습니다. 다시 로그인해주세요.");
+                window.location.href = 'index.html'; return;
+            }
+            conversationStartTime = Date.now(); 
             previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
             resetSessionTimeout(); 
 
-
-     // 3) 로컬스토리지에 남아있는 “이어하기” 정보가 있는지 검사
-      const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
-      if (initTopicDataString) {
-        try {
-          const initTopic = JSON.parse(initTopicDataString);
-          // 사용 후 즉시 제거
-          localStorage.removeItem('lozee_talk_init_topic');
-          // 만약 details 속성이 존재하면 “이어하기” 흐름으로 분기
-          if (initTopic.details) {
-            selectedMain = initTopic.details;
-            const initialMessage = initTopic.prompt 
-              || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까? 어떤 점이 궁금해?`;
-
-            appendMessage(initialMessage, 'assistant');
-            // TTS로도 재생할 경우: await playTTSWithControl(initialMessage);
-
-            // 입력창을 켜서 사용자의 다음 입력을 받을 준비
-            if (inputArea) inputArea.style.display = 'flex';
-            if (chatInput) chatInput.focus();
-            hasGreeted = true; // 이미 첫인사를 한 것으로 간주
-
-            // Firestore에 새 세션 기록
-            if (typeof logSessionStart === 'function') {
-              logSessionStart(currentUserEmail, selectedMain)
-                .then(id => currentFirestoreSessionId = id)
-                .catch(err => console.error("logSessionStart 오류:", err));
-            }
-            // 이어하기 흐름으로 빠졌으므로, 아래 일반 첫인사/주제선택은 실행하지 않음
-            return;
-          }
-
+            let startedWithInitTopic = false; // 이어하기로 시작했는지 여부 플래그
+            const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
+            if (initTopicDataString) {
+                try {
+                    const initTopic = JSON.parse(initTopicDataString);
+                    localStorage.removeItem('lozee_talk_init_topic'); 
+                    if (initTopic.details) { 
+                        selectedMain = initTopic.details; 
+                        const initialMessageFromLozee = initTopic.prompt || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까? 어떤 점이 궁금하거나 더 이야기하고 싶어?`;
+                        appendMessage(initialMessageFromLozee, 'assistant');
+                        console.log(`talk.html: "${selectedMain}" 주제 이어하기 시작.`);
+                        startChat(initialMessageFromLozee, 'topic_selection_init'); 
+                        hasGreeted = true; // 이어하기도 일종의 인사로 간주
+                        startedWithInitTopic = true; 
+                    }
                 } catch (e) { 
                     console.error("이어하기 주제(lozee_talk_init_topic) 파싱 오류:", e); 
                     localStorage.removeItem('lozee_talk_init_topic');
                 }
             }
 
-      // 4) 이어하기 정보가 없거나 파싱에 실패한 경우: 일반 첫인사 + 주제선택
-      const greeting = getInitialGreeting(userName + voc, hasGreeted);
-      appendMessage(greeting, 'assistant');
-      hasGreeted = true;
-      showMainTopics();
-    });
-
-
-
-
-            conversationStartTime = Date.now(); 
-            
-            previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
-            console.log("talk.html: 이전 누적 사용자 발화 글자 수:", previousTotalUserCharCountOverall);
-            
-            resetSessionTimeout(); 
-
-            const greeting = getInitialGreeting(userName + voc, hasGreeted);
-            appendMessage(greeting, 'assistant');
-            console.log("talk.html: 첫 인사 TTS는 사용자 인터랙션 후 재생 권장 (현재 자동 재생 안 함)");
-            hasGreeted = true;
-            showMainTopics();
-       
-
-
-
+            // ⭐ 이어하기로 시작하지 않은 경우에만 일반적인 첫인사 및 주제 선택 표시 ⭐
+            if (!startedWithInitTopic) {
+                const greeting = getInitialGreeting(userName + voc, hasGreeted);
+                appendMessage(greeting, 'assistant');
+                hasGreeted = true;
+                showMainTopics(); // 주제 선택 버튼 표시
+            }
+        });
 
 
         // --- 메시지 관련 함수 ---
@@ -642,23 +600,38 @@
 
 
         // --- 토픽 플로우 ---
-        function getTopicsForCurrentUser() {
-            const userType = localStorage.getItem('lozee_userType'); 
-            const ageForTopicGetter = userType === 'caregiver' 
-                ? (parseInt(localStorage.getItem('lozee_child_age') || userAge.toString(), 10)) 
-                : userAge; 
-            if (!counselingTopicsByAge) { console.error("counselingTopicsByAge가 정의되지 않았습니다."); return {}; }
-            if (userType === 'directUser') {
-                if (ageForTopicGetter < 11) return counselingTopicsByAge.directUser['10세미만'] || {};
-                if (ageForTopicGetter >= 11 && ageForTopicGetter <= 15) return counselingTopicsByAge.directUser['11-15세'] || {};
-                if (ageForTopicGetter >= 16 && ageForTopicGetter <= 29) return counselingTopicsByAge.directUser['16-29세'] || {};
-                return counselingTopicsByAge.directUser['16-29세'] || {}; 
-            } else if (userType === 'caregiver') {
-                return counselingTopicsByAge.caregiver || {};
-            } else {
-                console.warn("알 수 없는 사용자 유형:", userType);
-                return counselingTopicsByAge.directUser['11-15세'] || {}; 
+ function getTopicsForCurrentUser() {
+            // const userType = localStorage.getItem('lozee_userType'); // 이미 전역으로 선언됨
+            // ⭐ 보호자 유형일 때도 '본인 나이(userAge)'를 기준으로 counselingTopicsByAge.caregiver 조회
+            const ageForTopicLookup = userAge; // 아이 나이가 아닌 보호자 본인 나이 사용
+            
+            console.log(`getTopicsForCurrentUser - userType: ${userType}, ageForTopicLookup (보호자본인나이 또는 당사자나이): ${ageForTopicLookup}`);
+
+            if (!counselingTopicsByAge) { 
+                console.error("counselingTopicsByAge 객체를 찾을 수 없습니다. (counseling_topics.js 확인 필요)"); 
+                return {}; 
             }
+
+            let topicsForUserGroup;
+            if (userType === 'directUser' && counselingTopicsByAge.directUser) {
+                if (ageForTopicLookup < 11) topicsForUserGroup = counselingTopicsByAge.directUser['10세미만'];
+                else if (ageForTopicLookup >= 11 && ageForTopicLookup <= 15) topicsForUserGroup = counselingTopicsByAge.directUser['11-15세'];
+                else if (ageForTopicLookup >= 16 && ageForTopicLookup <= 29) topicsForUserGroup = counselingTopicsByAge.directUser['16-29세'];
+                else topicsForUserGroup = counselingTopicsByAge.directUser['30-55세'] || counselingTopicsByAge.directUser['16-29세']; // 30-55세 또는 기본값
+            } else if (userType === 'caregiver' && counselingTopicsByAge.caregiver) {
+                // 보호자 주제는 연령 구분 없이 caregiver 공통 주제 사용 또는 필요시 연령대 추가
+                topicsForUserGroup = counselingTopicsByAge.caregiver; 
+            } else {
+                console.warn(`알 수 없거나 지원하지 않는 사용자 유형(${userType})입니다. 기본 주제를 사용합니다.`);
+                topicsForUserGroup = counselingTopicsByAge.directUser ? (counselingTopicsByAge.directUser['11-15세'] || {}) : {};
+            }
+            
+            if (!topicsForUserGroup || Object.keys(topicsForUserGroup).length === 0) {
+                console.warn(`선택된 사용자 유형/나이에 맞는 주제 카테고리가 counseling_topics.js에 정의되지 않았거나 비어있습니다.`);
+                return {};
+            }
+            console.log("선택된 사용자/나이 그룹 주제:", topicsForUserGroup);
+            return topicsForUserGroup;
         }
                 
         function displayOptionsInChat(optionsArray, onSelectCallback) { 
