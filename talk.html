@@ -472,8 +472,51 @@
                 } 
             };
             recog.onerror = event => { console.error('Speech recognition error:', event.error); appendMessage('음성 인식 오류: ' + event.error, 'assistant_feedback'); if(isRec && recog){ try{recog.stop();}catch(e){console.warn("recog.stop() 오류:",e)}} isRec = false; if(micButton) micButton.classList.remove('recording'); stopAudio(); };
-            if(micButton) micButton.onclick = async () => { if (isRec) { if(recog) recog.stop(); } else { if (typeof stopCurrentTTS === 'function') stopCurrentTTS(); skipTTS = true; try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); setupAudioAnalysis(stream); if(recog) recog.start(); } catch (e) { console.error('마이크 접근 오류:', e); appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback'); } } };
-        } else { if(micButton) micButton.disabled = true; appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'assistant_feedback'); }
+            
+            // gpt 마이크 버튼 눌렀을 시 언제나 TTS 재생을 바뀌도록 20250531 오후 8시 30분 수정 
+                  if (micButton) micButton.onclick = async () => {
+           // ───────────────────────────────────
+           // 1) “마이크가 꺼져 있던(isRec===false) 상태라면 → TTS 먼저 재생”
+           if (!isRec) {
+               // (1) 최신 assistant 메시지를 가져와서 TTS로 재생
+               //    chatHistory 배열에서 role === 'assistant'인 마지막 요소를 찾는다
+               const lastAssistant = [...chatHistory].reverse().find(m => m.role === 'assistant');
+               if (lastAssistant) {
+                   try {
+                       // 재생 중단 플래그 초기화
+                       skipTTS = false;
+                       await playTTSWithControl(lastAssistant.content);
+                   } catch (ttsError) {
+                       console.error("마이크 누름 시 TTS 재생 오류:", ttsError);
+                   }
+               }
+
+               // (2) TTS가 끝난 뒤에 STT 모드로 진입
+               try {
+                   if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
+                   // TTS를 명시적으로 멈추고 skipTTS 재설정(이미 재생이 끝났으므로)
+                   skipTTS = true;
+                   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                   setupAudioAnalysis(stream);
+                   if (recog) recog.start();
+               } catch (e) {
+                   console.error('마이크 접근 오류:', e);
+                   appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback');
+               }
+
+           } else {
+               // ───────────────────────────────────
+               // 2) 이미 음성 인식 중(isRec===true)이라면 → 그냥 음성 인식 종료
+               if (recog) recog.stop();
+          }
+       };
+      // ───────────────────────────────────
+ 
+
+        } else { 
+            if(micButton) micButton.disabled = true; 
+            appendMessage('이 브라우저에서는 음성 인식을 지원하지 않습니다.', 'assistant_feedback'); 
+        }
 
         // --- 토픽 플로우 ---
         function getTopicsForCurrentUser() {
@@ -669,17 +712,22 @@
                 const cut = d.text.indexOf('{'); 
                 const clean = cut >= 0 ? d.text.slice(0, cut).trim() : d.text.trim();
                     
-                appendMessage(clean, 'assistant'); 
+                // 05월 31일 오후 8시 30분 수정 코드 
+                appendMessage(clean, 'assistant');
 
-                if (inputMethod === 'stt') { 
-                    await playTTSWithControl(clean);
-                } else if (inputMethod === 'text' && !skipTTS) { 
-                    console.log("텍스트 입력에 대한 응답. TTS는 현재 재생 안 함.");
-                } else if (inputMethod === 'topic_selection_init' && !skipTTS) {
-                    console.log("주제 선택 후 첫 응답. TTS는 현재 재생 안 함.");
-                }
-                if (skipTTS) skipTTS = false; 
-                
+                // ───────── 수정된 부분 ─────────
+                // skipTTS가 false인 경우에는 어떤 입력 방식(text, topic_selection_init, stt)이든
+                // 무조건 TTS 재생을 시도하도록 변경
+                if (!skipTTS) {
+                try {
+              await playTTSWithControl(clean);           } catch (e) {
+              console.error("playTTSWithControl 오류:", e);
+               }       }
+              // TTS 재생 이후에도 skipTTS를 초기화(다음 턴에 다시 TTS 재생이 가능하도록)
+                skipTTS = false;
+             // ─────────────────────────────
+
+
                 chatHistory.push({ role: 'assistant', content: clean });
                 assistantMessageCount++; 
 
@@ -731,15 +779,16 @@
                 if (verbosityPromptCount === 0 && assistantMessageCount >= 5) { askForVerbosityPreference(); } 
                 else if (verbosityPromptCount === 1 && (Date.now() - lastVerbosityPromptTime > PREFERENCE_PROMPT_INTERVAL)) { askForVerbosityPreference(); }
 
-            } catch (error) { 
-              if(thinkingBubble) thinkingBubble.remove(); 
-              console.error("sendMessage 내 오류:", error);
-              appendMessage("미안, 지금은 답변하기 조금 어려워. 잠시 후 다시 시도해 줄래?", "assistant_feedback");
-            } finally { 
-              isProcessing = false;
-              if(sendBtn) sendBtn.classList.remove('loading');
-            }
-        } 
+                // gpt 수정 버젼 05-31 오후 8시 30분 수정 
+              } catch (error) {
+         if (thinkingBubble) thinkingBubble.remove();
+         console.error("sendMessage 내 오류:", error);
+         appendMessage("미안, 지금은 답변하기 조금 어려워. 잠시 후 다시 시도해 줄래?", "assistant_feedback");
+     } finally {
+         isProcessing = false;
+         if (sendBtn) sendBtn.classList.remove('loading');
+     }
+ }
 
         // --- 이벤트 바인딩 ---
         if(sendBtn) sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text')); 
