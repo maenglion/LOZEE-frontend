@@ -712,25 +712,38 @@
                 const cut = d.text.indexOf('{'); 
                 const clean = cut >= 0 ? d.text.slice(0, cut).trim() : d.text.trim();
                     
-                // 05월 31일 오후 8시 30분 수정 코드 
+                // --- AI 응답 말풍선 표시 ---
                 appendMessage(clean, 'assistant');
 
                 // ───────── 수정된 부분 ─────────
                 // skipTTS가 false인 경우에는 어떤 입력 방식(text, topic_selection_init, stt)이든
                 // 무조건 TTS 재생을 시도하도록 변경
-                if (!skipTTS) {
-                try {
-              await playTTSWithControl(clean);           } catch (e) {
-              console.error("playTTSWithControl 오류:", e);
-               }       }
-              // TTS 재생 이후에도 skipTTS를 초기화(다음 턴에 다시 TTS 재생이 가능하도록)
-                skipTTS = false;
-             // ─────────────────────────────
 
+        // ─────────── 수정된 TTS 로직 ───────────
+        // 1) 기존 재생 중인 TTS가 있다면 중단
+        if (typeof stopCurrentTTS === 'function') {
+            stopCurrentTTS();
+        }
+        // 2) 이 턴에서 TTS를 재생하라는 플래그가 세트되어 있으면, playTTSWithControl 호출
+        //    단, 이미 skipTTS가 true라면(예: 마이크 누른 직후 STT 모드라면) 재생을 건너뜀
+        if (!skipTTS) {
+            try {
+                isPlayingTTS = true;        // 내부적으로 TTS 재생 중 상태 표시
+                await playTTSWithControl(clean);
+            } catch (e) {
+                console.error("playTTSWithControl 오류:", e);
+            } finally {
+                isPlayingTTS = false;
+            }
+        }
+        // 3) 한 번 재생했거나 재생을 건너뛴 뒤에는 반드시 다음 턴을 위해 skipTTS 초기화
+        skipTTS = false;
+        // ─────────────────────────────────────
 
-                chatHistory.push({ role: 'assistant', content: clean });
-                assistantMessageCount++; 
+        chatHistory.push({ role: 'assistant', content: clean });
+        assistantMessageCount++;
 
+                
                 // 분석 알림 로직 (수정된 조건)
                 const currentSessionElapsedTime = (Date.now() - conversationStartTime) / (1000 * 60);
                 // userTurnCount는 주제 선택 메시지를 제외한 순수 사용자 발화 턴
