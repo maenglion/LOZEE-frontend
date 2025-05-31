@@ -3,6 +3,9 @@
 // 0) GPT 백엔드 URL 정의
 const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat';
 
+// import 구문문
+import { neurodiversityInfo } from './neurodiversityData.js'; // 
+
 // 1) 호격 조사 결정: '아/야'
 export function getKoreanVocativeParticle(name) {
   if (!name || typeof name !== 'string' || name.trim() === '') return '야';
@@ -67,6 +70,31 @@ export function getSystemPrompt({ userName='친구', userAge=0, verbosity='defau
     prompt += `\n[말투 원칙] 반말과 존댓말은 절대 섞어 사용하지 않습니다. 아래 정의될 나이대별 호칭 및 말투 규칙을 정확히 따라주세요.`;
   prompt += `\n[초기 대화 원칙] 초기 300마디(사용자와 로지 대화 총합)까지는 대화를 이어갈 수 있는 짧은 질문이나 반응을 주로 합니다. (예: "그래서 어떻게 됐어?", "엄마가 뭐라셔?", "동생이 미안하다고 했어?", "이번 일이 처음이야?")`;
 
+  
+  // ⭐ 신경다양성 특성 인지 및 맞춤형 상호작용 지침 (neurodiversityData.js 활용) ⭐
+  if (userTraits && userTraits.length > 0 && userTraits[0] !== 'NotApplicable' && userTraits[0] !== 'Unsure') {
+    const selectedTraitNames = userTraits.map(traitCode => neurodiversityInfo[traitCode]?.displayName || traitCode).join(', ');
+    prompt += `\n[사용자 특성 인지] 사용자는 다음 신경다양성 특성(들)을 가지고 있거나 관련하여 이야기하고 싶어합니다: ${selectedTraitNames}. 이 특성들을 대화 중에 세심하게 고려하여 사용자가 깊이 이해받고 있다고 느끼도록 도와주세요.`;
+
+    userTraits.forEach(traitCode => {
+      const traitData = neurodiversityInfo[traitCode];
+      if (traitData) {
+        prompt += `\n[${traitData.displayName} 특성 참고 지침]`;
+        if (traitData.strengths && traitData.strengths.length > 0) {
+          prompt += `\n- 주요 강점: ${traitData.strengths.join(', ')}.`;
+        }
+        if (traitData.challenges && traitData.challenges.length > 0) {
+          prompt += `\n- 어려움 가능성: ${traitData.challenges.join(', ')}.`;
+        }
+        if (traitData.communicationTips && traitData.communicationTips.length > 0) {
+          prompt += `\n- 대화 시 참고: ${traitData.communicationTips.map(tip => `"${tip}"`).join(' ')}`;
+        }
+      }
+    });
+    
+    prompt += `\n[맞춤형 공감 일반 지침] 사용자가 자신의 특성을 언급하면 (예: "나는 기억력이 좋아", "나는 집중이 잘 안 돼"), 그 특성이 사용자가 선택한 신경다양성 유형의 일반적인 모습과 어떻게 연결될 수 있는지 부드럽게 언급하며 깊이 공감해주세요. (예: "${nameWithSubjectParticle} 기억력이 정말 좋구나! 그런 점은 어떤 일에 도움이 될 때가 많지?" 또는 "한 가지 일에 오래 집중하는 게 어려울 때가 있구나, ${userName}. 혹시 그럴 때 어떤 기분이 드니?") 사용자를 진단하거나 일반화하지 않고, 항상 개인의 경험을 존중하며 안전하게 이야기할 수 있도록 지지해주세요.`;
+  }
+  
   // verbosity에 따른 기본 답변 길이 지침
   if (verbosity === 'short') {
     prompt += `\n[답변 길이] 사용자가 '말을 좀 줄여줘'를 선택했습니다. 모든 답변을 핵심만 간추려 매우 짧고 명료하게, 한 문장으로 끝내세요.`;
@@ -142,6 +170,9 @@ export async function getGptResponse(userText, { chatHistory=[], verbosity='defa
   });
   return res;
 }
+
+
+
 
 // 7) 대화 종료 메시지
 export function getExitPrompt(userName='친구') {
