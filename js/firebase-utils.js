@@ -120,30 +120,31 @@ export async function saveJournalEntry(userId, currentTopic, chatHistory, analys
 }
 
 export async function saveManualJournalEntry(userId, topic, content) {
-  if (!userId || !topic || !content) {
-    console.warn("[Firebase Utils] saveManualJournalEntry: 필수 정보 누락. 저장 건너뜀.");
-    return null;
-  }
-
-     const journalEntry = {
+if (!userId || !topic || !content) {
+        console.warn("[Firebase Utils] saveManualJournalEntry: 필수 정보 부족.");
+        return null;
+    }
+    const journalEntry = {
         userId: userId,
-        topic: topic, // "수동 저장" 또는 사용자가 선택한 현재 주제
-        title: `${topic} - 로지의 설명 (수동 저장)`, // 임시 제목
-        summary: content, // AI의 설명을 요약으로 저장
-        mood: "neutral", // 또는 "informative"
-        keywords: ["수동저장", topic], // 간단한 키워드
-        detailedAnalysis: { overallSentiment: "neutral", conversationSummary: content.substring(0,200) }, // 간단한 분석
+        topic: topic || "로지의 설명", // 주제가 없다면 기본값
+        title: `로지가 알려준 ${topic} 방법 (수동저장)`, // 자동 제목 생성
+        summary: content, // AI의 설명 내용
+        mood: "informative", // 또는 neutral
+        keywords: ["설명", "방법", topic],
+        detailedAnalysis: { 
+            conversationSummary: content.substring(0, 200), // 간단 요약
+            overallSentiment: "neutral" 
+        },
         createdAt: serverTimestamp(),
-        entryType: "manual_save_explanation", // 새로운 타입 정의
-
-  };
+        entryType: "manual_save_explanation", // 구분용 타입
+    };
     try {
         const journalRef = await addDoc(collection(db, 'journals'), journalEntry);
-        console.log(`[Firebase Utils] 수동 저장 저널 생성 완료, ID: ${journalRef.id}`);
+        console.log(`[Firebase Utils] ✅ 수동 저장 저널 생성 완료, ID: ${journalRef.id}`);
         return journalRef.id;
     } catch (error) {
-        console.error("[Firebase Utils] 수동 저장 저널 생성 오류:", error);
-        throw error; // 오류를 다시 throw하여 sendMessage에서 잡도록 함
+        console.error("[Firebase Utils] ❌ 수동 저장 저널 생성 오류:", error);
+        throw error; 
     }
 }
 
