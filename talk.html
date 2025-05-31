@@ -364,6 +364,58 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('talk.html: ✅ js/firebase-config.js 모듈 로드됨');
             console.log('talk.html: DOMContentLoaded 이벤트 발생');
+
+ if (!currentUserEmail) {
+                alert("사용자 정보가 없습니다. 다시 로그인해주세요.");
+                window.location.href = 'index.html'; return;
+            }
+            conversationStartTime = Date.now(); 
+            previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
+            resetSessionTimeout(); 
+
+            const initTopicDataString = localStorage.getItem('lozee_talk_init_topic');
+            if (initTopicDataString) {
+                try {
+                    const initTopic = JSON.parse(initTopicDataString);
+                    localStorage.removeItem('lozee_talk_init_topic'); // 사용 후 즉시 제거
+
+                    if (initTopic.details) { // type 필드 대신 details 유무로 판단 (더 일반적)
+                        selectedMain = initTopic.details; // 이어갈 주제명으로 selectedMain 설정
+                        const initialMessageFromLozee = initTopic.prompt || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까? 어떤 점이 궁금하거나 더 이야기하고 싶어?`;
+                        
+                        appendMessage(initialMessageFromLozee, 'assistant');
+                        console.log(`talk.html: "${selectedMain}" 주제 이어하기 시작. 초기 프롬프트: "${initialMessageFromLozee}"`);
+                        // playTTSWithControl(initialMessageFromLozee); // 첫 AI 메시지 TTS (선택 사항)
+                        
+                        // 대화 입력창을 바로 활성화하고, 사용자의 다음 입력을 기다림
+                        if(inputArea) inputArea.style.display = 'flex';
+                        if(chatInput) chatInput.focus();
+                        hasGreeted = true; // 이미 인사는 한 것으로 간주 (또는 이어하기용 별도 인사)
+                        
+                        // Firestore에 세션 시작 로그 (selectedMain이 설정된 후)
+                        if(currentUserEmail && selectedMain && !currentFirestoreSessionId && typeof logSessionStart === 'function'){ 
+                            logSessionStart(currentUserEmail, selectedMain).then(id => {
+                                if (id) currentFirestoreSessionId = id;
+                            });
+                        }
+                        return; // 일반적인 첫인사 및 주제 선택 흐름은 여기서 중단
+                    }
+                } catch (e) { 
+                    console.error("이어하기 주제(lozee_talk_init_topic) 파싱 오류:", e); 
+                    localStorage.removeItem('lozee_talk_init_topic');
+                }
+            }
+
+            // 이어하기 주제가 없거나 처리에 실패한 경우에만 일반적인 첫인사 및 주제 선택 표시
+            const greeting = getInitialGreeting(userName + voc, hasGreeted);
+            appendMessage(greeting, 'assistant');
+            hasGreeted = true;
+            showMainTopics(); // 주제 선택 버튼 표시
+        });
+
+
+
+
             conversationStartTime = Date.now(); 
             
             previousTotalUserCharCount = await fetchPreviousUserCharCount();
@@ -408,7 +460,7 @@
        // hasGreeted = true;
        // showMainTopics();
   //  }
-});
+
 
 
 
@@ -600,19 +652,48 @@
             appendMessage('어떤 이야기를 나눠볼까?', 'assistant'); 
             const currentUserTopics = getTopicsForCurrentUser(); 
             let topicsWithOptions = []; 
-            const continueTopicData = localStorage.getItem('lozee_continue_topic');
-            if (continueTopicData) { try { const topicToContinue = JSON.parse(continueTopicData); topicsWithOptions.push({ icon: '↪️', displayText: `저번 대화 이어하기 (${topicToContinue.details || '생각 패턴'})`, isContinuation: true, continueDetails: topicToContinue }); } catch (e) { console.error("이어하기 주제 파싱 오류:", e); localStorage.removeItem('lozee_continue_topic');} }
-            if (currentUserTopics && typeof currentUserTopics === 'object' && Object.keys(currentUserTopics).length > 0) { const categoryNames = Object.keys(currentUserTopics); const categoryOptions = categoryNames.map(categoryName => { let icon = '💬'; if (currentUserTopics[categoryName] && Array.isArray(currentUserTopics[categoryName]) && currentUserTopics[categoryName].length > 0 && currentUserTopics[categoryName][0].icon) { icon = currentUserTopics[categoryName][0].icon; } return { icon: icon, displayText: categoryName, isContinuation: false }; }); topicsWithOptions.push(...categoryOptions); } 
-            else { console.warn(`현재 사용자에 맞는 주제 카테고리를 찾을 수 없거나 비어있습니다.`, currentUserTopics); } 
+
+            // "mypage (로지와의 약속)"에서 넘어온 이어하기 주제 (타입: 'cognitive_distortion_follow_up' 등)
+            const continueTopicDataFromPlans = localStorage.getItem('lozee_continue_topic');
+            if (continueTopicDataFromPlans) { 
+                try { 
+                    const topicToContinue = JSON.parse(continueTopicDataFromPlans); 
+                    topicsWithOptions.push({ 
+                        icon: '↪️', 
+                        displayText: `[약속] ${topicToContinue.details || '이전 생각 이어가기'}`, 
+                        isContinuation: true, 
+                        continueDetails: topicToContinue,
+                        type: 'mypage_plan' 
+                    }); 
+                } catch (e) { console.error("로지와의 약속 파싱 오류:", e); localStorage.removeItem('lozee_continue_topic');} 
+            }
+            
+            // 일반 주제들 추가
+            if (currentUserTopics && typeof currentUserTopics === 'object' && Object.keys(currentUserTopics).length > 0) { /* ... */ } 
             topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제', isContinuation: false }); 
+            
             displayOptionsInChat(topicsWithOptions, (selectedText, fullOptionObject) => { 
+                // ⭐ selectedMain 설정은 여기서 이루어짐 (사용자가 버튼 클릭 시)
                 selectedMain = selectedText; 
-                appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
-                if (fullOptionObject && fullOptionObject.isContinuation) { localStorage.removeItem('lozee_continue_topic'); const continueMessage = fullOptionObject.continueDetails && fullOptionObject.continueDetails.details ? `저번에 이야기했던 '${fullOptionObject.continueDetails.details}'에 대해 계속 이야기해보자.` : "저번에 나누던 이야기, 계속해볼까?"; startChat(continueMessage, 'topic_selection_init'); } 
-                else if (selectedMain === '자유주제') { const message = '네가 정하면 돼. 어떤 이야기가 하고 싶어?'; appendMessage(message, 'assistant'); if(inputArea) inputArea.style.display = 'flex'; if(chatInput) chatInput.focus();  } 
-                else { setTimeout(showSubTopics, 300); } 
+                
+                if (fullOptionObject && fullOptionObject.isContinuation) { // "이어하기" 버튼 클릭 시
+                    localStorage.removeItem('lozee_continue_topic'); 
+                    selectedMain = fullOptionObject.continueDetails.details || selectedText; // 실제 주제명으로 selectedMain 업데이트
+                    appendMessage(selectedMain + ' 이야기를 이어갈게!', 'assistant');
+                    const continueMessage = fullOptionObject.continueDetails && fullOptionObject.continueDetails.details 
+                        ? `저번에 이야기했던 '${selectedMain}'에 대해 계속 이야기해보자.` 
+                        : "저번에 나누던 이야기, 계속해볼까?";
+                    startChat(continueMessage, 'topic_selection_init'); 
+                } else if (selectedMain === '자유주제') { 
+                    appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
+                    const message = '네가 정하면 돼. 어떤 이야기가 하고 싶어?'; 
+                    appendMessage(message, 'assistant'); 
+                    if(inputArea) inputArea.style.display = 'flex'; if(chatInput) chatInput.focus();  
+                } else { // 일반 주제 카테고리 선택 시
+                    appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant'); 
+                    setTimeout(showSubTopics, 300); 
+                } 
             }); 
-            if (topicArea && typeof topicArea.style !== 'undefined') { topicArea.style.display = 'none !important'; }
         }
            
         function showSubTopics() { 
@@ -626,18 +707,25 @@
             displayOptionsInChat(subtopicOptions, (selectedSubtopicText) => { startChat(selectedSubtopicText, 'topic_selection_init'); }); 
         }
 
-        function startChat(initText, inputMethod = 'topic_selection_init') { 
-            console.log("startChat 함수 시작됨, 초기 메시지:", initText, "입력방식:", inputMethod); 
-            if (topicArea && typeof topicArea.style !== 'undefined') topicArea.style.display = 'none !important'; 
+               function startChat(initText, inputMethod = 'topic_selection_init') { 
+            console.log("startChat 함수 시작됨, 초기 메시지:", initText, "입력방식:", inputMethod, "현재 selectedMain:", selectedMain); 
+            // if (topicArea && typeof topicArea.style !== 'undefined') topicArea.style.display = 'none !important'; 
             if (inputArea) inputArea.style.display = 'flex'; 
             
-            const currentUserEmailForLog = localStorage.getItem('cbtUserEmail'); // 전역 currentUserEmail 사용
-            if(currentUserEmailForLog && selectedMain && !currentSessionId && typeof logSessionStart === 'function'){ 
-                logSessionStart(currentUserEmailForLog, selectedMain).then(id => currentSessionId = id);
+            // ⭐ 세션 시작 로그는 여기서, selectedMain이 확정된 후에, 그리고 새 세션일 때만
+            if(currentUserEmail && selectedMain && !currentFirestoreSessionId && typeof logSessionStart === 'function'){ 
+                logSessionStart(currentUserEmail, selectedMain).then(id => {
+                    if (id) currentFirestoreSessionId = id;
+                    console.log("새로운 세션 시작, 주제:", selectedMain, "세션 ID:", currentFirestoreSessionId);
+                });
             }
-            if (initText && String(initText).trim() !== '') { sendMessage(initText, inputMethod); } 
-            else { if (chatInput) chatInput.focus(); }
+            if (initText && String(initText).trim() !== '') { 
+                sendMessage(initText, inputMethod); 
+            } else { 
+                if (chatInput) chatInput.focus(); 
+            }
         }   
+         
         
         // --- 말 길이 선호도 질문 함수 ---
         function askForVerbosityPreference() {

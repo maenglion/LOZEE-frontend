@@ -288,35 +288,39 @@
             console.log("Journal Topic Detail Page (journal-list2.html): DOMContentLoaded");
             
             // "<이 주제로 이어 말하기>" 버튼 생성 로직
-            const pageHeaderEl = document.querySelector('.page-header');
-            if (currentDisplayTopic && userId && mainContainerEl && pageHeaderEl) {
+         const pageHeaderEl = document.querySelector('.page-header');
+            if (currentDisplayTopic && userId && mainContainerEl && pageHeaderEl) { // 실제 데이터 로드 시
                 const continueTopicButton = document.createElement('button');
-                continueTopicButton.className = 'action-button continue-topic-button-container'; // 클래스 추가
+                continueTopicButton.className = 'action-button continue-topic-button-container';
                 continueTopicButton.style.display = 'block';
-                continueTopicButton.style.margin = '0 auto 25px auto'; // 페이지 헤더와 카드 목록 사이
+                continueTopicButton.style.margin = '10px auto 25px auto'; 
                 continueTopicButton.style.fontSize = '1em';
                 continueTopicButton.innerHTML = `"${currentDisplayTopic}" 주제로 이어 말하기 🗣️`;
+                
                 continueTopicButton.onclick = () => {
+                    // talk.html로 이어하기 정보 전달
                     localStorage.setItem('lozee_talk_init_topic', JSON.stringify({
-                        type: 'continue_specific_topic',
-                        details: currentDisplayTopic,   
-                        prompt: `'${currentDisplayTopic}'에 대해서 어떤 이야기를 더 하고 싶어?`
+                        type: 'continue_specific_topic', // 이어하기 유형
+                        details: currentDisplayTopic,    // 이어갈 주제명
+                        prompt: `'${currentDisplayTopic}'에 대해서 어떤 이야기를 더 하고 싶어?` // talk.html 초기 메시지
                     }));
-                    window.location.href = 'talk.html';
+                    window.location.href = 'talk.html'; // ⭐ talk.html로 이동
                 };
                 pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
-            } else if (mainContainerEl && pageHeaderEl) { // 주제 정보 없을 때도 예시 버튼
+
+            } else if (mainContainerEl && pageHeaderEl) { // 예시 데이터 표시 시에도 버튼 UI는 보여주되, 기능은 alert
                  const displayTopicForButton = currentDisplayTopic || "예시 주제";
                  const sampleContinueButton = document.createElement('button');
                  sampleContinueButton.className = 'action-button continue-topic-button-container';
                  sampleContinueButton.style.display = 'block';
-                 sampleContinueButton.style.margin = '0 auto 25px auto';
+                 sampleContinueButton.style.margin = '10px auto 25px auto';
                  sampleContinueButton.style.fontSize = '1em';
-                 sampleContinueButton.innerHTML = `"${displayTopicForButton}" 이어 말하기 (샘플)`;
-                 sampleContinueButton.onclick = () => alert("실제 데이터가 있을 때 작동하는 기능입니다! 😊");
+                 sampleContinueButton.innerHTML = `"${displayTopicForButton}" 주제로 이어 말하기 (샘플)`;
+                 sampleContinueButton.onclick = () => alert("실제 데이터가 있을 때 talk.html로 이동하여 대화를 이어갑니다! 😊");
                  pageHeaderEl.insertAdjacentElement('afterend', sampleContinueButton);
             }
 
+           // Firestore 데이터 로드 또는 예시 데이터 표시 로직
             if (currentDisplayTopic && userId) {
                 await fetchTopicHeaderStats(); 
                 await loadSessionsForTopicPage(1); 
