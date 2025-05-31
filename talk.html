@@ -133,7 +133,7 @@
       border-color: #388E3C;
     }
   
-  .journal-save-notification { /* 저널 저장 알림 스타일 */
+  .journal-save-notification { /* 저널 저장 준비 알림 스타일 */
       align-self: center;
       background: #e8f5e9; /* 연한 초록색 */
       color: #2e7d32;
@@ -326,7 +326,7 @@
         let conversationStartTime = null;
        
         let analysisNotificationShown = false; // 상세 분석 알림 여부
-        let journalSaveNotificationShown = false; // 저널 저장 알림 여부 (800자 기준)
+        let journalSaveNotificationShown = false; // ⭐ 저널 저장 알림 여부 (800자 기준)
         
         let sessionTimeoutId = null;
         const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000; // 5분
@@ -398,12 +398,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const initTopic = JSON.parse(initTopicDataString);
                     localStorage.removeItem('lozee_talk_init_topic'); 
                     if (initTopic.details) { 
-                        selectedMain = initTopic.details; 
-                        const initialMessageFromLozee = initTopic.prompt || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까? 어떤 점이 궁금하거나 더 이야기하고 싶어?`;
+                        selectedMain = initTopic.details; // ⭐ 이어갈 주제로 selectedMain 설정
+                        const initialMessageFromLozee = initTopic.prompt || `지난번 '${selectedMain}' 이야기에 이어서 더 나눠볼까?`;
                         appendMessage(initialMessageFromLozee, 'assistant');
                         console.log(`talk.html: "${selectedMain}" 주제 이어하기 시작.`);
                         startChat(initialMessageFromLozee, 'topic_selection_init'); 
-                        hasGreeted = true; // 이어하기도 일종의 인사로 간주
+                        hasGreeted = true; 
                         startedWithInitTopic = true; 
                     }
                 } catch (e) { 
@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (journalSaveNotificationShown) return; // 이미 알림이 떴으면 중복 방지 (선택적)
             const notification = document.createElement('div');
             notification.className = 'journal-save-notification'; // CSS 클래스 적용
-            notification.textContent = '✅ 세션 이야기 저장 완료! (클릭해서 확인)'; 
+            notification.textContent = '📝 이야기가 충분히 쌓였네요! 이 대화는 종료 시 자동으로 저장됩니다.'; 
             notification.onclick = () => { 
                 // journal.html로 이동 시 필요한 정보 전달 (예: localStorage 사용)
                 // 이전에 저장된 lozee_conversation_analysis는 가장 최근 "분석" 결과이므로,
@@ -896,29 +896,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 appendMessage(clean, 'assistant');
 
 
-                // --- ⭐ 저널 저장 알림 (800자 기준) ⭐ ---
-                if (userCharCountInSession >= 800 && !journalSaveNotificationShown && selectedMain) {
-                    // 이 시점에 즉시 저장하고 journalId를 받아올 수도 있지만,
-                    // 일단은 "저장 준비 완료" 알림만 띄우고 실제 저장은 세션 종료 시에.
-                    // 또는, 여기서 바로 임시 저장 후 ID를 받아 notification에 연결할 수도 있음.
-                    // 현재는 알림만 띄우고, 실제 저장은 타임아웃 로직에서 함.
-                    const tempJournalDataForNotification = { 
-                        ...(lastAiAnalysisData || {}), 
-                        sessionDurationMinutes: Math.round((Date.now() - conversationStartTime) / (1000 * 60)),
-                        userCharCountForThisSession: userCharCountInSession 
-                    };
-                    // 임시로 저널을 저장하고 ID를 받아와서 알림에 연결하는 것이 더 사용자 친화적일 수 있음
-                    // 여기서는 간단히 알림만 먼저 표시 (실제 저장은 타임아웃 시)
-                    // 만약 즉시 저장하고 ID를 받아오려면:
-                    // const savedJournalId = await saveJournalEntry(currentUserEmail, selectedMain, chatHistory, tempJournalDataForNotification);
-                    // if (savedJournalId) showJournalSavedNotification(savedJournalId);
-                    
-                    // 지금은 "곧 저장될거야" 라는 느낌으로 알림만.
-                    const journalNotif = document.createElement('div');
-                    journalNotif.className = 'journal-save-notification';
-                    journalNotif.textContent = `📝 이야기가 충분히 쌓였네! 대화가 끝나면 자동으로 저장될 거야.`;
-                    if(chatWindow) chatWindow.appendChild(journalNotif);
-                    journalSaveNotificationShown = true; // 한 세션에 한 번만
+                // --- ⭐ 저널 저장 '준비' 알림 (800자 기준) ⭐ ---
+                if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
+                    showJournalReadyNotification(); 
                 }
 
 
@@ -976,10 +956,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
 
-                // ───────── 수정된 부분 ─────────
-                // skipTTS가 false인 경우에는 어떤 입력 방식(text, topic_selection_init, stt)이든
-                // 무조건 TTS 재생을 시도하도록 변경
-
                 
         // ─────────── 수정된 TTS 로직 ───────────
         // 1) 기존 재생 중인 TTS가 있다면 중단
@@ -1007,27 +983,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 
                 // 분석 알림 로직 (수정된 조건)
-                  const currentSessionElapsedTime = (Date.now() - conversationStartTime) / (1000 * 60);
+                const currentSessionElapsedTime = (Date.now() - conversationStartTime) / (1000 * 60);
                 const finalUserCharCountForAnalysis = previousTotalUserCharCountOverall + userCharCountInSession;
                 console.log(`[분석 조건 체크] 시간: ${currentSessionElapsedTime.toFixed(1)}분 (기준:10), 사용자 턴: ${userTurnCountInSession} (기준:20), 총 글자수: ${finalUserCharCountForAnalysis} (기준:1500)`);
-                if (currentSessionElapsedTime >= 10 && userTurnCountInSession >= 20 && finalUserCharCountForAnalysis >= 1500 && !analysisNotificationShown) { 
+                
+                if (currentSessionElapsedTime >= 10 && 
+                    userTurnCountInSession >= 20 && 
+                    finalUserCharCountForAnalysis >= 1500 && 
+                    !analysisNotificationShown) { 
+                    
                     console.log(`[분석 조건 충족!] 상세 분석 실행 및 localStorage 저장`);
                     let detailedAnalysisDataForStorage = { ...(lastAiAnalysisData || {}) }; 
                     if (LOZEE_ANALYSIS && typeof LOZEE_ANALYSIS.inferAgeAndLanguage === 'function') { /* ... */ }
                     // 다른 분석 모듈 호출
-                    if(Object.keys(detailedAnalysisDataForStorage).length > 0) {
-                        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
-                            startTime: conversationStartTime, 
-                            analysisTime: Date.now(),
-                            accumulatedDurationMinutes: Math.round(currentSessionElapsedTime), 
-                            accumulatedUserCharCount: finalUserCharCountForAnalysis, 
-                            results: detailedAnalysisDataForStorage
-                        }));
 
-                       showAnalysisNotification(); // ⭐ 이름 변경된 함수 호출
+                    console.log("[localStorage 저장 전] detailedAnalysisDataForStorage:", JSON.stringify(detailedAnalysisDataForStorage));
+                    if(Object.keys(detailedAnalysisDataForStorage).length > 0 && 
+                       (detailedAnalysisDataForStorage.gptRealtimeAnalysis || detailedAnalysisDataForStorage.ageLanguageAnalysis)) {
+                        localStorage.setItem('lozee_conversation_analysis', JSON.stringify({ /* ... */ }));
+                        console.log("[localStorage 저장 완료]");
+                        showAnalysisNotification(); 
                         analysisNotificationShown = true;
-                    } else { console.log("생성된 분석 데이터가 없어 알림 표시 안 함."); }
+                    } else { console.log("생성된 유의미한 분석 데이터가 없어 알림 표시 안 함."); }
                 } else if (!analysisNotificationShown) { console.log("[분석 조건 미충족]"); }
+
 
                 if (verbosityPromptCount === 0 && assistantMessageCount >= 5) { askForVerbosityPreference(); } 
                 else if (verbosityPromptCount === 1 && (Date.now() - lastVerbosityPromptTime > PREFERENCE_PROMPT_INTERVAL)) { askForVerbosityPreference(); }
