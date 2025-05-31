@@ -379,14 +379,42 @@
 
             // --- 각 분석 섹션 렌더링 ---
             // 1. 언어·나이 분석
-            if (languageAgeSection) {
-                if (userAge > 12 || !analysisResults.ageLanguageAnalysis) { 
-                    languageAgeSection.style.display = 'none';
-                } else {
-                    languageAgeSection.style.display = 'block'; 
-                    // ... (이전 답변의 언어 연령 분석 결과 표시 로직 전체) ...
-                }
-            }
+if (languageAgeSection) {
+    // 섹션 자체를 표시하거나 숨기는 조건
+    if (userAge > 12 || !analysisResults.ageLanguageAnalysis || accumulatedDurationMinutes < 1) { // 예: 최소 1분 대화 필요
+        languageAgeSection.style.display = 'none';
+    } else {
+        languageAgeSection.style.display = 'block';
+        const langAnalysis = analysisResults.ageLanguageAnalysis;
+
+        if (predictedLangAgeEl) {
+            predictedLangAgeEl.textContent = langAnalysis.predictedAge || "분석 중...";
+        }
+
+        if (ageDifferenceVisualEl && langAnalysis.differenceSymbol && langAnalysis.differenceText) {
+            ageDifferenceVisualEl.innerHTML = `${langAnalysis.differenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.differenceText})</span>`;
+        } else if (ageDifferenceVisualEl) {
+            ageDifferenceVisualEl.textContent = '';
+        }
+
+        if (ageFeedbackEl && langAnalysis.feedback) {
+            ageFeedbackEl.textContent = langAnalysis.feedback;
+            ageFeedbackEl.className = 'feedback neutral'; // 피드백 유형에 따라 클래스 조정 가능
+            ageFeedbackEl.style.display = 'block';
+        } else if (ageFeedbackEl) {
+            ageFeedbackEl.style.display = 'none';
+        }
+ 
+
+        // 연습 버튼 표시/숨기기 (현재 "준비 중")
+        if (languagePracticeBtn) {
+            // 여기에 특정 추천이 있을 경우 등의 조건을 추가할 수 있습니다.
+            // languagePracticeBtn.style.display = langAnalysis.needsPractice ? 'inline-block' : 'none';
+            languagePracticeBtn.style.display = 'none'; // 현재는 "준비 중"으로 유지
+        }
+    }
+}
+          
 
             // 2. 감정 어조 및 태그 클라우드
             if (emotionToneSection) { // 섹션 존재 확인
