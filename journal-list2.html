@@ -153,19 +153,20 @@
                 for (const ageGroup in ageGroups) { // e.g., '10세미만', '11-15세'
                     const mainTopicCategories = ageGroups[ageGroup];
                     for (const mainTopicName in mainTopicCategories) { // e.g., "감정 이야기", "친구 이야기"
-                        const subTopicsArray = mainTopicCategories[mainTopicName];
-                        for (const subTopic of subTopicsArray) {
-                            // Assuming topicKey from URL is one of the displayText values
-                            if (subTopic.displayText === topicKey) {
-                                return subTopic.displayText; // Found the matching displayText
-                            }
-                            // If you had an internal 'value' or 'id' distinct from displayText,
-                            // you would check it here: else if (subTopic.value === topicKey) return subTopic.displayText;
-                        }
+                           const subTopicsArray = mainTopicCategories[mainTopicName];
+                      // ★ subTopicsArray가 배열이 아닌 경우 예외 처리 ★
+                      if (!Array.isArray(subTopicsArray)) {
+                          continue;
+                      }
+                      for (const subTopic of subTopicsArray) {
+                          if (subTopic.displayText === topicKey) {
+                              return subTopic.displayText;
+                          }
+                      }
                     }
                 }
             }
-            return topicKey; // Fallback if not found (should ideally always be found)
+            return topicKey;
         }
 
         // Use counselingTopicsByAge here
