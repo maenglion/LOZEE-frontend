@@ -15,6 +15,8 @@ import {
   logSessionEnd
 } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
+import { getOrCreateUserId, saveJournalEntry /*, 기타 필요한 함수들 */ } from './firebase-utils.js'; // getOrCreateUserId 함수 import
+
 
 // --- 상태 변수 ---
 let skipTTS = false,
@@ -50,8 +52,12 @@ const sendBtn = document.getElementById('send-btn');
 const micButton = document.getElementById('mic-button');
 const meterLevel = document.getElementById('volume-level');
 
+
+// --- 전역 또는 모듈 스코프에서 userId 가져오기 ---
+const loggedInUserId = getOrCreateUserId(); // 함수 호출하여 userId 가져오기 및 설정
+                                     // 이 시점에 localStorage에 'lozee_userId'가 없으면 새로 생성 및 저장됨
+
 // --- 사용자 정보 (localStorage에서 가져와 일관되게 사용) ---
-const loggedInUserId = localStorage.getItem('lozee_userId'); // 현재 로그인한 사용자의 UID
 const userRole = localStorage.getItem('lozee_role') || 'child'; // 'child' 또는 'parent'
 const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10); // 대화 대상의 나이 (본인 또는 자녀)
 const userNameToDisplay = localStorage.getItem('lozee_username') || '친구';
@@ -59,11 +65,24 @@ const voc = getKoreanVocativeParticle(userNameToDisplay);
 const isParentND = localStorage.getItem('lozee_parentIsND') === 'true'; // 보호자 본인의 신경다양성 여부
 const targetChildId = localStorage.getItem('lozee_childId'); // 보호자 모드일 때 선택된 자녀의 UID
 
+
 // userType을 role 기반으로 결정 (directUser / caregiver)
 // talk.html에서 userType은 주제 선택(getTopicsForCurrentUser)과 통계 업데이트(updateUserOverallStats)에 사용됨
 const currentUserType = (userRole === 'parent') ? 'caregiver' : 'directUser';
 
 // --- Firestore 유틸리티 함수 ---
+
+// 예: Firestore에서 데이터 가져오기
+async function fetchSomeData() {
+    if (!loggedInUserId) {
+        console.error("사용자 UID가 없습니다.");
+        return;
+    }
+    const userRef = doc(db, 'users', loggedInUserId);
+    // ...
+}
+
+
 async function fetchPreviousUserCharCount() {
     if (!loggedInUserId) {
         console.warn("fetchPreviousUserCharCount: loggedInUserId가 없습니다.");
@@ -84,25 +103,12 @@ async function fetchPreviousUserCharCount() {
 
 // --- 초기화 로직 ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('talk.js: DOMContentLoaded 이벤트 발생');
-
-    let startedWithInitTopic = false; // ⭐ 사용 전에 미리 선언 및 초기화
-
-    // 사용자 정보 유효성 검사
+    console.log('페이지 로드됨. 사용자 UID:', loggedInUserId);
     if (!loggedInUserId) {
-        alert("사용자 정보(UID)가 없습니다. 다시 로그인해주세요.");
-        window.location.href = 'index.html';
+        alert("사용자 정보를 가져올 수 없습니다. 페이지를 새로고침하거나 다시 시작해주세요.");
+        // window.location.href = 'index.html'; // 필요시 시작 페이지로 리디렉션
         return;
     }
-    // userType (directUser/caregiver)은 currentUserType 변수로 이미 설정됨
-
-    // 테스트 계정 강제 설정 (필요시 사용, 배포 시 제거)
-    // if (loggedInUserId === '특정테스트계정UID') {
-    //     currentUserType = 'caregiver';
-    //     localStorage.setItem('lozee_userType', 'caregiver'); // 이 줄은 불필요, currentUserType 사용
-    //     userRole = 'parent';
-    //     localStorage.setItem('lozee_role', 'parent');
-    // }
 
     conversationStartTime = Date.now();
     try {

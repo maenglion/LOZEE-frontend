@@ -78,6 +78,19 @@ function detectRiskTags(text, detailedAnalysis = {}) {
  * - entryType?: string ("standard" | "child", 기본값: "standard")
  * - childName?: string (알림 메시지에 사용할 자녀 이름, 보호자 모드 & 알림 생성 시)
  */
+
+
+export function getOrCreateUserId() {
+  let userId = localStorage.getItem('lozee_userId');
+  if (!userId) {
+    userId = 'guest_' + crypto.randomUUID();
+    localStorage.setItem('lozee_userId', userId);
+  }
+  return userId;
+}
+
+
+
 export async function saveJournalEntry(ownerId, topic, journalDetails, options = {}) {
     if (!ownerId || !topic || !journalDetails || !journalDetails.summary) {
         console.warn("[Firebase Utils] saveJournalEntry: 필수 정보 부족 (ownerId, topic, summary). 저널 저장 건너뜀.");
@@ -173,6 +186,8 @@ export async function saveJournalEntry(ownerId, topic, journalDetails, options =
         return null; // 오류 발생 시 null 반환
     }
 }
+
+
 
 
 // --- 기존 함수들 (logSessionStart, logSessionEnd, saveManualJournalEntry, updateTopicStats, updateUserOverallStats, saveUserProfileData, uploadUserPhoto) ---
