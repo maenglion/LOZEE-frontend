@@ -80,16 +80,27 @@ function detectRiskTags(text, detailedAnalysis = {}) {
  */
 
 
+// ✅ 인증 없이 userId 생성 (crypto 기반 guest ID)
 export function getOrCreateUserId() {
   let userId = localStorage.getItem('lozee_userId');
   if (!userId) {
     userId = 'guest_' + crypto.randomUUID();
     localStorage.setItem('lozee_userId', userId);
+
+     // 🔽 여기서 Firestore에 사용자 정보 자동 저장
+    const userRef = doc(db, 'users', userId);
+    setDoc(userRef, {
+      uid: userId,
+      createdAt: serverTimestamp(),
+      isGuest: true
+    }, { merge: true }).then(() => {
+      console.log(`[Firestore] 새로운 게스트 사용자 등록: ${userId}`);
+    }).catch(err => {
+      console.error('[Firestore] 게스트 사용자 등록 실패:', err);
+    });
   }
   return userId;
 }
-
-
 
 export async function saveJournalEntry(ownerId, topic, journalDetails, options = {}) {
     if (!ownerId || !topic || !journalDetails || !journalDetails.summary) {
