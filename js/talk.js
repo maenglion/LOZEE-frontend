@@ -1,11 +1,11 @@
 // js/talk.js
 
-import './firebase-config.js'; // 경로 수정
-import { db } from './firebase-config.js'; // 경로 수정
+import './firebase-config.js';
+import { db } from './firebase-config.js';
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './gpt-dialog.js'; // 경로 수정
-import { playTTSFromText, stopCurrentTTS } from './tts.js'; // 경로 수정
-import LOZEE_ANALYSIS from './lozee-analysis.js'; // 경로 수정
+import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './gpt-dialog.js';
+import { playTTSFromText, stopCurrentTTS } from './tts.js';
+import LOZEE_ANALYSIS from './lozee-analysis.js';
 import {
   saveJournalEntry,
   saveManualJournalEntry,
@@ -13,8 +13,10 @@ import {
   updateUserOverallStats,
   logSessionStart,
   logSessionEnd
-} from './firebase-utils.js'; // 경로 수정
-import { counselingTopicsByAge } from './counseling_topics.js'; // 경로 수정
+} from './firebase-utils.js';
+// 아래 3줄은 counseling_topics.js에서 실제로 export 되는 변수명에 따라 수정 또는 삭제 필요
+import { counselingTopicsForChild, counselingTopicsForParent_ND, counselingTopicsForParent_Typical } from './counseling_topics.js'; 
+import { counselingTopicsByAge } from './counseling_topics.js';
 
 // --- 상태 변수 ---
 let skipTTS = false,
@@ -49,11 +51,48 @@ const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
 const micButton = document.getElementById('mic-button');
 const meterLevel = document.getElementById('volume-level');
-// const topicArea = document.getElementById('topic-area'); // HTML에 실제 이 ID를 가진 요소가 없으므로 주석 처리
+const topicArea = document.getElementById('topic-area'); // HTML에 실제 이 ID를 가진 요소가 없으므로 주석 처리
 
-// --- 사용자 정보 ---
-const userName = localStorage.getItem('lozee_username') || '친구';
-const userAge = parseInt(localStorage.getItem('lozee_userage') || '0', 10);
+  // 역할/나이 불러오기
+  const role = localStorage.getItem('lozee_role') || 'child'; // 기본을 child로 가정
+  const userId = localStorage.getItem('lozee_userId');
+  const childId = localStorage.getItem('lozee_childId');
+  const userAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
+
+  // 부모가 신경다양성인 여부 (예: 프로필에서 설정해두었다고 가정)
+  const parentIsND = localStorage.getItem('lozee_parentIsND') === 'true';
+
+  // 상담 토픽 선택 함수
+  function showMainTopics() {
+    let topics = [];
+
+    if (role === 'child') {
+      // 자녀용 주제: 나이 그룹별 선택
+      const ageGroup = getAgeGroup(userAge); // 예: "8-10"
+      topics = counselingTopicsForChild[ageGroup] || [];
+    } else if (role === 'parent') {
+      // 보호자용 주제: 신경다양성 여부에 따라 분기
+      topics = parentIsND
+        ? counselingTopicsForParent_ND
+        : counselingTopicsForParent_Typical;
+    }
+
+    // 화면에 버튼으로 렌더링
+    appendMessage('어떤 이야기를 나눠볼까? 아래 중에서 골라줘!', 'ai');
+    topicArea.innerHTML = ''; 
+    topics.forEach((t) => {
+      // 자녀용은 객체 배열, 보호자용은 문자열 배열 형태 가정
+      const displayText = typeof t === 'string' ? t : t.displayText;
+      const value     = typeof t === 'string' ? t : t.value;
+      const btn = document.createElement('button');
+      btn.className = 'topic-btn';
+      btn.textContent = displayText;
+      btn.onclick = () => selectMainTopic(value);
+      topicArea.appendChild(btn);
+    });
+    topicArea.classList.remove('hidden');
+  }
+const userName = localStorage.getItem('lozee_username')
 const currentUserEmail = localStorage.getItem('cbtUserEmail');
 let userType = localStorage.getItem('lozee_userType') || '';
 const voc = getKoreanVocativeParticle(userName);
@@ -69,6 +108,21 @@ async function fetchPreviousUserCharCount() {
     } catch (error) { console.error("Firestore 이전 누적 글자 수 로드 오류:", error); }
     return 0;
 }
+
+async function handleAiResponse(topic, aiSummary) {
+    let entryType, relatedChild;
+    if (role === "child") {
+      entryType = "standard";
+      relatedChild = null;
+    } else { // role === "parent"
+      entryType = "child";
+      relatedChild = childId;
+    }
+    await saveJournalEntry(userId, topic, aiSummary, {
+      relatedChildId: relatedChild,
+      entryType
+    });
+  }
 
 // --- 초기화 로직 ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -156,8 +210,12 @@ async function playTTSWithControl(txt) {
 
 let audioContext, analyser, source, dataArray, animId, streamRef;
 const LOW_COLOR = { r:0, g:200, b:0 }; const MID_COLOR = { r:255, g:200, b:0 }; const HIGH_COLOR = { r:255, g:69, b:0 };
-function interp(c1, c2, f) { return `rgb(<span class="math-inline">\{Math\.round\(c1\.r \+ f \* \(c2\.r \- c1\.r\)\)\},</span>{Math.round(c1.g + f * (c2.g - c1.g))},${Math.round(c1.b + f * (c2.b - c1.b))})`;}
-function setupAudioAnalysis(stream) { if (audioContext && audioContext.state !== 'closed') {audioContext.close().catch(e=>console.warn("이전 AudioContext 닫기 오류:", e));} audioContext = new AudioContext(); analyser = audioContext.createAnalyser(); analyser.fftSize = 256; source = audioContext.createMediaStreamSource(stream); source.connect(analyser); dataArray = new Uint8Array(analyser.frequencyBinCount); streamRef = stream; draw(); }
+function interp(c1, c2, f) {
+    const r = Math.round(c1.r + f * (c2.r - c1.r));
+    const g = Math.round(c1.g + f * (c2.g - c1.g));
+    const b = Math.round(c1.b + f * (c2.b - c1.b));
+    return `rgb(${r}, ${g}, ${b})`; // 쉼표 뒤 공백 추가 (일반적 스타일)
+}
 function draw() { animId = requestAnimationFrame(draw); if (!analyser || !dataArray) return; analyser.getByteFrequencyData(dataArray); let sum = dataArray.reduce((a, v) => a + v, 0); let avg = dataArray.length > 0 ? sum / dataArray.length : 0; let norm = Math.min(100, Math.max(0, (avg / 140) * 100)); if(meterLevel) {meterLevel.style.width = norm + '%'; meterLevel.style.background = `linear-gradient(to right, var(--background-color), ${norm <= 50 ? interp(LOW_COLOR, MID_COLOR, norm / 50) : interp(MID_COLOR, HIGH_COLOR, (norm - 50) / 50)})`;} if (norm > 10 && isRec && isPlayingTTS && !skipTTS) { console.log("사용자 음성 감지, TTS 중단 시도"); if (typeof stopCurrentTTS === 'function') stopCurrentTTS(); skipTTS = true; } }
 function stopAudio() { if (animId) cancelAnimationFrame(animId); if (source) source.disconnect(); if (streamRef) streamRef.getTracks().forEach(track => track.stop()); if (audioContext && audioContext.state !== 'closed') { audioContext.close().catch(e=>console.warn("AudioContext 닫기 오류:", e)); } audioContext = null; if(meterLevel) { meterLevel.style.width = '0%'; meterLevel.style.background = getComputedStyle(document.documentElement).getPropertyValue('--volume-meter-container-bg'); } }
 
@@ -392,6 +450,7 @@ async function sendMessage(text, inputMethod = 'text') {
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
+
     try {
         const elapsedTimeInMinutesForGPT =
             (Date.now() - conversationStartTime) / (1000 * 60);
@@ -417,7 +476,7 @@ async function sendMessage(text, inputMethod = 'text') {
             return;
         }
 
-        const d = await res.json(); // 서버는 { text: "...", analysis: { ... } } 형태로 응답
+      const d = await res.json(); // 서버는 { text: "...", analysis: { ... } } 형태로 응답
 
         // 서버가 이미 텍스트와 분석 데이터를 분리해서 전달한다고 가정
         const cleanText = d.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
@@ -463,49 +522,62 @@ async function sendMessage(text, inputMethod = 'text') {
             let detailedAnalysisDataForStorage = {
                 ...(lastAiAnalysisData || {}) // GPT가 제공한 기본 분석 데이터 (서버에서 파싱된 analysis 객체)
             };
+            
+            if ( LOZEE_ANALYSIS &&
+        typeof LOZEE_ANALYSIS.inferAgeAndLanguage === 'function'
+      ) {
+        try {
+          const conversationTextForAgeAnalysis = chatHistory
+            .map(item => `${item.role}: ${item.content}`)
+            .join('\n');
+          const ageAnalysisResult =
+            await LOZEE_ANALYSIS.inferAgeAndLanguage(
+              conversationTextForAgeAnalysis
+            );
 
-            if (
-                LOZEE_ANALYSIS &&
-                typeof LOZEE_ANALYSIS.inferAgeAndLanguage === 'function'
-            ) {
-                try {
-                    const conversationTextForAgeAnalysis = chatHistory
-                        .map(item => `${item.role}: ${item.content}`)
-                        .join('\n');
-                    const ageAnalysisResult =
-                        await LOZEE_ANALYSIS.inferAgeAndLanguage(
-                            conversationTextForAgeAnalysis
-                        );
+          if (ageAnalysisResult && !ageAnalysisResult.error) {
+            detailedAnalysisDataForStorage.ageLanguageAnalysis = {
+              predictedAge:
+                ageAnalysisResult.predicted_age_group || "분석 중...",
+              feedback:
+                ageAnalysisResult.feedback_message ||
+                "결과를 바탕으로 피드백을 생성합니다."
+            };
+            console.log(
+              "언어 연령 분석 결과 추가됨:",
+              detailedAnalysisDataForStorage.ageLanguageAnalysis
+            );
+          } else {
+            console.warn(
+              "언어 연령 분석 실패 또는 오류:",
+              ageAnalysisResult?.error
+            );
+          }
+        } catch (langAnalysisError) {
+          console.error(
+            "inferAgeAndLanguage 함수 실행 중 오류:",
+            langAnalysisError
+          );
+        }
+      }
+    // lastAiAnalysisData 등 분석 데이터를 이미 받아왔다고 가정
+    const dataToStoreInLocalStorage = {
+      results: lastAiAnalysisData,           // 실제 분석 결과 객체
+      userCharCount: userCharCountInSession, // 예시: 이번 세션 사용자 글자 수
+      timestamp: Date.now()                  // 저장 시점
+    };
+    // 로컬스토리지에 JSON.stringify 형태로 저장
+    localStorage.setItem('lozee_lastAnalysis', 
+        JSON.stringify(dataToStoreInLocalStorage));
+  }
 
-                    if (
-                        ageAnalysisResult &&
-                        !ageAnalysisResult.error
-                    ) {
-                        detailedAnalysisDataForStorage.ageLanguageAnalysis = {
-                            predictedAge:
-                                ageAnalysisResult.predicted_age_group ||
-                                "분석 중...",
-                            feedback:
-                                ageAnalysisResult.feedback_message ||
-                                "결과를 바탕으로 피드백을 생성합니다."
-                        };
-                        console.log(
-                            "언어 연령 분석 결과 추가됨:",
-                            detailedAnalysisDataForStorage.ageLanguageAnalysis
-                        );
-                    } else {
-                        console.warn(
-                            "언어 연령 분석 실패 또는 오류:",
-                            ageAnalysisResult?.error
-                        );
-                    }
-                } catch (langAnalysisError) {
-                    console.error(
-                        "inferAgeAndLanguage 함수 실행 중 오류:",
-                        langAnalysisError
-                    );
-                }
-            }
-
-            const dataToStoreInLocalStorage = {
-                results
+} catch (error) {
+    console.error("sendMessage 내 예외 발생:", error);
+    appendMessage("오류가 발생했어요. 다시 시도해 주세요.", "assistant_feedback");
+  } finally {
+    // 7) 처리 완료 후 UI 복원
+    isProcessing = false;
+    micButtonCurrentlyProcessing = false;
+    if (sendBtn) sendBtn.classList.remove('loading');
+  }
+} // <<< sendMessage 함수 완전히 닫는 중괄호

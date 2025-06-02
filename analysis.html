@@ -530,6 +530,63 @@
     }
         });
 
+
+        // 인지왜곡 또는 언어연령 차이 시 "로지와의 약속" 생성
+function createImprovementPlanIfNeeded(analysisResults, userAge) {
+    let plans = JSON.parse(localStorage.getItem('lozee_improvement_plans') || '[]');
+
+    // 1. 인지왜곡 관련 약속 생성
+    if (analysisResults.cognitiveDistortions && analysisResults.cognitiveDistortions.length > 0) {
+        analysisResults.cognitiveDistortions.forEach(distortion => {
+            // 이미 동일한 약속이 있는지 확인 (중복 방지)
+            const existingPlan = plans.find(p => p.type === 'cognitive_distortion' && p.details === distortion);
+            if (!existingPlan) {
+                plans.push({
+                    type: 'cognitive_distortion',
+                    title: `인지왜곡 점검: ${distortion}`,
+                    details: distortion, // 어떤 인지왜곡인지
+                    topic: analysisResults.summaryTitle || "이번 대화 주제", // 관련 대화 주제
+                    promptForContinuation: `지난번에 이야기 나눴던 '${distortion}' 생각 습관에 대해 좀 더 깊이 이야기 나눠볼까? 어떤 상황에서 그런 생각이 들었는지, 그 생각 때문에 어떤 기분이었는지 알려줄 수 있어?`
+                });
+            }
+        });
+    }
+
+    // 2. 언어 연령 차이 관련 약속 생성
+    if (analysisResults.ageLanguageAnalysis) {
+        const langAnalysis = analysisResults.ageLanguageAnalysis;
+        // predictedAge가 문자열 "X-Y세" 형태일 수 있으므로, 숫자 나이로 변환하거나 대표값 사용 필요
+        // 여기서는 간단히 문자열 그대로 사용하거나, 실제 나이(userAge)와 비교 로직이 필요
+        const ageDifference = Math.abs( (parseInt(langAnalysis.predictedAge) || userAge) - userAge ); // 간략화된 차이 계산
+
+        if (ageDifference >= 0.5) { // 예: 6개월(0.5년) 이상 차이 시
+             const existingPlan = plans.find(p => p.type === 'language_practice' && p.topic === (langAnalysis.topic || "언어 표현"));
+             if (!existingPlan) {
+                plans.push({
+                    type: 'language_practice',
+                    title: `말솜씨 연습: ${langAnalysis.topic || '언어 표현'}`,
+                    details: langAnalysis.feedback || '언어 표현력 향상',
+                    topic: langAnalysis.topic || "언어 표현", // 관련된 대화 주제나 연습할 언어 영역
+                    predictedAge: langAnalysis.predictedAge,
+                    userAge: userAge,
+                    promptForContinuation: `지난번 분석에서 내 말솜씨가 ${langAnalysis.predictedAge} 정도로 보였는데, 실제 나이(${userAge}세)와 조금 차이가 있었지? 같이 연습하면서 더 멋지게 말하는 법을 익혀볼까?`
+                });
+            }
+        }
+    }
+
+    if (plans.length > 0) {
+        localStorage.setItem('lozee_improvement_plans', JSON.stringify(plans));
+        console.log("Mypage: 개선 계획 저장됨:", plans);
+    }
+}
+// DOMContentLoaded 내에서 분석 결과가 로드된 후 호출
+// ...
+// if (analysisResults) {
+//     createImprovementPlanIfNeeded(analysisResults, userAge); // userAge는 localStorage 등에서 가져온 실제 사용자 나이
+// }
+// ...
+
         // --- 데이터 렌더링 함수들 (본문 내용 포함) ---
         // (renderTagCloud, renderPatternDashboard, alertCognitiveDistortions, 
         //  renderEmotionChart (new Chart 사용), displayEmpathyMessage, getKoreanVocativeParticle - 이전 답변의 완성된 코드 사용)

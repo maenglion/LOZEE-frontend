@@ -314,12 +314,15 @@
 
         const urlParams          = new URLSearchParams(window.location.search);
         const topicKeyFromUrl    = decodeURIComponent(urlParams.get('topic') || '');
-        const userId             = localStorage.getItem('cbtUserEmail');
+        const userId = localStorage.getItem('cbtUserEmail');
+const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가져오기
 
         const ITEMS_PER_PAGE         = 5;
         let lastVisibleDocForPaging  = null;
         let currentPageNum           = 1;
         let totalJournalDocsForTopic = 0;
+     
+
 
         // “화면용 토픽 이름” (현재는 displayText 그대로 사용)
         const topicDisplayName = getDisplayNameOfTopic(topicKeyFromUrl, counselingTopicsByAge);
@@ -514,6 +517,12 @@
                     orderBy('createdAt', 'desc'),
                     limit(ITEMS_PER_PAGE)
                 );
+
+             
+if (userType === 'caregiver') {
+    q = query(q, where("entryType", "==", "standard"));
+    console.log("보호자이므로 entryType 'standard' 저널만 필터링합니다.");
+}
                 if (page > 1 && lastDoc) {
                     q = query(q, startAfter(lastDoc));
                 }

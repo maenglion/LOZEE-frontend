@@ -227,3 +227,22 @@ export const counselingTopicsByAge = {
     ]
   }
 };
+
+export const counselingTopicsForChild = {
+  "8-10": [
+    { value: "우울", displayText: "우울감 이야기" },
+    { value: "불안", displayText: "불안감 이야기" },
+    // …기타 자녀용 주제…
+  ],
+  // 나이대별로 정의
+};
+
+export const counselingTopicsForParent_ND = [
+  "아이 학습 방법", "자폐 증상 대처", "감정 조절 팁",
+  // 보호자 중 신경다양성인용 주제
+];
+
+export const counselingTopicsForParent_Typical = [
+  "양육 스트레스", "부모 역할 고민", "자녀 돌봄 팁",
+  // 보호자 중 비신경다양성인용 주제
+];

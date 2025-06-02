@@ -442,7 +442,23 @@
                 displaySampleJournalTopicCards(); 
             }
         }
-                
+             
+        
+async function renderJournalsForParent(parentId) {
+  const q = query(
+    collection(db, "journals"),
+    where("ownerId", "==", parentId),
+    where("entryType", "==", "standard"), // "child"는 제외
+    orderBy("createdAt", "desc")
+  );
+  const snapshot = await getDocs(q);
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    // 기존처럼 제목·요약·날짜 렌더링
+  });
+}
+
+
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', () => {
             loadInitialPageData(); 

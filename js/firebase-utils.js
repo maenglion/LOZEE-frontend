@@ -75,36 +75,32 @@ export async function saveJournalEntry(ownerId, topic, summaryText, options = {}
   // 1) 위험 태그 감지
   const riskTags = detectRiskTags(summaryText);
 
-  // 2) journals 컬렉션에 항상 저장
-  const journalData = {
-    ownerId,
-    relatedChildId,
-    entryType,       // "standard" 또는 "child"
-    topic,
-    title: summaryText.substring(0, 25) + (summaryText.length > 25 ? '...' : ''),
+  // 2) journals 컬렉션에 당므 필드를 포함
+ const journalData = {
+    ownerId,            // 로그인한 사람 UID
+    relatedChildId,     // 보호자 모드일 때만 자녀 UID(아니면 null)
+    entryType,          // "standard" 또는 "child"
+    topic,              // 대화 주제
+    title: summaryText.substring(0, 25), // 예시로 앞 25자
     summary: summaryText,
-    tags: riskTags,  // 감지된 위험 태그만 담음
-    createdAt: serverTimestamp(),
+    tags: riskTagsArray, // 감지된 위험/감정 키워드 배열
+    createdAt: serverTimestamp()
   };
+  await addDoc(collection(db, "journals"), journalData);
 
-  const journalRef = await addDoc(collection(db, 'journals'), journalData);
-  console.log('✅ journals에 문서 저장됨 (ID:', journalRef.id, ')');
 
   // 3) 위험 태그가 하나라도 있으면 notifications에 알림 생성
-  if (entryType === 'child' && riskTags.length > 0 && relatedChildId) {
-    // 보호자 ID는 ownerId (child 상담 시 ownerId=보호자) 라고 가정
+   if (entryType === "child" && riskTags.length > 0 && relatedChildId) {
     const notificationData = {
       parentId: ownerId,
       childId: relatedChildId,
       journalId: journalRef.id,
-      type: 'risk_alert',
-      // 메시지는 태그에 따라 자유롭게 조합
-      message: `위험 신호 감지: [${riskTags.join(', ')}]`,
+      type: "risk_alert",
+      message: `위험 신호 감지: [${riskTags.join(", ")}]`,
       createdAt: serverTimestamp(),
-      isRead: false
+      isRead: false,
     };
-    await addDoc(collection(db, 'notifications'), notificationData);
-    console.log('⚠️ notifications에 위험 알림 저장됨');
+    await addDoc(collection(db, "notifications"), notificationData);
   }
 
   return journalRef.id;
@@ -246,6 +242,13 @@ export async function updateTopicStats(userId, topicName) {
     if (!userId || !topicName) {
         console.warn("[Firebase Utils] updateTopicStats: userId 또는 topicName이 없습니다.");
         return;
+    }
+
+    // 보호자의 경우, "standard" 타입의 저널 활동만 topicStats에 반영할지 결정
+    const userType = localStorage.getItem('lozee_userType'); // 실제로는 이 함수 호출 전에 userType을 알아야 함
+    if (userType === 'caregiver' && entryType !== 'standard') {
+        console.log(`[Firebase Utils] 보호자의 child entryType 저널(${topicName})은 topicStats에 반영하지 않습니다.`);
+        return; 
     }
     const topicStatRef = doc(db, `users/${userId}/topicStats`, topicName); 
     try {
