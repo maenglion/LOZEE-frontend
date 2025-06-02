@@ -13,9 +13,8 @@ import {
   updateUserOverallStats,
   logSessionStart,
   logSessionEnd
-} from './firebase-utils.js';
+} from './firebase-utils.js'; // 경로 수정
 // 아래 3줄은 counseling_topics.js에서 실제로 export 되는 변수명에 따라 수정 또는 삭제 필요
-import { counselingTopicsForChild, counselingTopicsForParent_ND, counselingTopicsForParent_Typical } from './counseling_topics.js'; 
 import { counselingTopicsByAge } from './counseling_topics.js';
 
 // --- 상태 변수 ---
@@ -62,41 +61,7 @@ const topicArea = document.getElementById('topic-area'); // HTML에 실제 이 I
   // 부모가 신경다양성인 여부 (예: 프로필에서 설정해두었다고 가정)
   const parentIsND = localStorage.getItem('lozee_parentIsND') === 'true';
 
-  // 상담 토픽 선택 함수
-  function showMainTopics() {
-    let topics = [];
-
-    if (role === 'child') {
-      // 자녀용 주제: 나이 그룹별 선택
-      const ageGroup = getAgeGroup(userAge); // 예: "8-10"
-      topics = counselingTopicsForChild[ageGroup] || [];
-    } else if (role === 'parent') {
-      // 보호자용 주제: 신경다양성 여부에 따라 분기
-      topics = parentIsND
-        ? counselingTopicsForParent_ND
-        : counselingTopicsForParent_Typical;
-    }
-
-    // 화면에 버튼으로 렌더링
-    appendMessage('어떤 이야기를 나눠볼까? 아래 중에서 골라줘!', 'ai');
-    topicArea.innerHTML = ''; 
-    topics.forEach((t) => {
-      // 자녀용은 객체 배열, 보호자용은 문자열 배열 형태 가정
-      const displayText = typeof t === 'string' ? t : t.displayText;
-      const value     = typeof t === 'string' ? t : t.value;
-      const btn = document.createElement('button');
-      btn.className = 'topic-btn';
-      btn.textContent = displayText;
-      btn.onclick = () => selectMainTopic(value);
-      topicArea.appendChild(btn);
-    });
-    topicArea.classList.remove('hidden');
-  }
-const userName = localStorage.getItem('lozee_username')
-const currentUserEmail = localStorage.getItem('cbtUserEmail');
-let userType = localStorage.getItem('lozee_userType') || '';
-const voc = getKoreanVocativeParticle(userName);
-
+ 
 async function fetchPreviousUserCharCount() {
     if (!currentUserEmail) return 0;
     try {
