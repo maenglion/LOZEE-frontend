@@ -21,6 +21,95 @@ import {
     getDownloadURL 
 } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
 
+
+// 위험 키워드 사전
+import { RISK_KEYWORDS, PERSONS, EMOTION_WORDS } from './constants.js';
+/**
+ * 텍스트에서 위험 태그를 감지하여 배열로 반환
+ * - RISK_KEYWORDS 중 하나라도 포함 시 해당 키워드 태그로 추가
+ * - PERSONS 중 하나 + EMOTION_WORDS 중 하나가 같이 있을 시 “인물:감정” 태그 추가
+ */
+function detectRiskTags(text) {
+  const tags = new Set();
+
+  const lower = text.toLowerCase();
+
+  // 1) 단어 단위 위험 키워드 검출
+  RISK_KEYWORDS.forEach((kw) => {
+    if (lower.includes(kw)) {
+      tags.add(kw);
+    }
+  });
+
+  // 2) 특정인물 + 감정 단어 조합 검출
+  PERSONS.forEach((person) => {
+    const lowerPerson = person.toLowerCase();
+    if (lower.includes(lowerPerson)) {
+      // 해당 인물이 문장에 있으면 감정 단어와 결합 가능성 체크
+      EMOTION_WORDS.forEach((emo) => {
+        if (lower.includes(emo)) {
+          tags.add(`${person}:${emo}`);
+        }
+      });
+    }
+  });
+
+  return Array.from(tags); // 중복 제거된 배열 리턴
+}
+
+/**
+ * Journal을 저장하면서, 위험 키워드가 감지되면 notifications 컬렉션에도 알림 생성
+ * @param {string} ownerId         – 보호자 또는 자녀의 UID
+ * @param {string} topic           – 대화 주제
+ * @param {string} summaryText     – GPT가 생성한 요약 텍스트 (string)
+ * @param {object} options
+ *        options.relatedChildId: string  // 자녀 UID (보호자가 대리 상담할 때)
+ *        options.entryType:     string  // "standard" | "child"
+ */
+export async function saveJournalEntry(ownerId, topic, summaryText, options = {}) {
+  const {
+    relatedChildId = null,
+    entryType = 'standard',
+  } = options;
+
+  // 1) 위험 태그 감지
+  const riskTags = detectRiskTags(summaryText);
+
+  // 2) journals 컬렉션에 항상 저장
+  const journalData = {
+    ownerId,
+    relatedChildId,
+    entryType,       // "standard" 또는 "child"
+    topic,
+    title: summaryText.substring(0, 25) + (summaryText.length > 25 ? '...' : ''),
+    summary: summaryText,
+    tags: riskTags,  // 감지된 위험 태그만 담음
+    createdAt: serverTimestamp(),
+  };
+
+  const journalRef = await addDoc(collection(db, 'journals'), journalData);
+  console.log('✅ journals에 문서 저장됨 (ID:', journalRef.id, ')');
+
+  // 3) 위험 태그가 하나라도 있으면 notifications에 알림 생성
+  if (entryType === 'child' && riskTags.length > 0 && relatedChildId) {
+    // 보호자 ID는 ownerId (child 상담 시 ownerId=보호자) 라고 가정
+    const notificationData = {
+      parentId: ownerId,
+      childId: relatedChildId,
+      journalId: journalRef.id,
+      type: 'risk_alert',
+      // 메시지는 태그에 따라 자유롭게 조합
+      message: `위험 신호 감지: [${riskTags.join(', ')}]`,
+      createdAt: serverTimestamp(),
+      isRead: false
+    };
+    await addDoc(collection(db, 'notifications'), notificationData);
+    console.log('⚠️ notifications에 위험 알림 저장됨');
+  }
+
+  return journalRef.id;
+}
+
 /**
  * 세션 시작 로그를 Firestore의 sessions 컬렉션에 저장합니다.
  * @param {string} userId 현재 사용자 이메일
