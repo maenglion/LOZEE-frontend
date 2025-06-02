@@ -50,7 +50,7 @@ const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
 const micButton = document.getElementById('mic-button');
 const meterLevel = document.getElementById('volume-level');
-const topicArea = document.getElementById('topic-area'); // HTML에 실제 이 ID를 가진 요소가 없으므로 주석 처리
+// const topicArea = document.getElementById('topic-area'); // HTML에 실제 이 ID를 가진 요소가 없으므로 주석 처리
 
   // 역할/나이 불러오기
   const role = localStorage.getItem('lozee_role') || 'child'; // 기본을 child로 가정
@@ -60,6 +60,10 @@ const topicArea = document.getElementById('topic-area'); // HTML에 실제 이 I
 
   // 부모가 신경다양성인 여부 (예: 프로필에서 설정해두었다고 가정)
   const parentIsND = localStorage.getItem('lozee_parentIsND') === 'true';
+
+  // ⭐ currentUserEmail 및 userType을 여기서 명시적으로 정의 ⭐
+const currentUserEmail = localStorage.getItem('cbtUserEmail'); // 로그인한 사용자의 이메일 (ID로도 사용 가능)
+let userType = localStorage.getItem('lozee_userType') || ''; // directUser 또는 caregiver
 
  
 async function fetchPreviousUserCharCount() {
@@ -91,13 +95,24 @@ async function handleAiResponse(topic, aiSummary) {
 
 // --- 초기화 로직 ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('talk.html: DOMContentLoaded 이벤트 발생');
-    if (currentUserEmail === 'unbearable_@naver.com') { // 테스트 계정 userType 강제 설정
+    console.log('talk.html: DOMContentLoaded 이벤트 발생'); // 이 부분이 talk.js:94
+
+    // currentUserEmail과 userType은 이미 위에서 선언되었으므로 바로 사용 가능
+    if (currentUserEmail === 'unbearable_@naver.com') { // talk.js:95 (오류 발생 지점 예상)
         userType = 'caregiver';
-        localStorage.setItem('lozee_userType', 'caregiver'); // localStorage에도 반영
+        localStorage.setItem('lozee_userType', 'caregiver');
     }
-    if (!currentUserEmail) { alert("사용자 정보(이메일)가 없습니다. 다시 로그인해주세요."); window.location.href = 'index.html'; return; }
-    if (!userType) { alert("사용자 유형 정보가 없습니다. 시작 페이지에서 유형을 다시 선택해주세요."); window.location.href = 'index.html'; return; }
+    if (!currentUserEmail) {
+        alert("사용자 정보(이메일/ID)가 없습니다. 다시 로그인해주세요.");
+        window.location.href = 'index.html';
+        return;
+    }
+    if (!userType) {
+        alert("사용자 유형 정보가 없습니다. 시작 페이지에서 유형을 다시 선택해주세요.");
+        window.location.href = 'index.html';
+        return;
+    }
+
 
     conversationStartTime = Date.now();
     previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
