@@ -148,24 +148,23 @@
                     return;
                 }
 
-                try {
-                    const fullAnalysis = JSON.parse(analysisDataString);
-                    analysisResults = fullAnalysis.results;
-                } catch (e) {
-                    console.error("저장된 분석 결과 파싱 오류:", e);
-                    if (containerEl) containerEl.innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
-                    return;
-                }
+                 try {
+        const fullAnalysis = JSON.parse(analysisDataString);
+        analysisResults = fullAnalysis.results; // GPT 응답의 analysis 객체 또는 talk.js에서 저장한 results 객체
+        accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0; // 이 값은 언어 연령 분석에 사용됨
+    } catch (e) {
+        console.error("저장된 분석 결과 파싱 오류:", e);
+        if (containerEl) containerEl.innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
+        // languageAgeSection이 있다면 여기서 숨기거나, 다른 섹션도 처리
+        if (languageAgeSection) languageAgeSection.style.display = 'none';
+        // emotionToneSection 등 다른 섹션도 숨기거나 "데이터 없음" 메시지 표시
+        return;
+    }
 
-                if (!analysisResults) {
-                    console.warn("Adult Analysis Page: 파싱 후 analysisResults 객체가 null입니다.");
-                    if (conversationSummaryContentEl) conversationSummaryContentEl.innerHTML = '<p>분석 결과가 없습니다.</p>';
-                    // 필요시 다른 섹션에도 '데이터 없음' 메시지 표시
-                    if(emotionToneSection) emotionToneSection.innerHTML = '<p style="text-align:center;color:#777;">감정 분석 데이터가 없어요.</p>';
-                    if(keywordsSection) keywordsSection.innerHTML = '<p style="text-align:center;color:#777;">키워드 분석 데이터가 없어요.</p>';
-                    if(situationSection) situationSection.innerHTML = '<p style="text-align:center;color:#777;">생각 탐험 데이터가 없어요.</p>';
-                    return;
-                }
+    if (!analysisResults) {
+        // ... (analysisResults가 null일 때의 처리) ...
+        return;
+    }
 
                 // --- 각 분석 섹션 렌더링 ---
                 // 1. 로지와의 대화 요약
