@@ -2,7 +2,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
         import { db } from './js/firebase-config.js';
         import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-        // firebase-utils.js의 getOrCreateUserId는 여기서는 사용하지 않고, 직접 UID를 관리합니다.
 
         const auth = getAuth();
 
@@ -13,64 +12,92 @@
             diagnosisType: document.getElementById('stepDiagnosisType'),
             nameBirthSelf: document.getElementById('stepNameBirthSelf'),
             nameBirthChild: document.getElementById('stepNameBirthChild'),
-            finalStart: document.getElementById('stepFinalStart') // CBT, ChildEmail 단계는 일단 제외하고 바로 시작으로
+            finalStart: document.getElementById('stepFinalStart')
         };
 
         const userTypeButtons = document.querySelectorAll('.user-type-btn');
+        // const cbtCodeInput = document.getElementById('cbtCodeInput'); // CBT 관련 요소는 현재 로직에서 제외
+        // const cbtCodeError = document.getElementById('cbtCodeError');
+        // const submitCbtCodeBtn = document.getElementById('submitCbtCodeBtn');
+
         const caregiverNdOptionBtns = document.querySelectorAll('.caregiver-nd-btn');
+        const caregiverNdError = document.getElementById('caregiverNdError');
         const submitCaregiverNdBtn = document.getElementById('submitCaregiverNdBtn');
+
+        const diagnosisTitleEl = document.getElementById('diagnosisTitle');
+        const diagnosisInfoEl = document.getElementById('diagnosisInfo');
         const diagnosisOptionBtns = document.querySelectorAll('.diagnosis-btn');
+        const diagnosisError = document.getElementById('diagnosisError');
         const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn');
 
+        const nameBirthSelfTitleEl = document.getElementById('nameBirthSelfTitle');
         const nameSelfInput = document.getElementById('nameSelfInput');
+        const nameSelfError = document.getElementById('nameSelfError');
         const birthSelfYear = document.getElementById('birthSelfYear');
         const birthSelfMonth = document.getElementById('birthSelfMonth');
         const birthSelfDay = document.getElementById('birthSelfDay');
-        const submitNameBirthSelfBtn = document.getElementById('submitNameBirthSelfBtn');
-        const nameSelfError = document.getElementById('nameSelfError');
         const birthSelfError = document.getElementById('birthSelfError');
+        const submitNameBirthSelfBtn = document.getElementById('submitNameBirthSelfBtn');
+        // 라벨 DOM 요소 ID 확인 및 일치 (HTML의 for 속성과 JS의 getElementById ID가 일치해야 함)
+        // const nameSelfPromptEl = document.getElementById('nameSelfPromptLabel');
+        // const birthSelfPromptEl = document.getElementById('birthSelfPromptLabel');
+        // const birthSelfInfoTextEl = document.getElementById('birthSelfInfoText');
 
+
+        const nameBirthChildTitleEl = document.getElementById('nameBirthChildTitle');
         const nameChildInput = document.getElementById('nameChildInput');
+        const nameChildError = document.getElementById('nameChildError');
         const birthChildYear = document.getElementById('birthChildYear');
         const birthChildMonth = document.getElementById('birthChildMonth');
         const birthChildDay = document.getElementById('birthChildDay');
-        const submitNameBirthChildBtn = document.getElementById('submitNameBirthChildBtn');
-        const nameChildError = document.getElementById('nameChildError');
         const birthChildError = document.getElementById('birthChildError');
+        const submitNameBirthChildBtn = document.getElementById('submitNameBirthChildBtn');
+        // const nameChildPromptEl = document.getElementById('nameChildPromptLabel');
+        // const birthChildPromptEl = document.getElementById('birthChildPromptLabel');
+        // const birthChildInfoTextEl = document.getElementById('birthChildInfoText');
 
-        const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn'); // HTML에 이 ID 버튼 추가됨
+        const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn'); // HTML에 정의된 최종 시작 버튼 ID
 
         // --- 상태 변수 ---
         let currentUserId = null; // Firebase Auth UID
         let selectedUserType = ''; // 'directUser' 또는 'caregiver'
-        // 각 단계에서 입력받는 정보를 저장할 변수들
         let tempCaregiverSelfName = '', tempCaregiverSelfBirthDate = '', tempCaregiverSelfAge = null;
         let tempChildName = '', tempChildBirthDate = '', tempChildAge = null;
+        // let tempChildLozeeUid = null; // 자녀 UID는 이번 단계에서 설정하지 않음 (필요시 mypage에서 연결)
         let tempDirectUserName = '', tempDirectUserBirthDate = '', tempDirectUserAge = null;
         let tempSelectedCaregiverNd = [];
-        let tempSelectedDiagnoses = []; // 당사자 또는 자녀의 특성 저장용
+        let tempSelectedDiagnoses = [];
 
         // --- 헬퍼 함수 ---
         function showStep(stepElement) {
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            if (stepElement) stepElement.classList.add('active');
-            else console.error("showStep: 표시할 요소가 없습니다.");
+            if (stepElement) {
+                stepElement.classList.add('active');
+            } else {
+                console.error("showStep: 표시할 stepElement가 유효하지 않습니다.");
+            }
         }
 
         function populateBirthSelects(yearEl, monthEl, dayEl, startYearOffset = 0, endYearOffset = 100) {
-            if (!yearEl || !monthEl || !dayEl) return;
+            if (!yearEl || !monthEl || !dayEl) {
+                console.error("populateBirthSelects: 생년월일 select 요소를 찾을 수 없습니다.");
+                return;
+            }
             yearEl.innerHTML = '<option value="">년</option>';
             monthEl.innerHTML = '<option value="">월</option>';
             dayEl.innerHTML = '<option value="">일</option>';
             const currentYear = new Date().getFullYear();
             for (let y = currentYear - startYearOffset; y >= currentYear - endYearOffset; y--) {
-                const opt = new Option(`${y}년`, y); yearEl.add(opt);
+                const opt = new Option(`${y}년`, y);
+                yearEl.add(opt);
             }
             for (let m = 1; m <= 12; m++) {
-                const opt = new Option(`${m}월`, m); monthEl.add(opt);
+                const opt = new Option(`${m}월`, m);
+                monthEl.add(opt);
             }
             for (let d = 1; d <= 31; d++) {
-                const opt = new Option(`${d}일`, d); dayEl.add(opt);
+                const opt = new Option(`${d}일`, d);
+                dayEl.add(opt);
             }
         }
 
@@ -87,14 +114,14 @@
             return age >= 0 ? age : null;
         }
 
-        async function saveOrUpdateUserProfile(uid, profileData) {
+        async function saveUserProfileToFirestore(uid, profileData) {
             if (!uid || !profileData) {
-                console.error("saveOrUpdateUserProfile: UID 또는 프로필 데이터가 없습니다.");
+                console.error("saveUserProfileToFirestore: UID 또는 프로필 데이터가 없습니다.");
                 return;
             }
             const userRef = doc(db, "users", uid);
             const dataToSave = {
-                uid: uid,
+                uid: uid, // UID도 문서에 저장
                 ...profileData,
                 lastLogin: serverTimestamp()
             };
@@ -104,16 +131,15 @@
                 if (!userSnap.exists()) {
                     dataToSave.createdAt = serverTimestamp(); // 최초 생성 시에만 createdAt 설정
                     await setDoc(userRef, dataToSave);
-                    console.log(`[saveOrUpdateUserProfile] Firestore에 새 사용자 문서 생성: ${uid}`, dataToSave);
+                    console.log(`[saveUserProfileToFirestore] Firestore에 새 사용자 문서 생성: ${uid}`, dataToSave);
                 } else {
-                    // 기존 문서에는 병합하여 업데이트 (createdAt은 덮어쓰지 않음)
-                    await setDoc(userRef, dataToSave, { merge: true });
-                    console.log(`[saveOrUpdateUserProfile] Firestore 사용자 문서 업데이트: ${uid}`, dataToSave);
+                    await setDoc(userRef, dataToSave, { merge: true }); // 기존 정보에 병합/업데이트
+                    console.log(`[saveUserProfileToFirestore] Firestore 사용자 문서 업데이트: ${uid}`, dataToSave);
                 }
             } catch (error) {
-                console.error(`[saveOrUpdateUserProfile] 사용자 문서 저장/업데이트 실패 (${uid}):`, error.message, error);
-                alert("사용자 정보를 저장하는 데 실패했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.");
-                throw error; // 오류를 다시 throw하여 호출한 곳에서 처리할 수 있도록 함
+                console.error(`[saveUserProfileToFirestore] 사용자 문서 저장/업데이트 실패 (${uid}):`, error.message);
+                alert("사용자 정보를 저장하는 데 실패했습니다. 인터넷 연결을 확인하고 다시 시도해주세요. Firestore 보안 규칙도 확인해주세요.");
+                throw error;
             }
         }
 
@@ -121,12 +147,12 @@
         userTypeButtons.forEach(button => {
             button.onclick = () => {
                 selectedUserType = button.dataset.usertype;
-                // userType에 따라 다음 단계 결정 (CBT 코드 입력 단계는 일단 제외)
+                // CBT 코드 입력 단계는 현재 로직에서 제외되었으므로 바로 다음 단계로
                 if (selectedUserType === 'caregiver') {
                     showStep(steps.caregiverNd);
                 } else { // directUser
-                    document.getElementById('diagnosisTitle').textContent = "현재 어떤 어려움을 느끼고 있나요?";
-                    document.getElementById('diagnosisInfo').textContent = "해당하는 항목을 모두 선택해주세요. (중복 선택 가능)";
+                    if(diagnosisTitleEl) diagnosisTitleEl.textContent = "현재 어떤 어려움을 느끼고 있나요?";
+                    if(diagnosisInfoEl) diagnosisInfoEl.textContent = "해당하는 항목을 모두 선택해주세요. (중복 선택 가능)";
                     showStep(steps.diagnosisType);
                 }
             };
@@ -152,13 +178,15 @@
                         tempSelectedCaregiverNd.push(ndType);
                     }
                 }
+                if(caregiverNdError) caregiverNdError.textContent = '';
                 console.log("선택된 보호자/배우자 신경다양성:", tempSelectedCaregiverNd);
             };
         });
 
-        submitCaregiverNdBtn.onclick = () => {
-            document.getElementById('diagnosisTitle').textContent = "아이(또는 가족)의 어떤 점에 대해 이야기 나누고 싶으세요?";
-            document.getElementById('diagnosisInfo').textContent = "해당하는 어려움을 모두 선택해주세요. (중복 선택 가능)";
+        if(submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => {
+            // localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(tempSelectedCaregiverNd)); // 최종 저장 시 한번에
+            if(diagnosisTitleEl) diagnosisTitleEl.textContent = "아이(또는 가족)의 어떤 점에 대해 이야기 나누고 싶으세요?";
+            if(diagnosisInfoEl) diagnosisInfoEl.textContent = "해당하는 어려움을 모두 선택해주세요. (중복 선택 가능)";
             showStep(steps.diagnosisType);
         };
 
@@ -184,35 +212,43 @@
                         tempSelectedDiagnoses.push(diagnosis);
                     }
                 }
+                if(diagnosisError) diagnosisError.textContent = '';
                 console.log("선택된 진단/어려움 유형:", tempSelectedDiagnoses);
             };
         });
 
-        submitDiagnosisBtn.onclick = () => {
-            if (selectedUserType === 'caregiver' && tempSelectedDiagnoses.length === 0) {
-                 document.getElementById('diagnosisError').textContent = "아이(또는 가족)의 특성을 하나 이상 선택해주세요."; return;
-            } else if (selectedUserType === 'directUser' && tempSelectedDiagnoses.length === 0) {
-                 document.getElementById('diagnosisError').textContent = "하나 이상 선택해주세요."; return;
+        if(submitDiagnosisBtn) submitDiagnosisBtn.onclick = () => {
+            if (tempSelectedDiagnoses.length === 0) {
+                if(diagnosisError) diagnosisError.textContent = "하나 이상 선택해주세요."; return;
             }
-            document.getElementById('diagnosisError').textContent = '';
+            if(diagnosisError) diagnosisError.textContent = '';
+            // localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses)); // 최종 저장 시 한번에
 
             if (selectedUserType === 'caregiver') {
-                document.getElementById('nameBirthSelfTitle').textContent = "보호자님의 정보를 알려주세요.";
-                populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 18, 70);
+                if(nameBirthSelfTitleEl) nameBirthSelfTitleEl.textContent = "보호자님의 정보를 알려주세요.";
+                // document.getElementById('nameSelfPromptLabel').textContent = "로지가 보호자님을 어떻게 부르면 좋을까요?";
+                // document.getElementById('nameSelfInput').placeholder = "보호자님 이름 또는 별명";
+                // document.getElementById('birthSelfPromptLabel').textContent = "보호자님의 생년월일을 선택해주세요.";
+                // document.getElementById('birthSelfInfoText').textContent = "정확한 나이를 계산하여 맞춤형 상호작용을 제공합니다.";
+                populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 18, 70); // 보호자 나이 범위
             } else { // directUser
-                document.getElementById('nameBirthSelfTitle').textContent = "만나서 반가워요! 당신에 대해 알려주세요.";
-                populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 7, 70);
+                if(nameBirthSelfTitleEl) nameBirthSelfTitleEl.textContent = "만나서 반가워요! 당신에 대해 알려주세요.";
+                // document.getElementById('nameSelfPromptLabel').textContent = "로지가 당신을 어떻게 부르면 좋을까요?";
+                // document.getElementById('nameSelfInput').placeholder = "이름 또는 별명";
+                // document.getElementById('birthSelfPromptLabel').textContent = "생년월일을 선택해주세요.";
+                // document.getElementById('birthSelfInfoText').textContent = "정확한 나이를 계산하여 더 적절한 대화 경험을 제공합니다.";
+                populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 3, 90); // 당사자 나이 범위 (최소 3세로 가정)
             }
             showStep(steps.nameBirthSelf);
         };
 
-        submitNameBirthSelfBtn.onclick = () => {
+        if(submitNameBirthSelfBtn) submitNameBirthSelfBtn.onclick = () => {
             const name = nameSelfInput.value.trim();
             const y = birthSelfYear.value, m = birthSelfMonth.value, d = birthSelfDay.value;
-            if (!name) { nameSelfError.textContent = '이름(또는 별명)을 입력해주세요.'; return; }
-            nameSelfError.textContent = '';
-            if (!y || !m || !d) { birthSelfError.textContent = '생년월일을 모두 선택해주세요.'; return; }
-            birthSelfError.textContent = '';
+            if (!name) { if(nameSelfError) nameSelfError.textContent = '이름(또는 별명)을 입력해주세요.'; return; }
+            if(nameSelfError) nameSelfError.textContent = '';
+            if (!y || !m || !d) { if(birthSelfError) birthSelfError.textContent = '생년월일을 모두 선택해주세요.'; return; }
+            if(birthSelfError) birthSelfError.textContent = '';
 
             const age = calculateAge(y, m, d);
             const birthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -221,136 +257,128 @@
                 tempCaregiverSelfName = name;
                 tempCaregiverSelfBirthDate = birthDate;
                 tempCaregiverSelfAge = age;
-                populateBirthSelects(birthChildYear, birthChildMonth, birthChildDay, 0, 18);
+                // document.getElementById('nameBirthChildTitle').textContent = "아이(또는 가족)의 정보를 알려주세요.";
+                // document.getElementById('nameChildPromptLabel').textContent = "로지가 아이(또는 가족)를 어떻게 부르면 좋을까요?";
+                // document.getElementById('nameChildInput').placeholder = "아이(또는 가족) 이름 또는 별명";
+                // document.getElementById('nameChildInput').value = ''; // 자녀 이름 입력 필드 초기화
+                // document.getElementById('birthChildPromptLabel').textContent = "아이(또는 가족)의 생년월일을 선택해주세요.";
+                populateBirthSelects(birthChildYear, birthChildMonth, birthChildDay, 0, 18); // 자녀 나이 범위
                 showStep(steps.nameBirthChild);
             } else { // directUser
                 tempDirectUserName = name;
                 tempDirectUserBirthDate = birthDate;
                 tempDirectUserAge = age;
-                showStep(steps.finalStart); // 당사자는 정보 입력 후 바로 시작 단계로
+                showStep(steps.finalStart);
             }
         };
 
-        submitNameBirthChildBtn.onclick = () => {
+        if(submitNameBirthChildBtn) submitNameBirthChildBtn.onclick = () => {
             const name = nameChildInput.value.trim();
             const y = birthChildYear.value, m = birthChildMonth.value, d = birthChildDay.value;
-            if (!name) { nameChildError.textContent = '아이(또는 가족)의 이름을 입력해주세요.'; return; }
-            nameChildError.textContent = '';
-            if (!y || !m || !d) { birthChildError.textContent = '아이(또는 가족)의 생년월일을 모두 선택해주세요.'; return; }
-            birthChildError.textContent = '';
+            if (!name) { if(nameChildError) nameChildError.textContent = '아이(또는 가족)의 이름을 입력해주세요.'; return; }
+            if(nameChildError) nameChildError.textContent = '';
+            if (!y || !m || !d) { if(birthChildError) birthChildError.textContent = '아이(또는 가족)의 생년월일을 모두 선택해주세요.'; return; }
+            if(birthChildError) birthChildError.textContent = '';
 
             tempChildName = name;
             tempChildBirthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             tempChildAge = calculateAge(y, m, d);
-            showStep(steps.finalStart); // 자녀 정보 입력 후 시작 단계로
+            showStep(steps.finalStart); // 자녀 정보 입력 후 다음 단계 (예: 자녀 UID 연결 또는 바로 시작)
         };
 
-        startLozeeConversationBtn.onclick = async () => {
+        if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
             if (!currentUserId) {
-                alert("사용자 세션 초기화 중 오류가 발생했습니다. 페이지를 새로고침 해주세요.");
+                alert("사용자 인증 정보가 없습니다. 페이지를 새로고침하거나 다시 시도해주세요.");
                 return;
             }
 
-            // 최종적으로 localStorage 및 Firestore에 정보 저장
-            let finalProfileData = {
+            // 1. 최종 프로필 데이터 구성
+            let profileDataToSave = {
                 role: selectedUserType === 'caregiver' ? 'parent' : 'child',
-                userType: selectedUserType
+                userType: selectedUserType,
+                // 공통 정보 (당사자 또는 보호자 본인 정보)
+                name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName,
+                birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate,
+                age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge,
             };
-            let finalUserName = '';
-            let finalUserAge = null; // talk.js에서 사용할 대화 맥락 나이
+
+            // 2. localStorage에 저장할 대화 맥락용 정보 설정
+            localStorage.setItem('lozee_username', profileDataToSave.name); // 현재 대화 상대의 이름
+            localStorage.setItem('lozee_role', profileDataToSave.role);
+            localStorage.setItem('lozee_userType', profileDataToSave.userType);
+
 
             if (selectedUserType === 'caregiver') {
-                finalUserName = tempCaregiverSelfName;
-                finalUserAge = tempChildAge; // 보호자 모드 시 대화 맥락 나이는 자녀 나이
-
-                finalProfileData.name = tempCaregiverSelfName;
-                finalProfileData.birthDate = tempCaregiverSelfBirthDate;
-                finalProfileData.age = tempCaregiverSelfAge; // 보호자 본인 나이
-                finalProfileData.caregiver = { // Firestore 'caregiver' 맵
+                profileDataToSave.caregiverInfo = { // Firestore에 저장될 보호자 하위 정보
                     caregiverNeurodiversity: tempSelectedCaregiverNd,
                     childName: tempChildName,
                     childBirthDate: tempChildBirthDate,
                     childAge: tempChildAge,
-                    childDiagnoses: tempSelectedDiagnoses // 여기서는 자녀의 특성
-                    // childLozeeUid: childLozeeUid, // UID 연결 로직 추가 시
+                    childDiagnoses: tempSelectedDiagnoses // 자녀의 특성
+                    // childLozeeUid: tempChildLozeeUid, // 만약 자녀 UID 연결 로직이 있다면
                 };
-                // 보호자 본인의 '진단/어려움'은 caregiverNeurodiversity로 관리하므로, users 최상위 diagnoses는 비워둠
-                finalProfileData.diagnoses = [];
-            } else { // directUser
-                finalUserName = tempDirectUserName;
-                finalUserAge = tempDirectUserAge; // 당사자 모드 시 대화 맥락 나이는 본인 나이
-
-                finalProfileData.name = tempDirectUserName;
-                finalProfileData.birthDate = tempDirectUserBirthDate;
-                finalProfileData.age = tempDirectUserAge;
-                finalProfileData.diagnoses = tempSelectedDiagnoses;
-            }
-
-            // localStorage 업데이트
-            localStorage.setItem('lozee_username', finalUserName);
-            localStorage.setItem('lozee_userAge', finalUserAge !== null ? finalUserAge.toString() : '0');
-            localStorage.setItem('lozee_role', finalProfileData.role);
-            localStorage.setItem('lozee_userType', finalProfileData.userType);
-
-            if (selectedUserType === 'caregiver') {
+                // localStorage에는 대화 맥락용 자녀 정보 및 보호자 특성 저장
+                localStorage.setItem('lozee_userAge', tempChildAge !== null ? tempChildAge.toString() : '0'); // 대화 맥락 나이 = 자녀 나이
                 localStorage.setItem('lozee_childName', tempChildName);
-                localStorage.setItem('lozee_childAge', tempChildAge !== null ? tempChildAge.toString() : '0');
-                localStorage.setItem('lozee_parentIsND', JSON.stringify(tempSelectedCaregiverNd.length > 0 && tempSelectedCaregiverNd[0] !== 'unsure_or_none'));
-                 // lozee_diagnoses는 자녀의 것이므로, talk.js에서 userTraits 로드 시 참고할 수 있도록
-                 localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses)); // 자녀 특성
-                 localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(tempSelectedCaregiverNd)); // 보호자 특성
-            } else { // directUser인 경우, child 관련 정보 및 보호자 ND 정보 제거
+                localStorage.setItem('lozee_childAge', tempChildAge !== null ? tempChildAge.toString() : '0'); // 명시적 자녀 나이
+                localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses)); // 자녀 특성 (talk.js에서 사용)
+                localStorage.setItem('lozee_parentIsND', JSON.stringify(tempSelectedCaregiverNd.length > 0 && !tempSelectedCaregiverNd.includes('unsure_or_none')));
+                localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(tempSelectedCaregiverNd)); // 보호자 본인 특성
+            } else { // directUser
+                profileDataToSave.diagnoses = tempSelectedDiagnoses; // 본인 특성
+                localStorage.setItem('lozee_userAge', tempDirectUserAge !== null ? tempDirectUserAge.toString() : '0'); // 대화 맥락 나이 = 본인 나이
+                localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses));
+                // directUser일 경우 child 및 caregiver 관련 localStorage 항목 정리
                 localStorage.removeItem('lozee_childName');
                 localStorage.removeItem('lozee_childAge');
                 localStorage.removeItem('lozee_parentIsND');
                 localStorage.removeItem('lozee_childId');
                 localStorage.removeItem('lozee_caregiver_neurodiversity');
-                localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses)); // 본인 특성
             }
 
-
             try {
-                await saveOrUpdateUserProfile(currentUserId, finalProfileData);
+                await saveUserProfileToFirestore(currentUserId, profileDataToSave);
                 window.location.href = 'talk.html';
             } catch (error) {
-                // saveOrUpdateUserProfile 내부에서 이미 alert를 띄울 수 있음
-                console.error("최종 사용자 정보 저장 실패:", error);
-                // 여기서 추가적인 사용자 안내 메시지 가능
+                console.error("최종 사용자 정보 저장 실패 (startLozeeConversationBtn):", error);
+                // 사용자에게 오류 알림 가능
             }
         };
 
-        // 페이지 로드 시: Firebase Auth 상태 확인 및 UID 설정
-        onAuthStateChanged(auth, (user) => {
-            if (user) { // 이미 (익명)로그인된 상태
+        // --- 페이지 로드 시 실행 ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
                 console.log("Index: 기존 Firebase Auth 세션 감지. UID:", user.uid);
                 currentUserId = user.uid;
                 localStorage.setItem('lozee_userId', currentUserId);
-                // Firestore에서 사용자 정보 가져와서 localStorage 업데이트 및 다음 단계 결정 (선택적)
-                // getDoc(doc(db, "users", currentUserId)).then(userSnap => {
-                // if (userSnap.exists()) { /* localStorage 업데이트 */ }
-                // });
-            } else { // 로그인 안 된 상태 -> 익명 로그인 시도
-                signInAnonymously(auth)
-                    .then((userCredential) => {
-                        const newUser = userCredential.user;
-                        console.log('Index: 새로운 익명 사용자 UID 생성 및 저장:', newUser.uid);
-                        currentUserId = newUser.uid;
-                        localStorage.setItem('lozee_userId', currentUserId);
-                    })
-                    .catch((error) => {
-                        console.error("Index: 익명 로그인 실패:", error);
-                        // 익명 로그인 실패 시 임시 guest UID 사용 (최후의 수단)
-                        currentUserId = localStorage.getItem('lozee_userId');
-                        if (!currentUserId) {
-                            currentUserId = 'guest_' + crypto.randomUUID();
-                            localStorage.setItem('lozee_userId', currentUserId);
-                            console.log('Index: 익명 로그인 실패, 임시 guest UID 사용:', currentUserId);
-                        }
-                    });
+
+                // (선택적) 기존 사용자인 경우 Firestore에서 정보를 가져와 다음 단계 결정 또는 자동 로그인
+                // const userDocRef = doc(db, "users", currentUserId);
+                // const userSnap = await getDoc(userDocRef);
+                // if (userSnap.exists() && userSnap.data().name && userSnap.data().role) {
+                //     console.log("Index: 기존 사용자 정보 감지, talk.html로 바로 이동 고려");
+                //     // 필요한 localStorage 값들 설정...
+                //     // window.location.href = 'talk.html';
+                //     // return;
+                // }
+                showStep(steps.userType); // 기존 사용자도 일단 유형 선택부터 (또는 프로필 있으면 바로 talk.html)
+            } else {
+                console.log("Index: Firebase Auth 세션 없음. 익명 로그인 시도.");
+                try {
+                    const userCredential = await signInAnonymously(auth);
+                    const newUser = userCredential.user;
+                    console.log('Index: 새로운 익명 사용자 UID 생성 및 저장:', newUser.uid);
+                    currentUserId = newUser.uid;
+                    localStorage.setItem('lozee_userId', currentUserId);
+                    showStep(steps.userType); // UID 생성 후 첫 단계 표시
+                } catch (error) {
+                    console.error("Index: 익명 로그인 실패:", error);
+                    alert("세션 초기화에 실패했습니다. 페이지를 새로고침 해주세요.");
+                    // 익명 로그인 실패 시 대체 로직 (예: 임시 guest UID 사용은 권장하지 않음)
+                }
             }
-            // UID가 설정된 후 첫 단계 표시
-            showStep(steps.userType);
         });
-        </script>
+  
+    </script>
 </body>
 </html>
