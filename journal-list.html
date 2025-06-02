@@ -252,13 +252,12 @@
         const pageTabTitleEl = document.querySelector('title');
         const mainTagButtonsEl = document.getElementById('mainTagButtons');
 
-        const loggedInUserName = localStorage.getItem('lozee_username') || '나'; // ⭐ 화면 표시용 이름
-        if (pageMainTitleEl) pageMainTitleEl.textContent = `${loggedInUserName}의 이야기 모음집 📖`;
-        if (pageTabTitleEl) pageTabTitleEl.textContent = `${loggedInUserName}의 이야기 모음집 - LOZEE`;
+        const userName = localStorage.getItem('lozee_username') || '나';
+        if (pageMainTitleEl) pageMainTitleEl.textContent = `${userName}의 이야기 모음집 📖`;
+        if (pageTabTitleEl) pageTabTitleEl.textContent = `${userName}의 이야기 모음집 - LOZEE`;
 
-        let allUserTopicStats = [];
+        let allUserTopicStats = []; 
         let currentFilterTag = '전체보기';
-
 
         // --- 예시 데이터 표시 함수 (요청사항 반영) ---
         function displaySampleJournalTopicCards() {
@@ -409,43 +408,56 @@
         }
 
         // --- Firestore에서 초기 데이터 로드 함수 ---
-          async function loadInitialPageData() {
-          const loggedInUserId = localStorage.getItem('lozee_userId'); // ⭐ UID 사용
-
-            if (!loggedInUserId) {
+        async function loadInitialPageData() {
+            const userId = localStorage.getItem('cbtUserEmail');
+            if (!userId) {
                 if(pageMainTitleEl) pageMainTitleEl.textContent = `${localStorage.getItem('lozee_username') || '나'}의 이야기 모음집 📖 (예시)`;
-                console.log("사용자 UID 없음, 예시 데이터를 표시합니다.");
-                displaySampleJournalTopicCards();
+                console.log("사용자 ID 없음, 예시 데이터를 표시합니다.");
+                displaySampleJournalTopicCards(); 
                 return;
             }
 
             try {
-                // users/{UID}/topicStats 경로 사용
-                const statsQuery = query(collection(db, `users/${loggedInUserId}/topicStats`), orderBy('lastChattedAt', 'desc')); // ⭐ UID 사용
+                const statsQuery = query(collection(db, `users/${userId}/topicStats`), orderBy('lastChattedAt', 'desc'));
                 const statsSnapshot = await getDocs(statsQuery);
 
-                if (statsSnapshot.empty) {
+                if (statsSnapshot.empty) { 
                     console.log("Firestore에 topicStats 데이터 없음, 예시 데이터를 표시합니다.");
                     if(mainTagButtonsEl) mainTagButtonsEl.innerHTML = '<p>이야기를 나누면 자주 나온 마음 조각들을 여기서 볼 수 있어요!</p>';
-                    displaySampleJournalTopicCards();
+                    displaySampleJournalTopicCards(); 
                     return;
                 }
-
+                
                 allUserTopicStats = statsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                allUserTopicStats.forEach(stat => { if (!stat.keywords) stat.keywords = []; });
-
-                displayMainTags(allUserTopicStats);
-                currentFilterTag = '전체보기';
-                renderFilteredTopicCards();
+                allUserTopicStats.forEach(stat => { if (!stat.keywords) stat.keywords = []; }); // keywords 없으면 빈 배열로
+                
+                displayMainTags(allUserTopicStats); 
+                currentFilterTag = '전체보기'; 
+                renderFilteredTopicCards(); 
 
             } catch (error) {
                 console.error("초기 데이터 로드 중 오류:", error);
                 if(topicCardListEl) topicCardListEl.innerHTML = '<p>이야기 모음집을 불러오는 데 문제가 발생했어요. 😭 잠시 후 다시 시도해주세요.</p>';
-                // console.log("오류 발생, 예시 데이터를 표시합니다."); // 실제 오류 시 예시 데이터 표시는 부적절할 수 있음
-                // displaySampleJournalTopicCards();
+                console.log("오류 발생, 예시 데이터를 표시합니다.");
+                displaySampleJournalTopicCards(); 
             }
         }
              
+        
+async function renderJournalsForParent(parentId) {
+  const q = query(
+    collection(db, "journals"),
+    where("ownerId", "==", parentId),
+    where("entryType", "==", "standard"), // "child"는 제외
+    orderBy("createdAt", "desc")
+  );
+  const snapshot = await getDocs(q);
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    // 기존처럼 제목·요약·날짜 렌더링
+  });
+}
+
 
         // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', () => {

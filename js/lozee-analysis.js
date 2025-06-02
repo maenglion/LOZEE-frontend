@@ -3,8 +3,7 @@
 
 
 // 분석 백엔드 url 정의
-// js/lozee-analysis.js
-const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'; 
+const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis'; 
 
 // --- 1) 대화 시간별 언어·나이 분석 ---
 const timeTracking = { 

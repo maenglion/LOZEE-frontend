@@ -136,24 +136,23 @@
     <script src="./js/gnb.js" defer></script> 
     <!-- keywordCloud.js를 import 해서 tagCloud에 키워드 뱃지를 렌더링 -->
     <script type="module">
-                import { db } from './js/firebase-config.js';
+        import { db } from './js/firebase-config.js';
         import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-        import { renderKeywordCloud } from './js/keywordCloud.js'; // 이 파일이 존재하고, 함수가 export 되어야 함
-        import { counselingTopicsByAge } from './js/counseling_topics.js'; // 대분류 찾기에 사용
+        import { renderKeywordCloud } from './js/keywordCloud.js';
+        import { counselingTopicsByAge } from './js/counseling_topics.js';
 
+        // URL 쿼리 파라미터로부터 journalId 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const journalId = urlParams.get("journalId") || "";
 
+        // DOM 요소들
         const pageTabTitleEl       = document.querySelector('title');
         const journalPageTitleEl   = document.getElementById('journalPageTitle');
         const sessionDateDisplayEl = document.getElementById('sessionDateDisplay');
         const sessionSummaryEl     = document.getElementById('sessionSummaryContent');
         const tagCloudEl           = document.getElementById('tagCloud');
 
-        // 현재 로그인한 사용자 정보 (필요시 활용)
-        const loggedInUserId = localStorage.getItem('lozee_userId');
-        const loggedInUserName = localStorage.getItem('lozee_username') || '나';
-
+        // 깊이: “대분류 → 서브토픽” 매핑
         function findMainCategoryOfTopic(topicKey, topicsData) {
             for (const userType in topicsData) {
                 const ageGroups = topicsData[userType];
@@ -173,7 +172,7 @@
             return '';
         }
 
-            async function loadJournalDetail() {
+        async function loadJournalDetail() {
             if (!journalId) {
                 journalPageTitleEl.innerText = "잘못된 접근: journalId가 없습니다.";
                 sessionDateDisplayEl.innerText = "";
@@ -181,10 +180,8 @@
             }
 
             try {
-                // journals 컬렉션의 문서를 직접 참조 (userId 필터링은 불필요, journalId로 직접 접근)
                 const journalRef = doc(db, "journals", journalId);
                 const journalSnap = await getDoc(journalRef);
-
                 if (!journalSnap.exists()) {
                     journalPageTitleEl.innerText = "해당 저널을 찾을 수 없습니다.";
                     sessionDateDisplayEl.innerText = "";
@@ -192,31 +189,29 @@
                 }
 
                 const data = journalSnap.data();
-                // 보안 검사: 현재 로그인한 사용자가 이 저널의 소유자(userId) 또는 관련자(relatedChildId)인지 확인 (선택 사항)
-                // const journalOwnerUid = data.userId || data.ownerId;
-                // const journalRelatedChildUid = data.relatedChildId;
-                // const currentUserRole = localStorage.getItem('lozee_role');
-                // if (loggedInUserId !== journalOwnerUid && !(currentUserRole === 'parent' && loggedInUserId === data.ownerId && journalRelatedChildUid === localStorage.getItem('lozee_childId_being_viewed_by_parent'))) {
-                //     journalPageTitleEl.innerText = "이 저널을 볼 권한이 없습니다.";
-                //     sessionDateDisplayEl.innerText = "";
-                //     sessionSummaryEl.innerText = "";
-                //     if(tagCloudEl) tagCloudEl.innerHTML = "";
-                //     return;
-                // }
-
-
+                // ─────────────────────────────────────────────────────────────────
+                // 1) 제목(title) 렌더링
+                //    - data.title이 있으면 그대로 사용
+                //    - 없으면: “대분류 – GPT 요약 첫 문장” 꼴로 생성
                 let titleText = "";
                 if (data.title && data.title.trim()) {
                     titleText = data.title;
                 } else {
-                    const mainCategory = findMainCategoryOfTopic(data.topic || "", counselingTopicsByAge) || "주제"; //
-                    const gptSummary = data.summary ? data.summary.split('\n')[0] : "요약 내용이 없습니다."; //
+                    // 대분류 찾기
+                    const mainCategory = findMainCategoryOfTopic(
+                        data.topic || "", 
+                        counselingTopicsByAge
+                    ) || "주제";
+                    // GPT 요약 첫 문장
+                    const gptSummary = data.summary 
+                        ? data.summary.split('\n')[0] 
+                        : "요약 내용이 없습니다.";
                     titleText = `${mainCategory} – ${gptSummary}`;
                 }
-                // document.title = `${titleText} – LOZEE`; // pageTabTitleEl 사용
-                if(pageTabTitleEl) pageTabTitleEl.textContent = `${titleText} – LOZEE`;
-                if(journalPageTitleEl) journalPageTitleEl.innerText = titleText;
+                document.title = `${titleText} – LOZEE`; // 탭 제목
+                journalPageTitleEl.innerText = titleText;
 
+                // 2) 날짜 렌더링
                 if (data.createdAt?.toDate) {
                     sessionDateDisplayEl.innerText = `대화 날짜: ${
                         data.createdAt.toDate().toLocaleDateString('ko-KR', {
@@ -227,27 +222,22 @@
                     sessionDateDisplayEl.innerText = "대화 날짜: 정보 없음";
                 }
 
+                // 3) 요약(summary) 렌더링
                 sessionSummaryEl.innerText = data.summary || "요약된 내용이 없습니다.";
 
-                const keywords = (data.detailedAnalysis && data.detailedAnalysis.keywords) ? data.detailedAnalysis.keywords : (data.tags || []); // data.tags도 고려
-                
-                // renderKeywordCloud 함수가 배열을 받는지, 객체 배열을 받는지 확인 필요
-                // 현재는 문자열 배열을 전달하는 것으로 가정
-                if (typeof renderKeywordCloud === 'function') {
-                    renderKeywordCloud(keywords); // keywordCloud.js의 함수 사용
-                } else if (tagCloudEl) { // renderKeywordCloud가 없을 경우 대비
-                    tagCloudEl.innerHTML = keywords.length > 0
-                        ? keywords.map(kw => `<span class="badge">${kw}</span>`).join('')
-                        : '<p style="color: #666;">표시할 키워드가 없습니다.</p>';
-                }
-
+                // 4) 키워드(tags) 렌더링
+                //    - 상세 분석(detailedAnalysis) 안에 keywords가 들어있다면 그것을 사용
+                const keywords = (data.detailedAnalysis && data.detailedAnalysis.keywords) 
+                    ? data.detailedAnalysis.keywords 
+                    : [];
+                renderKeywordCloud(keywords);
 
             } catch (error) {
                 console.error("저널 로드 중 오류:", error);
-                if(journalPageTitleEl) journalPageTitleEl.innerText = "오류가 발생했습니다.";
-                if(sessionDateDisplayEl) sessionDateDisplayEl.innerText = "";
-                if(sessionSummaryEl) sessionSummaryEl.innerText = "";
-                if(tagCloudEl) tagCloudEl.innerHTML = `<p style="color: #666;">키워드를 불러오는 데 실패했습니다.</p>`;
+                journalPageTitleEl.innerText = "오류가 발생했습니다.";
+                sessionDateDisplayEl.innerText = "";
+                sessionSummaryEl.innerText = "";
+                tagCloudEl.innerHTML = `<p style="color: #666;">키워드를 불러오는 데 실패했습니다.</p>`;
             }
         }
 

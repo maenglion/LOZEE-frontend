@@ -8,43 +8,65 @@
         href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap"
         rel="stylesheet"
     />
-    <link rel="stylesheet" href="gnb.css">
+    <link rel="stylesheet" href="gnb.css"> 
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
     <style>
         /* analysis.html 페이지 고유 스타일 */
         :root {
-            --primary-color: #6e8efb;
-            --secondary-color: #5a7edf;
-            --background-color: #ffffff; /* body 배경을 흰색으로 통일 */
-            --text-color: #333333;
-            --card-bg-analysis: #ffffff; /* 카드 배경도 흰색으로 */
-            --explanation-bg-analysis: #eef2f7; /* 설명 영역 배경은 연한 파랑 */
-            --primary-color-analysis: var(--primary-color); /* h1 제목 등에 사용될 색상 */
-            --gnb-height: 56px;
-        }
+      --primary-color: #6e8efb;
+      --secondary-color: #5a7edf;
+      --background-color: #ffffff;
+      --text-color: #333333;
+      
+      --user-bubble-bg: var(--primary-color);
+      --user-bubble-text: #ffffff;
+      --assistant-bubble-bg: #F5E7A1; /* 로지 말풍선 배경색 */
+      --assistant-bubble-text: #333333;
+
+      --input-area-bg: #f8f9fa;
+      --chat-input-bg: #ffffff;
+      --chat-input-text-color: #333333;
+      --chat-input-border-color: #ced4da;
+      --chat-input-placeholder-color: #777777;
+
+      --button-bg: var(--primary-color);
+      --button-text-color: #ffffff;
+      --button-hover-bg: var(--secondary-color);
+
+      --volume-meter-container-bg: #e9ecef;
+      --volume-meter-level-bg: var(--primary-color);
+      --meter-height: 6px;
+      --meter-top-margin: 8px;
+
+      --analysis-notification-bg: #fff3cd;
+      --analysis-notification-text: #856404;
+
+      --gnb-height: 56px; 
+      --chat-input-area-height: 70px;
+        } 
 
         body {
             margin: 0;
-            padding-top: var(--gnb-height);
+            padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
             font-family: 'KoPub World Dotum', sans-serif;
-            background-color: var(--background-color); /* :root 변수 사용 */
+            background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.6;
-        }
-
-        .container {
-            max-width:900px;
-            margin:25px auto;
-            padding:0 25px;
+        }   
+    
+        .container { 
+            max-width:900px; 
+            margin:25px auto; 
+            padding:0 25px; 
             box-sizing: border-box;
         }
-        h1 { /* 페이지 메인 타이틀 */
-            color: var(--primary-color-analysis);
+        h1 {
+            color: var(--primary-color-analysis); 
             text-align: center;
-            font-size: 2em;
-            margin-bottom: 15px;
+            font-size: 2em; 
+            margin-bottom: 15px; 
             font-weight: 700;
         }
         .share-button-container {
@@ -52,7 +74,7 @@
             margin-bottom: 30px;
         }
         #reportShareButton {
-            background-color: var(--primary-color); /* :root 변수 사용 */
+            background-color: #6e8efb; 
             color: white;
             padding: 10px 20px;
             border: none;
@@ -63,56 +85,56 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         #reportShareButton:hover {
-            background-color: var(--secondary-color); /* :root 변수 사용 */
+            background-color: #5a7edf;
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        .assistant-analysis-notice {
+        .assistant-analysis-notice { 
             font-size: 0.75em;
-            color: #78909c;
+            color: #78909c; 
             margin-top: -12px;
             margin-bottom: 15px;
             text-align: right;
         }
-        .module-explanation {
-            font-size:0.9em;
-            color:#555;
+        .module-explanation { 
+            font-size:0.9em; 
+            color:#555; 
             margin-bottom:15px;
             padding: 10px;
-            background-color: var(--explanation-bg-analysis);
+            background-color: var(--explanation-bg-analysis); 
             border-radius: 6px;
             line-height: 1.6;
         }
 
-        h2 { /* 각 섹션 제목 */
-            margin-top:0;
-            margin-bottom: 8px;
-            font-size:1.5em;
-            color:#34495e; /* 남색 계열 */
-            border-bottom: 2px solid #e0e0e0;
+        h2 { 
+            margin-top:0; 
+            margin-bottom: 8px; 
+            font-size:1.5em; 
+            color:#34495e; 
+            border-bottom: 2px solid #e0e0e0; 
             padding-bottom: 12px;
         }
-        .section {
-            background:var(--card-bg-analysis);
-            padding:25px;
-            margin-top:25px;
-            border-radius:12px;
-            box-shadow:0 4px 12px rgba(0,0,0,0.08);
+        .section { 
+            background:var(--card-bg-analysis); 
+            padding:25px; 
+            margin-top:25px; 
+            border-radius:12px; 
+            box-shadow:0 4px 12px rgba(0,0,0,0.08); 
         }
         .section p {
-            color: #555555;
+            color: #555555; 
             line-height: 1.7;
-            font-size: 1em;
+            font-size: 1em; 
         }
-        .section p span { /* 현재 코드에는 없지만, 강조용으로 추가 가능 */
-            color: var(--secondary-color);
+        .section p span { 
+            color: #2c3e50; 
             font-weight: bold;
         }
-        .feedback {
-            margin-top:15px;
-            padding:12px 18px;
-            border-left-width:5px;
+        .feedback { 
+            margin-top:15px; 
+            padding:12px 18px; 
+            border-left-width:5px; 
             border-left-style:solid;
-            border-radius:8px;
+            border-radius:8px; 
             font-size: 0.95em;
             line-height: 1.6;
         }
@@ -123,39 +145,39 @@
         #emotionChartContainer {
             position: relative;
             max-width: 450px;
-            min-height: 100px;
+            min-height: 100px; /* 차트 또는 "데이터 없음" 메시지 영역 */
             height: auto;
             margin: 20px auto 0;
-            display: flex;
+            display: flex; 
             align-items: center;
             justify-content: center;
         }
-        #emotionChart, #situationChart { /* #situationChart는 현재 사용 안함 */
-            width:100% !important;
-            height:auto !important;
-            aspect-ratio: 1 / 1; /* 정사각형 비율 유지 */
-            background-color: #fdfdfd;
+        #emotionChart, #situationChart { 
+            width:100% !important; 
+            height:auto !important; 
+            aspect-ratio: 1 / 1; 
+            background-color: #fdfdfd; 
             border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            padding: 15px;
+            border: 1px solid #e0e0e0; 
+            padding: 15px; 
             box-sizing: border-box;
-            display: none; /* JS로 표시 */
+            display: none; /* 기본 숨김, 데이터 있을 때 JS로 표시 */
         }
         #tagCloud { min-height:100px; border:1px dashed #cccccc; padding:15px; margin-top: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; }
         .badge { display:inline-block; margin:4px; padding:8px 12px; background:#e8eaf6; color: #3f51b5; border-radius:16px; font-size:0.9em; transition: background-color 0.2s, color 0.2s; font-weight: 500; }
         .badge:hover { background-color: #c5cae9; color: #303f9f; }
         #patternDashboard { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 8px; color: #444; min-height: 50px; }
-        #patternDashboard p { color: #444; margin-bottom: 8px; } /* 기존 스타일과 중복될 수 있으나 명시 */
+        #patternDashboard p { color: #444; margin-bottom: 8px; }
         #situationAlerts { margin-top: 15px; min-height: 50px; }
         #situationAlerts .cognitive-distortion-item { background:#fff3cd; border-left: 5px solid #ffc107; color: #856404; padding: 10px 15px; margin-bottom: 10px; border-radius: 4px; font-size: 0.9em; }
         .footer-assistant-notice { text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.8em; color: #78909c; }
         .methodology-list { list-style-type: none; padding-left: 0; font-size: 0.9em; color: #555; }
         .methodology-list li { margin-bottom: 12px; padding-left: 25px; position: relative; }
-        .methodology-list li::before { content: "💡"; color: var(--primary-color); /* :root 변수 사용 */ position: absolute; left: 0; font-size: 1.1em; }
+        .methodology-list li::before { content: "💡"; color: #6078ea; position: absolute; left: 0; font-size: 1.1em; }
         .methodology-list li strong { color: #34495e; }
-        .action-button { display: inline-block; margin-top: 15px; background-color: var(--primary-color); color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; transition: background-color 0.2s; }
-        .action-button:hover { background-color: var(--secondary-color); }
-
+        .action-button { display: inline-block; margin-top: 15px; background-color: #6e8efb; color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9em; transition: background-color 0.2s; }
+        .action-button:hover { background-color: #5a7edf; }
+        
         @media (max-width: 768px) { h1 { font-size: 1.7em; } h2 { font-size: 1.3em; } .section { padding: 20px; } #emotionChartContainer { max-width: 100%; } #emotionChart, #situationChart { aspect-ratio: 4 / 3; } .methodology-list { font-size: 0.85em; } }
         @media (max-width: 480px) { .container { margin: 15px auto; padding: 0 15px; } h1 { font-size: 1.5em; margin-bottom: 25px; } h2 { font-size: 1.2em; } .section { padding: 15px; margin-top: 20px;} .section p { font-size: 0.95em; } .feedback { padding: 10px 15px; font-size: 0.9em;} #emotionChartContainer { max-width: 100%; } #emotionChart, #situationChart { aspect-ratio: 1 / 1; } .badge { font-size: 0.85em; padding: 6px 10px;} .assistant-analysis-notice { font-size: 0.7em; } .methodology-list { font-size: 0.8em; } }
     </style>
@@ -165,10 +187,11 @@
         <div id="gnb-title">LOZEE</div>
         <button id="menu-toggle">☰</button>
         <div id="dropdown-menu">
-          <a href="mypage.html">🎨 내 정보 보기</a>
-          <a href="index.html">✨ 새로운 이야기 시작!</a>
-          <a href="analysis.html">📊 우리 이야기 분석</a> <a href="journal-list.html">📖 이야기 모음집</a>
-          <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
+          <a href="mypage.html">🎨 내 정보 보기</a> 
+          <a href="index.html">✨ 새로운 이야기 시작!</a> 
+          <a href="analysis.html">📊 우리 이야기 분석</a> 
+          <a href="journal-list.html">📖 이야기 모음집</a> 
+          <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a> 
         </div>
     </nav>
 
@@ -178,7 +201,7 @@
             <button id="reportShareButton">나의 이야기 보고서 공유하기 🔗</button>
         </div>
 
-        <div class="section" id="languageAgeSection" style="display:none;">
+        <div class="section" id="languageAgeSection" style="display:none;"> 
             <h2>🗣️ 내 말솜씨 나이는 몇 살일까?</h2>
             <p class="assistant-analysis-notice">LOZEE AI 분석</p>
             <p class="module-explanation">
@@ -190,10 +213,32 @@
                 <strong>2단계(2시간~)</strong>: 좀 더 많은 이야기를 나누면 로지가 너를 더 잘 알게 돼! <br>
                 <strong>3단계(6시간~)</strong>: 와! 이제 정말 너의 멋진 말솜씨를 잘 알 것 같아! (가장 정확한 분석)
             </p>
-            <p>내 진짜 나이: <span id="realAge">정보 없음</span>살</p>
-            <p>내 말솜씨 나이 (로지의 생각): <span id="predictedLangAge">분석 중...</span> <span id="ageDifferenceVisual" style="font-weight:normal; margin-left: 8px;"></span></p>
-            <div id="ageFeedback" class="feedback" style="display:none;"></div>
-            <button id="languagePracticeBtn" class="action-button" style="display:none;">로지와 함께 말솜씨 키우기 쑥쑥! 🌱 (준비 중)</button>
+
+             <!-- 실제 예측 결과 영역 -->
+    <p>내 진짜 나이: <span id="realAge"></span>살</p>
+    <p>내 말솜씨 나이 (로지의 생각): <span id="predictedLangAge"></span> <span id="ageDifferenceVisual" style="font-weight:normal; margin-left: 8px;"></span></p>
+    
+    <!-- 분석 전 안내 또는 단계별 메시지를 담을 영역 -->
+    <div id="ageFeedback" class="feedback" style="display:none;"></div>
+    
+    <!-- (선택) 언어 연습 버튼 -->
+    <button id="languagePracticeBtn" class="action-button" style="display:none;">
+        로지와 함께 말솜씨 키우기 쑥쑥! 🌱 (준비 중)
+    </button>
+
+        </div>
+
+        <div class="section" id="analysisMethodologySection">
+             <h2>LOZEE의 분석 방법론</h2>
+            <p class="assistant-analysis-notice">LOZEE AI 분석</p>
+            <ul class="methodology-list">
+                <li><strong>Russell의 감정 원형 모형</strong>: Valence(쾌-불쾌)와 Arousal(각성-이완) 축을 기반으로 감정의 위치를 다차원적으로 분석합니다.</li>
+                <li><strong>Plutchik의 감정 바퀴</strong>: 8가지 기본 감정과 그 강도 및 유사성을 바탕으로 복합적인 감정 상태를 이해합니다.</li>
+                <li><strong>Lexicon 기반 감성 분석</strong>: 한국어 감성 사전(예: KOSAC)을 활용하여 텍스트의 긍정, 부정, 중립 극성을 판단합니다.</li>
+                <li><strong>딥러닝 분류 모델 (BERT/KoBERT)</strong>: 최신 자연어 처리 모델을 사용하여 문맥을 고려한 고정밀 감정 극성 및 세부 감정(예: 기쁨, 슬픔, 분노 등)을 분류합니다.</li>
+                <li><strong>인지왜곡 이론 (Beck의 CBT)</strong>: 인지행동치료 이론에 기반하여 대화에서 나타날 수 있는 대표적인 인지왜곡 패턴(예: 흑백논리, 과잉일반화 등)을 감지합니다.</li>
+                <li><strong>대화 주제 구조화</strong>: LOZEE AI의 자체 상담 토픽 데이터를 활용하여 대화의 흐름과 주요 주제를 체계적으로 파악하고 관련 피드백을 제공합니다.</li>
+            </ul>
         </div>
 
         <div class="section" id="emotionToneSection">
@@ -202,14 +247,15 @@
             <p class="module-explanation">
                 우리가 나눈 이야기에서 어떤 느낌들이 많았는지, 또 어떤 단어들을 자주 사용했는지 보여줄게! 네 마음속 날씨를 함께 알아보자! ☀️🌧️
             </p>
-            <div id="emotionChartContainer"> <canvas id="emotionChart"></canvas>
+            <div id="emotionChartContainer"> <canvas id="emotionChart"></canvas> 
             </div>
-            <p id="empathyMessage" class="feedback" style="display:none; margin-top:15px;"></p>
+            <p id="empathyMessage" class="feedback" style="display:none; margin-top:15px;"></p> 
             <div id="tagCloud"></div>
         </div>
 
         <div class="section" id="patternSection">
-            <h2>🔍 자주 나타나는 내 마음 &amp; 단어</h2> <p class="assistant-analysis-notice">LOZEE AI 분석</p>
+            <h2>🔍 자주 나타나는 내 마음 & 단어</h2>
+            <p class="assistant-analysis-notice">LOZEE AI 분석</p>
             <p class="module-explanation">
                 이야기하다 보면 나도 모르게 자주 쓰는 말이나 비슷한 느낌을 표현할 때가 있어. 로지가 그런 부분을 찾아봤어!
             </p>
@@ -222,49 +268,45 @@
             <p class="module-explanation">
                 여기는 우리가 나눈 이야기를 요약하고, 혹시 네 생각이 한쪽으로만 기울어지지는 않았는지(이걸 '생각 습관'이라고 불러볼까?), 어떤 특별한 점이 있는지 살펴보는 곳이야. 특별한 생각 습관이 보여도 걱정하지 마! 누구나 그럴 수 있고, 우리는 이야기하면서 함께 더 유연하게 생각하는 방법을 찾을 수 있어! 💪
             </p>
-            <canvas id="situationChart" style="display:none;"></canvas>
+            <canvas id="situationChart" style="display:none;"></canvas> 
             <div id="situationAlerts" style="margin-top:15px;"></div>
             <button id="continueDistortionTalkBtn" class="action-button" style="display:none;">이 생각에 대해 다음에 더 이야기 나눠볼까? 🤔</button>
         </div>
 
-        <div class="section" id="analysisMethodologySection">
-             <h2>LOZEE의 분석 방법론</h2>
-             <p class="assistant-analysis-notice">LOZEE AI 분석</p>
-            <ul class="methodology-list">
-                <li><strong>Russell의 감정 원형 모형</strong>: Valence(쾌-불쾌)와 Arousal(각성-이완) 축을 기반으로 감정의 위치를 다차원적으로 분석합니다.</li>
-                <li><strong>Plutchik의 감정 바퀴</strong>: 8가지 기본 감정과 그 강도 및 유사성을 바탕으로 복합적인 감정 상태를 이해합니다.</li>
-                <li><strong>Lexicon 기반 감성 분석</strong>: 한국어 감성 사전(예: KOSAC)을 활용하여 텍스트의 긍정, 부정, 중립 극성을 판단합니다.</li>
-                <li><strong>딥러닝 분류 모델 (BERT/KoBERT)</strong>: 최신 자연어 처리 모델을 사용하여 문맥을 고려한 고정밀 감정 극성 및 세부 감정(예: 기쁨, 슬픔, 분노 등)을 분류합니다.</li>
-                <li><strong>인지왜곡 이론 (Beck의 CBT)</strong>: 인지행동치료 이론에 기반하여 대화에서 나타날 수 있는 대표적인 인지왜곡 패턴(예: 흑백논리, 과잉일반화 등)을 감지합니다.</li>
-                <li><strong>대화 주제 구조화</strong>: LOZEE AI의 자체 상담 토픽 데이터를 활용하여 대화의 흐름과 주요 주제를 체계적으로 파악하고 관련 피드백을 제공합니다.</li>
-            </ul>
-        </div>
-
-        <p class="footer-assistant-notice">본 분석은 로지 AI가 마음을 담아 준비했어요. 개인적인 성찰을 위한 참고 자료로 활용해주세요.</p>
+        <p class="footer-assistant-notice">본 분석은 로지 AI가 마음을 담아 준비했어요.</p>
     </div>
 
     <script type="module">
+        // Chart.js import는 삭제하고, <head>에서 UMD 버전을 로드합니다.
         let chartLibraryInitialized = false;
 
         function initializeChartJsGlobal() {
-            // ... (이전과 동일) ...
-            // Chart.js가 전역적으로 사용 가능하도록 설정하는 로직 (예: window.Chart = Chart;)
-            // 또는 Chart.js 인스턴스 생성 시 필요한 기본 설정 등을 수행
-            // 이 함수가 성공적으로 Chart.js를 초기화하면 chartLibraryInitialized = true; 로 설정해야 함
-            if (typeof Chart !== 'undefined') {
-                // 예시: Chart.defaults.font.family = "'KoPub World Dotum', sans-serif";
-                // 예시: Chart.defaults.responsive = true;
-                chartLibraryInitialized = true;
-                console.log("Chart.js library is considered initialized.");
-                return true;
+            try {
+                if (typeof Chart !== 'undefined' && Chart) { 
+                    Chart.defaults.color = '#333'; 
+                    Chart.defaults.borderColor = '#e0e0e0'; 
+                    Chart.defaults.font.family = "'KoPub World Dotum', sans-serif"; 
+                    Chart.defaults.font.size = 12; 
+                    console.log("Analysis Page: Chart.js(UMD) 라이브러리가 인식되고 기본값이 설정되었습니다.");
+                    chartLibraryInitialized = true;
+                    return true;
+                } else {
+                    console.error("Analysis Page: Chart.js(UMD) 라이브러리를 찾을 수 없습니다.");
+                    const emotionChartContainer = document.getElementById('emotionChartContainer');
+                    if (emotionChartContainer) {
+                        emotionChartContainer.innerHTML = '<p style="text-align:center; color:red; padding:20px;">차트 기능에 문제가 있어요. 😭<br>페이지를 새로고침 해보세요.</p>';
+                    }
+                    return false;
+                }
+            } catch (error) {
+                console.error("Analysis Page: Chart.js(UMD) 초기화 중 오류!", error);
+                return false;
             }
-            console.warn("Chart.js library not found or not ready.");
-            return false;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => { // async 제거 가능
             console.log("Analysis Page: DOMContentLoaded 이벤트 시작");
-            const chartJsIsReady = initializeChartJsGlobal();
+            const chartJsIsReady = initializeChartJsGlobal(); 
 
             // --- DOM 요소 가져오기 ---
             const languageAgeSection = document.getElementById('languageAgeSection');
@@ -273,169 +315,166 @@
             const ageFeedbackEl = document.getElementById('ageFeedback');
             const ageDifferenceVisualEl = document.getElementById('ageDifferenceVisual');
             const languagePracticeBtn = document.getElementById('languagePracticeBtn');
-
-            const emotionChartEl = document.getElementById('emotionChart');
-            const emotionChartContainerEl = document.getElementById('emotionChartContainer');
+            
+            const emotionChartEl = document.getElementById('emotionChart'); // canvas 요소
+            const emotionChartContainerEl = document.getElementById('emotionChartContainer'); // canvas를 감싸는 div
             const empathyMessageEl = document.getElementById('empathyMessage');
             const tagCloudEl = document.getElementById('tagCloud');
-
+            
             const patternDashboardEl = document.getElementById('patternDashboard');
-            const patternSection = document.getElementById('patternSection');
+            
             const situationAlertsEl = document.getElementById('situationAlerts');
             const continueDistortionTalkBtn = document.getElementById('continueDistortionTalkBtn');
-            const situationSection = document.getElementById('situationSection');
-
+            // const situationChartEl = document.getElementById('situationChart'); // 현재 사용 안 함
+            
             const reportShareButton = document.getElementById('reportShareButton');
             const containerEl = document.querySelector('.container');
 
-            // --- 데이터 로드 ---
+            // 사용자 나이 표시
             const userAge = parseInt(localStorage.getItem('lozee_userage'), 10) || 0;
-            if(realAgeEl) realAgeEl.textContent = userAge > 0 ? userAge : "정보 없음";
-            console.log("Analysis Page - User Age:", userAge);
+           if (realAgeEl) realAgeEl.textContent = userAge || "정보 없음";
+
+           // 로컬스토리지에서 분석 데이터 불러오기
 
             const analysisDataString = localStorage.getItem('lozee_conversation_analysis');
-            let analysisResults = null;
-            let accumulatedDurationMinutes = 0;
+                    if (!analysisDataString) {
+            // 분석 결과 자체가 없으면 언어분석 섹션을 숨기고 종료
+            if (languageAgeSection) languageAgeSection.style.display = 'none';
+            // (추가로 “계속 대화를 통해 분석을 받을 수 있습니다” 같은 안내를 별도 섹션에 삽입해도 좋음)
+            return;
+        }
 
-            if (!analysisDataString) {
-                console.warn("Analysis Page: localStorage에 'lozee_conversation_analysis' 데이터가 없습니다.");
-                if (containerEl) {
-                    document.querySelectorAll('.section:not(#analysisMethodologySection)').forEach(sec => {
-                        if(sec && sec.id !== 'analysisMethodologySection') sec.style.display = 'none';
-                    });
-                     if (!containerEl.querySelector('.no-data-message')) {
-                        const noDataMsgDiv = document.createElement('div');
-                        noDataMsgDiv.className = 'feedback neutral no-data-message';
-                        noDataMsgDiv.style.textAlign = 'center';
-                        noDataMsgDiv.style.marginTop = '20px';
-                        noDataMsgDiv.innerHTML = '<h2>아직 로지와 나눈 이야기가 충분하지 않나 봐요! 😮</h2><p>먼저 로지와 신나게 이야기하고 분석 결과를 확인해보세요!</p>';
-                        const methodologySection = document.getElementById('analysisMethodologySection');
-                        let referenceNodeForMessage = methodologySection;
-                        const pageH1 = containerEl.querySelector('h1');
-                        if (pageH1 && pageH1.nextElementSibling) {
-                             referenceNodeForMessage = pageH1.nextElementSibling;
-                             if (referenceNodeForMessage.nextElementSibling) {
-                                referenceNodeForMessage = referenceNodeForMessage.nextElementSibling;
-                             }
-                        }
-                        if (referenceNodeForMessage && referenceNodeForMessage.parentElement === containerEl) {
-                            containerEl.insertBefore(noDataMsgDiv, referenceNodeForMessage);
-                        } else {
-                             containerEl.appendChild(noDataMsgDiv);
-                        }
-                    }
-                }
-                return;
-            }
 
-             try {
+
+        let analysisResults, accumulatedDurationMinutes;
+        try {
+            const fullAnalysis = JSON.parse(analysisDataString);
+            analysisResults = fullAnalysis.results;
+            accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0;
+        } catch (e) {
+            console.error("저장된 분석 결과 파싱 오류:", e);
+            if (languageAgeSection) languageAgeSection.style.display = 'none';
+            return;
+        }
+
+            try {
                 const fullAnalysis = JSON.parse(analysisDataString);
                 analysisResults = fullAnalysis.results;
                 accumulatedDurationMinutes = parseFloat(fullAnalysis.accumulatedDurationMinutes) || 0;
             } catch (e) {
                 console.error("저장된 분석 결과 파싱 오류:", e);
                 if (containerEl) containerEl.innerHTML = '<h1>앗! 분석 결과를 불러오는 데 문제가 생겼어요 😥</h1><p style="text-align:center;">이전 대화로 돌아가거나, 잠시 후 다시 시도해주세요.</p>';
-                if (languageAgeSection) languageAgeSection.style.display = 'none';
+                return; 
+            }
+            
+            if (!analysisResults) {
+                console.warn("Analysis Page: 파싱 후 analysisResults 객체가 null입니다.");
+                // ... (데이터 없음 메시지 처리, 이전과 유사) ...
                 return;
             }
 
-            if (!analysisResults) {
-                console.warn("Analysis Page: 'analysisResults' 객체가 유효하지 않습니다.");
-                 if (containerEl && !containerEl.querySelector('.no-data-message')) { // 중복 방지 및 analysisResults null일 때 메시지 표시
-                    document.querySelectorAll('.section:not(#analysisMethodologySection)').forEach(sec => {
-                        if(sec && sec.id !== 'analysisMethodologySection') sec.style.display = 'none';
-                    });
-                    const noDataMsgDiv = document.createElement('div');
-                    noDataMsgDiv.className = 'feedback neutral no-data-message';
-                    noDataMsgDiv.style.textAlign = 'center';
-                    noDataMsgDiv.style.marginTop = '20px';
-                    noDataMsgDiv.innerHTML = '<h2>분석 결과를 처리할 수 없어요. 😮</h2><p>데이터 형식이 올바르지 않거나 필요한 정보가 부족해요. 다시 시도해주세요.</p>';
-                    const methodologySection = document.getElementById('analysisMethodologySection');
-                    let referenceNodeForMessage = methodologySection;
-                    const pageH1 = containerEl.querySelector('h1');
-                    if (pageH1 && pageH1.nextElementSibling) {
-                         referenceNodeForMessage = pageH1.nextElementSibling;
-                         if (referenceNodeForMessage.nextElementSibling) {
-                            referenceNodeForMessage = referenceNodeForMessage.nextElementSibling;
-                         }
-                    }
-                    if (referenceNodeForMessage && referenceNodeForMessage.parentElement === containerEl) {
-                        containerEl.insertBefore(noDataMsgDiv, referenceNodeForMessage);
-                    } else {
-                         containerEl.appendChild(noDataMsgDiv);
-                    }
-                }
-                return;
-            }
 
             // --- 각 분석 섹션 렌더링 ---
+            // 1. 언어·나이 분석
+ // 4) 언어분석 섹션 항상 노출 (단, 13세 이상이면 숨김)
+        if (!languageAgeSection) return;
+        if (userAge > 12 || !analysisResults.ageLanguageAnalysis) {
+            // 13세 이상이거나, ageLanguageAnalysis 데이터가 없으면 아예 숨김
+            languageAgeSection.style.display = 'none';
+            return;
+        } else {
+            // 나이가 12세 이하이고, 분석 데이터가 있으면 섹션을 노출
+            languageAgeSection.style.display = 'block';
+        }
 
-            // 1. 언어·나이 분석 (12세 이하 사용자에게만 표시)
-            if (languageAgeSection) {
-                const userAgeForLangAnalysis = userAge; // 위에서 이미 가져온 userAge 변수 사용
-
-                // 섹션을 표시하기 위한 최소 조건: 사용자 연령 12세 이하, 언어 분석 데이터 존재,
-                // 그리고 최소 1분 이상 대화 (안내 메시지 또는 실제 분석 결과 표시 목적)
-                if (userAgeForLangAnalysis > 0 &&
-                    userAgeForLangAnalysis <= 12 &&
-                    analysisResults.ageLanguageAnalysis &&
-                    accumulatedDurationMinutes >= 1) { // 이 섹션을 표시하기 위한 최소 누적 시간
-
-                    languageAgeSection.style.display = 'block';
-                    const langAnalysis = analysisResults.ageLanguageAnalysis;
-
-                    if (realAgeEl) realAgeEl.textContent = userAgeForLangAnalysis;
-
-                    if (accumulatedDurationMinutes < 30) { // 정확한 분석을 위한 시간이 아직 부족할 때
-                        if (predictedLangAgeEl) predictedLangAgeEl.textContent = "...";
-                        if (ageDifferenceVisualEl) ageDifferenceVisualEl.textContent = "";
-                        if (ageFeedbackEl) {
-                            ageFeedbackEl.textContent = "언어 분석 정확도를 높이려면 로지와 누적 30분 이상 이야기 나눠보는 게 좋아요! 😊 (현재 " + Math.floor(accumulatedDurationMinutes) + "분)";
-                            ageFeedbackEl.className = 'feedback neutral';
-                            ageFeedbackEl.style.display = 'block';
-                        }
-                        if (languagePracticeBtn) languagePracticeBtn.style.display = 'none';
-                    } else { // 분석을 위한 충분한 시간 (30분 이상)
-                        if (predictedLangAgeEl) predictedLangAgeEl.textContent = langAnalysis.predictedAge || "분석 중";
-
-                        if (ageDifferenceVisualEl && langAnalysis.differenceSymbol && langAnalysis.differenceText) {
-                            // 수정된 부분: 불필요한 이스케이프 제거 및 올바른 CSS 적용
-                            ageDifferenceVisualEl.innerHTML = `<span class="math-inline">${langAnalysis.differenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.differenceText})</span></span>`;
-                        } else if (ageDifferenceVisualEl) {
-                            ageDifferenceVisualEl.textContent = '';
-                        }
-
-                        if (ageFeedbackEl && langAnalysis.feedback) {
-                            ageFeedbackEl.textContent = langAnalysis.feedback;
-                            ageFeedbackEl.className = `feedback ${langAnalysis.sentiment || 'neutral'}`;
-                            ageFeedbackEl.style.display = 'block';
-                        } else if (ageFeedbackEl) {
-                            ageFeedbackEl.style.display = 'none';
-                        }
-
-                        if (languagePracticeBtn /* && langAnalysis.someConditionForPractice */) {
-                            languagePracticeBtn.style.display = 'inline-block';
-                        } else if (languagePracticeBtn) {
-                            languagePracticeBtn.style.display = 'none';
-                        }
-                    }
-                } else { // 섹션 표시 조건 미충족
-                    languageAgeSection.style.display = 'none';
-                }
+        // 5) 누적 대화 시간에 따른 분기 처리
+        const langAnalysis = analysisResults.ageLanguageAnalysis;
+        if (accumulatedDurationMinutes < 30) {
+            // ——————————————————————————————
+            // [30분 미만 안내]
+            // 30분을 못 채웠다면, 분석 결과 대신 안내 메시지만 보여줌
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = "..."; 
             }
-
+            if (ageDifferenceVisualEl) {
+                ageDifferenceVisualEl.textContent = "";
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = "언어 분석을 받으려면 누적 30분 이상 대화해야 합니다 😊";
+                ageFeedbackEl.className = 'feedback neutral';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'none';
+            }
+        }
+        else if (accumulatedDurationMinutes < 120) {
+            // ——————————————————————————————
+            // [1단계: 누적 30분 이상 ~ 2시간 미만]
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = langAnalysis.stage1PredictedAge || "분석 준비 중";
+            }
+            if (ageDifferenceVisualEl && langAnalysis.stage1DifferenceSymbol && langAnalysis.stage1DifferenceText) {
+                ageDifferenceVisualEl.innerHTML = `${langAnalysis.stage1DifferenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.stage1DifferenceText})</span>`;
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = langAnalysis.stage1Feedback || "30분 넘게 이야기해줘서 고마워! 언어 분석을 시작할게.";
+                ageFeedbackEl.className = 'feedback positive';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'none';
+            }
+        }
+        else if (accumulatedDurationMinutes < 300) {
+            // ——————————————————————————————
+            // [2단계: 누적 2시간 이상 ~ 5시간 미만]
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = langAnalysis.stage2PredictedAge || "분석 준비 중";
+            }
+            if (ageDifferenceVisualEl && langAnalysis.stage2DifferenceSymbol && langAnalysis.stage2DifferenceText) {
+                ageDifferenceVisualEl.innerHTML = `${langAnalysis.stage2DifferenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.stage2DifferenceText})</span>`;
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = langAnalysis.stage2Feedback || "2시간 넘게 이야기했네! 더 깊은 분석 결과를 보여줄게.";
+                ageFeedbackEl.className = 'feedback neutral';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'block'; 
+                // (예시) 2단계 이후부터는 언어 연습 버튼을 노출할 수도 있음
+            }
+        }
+        else {
+            // ——————————————————————————————
+            // [3단계: 누적 5시간 이상]
+            if (predictedLangAgeEl) {
+                predictedLangAgeEl.textContent = langAnalysis.stage3PredictedAge || "분석 준비 중";
+            }
+            if (ageDifferenceVisualEl && langAnalysis.stage3DifferenceSymbol && langAnalysis.stage3DifferenceText) {
+                ageDifferenceVisualEl.innerHTML = `${langAnalysis.stage3DifferenceSymbol} <span style="font-size:0.8em; margin-left:4px;">(${langAnalysis.stage3DifferenceText})</span>`;
+            }
+            if (ageFeedbackEl) {
+                ageFeedbackEl.textContent = langAnalysis.stage3Feedback || "5시간 넘게 이야기해줘서 정말 고마워! 가장 정확한 분석을 보여줄게.";
+                ageFeedbackEl.className = 'feedback positive';
+                ageFeedbackEl.style.display = 'block';
+            }
+            if (languagePracticeBtn) {
+                languagePracticeBtn.style.display = 'block';
+            }
+        }
+          
 
             // 2. 감정 어조 및 태그 클라우드
-            const emotionToneSection = document.getElementById('emotionToneSection');
-            if (emotionToneSection) {
+            if (emotionToneSection) { // 섹션 존재 확인
                 if (chartJsIsReady && analysisResults.emotionToneData && Object.keys(analysisResults.emotionToneData).length > 0) {
-                    if(emotionChartEl) emotionChartEl.style.display = 'block';
+                    if(emotionChartEl) emotionChartEl.style.display = 'block'; // 캔버스 보이기
                     if(emotionChartContainerEl && emotionChartContainerEl.querySelector('.no-chart-message')) {
-                         emotionChartContainerEl.querySelector('.no-chart-message').remove();
+                         emotionChartContainerEl.querySelector('.no-chart-message').remove(); // 데이터있으면 메시지 제거
                     }
                     renderEmotionChart('emotionChart', analysisResults.emotionToneData);
                     if(empathyMessageEl) displayEmpathyMessage(analysisResults.emotionToneData);
-                } else {
+                } else { // 차트 못 그리거나 데이터 없을 때
                     if(emotionChartEl) emotionChartEl.style.display = 'none';
                     if(emotionChartContainerEl && !emotionChartContainerEl.querySelector('.no-chart-message')) {
                         const noDataMsg = document.createElement('p');
@@ -446,10 +485,10 @@
                     if(empathyMessageEl) { empathyMessageEl.textContent = "아직은 네 마음속 감정들을 자세히 알기 어려워. 로지랑 더 많은 이야기를 나눠보자!"; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block'; }
                 }
                 if (analysisResults.keywords && analysisResults.keywords.length > 0) {
-                    if(tagCloudEl) renderTagCloud('tagCloud', analysisResults.keywords.map(kw => ({ text: kw, weight: Math.floor(5 + Math.random() * 10) })));
+                    if(tagCloudEl) renderTagCloud('tagCloud', analysisResults.keywords.map(kw => ({ text: kw, weight: 5 + Math.floor(Math.random() * 10) })));
                 } else { if(tagCloudEl) tagCloudEl.innerHTML = '<p style="text-align:center; color:#888;">이야기 속에서 자주 나온 단어들을 모으고 있어요!</p>';}
             }
-
+            
             // 3. 반복 패턴
             if (patternSection) {
                 if (analysisResults.patterns && analysisResults.patterns.length > 0) {
@@ -460,41 +499,10 @@
             // 4. 상황 분석 (인지왜곡)
             if (situationSection) {
                 const situationChartToHide = document.getElementById('situationChart');
-                if(situationChartToHide) situationChartToHide.style.display = 'none';
-
+                if(situationChartToHide) situationChartToHide.style.display = 'none'; 
                 if (analysisResults.cognitiveDistortions && analysisResults.cognitiveDistortions.length > 0) {
                     if(situationAlertsEl) alertCognitiveDistortions('situationAlerts', analysisResults.cognitiveDistortions);
-                    if (continueDistortionTalkBtn) {
-                        continueDistortionTalkBtn.style.display = 'inline-block';
-                        continueDistortionTalkBtn.onclick = () => {
-                            createImprovementPlanIfNeeded(analysisResults, userAge);
-                            const plans = JSON.parse(localStorage.getItem('lozee_improvement_plans') || '[]');
-                            // 가장 최근에 추가된 해당 왜곡 관련 계획을 찾거나, 더 구체적인 매칭 로직 필요
-                            const relevantDistortion = analysisResults.cognitiveDistortions[0]; // 예시: 첫 번째 왜곡
-                            const plan = plans.find(p => p.type === 'cognitive_distortion' && p.details === relevantDistortion);
-
-                            if (plan) {
-                                const continueTopicData = {
-                                    type: 'continue_improvement_plan',
-                                    planType: plan.type,
-                                    details: plan.topic || plan.details,
-                                    prompt: plan.promptForContinuation || `"${plan.details}" 생각 패턴에 대해 더 이야기 나눠볼까요?`
-                                };
-                                localStorage.setItem('lozee_talk_init_topic', JSON.stringify(continueTopicData));
-                                window.location.href = 'talk.html';
-                            } else {
-                                 // 만약 직접 매칭되는 plan이 없다면, 일반적인 인지왜곡 대화 시작 토픽 생성
-                                const genericDistortionTopic = {
-                                    type: 'cognitive_distortion_discussion',
-                                    details: relevantDistortion, // 어떤 왜곡에 대한 것인지 명시
-                                    prompt: `최근 대화에서 "${relevantDistortion}" 생각 패턴이 나타났어요. 이 부분에 대해 좀 더 자세히 이야기 나눠볼까요?`
-                                };
-                                localStorage.setItem('lozee_talk_init_topic', JSON.stringify(genericDistortionTopic));
-                                window.location.href = 'talk.html';
-                                console.log("특정 개선 계획은 없지만, 인지왜곡 주제로 대화 시작:", relevantDistortion);
-                            }
-                        };
-                    }
+                    if (continueDistortionTalkBtn) { continueDistortionTalkBtn.style.display = 'inline-block'; continueDistortionTalkBtn.onclick = () => { /* ... */ }; }
                 } else {
                     if(situationAlertsEl) situationAlertsEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';
                     if(continueDistortionTalkBtn) continueDistortionTalkBtn.style.display = 'none';
@@ -502,163 +510,187 @@
             }
 
             // 공유 버튼 로직
-            if(reportShareButton) {
-                reportShareButton.onclick = () => {
-                    const reportId = (localStorage.getItem('lozee_username') || 'user') + "_" + new Date().getTime();
-                    const shareableLink = `${window.location.origin}${window.location.pathname}?report_id=${reportId}`;
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(shareableLink)
-                            .then(() => {
-                                alert('공유 링크가 복사되었습니다!\n' + shareableLink + '\n(실제 공유를 위해서는 보고서 저장 기능이 필요합니다.)');
-                            })
-                            .catch(err => {
-                                console.error('클립보드 복사 실패:', err);
-                                alert('링크 복사에 실패했어요. 수동으로 복사해주세요:\n' + shareableLink);
-                            });
-                    } else {
-                        prompt('아래 링크를 복사하여 공유하세요 (실제 공유 기능은 추가 구현 필요):', shareableLink);
-                    }
-                };
-            }
-            if (analysisResults) {
-                 createImprovementPlanIfNeeded(analysisResults, userAge);
-            }
+            if(reportShareButton) { reportShareButton.onclick = () => { 
+                const reportId = localStorage.getItem('lozee_username') + "_" + new Date().getTime();
+        const shareableLink = `${window.location.origin}${window.location.pathname}?report_id=${reportId}`;
 
-        }); // DOMContentLoaded 끝
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareableLink)
+                .then(() => {
+                    alert('공유 링크가 복사되었습니다!\n' + shareableLink);
+                })
+                .catch(err => {
+                    console.error('클립보드 복사 실패:', err);
+                    alert('링크 복사에 실패했어요. 수동으로 복사해주세요:\n' + shareableLink);
+                });
+        } else {
+            prompt('아래 링크를 복사하여 공유하세요:', shareableLink);
+        } 
+    }; 
+    }
+        });
 
-        function renderTagCloud(elementId, tags) { const cloudEl = document.getElementById(elementId); if(!cloudEl) return; if(tags && tags.length > 0) { cloudEl.innerHTML = tags.map(tag => { const size = 0.8 + ((tag.weight || 5) / 15); const opacity = Math.max(0.5, (tag.weight || 5) / 10); return `<span class="badge" style="opacity:${opacity}; font-size:${size}em;">${tag.text}</span>`; }).join(''); } else { cloudEl.innerHTML = '<p style="text-align:center; color:#888;">이야기에서 자주 나온 단어들을 모으고 있어요!</p>'; } }
-        function renderPatternDashboard(elementId, patterns) { const dashEl = document.getElementById(elementId); if(!dashEl) return; if(patterns && patterns.length > 0) { dashEl.innerHTML = patterns.map(p => `<p>💡 ${p}</p>`).join(''); } else { dashEl.innerHTML = '<p style="text-align:center; color:#888;">반복되는 이야기 패턴을 찾고 있어요!</p>'; } }
-        function alertCognitiveDistortions(elementId, distortions) { const alertEl = document.getElementById(elementId); if(!alertEl) return; if(distortions && distortions.length > 0) { alertEl.innerHTML = distortions.map(d => `<p class="cognitive-distortion-item">${d}</p>`).join(''); } else { alertEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';} }
-        function renderEmotionChart(canvasId, emotionData) {
-            if (!chartLibraryInitialized || typeof Chart === 'undefined') {
-                console.warn("Chart.js is not initialized or Chart is undefined in renderEmotionChart.");
-                const chartContainer = document.getElementById('emotionChartContainer');
-                const chartEl = document.getElementById(canvasId);
-                if (chartContainer && !chartContainer.querySelector('.no-chart-library-message')) {
-                    if(chartEl) chartEl.style.display = 'none';
-                    const noLibMsg = document.createElement('p');
-                    noLibMsg.textContent = "차트 라이브러리를 불러오는 데 실패했습니다. 😥";
-                    noLibMsg.style.textAlign = 'center'; noLibMsg.style.color = '#cc0000'; noLibMsg.classList.add('no-chart-library-message');
-                    chartContainer.appendChild(noLibMsg);
-                }
-                return;
-            }
-            const ctx = document.getElementById(canvasId)?.getContext('2d');
-            const chartContainer = document.getElementById('emotionChartContainer');
-            const chartEl = document.getElementById(canvasId);
-            if (!ctx) { console.error("Canvas context not found for ID:", canvasId); return; }
-            if (!emotionData || Object.keys(emotionData).length === 0) {
-                if(chartContainer && !chartContainer.querySelector('.no-chart-data-message')) {
-                    if(chartEl) chartEl.style.display = 'none';
-                    const noDataMsg = document.createElement('p');
-                    noDataMsg.textContent = "표시할 감정 데이터가 없어요. 로지와 더 이야기해볼까요?";
-                    noDataMsg.style.textAlign = 'center'; noDataMsg.style.color = '#888'; noDataMsg.classList.add('no-chart-data-message');
-                    chartContainer.appendChild(noDataMsg);
-                }
-                return;
-            }
-            if(chartContainer) { const exMsg = chartContainer.querySelector('.no-chart-message') || chartContainer.querySelector('.no-chart-library-message') || chartContainer.querySelector('.no-chart-data-message'); if (exMsg) exMsg.remove(); if(chartEl) chartEl.style.display = 'block';}
-            const existingChart = Chart.getChart(ctx); if (existingChart) { existingChart.destroy(); }
-            const emotionColors = { '기쁨': 'rgba(255, 205, 86, 0.7)','슬픔': 'rgba(54, 162, 235, 0.7)','분노': 'rgba(255, 99, 132, 0.7)','불안': 'rgba(153, 102, 255, 0.7)','수치': 'rgba(255, 159, 64, 0.7)','중립': 'rgba(201, 203, 207, 0.7)'};
-            const labels = Object.keys(emotionData); const dataValues = Object.values(emotionData);
-            const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(100,100,100,0.7)');
-            new Chart(ctx, { type: 'doughnut', data: { labels: labels, datasets: [{ label: '나의 마음 비율', data: dataValues, backgroundColor: backgroundColors, borderColor: '#ffffff', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: (Chart.defaults && Chart.defaults.color) || '#333', font: { family: (Chart.defaults && Chart.defaults.font && Chart.defaults.font.family) || "'KoPub World Dotum', sans-serif", size: 11 }, padding: 15 } }, tooltip: { titleFont: { family: (Chart.defaults && Chart.defaults.font && Chart.defaults.font.family) || "'KoPub World Dotum', sans-serif" }, bodyFont: { family: (Chart.defaults && Chart.defaults.font && Chart.defaults.font.family) || "'KoPub World Dotum', sans-serif" } } } } });
-        }
-        function displayEmpathyMessage(emotionData) {
-            const empathyMessageEl = document.getElementById('empathyMessage');
-            if (!empathyMessageEl || !emotionData || Object.keys(emotionData).length === 0) { if (empathyMessageEl) empathyMessageEl.style.display = 'none'; return; }
-            const entries = Object.entries(emotionData).filter(([, score]) => score > 0);
-            if (entries.length === 0) { empathyMessageEl.textContent = '대화에서 다양한 감정들을 탐색해볼 수 있어요.'; empathyMessageEl.className = 'feedback neutral'; empathyMessageEl.style.display = 'block'; return; }
-            entries.sort((a, b) => b[1] - a[1]);
-            const [dominantEmotion, score] = entries[0]; let msg = ''; let sentimentClass = 'neutral';
-            if (score > 0.3) { // 감정 점수가 0.3 이상일 때만 구체적인 메시지
-                switch (dominantEmotion) {
-                    case '기쁨': msg = `대화에서 <strong>즐거움</strong>이 느껴지네요! 좋은 순간들을 많이 나누셨나 봐요. 😊`; sentimentClass = 'positive'; break;
-                    case '슬픔': msg = `<strong>슬픔이나 속상함</strong>이 느껴지는 부분이 있었어요. 그 마음에 로지가 귀 기울일게요. 털어놓아 주셔서 고마워요.`; sentimentClass = 'negative'; break;
-                    case '분노': msg = `<strong>화나거나 답답한 감정</strong>이 있었던 것 같아요. 그런 감정도 소중한 내 마음의 신호랍니다.`; sentimentClass = 'negative'; break;
-                    case '불안': msg = `<strong>걱정이나 불안함</strong>이 느껴졌어요. 어떤 점이 마음을 불편하게 했는지 함께 살펴볼까요?`; sentimentClass = 'negative'; break;
-                    case '수치': msg = `혹시 <strong>부끄럽거나 당황스러운 마음</strong>이 드셨나요? 괜찮아요, 여기는 안전한 공간이에요.`; sentimentClass = 'neutral'; break; // 수치심은 부정적일수도 중립적일수도 있음
-                    case '중립': msg = `대화가 전반적으로 <strong>차분하게</strong> 진행된 것 같아요. 생각을 정리하는 데 도움이 되었길 바라요.`; sentimentClass = 'neutral'; break;
-                    default: msg = '다양한 감정들을 표현해주셨네요. 자신의 감정을 알아차리는 것은 매우 중요합니다.'; sentimentClass = 'neutral';
-                }
-            } else if (entries.length > 0 && score > 0) { // 가장 높은 감정이라도 0.3 미만일 때
-                 msg = `대화에서 여러 감정들이 조금씩 느껴졌어요. ${dominantEmotion} 감정이 가장 두드러졌지만, 전반적으로 다양한 마음을 탐색하고 계신 것 같아요.`;
-                 sentimentClass = 'neutral';
-            }
-             else { msg = '이야기를 통해 다양한 감정들을 탐색하고 표현하는 연습을 할 수 있어요.'; sentimentClass = 'neutral'; }
-            empathyMessageEl.innerHTML = msg; empathyMessageEl.className = `feedback ${sentimentClass}`; empathyMessageEl.style.display = 'block';
-        }
 
-        function createImprovementPlanIfNeeded(analysisResults, userAge) {
-            let plans = JSON.parse(localStorage.getItem('lozee_improvement_plans') || '[]' );
-            const currentJournalId = localStorage.getItem('lozee_selected_journal_id') || `session_${new Date().getTime()}`;
+        // 인지왜곡 또는 언어연령 차이 시 "로지와의 약속" 생성
+function createImprovementPlanIfNeeded(analysisResults, userAge) {
+    let plans = JSON.parse(localStorage.getItem('lozee_improvement_plans') || '[]');
 
-            if (analysisResults.cognitiveDistortions && analysisResults.cognitiveDistortions.length > 0) {
-                analysisResults.cognitiveDistortions.forEach(distortion => {
-                    const planId = `cog_${currentJournalId}_${distortion.replace(/\s+/g, '_').substring(0,20)}`;
-                    const existingPlan = plans.find(p => p.id === planId);
-                    if (!existingPlan) {
-                        plans.push({
-                            id: planId,
-                            type: 'cognitive_distortion',
-                            title: `생각 습관 돌아보기: "${distortion}"`,
-                            details: distortion,
-                            topic: analysisResults.summaryTitle || "최근 대화 주제",
-                            promptForContinuation: `지난번에 "${analysisResults.summaryTitle || '이 대화'}"에서 나타났던 "${distortion}" 생각 패턴에 대해 더 깊이 이야기 나눠볼까요? 어떤 상황에서 그런 생각이 들었고, 그로 인해 어떤 감정을 느끼셨는지 편하게 말씀해주세요.`
-                        });
-                    }
+    // 1. 인지왜곡 관련 약속 생성
+    if (analysisResults.cognitiveDistortions && analysisResults.cognitiveDistortions.length > 0) {
+        analysisResults.cognitiveDistortions.forEach(distortion => {
+            // 이미 동일한 약속이 있는지 확인 (중복 방지)
+            const existingPlan = plans.find(p => p.type === 'cognitive_distortion' && p.details === distortion);
+            if (!existingPlan) {
+                plans.push({
+                    type: 'cognitive_distortion',
+                    title: `인지왜곡 점검: ${distortion}`,
+                    details: distortion, // 어떤 인지왜곡인지
+                    topic: analysisResults.summaryTitle || "이번 대화 주제", // 관련 대화 주제
+                    promptForContinuation: `지난번에 이야기 나눴던 '${distortion}' 생각 습관에 대해 좀 더 깊이 이야기 나눠볼까? 어떤 상황에서 그런 생각이 들었는지, 그 생각 때문에 어떤 기분이었는지 알려줄 수 있어?`
                 });
             }
+        });
+    }
 
-            if (userAge > 0 && userAge <= 12 && analysisResults.ageLanguageAnalysis && accumulatedDurationMinutes >= 30) { // 30분 이상 대화했을 때만 언어 연습 계획 생성
-                const langAnalysis = analysisResults.ageLanguageAnalysis;
-                const realUserAge = userAge;
-                let predictedUserAgeNum = null;
+    // 2. 언어 연령 차이 관련 약속 생성
+    if (analysisResults.ageLanguageAnalysis) {
+        const langAnalysis = analysisResults.ageLanguageAnalysis;
+        // predictedAge가 문자열 "X-Y세" 형태일 수 있으므로, 숫자 나이로 변환하거나 대표값 사용 필요
+        // 여기서는 간단히 문자열 그대로 사용하거나, 실제 나이(userAge)와 비교 로직이 필요
+        const ageDifference = Math.abs( (parseInt(langAnalysis.predictedAge) || userAge) - userAge ); // 간략화된 차이 계산
 
-                if (langAnalysis.predictedAge) {
-                    const ageMatch = String(langAnalysis.predictedAge).match(/(\d+)(-(\d+))?/);
-                    if (ageMatch && ageMatch[1]) {
-                        predictedUserAgeNum = parseInt(ageMatch[1]);
-                        if (ageMatch[3]) {
-                            predictedUserAgeNum = (predictedUserAgeNum + parseInt(ageMatch[3])) / 2;
-                        }
-                    }
-                }
-                
-                if (predictedUserAgeNum !== null) {
-                    const ageDifference = Math.abs(predictedUserAgeNum - realUserAge);
-                    // 실제 나이와 예측된 말솜씨 나이가 6개월(0.5년) 이상 차이날 때 계획 생성
-                    if (ageDifference >= 0.5) {
-                        const planId = `lang_${currentJournalId}_age_diff`;
-                        const existingPlan = plans.find(p => p.id === planId);
-                        if (!existingPlan) {
-                            plans.push({
-                                id: planId,
-                                type: 'language_practice',
-                                title: `말솜씨 발전시키기`,
-                                details: `언어 표현력 향상 (예상 ${langAnalysis.predictedAge}, 실제 ${realUserAge}세)`,
-                                topic: "언어 표현 연습",
-                                predictedAge: langAnalysis.predictedAge,
-                                userAge: realUserAge,
-                                promptForContinuation: `지난번 분석에서 내 말솜씨가 ${langAnalysis.predictedAge} 정도로 보였는데, 실제 나이(${realUserAge}세)와 조금 차이가 있었지? 함께 연습하면서 생각이나 느낌을 더 잘 표현하는 방법을 찾아보자! 어떤 말부터 연습해볼까?`
-                            });
-                        }
-                    }
-                }
-            }
-
-            const uniquePlans = plans.filter((plan, index, self) =>
-                index === self.findIndex((p) => (p.id === plan.id))
-            );
-
-            if (uniquePlans.length > 0) {
-                localStorage.setItem('lozee_improvement_plans', JSON.stringify(uniquePlans));
-                console.log("Analysis Page: 개선 계획 저장됨:", uniquePlans);
-            } else {
-                 console.log("Analysis Page: 생성할 새로운 개선 계획이 없습니다.");
+        if (ageDifference >= 0.5) { // 예: 6개월(0.5년) 이상 차이 시
+             const existingPlan = plans.find(p => p.type === 'language_practice' && p.topic === (langAnalysis.topic || "언어 표현"));
+             if (!existingPlan) {
+                plans.push({
+                    type: 'language_practice',
+                    title: `말솜씨 연습: ${langAnalysis.topic || '언어 표현'}`,
+                    details: langAnalysis.feedback || '언어 표현력 향상',
+                    topic: langAnalysis.topic || "언어 표현", // 관련된 대화 주제나 연습할 언어 영역
+                    predictedAge: langAnalysis.predictedAge,
+                    userAge: userAge,
+                    promptForContinuation: `지난번 분석에서 내 말솜씨가 ${langAnalysis.predictedAge} 정도로 보였는데, 실제 나이(${userAge}세)와 조금 차이가 있었지? 같이 연습하면서 더 멋지게 말하는 법을 익혀볼까?`
+                });
             }
         }
+    }
+
+    if (plans.length > 0) {
+        localStorage.setItem('lozee_improvement_plans', JSON.stringify(plans));
+        console.log("Mypage: 개선 계획 저장됨:", plans);
+    }
+}
+// DOMContentLoaded 내에서 분석 결과가 로드된 후 호출
+// ...
+// if (analysisResults) {
+//     createImprovementPlanIfNeeded(analysisResults, userAge); // userAge는 localStorage 등에서 가져온 실제 사용자 나이
+// }
+// ...
+
+        // --- 데이터 렌더링 함수들 (본문 내용 포함) ---
+        // (renderTagCloud, renderPatternDashboard, alertCognitiveDistortions, 
+        //  renderEmotionChart (new Chart 사용), displayEmpathyMessage, getKoreanVocativeParticle - 이전 답변의 완성된 코드 사용)
+        function renderTagCloud(elementId, tags) { const cloudEl = document.getElementById(elementId); if(!cloudEl) return; if(tags && tags.length > 0) { cloudEl.innerHTML = tags.map(tag => { const size = 0.8 + (tag.weight / 15); const opacity = Math.max(0.5, tag.weight / 10); return `<span class="badge" style="opacity:${opacity}; font-size:${size}em;">${tag.text}</span>`; }).join(''); } else { cloudEl.innerHTML = '<p style="text-align:center; color:#888;">이야기에서 자주 나온 단어들을 모으고 있어요!</p>'; } }
+        function renderPatternDashboard(elementId, patterns) { const dashEl = document.getElementById(elementId); if(!dashEl) return; if(patterns && patterns.length > 0) { dashEl.innerHTML = patterns.map(p => `<p>💡 ${p}</p>`).join(''); } else { dashEl.innerHTML = '<p style="text-align:center; color:#888;">반복되는 이야기 패턴을 찾고 있어요!</p>'; } }
+        function alertCognitiveDistortions(elementId, distortions) { const alertEl = document.getElementById(elementId); if(!alertEl) return; if(distortions && distortions.length > 0) { alertEl.innerHTML = distortions.map(d => `<p class="cognitive-distortion-item">${d}</p>`).join(''); } else { alertEl.innerHTML = '<p style="text-align:center; color:#888;">특별히 한쪽으로 기울어진 생각 없이 이야기를 잘 나누고 있구나! 잘했어! 👍</p>';} }
+        
+        function renderEmotionChart(canvasId, emotionData) { 
+            if (!chartLibraryInitialized || typeof Chart === 'undefined') { 
+                console.error("Chart.js가 준비되지 않아 차트를 그릴 수 없습니다."); 
+                const chartContainer = document.getElementById('emotionChartContainer');
+                if(chartContainer && !chartContainer.querySelector('.no-chart-library-message')) {
+                     const noLibMsg = document.createElement('p');
+                     noLibMsg.textContent = "차트 라이브러리를 불러오는 데 문제가 발생했어요. 😥";
+                     noLibMsg.style.textAlign = 'center'; noLibMsg.style.color = 'red';
+                     noLibMsg.classList.add('no-chart-library-message');
+                     chartContainer.innerHTML = ''; // 기존 캔버스나 메시지 제거
+                     chartContainer.appendChild(noLibMsg);
+                }
+                return; 
+            }
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            const chartContainer = document.getElementById('emotionChartContainer'); 
+            const chartEl = document.getElementById(canvasId);
+
+            if (!ctx) { 
+                console.error("renderEmotionChart: 캔버스 context를 가져올 수 없습니다."); 
+                if(chartContainer && !chartContainer.querySelector('.no-chart-message')) {
+                    chartContainer.innerHTML = '<p class="no-chart-message" style="text-align:center; color:red;">차트를 표시할 수 없어요. 😥</p>';
+                }
+                return; 
+            }
+            
+            if (!emotionData || Object.keys(emotionData).length === 0) {
+                if(chartContainer && !chartContainer.querySelector('.no-chart-message')) {
+                    chartContainer.innerHTML = '<p class="no-chart-message" style="text-align:center; color:#888; padding:20px;">분석이 쌓이면 여기에 마음 색깔 차트가 완성될 거야! 😊</p>';
+                }
+                if(chartEl) chartEl.style.display = 'none'; // 캔버스 숨기기
+                return;
+            }
+            
+            if(chartContainer) { // 데이터 있으면 메시지 제거 및 캔버스 보이기
+                const existingMsg = chartContainer.querySelector('.no-chart-message') || chartContainer.querySelector('.no-chart-library-message');
+                if (existingMsg) existingMsg.remove();
+                if(chartEl) chartEl.style.display = 'block';
+            }
+
+
+            const existingChart = Chart.getChart(ctx); // 전역 Chart 사용
+            if (existingChart) { existingChart.destroy(); }
+
+            const emotionColors = { '기쁨': 'rgba(255, 205, 86, 0.7)','슬픔': 'rgba(54, 162, 235, 0.7)','분노': 'rgba(255, 99, 132, 0.7)','불안': 'rgba(153, 102, 255, 0.7)','수치': 'rgba(255, 159, 64, 0.7)','중립': 'rgba(201, 203, 207, 0.7)'};
+            const labels = Object.keys(emotionData);
+            const dataValues = Object.values(emotionData);
+            const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(100, 100, 100, 0.7)');
+
+            new Chart(ctx, { // 전역 Chart 사용
+                type: 'doughnut', 
+                data: { 
+                    labels: labels, 
+                    datasets: [{ label: '나의 마음 비율', data: dataValues, backgroundColor: backgroundColors, borderColor: '#ffffff', borderWidth: 2 }] 
+                }, 
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: Chart.defaults.color, font: { family: Chart.defaults.font.family, size: 11 }, padding: 15 } }, 
+                        tooltip: { titleFont: { family: Chart.defaults.font.family }, bodyFont: { family: Chart.defaults.font.family } } 
+                    } 
+                } 
+            });
+        }
+
+        function displayEmpathyMessage(emotionData) { // emotionData 예시: { 기쁨: 0.6, 슬픔: 0.1, 분노: 0.05, … }
+    const empathyMessageEl = document.getElementById('empathyMessage');
+    if (!empathyMessageEl || !emotionData) return;
+
+    // 가장 수치가 높은 감정 구하기
+    const entries = Object.entries(emotionData);
+    entries.sort((a, b) => b[1] - a[1]);
+    const [dominantEmotion, score] = entries[0]; // 예: ["기쁨", 0.6]
+
+    let msg = '';
+    switch (dominantEmotion) {
+        case '기쁨':
+            msg = '지금 기분이 좋아 보이네요! 😊';
+            break;
+        case '슬픔':
+            msg = '조금 슬퍼 보이네요. 괜찮아요?';
+            break;
+        case '분노':
+            msg = '화가 나 있는 것 같아요. 무슨 일이 있었나요?';
+            break;
+        case '불안':
+            msg = '불안한 기분이 드나 봐요. 함께 이야기해요.';
+            break;
+        default:
+            msg = '지금 어떤 기분인지 궁금해요. 언제든 말해 주세요!';
+    }
+    empathyMessageEl.textContent = msg;
+    empathyMessageEl.className = 'feedback neutral';
+    empathyMessageEl.style.display = 'block';
+}
+        function getKoreanVocativeParticle(name) { /* ... 이전 답변의 완성된 코드 ... */ }
     </script>
-    <script src="./js/gnb.js" defer></script>
+    <script src="./js/gnb.js" defer></script> 
 </body>
 </html>
