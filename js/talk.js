@@ -596,6 +596,24 @@ async function sendMessage(text, inputMethod = 'text') { /* ... 기존과 동일
                 // currentTopic: currentTopicForSend,
                 // journalId: currentFirestoreSessionId (또는 실제 저널 ID)
             };
+// 디버깅 
+            const response = await fetch('/api/tts', { /* ... */ });
+if (!response.ok) {
+    console.error("TTS API fetch 실패:", response.status, await response.text());
+    throw new Error(`TTS 서비스 오류: ${response.status}`);
+}
+const blob = await response.blob();
+console.log("TTS Blob 수신됨:", blob);
+if (blob.size === 0) {
+    console.error("TTS Blob 크기가 0입니다.");
+    throw new Error("TTS 서버에서 빈 오디오 데이터를 받았습니다.");
+}
+// ...
+currentAudio.onerror = (e) => {
+    console.error("오디오 재생 중 오류 이벤트:", e); // 여기에 더 자세한 정보가 있을 수 있음
+    console.error("오디오 객체 에러 코드:", currentAudio.error?.code, "메시지:", currentAudio.error?.message);
+    reject(new Error('오디오 재생 중 오류'));
+};
 
             const gptProvidedAnalysisExists = Object.keys(lastAiAnalysisData || {}).length > 0;
             if (gptProvidedAnalysisExists || detailedAnalysisDataForStorage.ageLanguageAnalysis) {

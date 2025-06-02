@@ -23,6 +23,7 @@
             background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.6;
+            /* GNB로 인한 상단 패딩은 gnb.css에서 body에 적용하는 것을 권장 */
         }
         .container {
             max-width: 800px;
@@ -34,7 +35,7 @@
             text-align: center;
             margin-bottom: 15px;
             padding: 20px;
-            background-color: var(--card-bg, #ffffff);
+            background-color: var(--card-bg);
             border-radius: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
@@ -54,15 +55,11 @@
             margin: 0 10px;
             display: inline-block;
         }
-        .continue-topic-button-container {
-            text-align: center;
-            margin-bottom: 25px;
-        }
         .session-card-list {
             display: flex;
             flex-direction: column;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 20px; /* 이어 말하기 버튼과의 간격 */
         }
         .session-card-wide {
             background-color: var(--card-bg);
@@ -81,21 +78,27 @@
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 8px;
-            border-bottom: none;
-            padding-bottom: 5px;
         }
         .session-card-wide .session-date {
             font-size: 0.85em;
             color: #777;
-            font-weight: normal;
         }
-        .session-card-wide h3 {
+        .session-card-wide .session-meta { /* 회차 표시 */
+            font-size: 0.85em;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        .session-card-wide h3.session-title { /* 클릭 가능하도록 스타일 조정 */
             font-size: 1.15em;
             color: var(--text-color);
             margin-top: 0;
             margin-bottom: 8px;
             font-weight: 500;
             cursor: pointer;
+            transition: color 0.2s;
+        }
+        .session-card-wide h3.session-title:hover {
+            color: var(--primary-color);
         }
         .session-card-wide .session-summary {
             font-size: 0.9em;
@@ -109,10 +112,8 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
-            min-height: calc(0.9em * 1.5 * 3);
-            padding-left: 0;
-            border-left: none;
-            cursor: pointer;
+            min-height: calc(0.9em * 1.5 * 3); /* 최소 3줄 높이 확보 */
+            /* 요약 부분 자체는 클릭 이벤트가 필요 없어 보임. 제목 클릭으로 대체 */
         }
         .session-card-wide .session-summary.expanded {
             -webkit-line-clamp: unset;
@@ -130,7 +131,6 @@
         .session-card-wide .session-analysis-summary {
             background-color: transparent;
             padding: 8px 0 0 0;
-            border-radius: 0;
             font-size: 0.85em;
             margin-top: 8px;
             border: none;
@@ -138,12 +138,12 @@
         .session-card-wide .session-analysis-summary h4 {
             font-size: 0.9em;
             color: var(--secondary-color);
-            margin-bottom: 3px;
+            margin-bottom:3px;
             font-weight: bold;
         }
         .session-card-wide .session-analysis-summary p {
-            margin: 0;
-            line-height: 1.4;
+            margin:0;
+            line-height:1.4;
             color: #666;
         }
         .session-card-wide .analysis-view-button {
@@ -169,9 +169,9 @@
             gap: 12px;
             font-size: 1em;
             margin-top: 30px;
-            padding-bottom: 20px;
+            padding-bottom:20px;
         }
-        .pagination button {
+        .pagination button { /* a 태그 대신 button 사용 */
             text-decoration: none;
             color: var(--primary-color);
             font-weight: bold;
@@ -186,7 +186,7 @@
             background-color: var(--secondary-color);
             color: white;
         }
-        .pagination button.current {
+        .pagination button.current { /* 현재 페이지 버튼 스타일 (필요시) */
             color: var(--text-color);
             background-color: #e0e0e0;
             border-color: #e0e0e0;
@@ -210,7 +210,7 @@
             font-size: 1.3em;
             margin-bottom: 10px;
         }
-        .action-button {
+        .action-button { /* "이어 말하기", "더 보기" 등 공용 버튼 */
             display: inline-block;
             margin-top: 15px;
             background-color: var(--action-button-bg);
@@ -220,6 +220,7 @@
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.9em;
+            transition: background-color 0.2s;
         }
         .action-button:hover {
             background-color: var(--secondary-color);
@@ -243,26 +244,22 @@
         <div class="page-header">
             <h1 id="topicTitleDisplay" class="topic-display-title">주제 불러오는 중...</h1>
             <div class="topic-stats-info">
-                <span id="totalSessionCount">총 0회</span> | 
+                <span id="totalSessionCount">총 0회</span> |
                 <span id="lastSessionDate">마지막 대화: 정보 없음</span>
             </div>
         </div>
-        <!-- “이 주제로 이어 말하기” 버튼은 스크립트 내에서 삽입됩니다 -->
         <div class="session-card-list" id="sessionCardList"></div>
         <div class="pagination" id="paginationControls"></div>
     </main>
 
     <script src="./js/gnb.js" defer></script>
     <script type="module">
-import { db } from './js/firebase-config.js';
+        import { db } from './js/firebase-config.js';
         import {
             collection, query, where, getDocs, orderBy, limit,
-            // doc, getDoc, // 이 페이지에서는 직접 사용 안 함
             getCountFromServer, startAfter
         } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-        // counselingTopicsByAge import (counseling_topics.js 파일명이 맞는지, export 이름이 맞는지 확인)
         import { counselingTopicsByAge } from './js/counseling_topics.js';
-
 
         // --- DOM 요소 가져오기 ---
         const topicTitleDisplayEl   = document.getElementById('topicTitleDisplay');
@@ -271,7 +268,6 @@ import { db } from './js/firebase-config.js';
         const sessionCardListEl     = document.getElementById('sessionCardList');
         const paginationControlsEl  = document.getElementById('paginationControls');
         const pageTabTitleEl        = document.querySelector('title');
-        // const mainContainerEl = document.getElementById('mainContainer'); // 현재 사용 안 함
 
         // --- URL 파라미터 및 사용자 정보 ---
         const urlParams          = new URLSearchParams(window.location.search);
@@ -286,45 +282,44 @@ import { db } from './js/firebase-config.js';
         let totalJournalDocsForTopic = 0;
 
         // --- 헬퍼 함수 ---
-        function findMainCategoryOfTopic(topicKey, topicsData) {
+        function findMainCategoryOfTopic(subTopicDisplayText, topicsData) {
+            if (!subTopicDisplayText || !topicsData) return '';
             for (const userType in topicsData) {
                 const ageGroups = topicsData[userType];
+                if (!ageGroups) continue;
                 for (const ageGroup in ageGroups) {
                     const mainTopicCategories = ageGroups[ageGroup];
+                    if (!mainTopicCategories) continue;
                     for (const mainTopicName in mainTopicCategories) {
                         const subTopicsArray = mainTopicCategories[mainTopicName];
-                        if (!Array.isArray(subTopicsArray)) continue;
-                        for (const subTopic of subTopicsArray) {
-                            if (subTopic.displayText === topicKey) {
-                                return mainTopicName;
-                            }
+                        if (Array.isArray(subTopicsArray)) {
+                             const found = subTopicsArray.find(st => st.displayText === subTopicDisplayText);
+                             if (found) return mainTopicName;
                         }
                     }
                 }
             }
-            return '';
+            return ''; // 못 찾으면 빈 문자열 또는 기본값
         }
 
-        function getDisplayNameOfTopic(topicKey, topicsData) {
-            // counselingTopicsByAge를 직접 참조하지 않고, 인자로 받은 topicsData 사용
+        function getDisplayNameOfTopic(key, topicsData) {
+            if (!key || !topicsData) return key; // 키가 없거나 데이터 없으면 키 반환
             for (const userType in topicsData) {
                 const ageGroups = topicsData[userType];
+                if (!ageGroups) continue;
                 for (const ageGroup in ageGroups) {
                     const mainTopicCategories = ageGroups[ageGroup];
+                    if (!mainTopicCategories) continue;
                     for (const mainTopicName in mainTopicCategories) {
                         const subTopicsArray = mainTopicCategories[mainTopicName];
-                        if (!Array.isArray(subTopicsArray)) continue;
-                        for (const subTopic of subTopicsArray) {
-                            // topicKey가 value일 수도 있고, displayText일 수도 있음을 고려 (counseling_topics.js 구조에 따라)
-                            // 여기서는 displayText와 일치하는 경우를 찾음
-                            if (subTopic.displayText === topicKey || (subTopic.value && subTopic.value === topicKey) ) {
-                                return subTopic.displayText;
-                            }
+                        if (Array.isArray(subTopicsArray)) {
+                            const found = subTopicsArray.find(st => st.displayText === key || st.value === key);
+                            if (found) return found.displayText;
                         }
                     }
                 }
             }
-            return topicKey; // 매칭되는 것이 없으면 키를 그대로 반환
+            return key; // 매칭되는 것이 없으면 키를 그대로 반환
         }
 
         const topicDisplayName = getDisplayNameOfTopic(topicKeyFromUrl, counselingTopicsByAge);
@@ -340,9 +335,15 @@ import { db } from './js/firebase-config.js';
                   })
                 : '날짜 정보 없음';
 
-            const gptSummary = sessionData.summary ? sessionData.summary.split('\n')[0] : '요약 내용이 준비되지 않았어요.';
-            const mainCategory = findMainCategoryOfTopic(topicKeyFromUrl, counselingTopicsByAge) || '주제';
-            const sessionTitle = sessionData.title && sessionData.title.trim() ? sessionData.title : `${mainCategory} – ${gptSummary}`;
+            // topicKeyFromUrl은 URL에서 온 서브토픽의 displayText (또는 value)
+            // sessionData.topic은 저널 저장 시 사용된 서브토픽의 displayText
+            const currentSessionTopic = sessionData.topic || topicKeyFromUrl;
+            const mainCategory = findMainCategoryOfTopic(currentSessionTopic, counselingTopicsByAge) || '선택한 주제';
+            const gptSummaryPreview = sessionData.summary ? sessionData.summary.split('\n')[0].substring(0, 50) + (sessionData.summary.length > 50 ? "..." : "") : '요약...';
+
+            const sessionTitle = sessionData.title && sessionData.title.trim()
+                ? sessionData.title
+                : `${mainCategory} – ${gptSummaryPreview}`;
 
             card.innerHTML = `
                 <div class="session-header">
@@ -357,12 +358,12 @@ import { db } from './js/firebase-config.js';
             summaryParagraph.textContent = fullSummary;
             card.appendChild(summaryParagraph);
 
-            if (fullSummary.length > 120) { // 더보기/접기 버튼 (기존 로직)
+            if (fullSummary.length > 120) {
                 const moreBtn = document.createElement('span');
                 moreBtn.className = 'more-summary-btn';
                 moreBtn.textContent = '더보기';
                 moreBtn.onclick = (e) => {
-                    e.stopPropagation(); // 이벤트 버블링 방지
+                    e.stopPropagation();
                     summaryParagraph.classList.toggle('expanded');
                     moreBtn.textContent = summaryParagraph.classList.contains('expanded') ? '접기' : '더보기';
                 };
@@ -394,36 +395,40 @@ import { db } from './js/firebase-config.js';
                 analysisBtn.className = 'analysis-view-button';
                 analysisBtn.textContent = '이 날의 분석 자세히 보기 📊';
                 analysisBtn.dataset.journalid = sessionData.id;
-                analysisBtn.onclick = (e) => { // 분석 보기 버튼 클릭 시
-                    e.preventDefault(); // a 태그가 아니므로 기본 동작은 없지만, 습관적으로 추가
+                analysisBtn.onclick = (e) => {
+                    e.preventDefault();
                     const journalId = e.currentTarget.dataset.journalid;
-                    // localStorage에 분석 페이지에서 사용할 정보 저장
                     localStorage.setItem('lozee_selected_journal_id', journalId);
                     localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
                         results: sessionData.detailedAnalysis || {},
                         accumulatedDurationMinutes: sessionData.sessionDurationMinutes || 0,
                         accumulatedUserCharCount: sessionData.userCharCountForThisSession || 0,
                         journalId: journalId,
-                        journalTitle: sessionTitle,
+                        journalTitle: sessionTitle, // 여기서 사용된 sessionTitle
                         journalDate: sessionData.createdAt?.toDate ? sessionData.createdAt.toDate().toISOString() : null,
                         journalSummaryFull: sessionData.summary
                     }));
-                    window.location.href = `analysis.html?journalId=${journalId}`; // analysis.html로 이동
+                     // 나이에 따라 다른 분석 페이지로 이동
+                    const ageForAnalysisRedirect = parseInt(localStorage.getItem('lozee_userAge'), 10) || 0;
+                    if (ageForAnalysisRedirect >= 15 && currentUserType === 'directUser') {
+                        window.location.href = `analysis_adult.html?journalId=${journalId}`;
+                    } else {
+                        window.location.href = `analysis.html?journalId=${journalId}`;
+                    }
                 };
                 card.appendChild(analysisBtn);
             }
 
             const titleEl = card.querySelector('.session-title');
-            if (titleEl) { // 제목 클릭 시 journal.html로 이동 (세부 내용 보기)
+            if (titleEl) {
                 titleEl.onclick = (e) => {
                     const journalId = e.currentTarget.dataset.journalid;
                     if (journalId) {
-                        // journal.html에서도 localStorage를 사용할 수 있도록 유사한 정보 저장
                         localStorage.setItem('lozee_selected_journal_id', journalId);
                          localStorage.setItem('lozee_conversation_analysis', JSON.stringify({
-                            results: sessionData.detailedAnalysis || {}, // journal.html에서 키워드 등에 사용 가능
+                            results: sessionData.detailedAnalysis || {}, // journal.html에서 사용 가능
                             journalId: journalId,
-                            journalTitle: sessionTitle,
+                            journalTitle: sessionTitle, // 여기서 사용된 sessionTitle
                             journalDate: sessionData.createdAt?.toDate ? sessionData.createdAt.toDate().toISOString() : null,
                             journalSummaryFull: sessionData.summary
                         }));
@@ -441,9 +446,9 @@ import { db } from './js/firebase-config.js';
                 let countBaseQuery = query(
                     collection(db, 'journals'),
                     where('userId', '==', loggedInUserId),
-                    where('topic', '==', topicKeyFromUrl)
+                    where('topic', '==', topicKeyFromUrl) // topicKeyFromUrl은 서브토픽의 displayText
                 );
-                if (currentUserType === 'caregiver') { // 보호자면 'standard' 타입만 카운트
+                if (currentUserType === 'caregiver') {
                     countBaseQuery = query(countBaseQuery, where("entryType", "==", "standard"));
                 }
                 const snapshot = await getCountFromServer(countBaseQuery);
@@ -457,7 +462,7 @@ import { db } from './js/firebase-config.js';
                         where('userId', '==', loggedInUserId),
                         where('topic', '==', topicKeyFromUrl)
                     );
-                    if (currentUserType === 'caregiver') { // 보호자면 'standard' 타입만 고려
+                    if (currentUserType === 'caregiver') {
                         lastDocBaseQuery = query(lastDocBaseQuery, where("entryType", "==", "standard"));
                     }
                     const lastDocQuery = query(lastDocBaseQuery, orderBy('createdAt', 'desc'), limit(1));
@@ -482,7 +487,9 @@ import { db } from './js/firebase-config.js';
         // --- 세션 목록 로드 및 표시 ---
         async function loadSessionsForTopicPage(page = 1, lastDoc = null) {
             if (!loggedInUserId || !topicKeyFromUrl) {
-                console.warn('loadSessionsForTopicPage: userId 또는 topicKeyFromUrl 없음.');
+                console.warn('loadSessionsForTopicPage: loggedInUserId 또는 topicKeyFromUrl 없음.');
+                sessionCardListEl.innerHTML = '<p class="no-data-message">잘못된 접근입니다. 사용자 정보나 주제 정보가 없습니다.</p>';
+                if (paginationControlsEl) paginationControlsEl.style.display = 'none';
                 return;
             }
             if (!sessionCardListEl || !topicTitleDisplayEl) {
@@ -491,7 +498,7 @@ import { db } from './js/firebase-config.js';
             }
 
             if (page === 1) {
-                sessionCardListEl.innerHTML = ''; // 첫 페이지 로드 시 기존 카드 지우기
+                sessionCardListEl.innerHTML = '';
                 lastVisibleDocForPaging = null;
                 currentPageNum = 1;
             }
@@ -503,10 +510,10 @@ import { db } from './js/firebase-config.js';
                 let q = query(
                     collection(db, 'journals'),
                     where('userId', '==', loggedInUserId),
-                    where('topic', '==', topicKeyFromUrl)
+                    where('topic', '==', topicKeyFromUrl) // topicKeyFromUrl은 서브토픽의 displayText
                 );
 
-                if (currentUserType === 'caregiver') { // 보호자는 'standard' 타입 저널만
+                if (currentUserType === 'caregiver') {
                     q = query(q, where("entryType", "==", "standard"));
                     console.log("journal-list2.html: 보호자 유형 - 본인의 'standard' 저널만 로드합니다.");
                 }
@@ -519,7 +526,6 @@ import { db } from './js/firebase-config.js';
 
                 const querySnapshot = await getDocs(q);
 
-                // "날리지 말라"고 하신 핵심 로직 시작
                 if (querySnapshot.empty && page === 1) {
                     sessionCardListEl.innerHTML =
                         `<div class="no-data-message"><h2>“${topicDisplayName}” 주제로 나눈 이야기가 아직 없어요.</h2><p>대화를 시작해보세요! 😊</p></div>`;
@@ -539,12 +545,18 @@ import { db } from './js/firebase-config.js';
                     lastVisibleDocForPaging = querySnapshot.docs[querySnapshot.docs.length - 1];
                 }
                 updatePaginationUI(currentPageNum);
-                // "날리지 말라"고 하신 핵심 로직 끝
 
             } catch (error) {
                 console.error(`'${topicKeyFromUrl}' 주제 로드 중 오류:`, error.message, error);
-                sessionCardListEl.innerHTML =
-                    '<p class="no-data-message">이야기 기록을 불러오는 중 문제가 발생했어요. 😥 Firestore 색인을 확인해보세요.</p>';
+                let errorMsgHtml = '<p class="no-data-message">이야기 기록을 불러오는 중 문제가 발생했어요. 😥';
+                if (error.message && error.message.includes("index")) {
+                    const firestoreIndexLink = error.message.substring(error.message.indexOf('https://console.firebase.google.com'));
+                    if (firestoreIndexLink) {
+                        errorMsgHtml += `<br><span style="font-size:0.8em;">필요한 Firestore 색인이 없을 수 있습니다. <a href="${firestoreIndexLink}" target="_blank">여기에서 생성</a>하세요.</span>`;
+                    }
+                }
+                errorMsgHtml += '</p>';
+                sessionCardListEl.innerHTML = errorMsgHtml;
                 if (paginationControlsEl) paginationControlsEl.style.display = 'none';
             }
         }
@@ -562,7 +574,7 @@ import { db } from './js/firebase-config.js';
             if (!loadMoreBtn) {
                 loadMoreBtn = document.createElement('button');
                 loadMoreBtn.id = 'loadMoreBtn';
-                loadMoreBtn.className = 'action-button';
+                loadMoreBtn.className = 'action-button'; // 공용 버튼 스타일 사용
                 paginationControlsEl.innerHTML = '';
                 paginationControlsEl.appendChild(loadMoreBtn);
             }
@@ -575,21 +587,21 @@ import { db } from './js/firebase-config.js';
         }
 
         // --- 페이지 초기화 ---
-        // DOMContentLoaded 리스너는 하나만 있어야 합니다.
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('Journal Topic Detail Page (journal-list2.html): DOMContentLoaded');
-
-            if (!loggedInUserId || !topicKeyFromUrl) { // UID 사용
-                if (topicTitleDisplayEl) topicTitleDisplayEl.textContent = '주제 정보를 불러올 수 없습니다.';
-                if (sessionCardListEl) sessionCardListEl.innerHTML = '<p class="no-data-message">선택된 주제가 없거나 사용자 정보를 찾을 수 없어요. 이전 페이지로 돌아가 다시 시도해 주세요.</p>';
+            // UID와 topicKeyFromUrl 유효성 검사 먼저 수행
+            if (!loggedInUserId || !topicKeyFromUrl) {
+                if (topicTitleDisplayEl) topicTitleDisplayEl.textContent = '잘못된 접근입니다.';
+                if (sessionCardListEl) sessionCardListEl.innerHTML = '<p class="no-data-message">사용자 정보 또는 주제 정보가 없어 내용을 표시할 수 없습니다. 이전 페이지로 돌아가 다시 시도해 주세요.</p>';
                 if (paginationControlsEl) paginationControlsEl.style.display = 'none';
-                return;
+                return; // 필수 정보 없으면 더 이상 진행 안 함
             }
 
+            // "이 주제로 이어 말하기" 버튼 생성
             const pageHeaderEl = document.querySelector('.page-header');
-            if (pageHeaderEl) { // "이 주제로 이어 말하기" 버튼 추가
+            if (pageHeaderEl) { // pageHeaderEl이 확실히 존재할 때만 버튼 추가
                 const continueTopicButton = document.createElement('button');
-                continueTopicButton.className = 'action-button'; // 공용 버튼 스타일 사용 가능
+                continueTopicButton.className = 'action-button';
                 continueTopicButton.style.display = 'block';
                 continueTopicButton.style.margin = '10px auto 25px auto';
                 continueTopicButton.style.fontSize = '1em';
@@ -599,18 +611,19 @@ import { db } from './js/firebase-config.js';
                         'lozee_talk_init_topic',
                         JSON.stringify({
                             type: 'continue_specific_topic',
-                            details: topicKeyFromUrl, // 내부 키 (counseling_topics.js의 displayText와 일치)
+                            details: topicKeyFromUrl, // 이 값은 counseling_topics.js의 displayText와 일치
                             prompt: `'${topicDisplayName}'에 대해 어떤 점이 더 이야기하고 싶으세요?`
                         })
                     );
                     window.location.href = 'talk.html';
                 };
-                // page-header 다음, session-card-list 이전에 버튼 삽입
                 pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
+            } else {
+                console.warn("Page-header element not found, '이어 말하기' button not added.");
             }
 
-            await fetchTopicHeaderStats(); // 헤더 통계 먼저 로드
-            await loadSessionsForTopicPage(1); // 그 다음 첫 페이지 세션 로드
+            await fetchTopicHeaderStats();
+            await loadSessionsForTopicPage(1);
         });
     </script>
 </body>
