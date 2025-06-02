@@ -442,25 +442,26 @@ function resetSessionTimeout() { /* ... 기존과 동일 (UID 사용하도록 �
 
         const finalTopicForJournal = selectedSubTopicDetails ? selectedSubTopicDetails.displayText : (selectedMain || "알 수 없는 주제");
 
-        if (finalTopicForJournal && finalTopicForJournal !== "알 수 없는 주제" && chatHistory.length > 2 && typeof saveJournalEntry === 'function') {
+             if (finalTopicForJournal && finalTopicForJournal !== "알 수 없는 주제" && chatHistory.length > 2 && typeof saveJournalEntry === 'function') {
             const journalDetailsToSave = {
-                summary: lastAiAnalysisData?.conversationSummary || chatHistory.map(m=>m.content).join('\n').substring(0,1000) + "...",
-                title: lastAiAnalysisData?.summaryTitle || finalTopicForJournal.substring(0,30),
+                summary: lastAiAnalysisData?.conversationSummary || chatHistory.map(m=>m.content).join('\n').substring(0,1000) + "...", // GPT 요약 우선
+                title: lastAiAnalysisData?.summaryTitle || finalTopicForJournal.substring(0,30), // GPT 제목 우선
                 mood: lastAiAnalysisData?.overallSentiment,
                 keywords: lastAiAnalysisData?.keywords,
-                detailedAnalysis: lastAiAnalysisData || {}, // GPT가 제공한 전체 분석 결과 저장
-                sessionDurationMinutes: (Date.now() - conversationStartTime) / (60 * 1000), // 실제 경과 시간
+                detailedAnalysis: lastAiAnalysisData || {},
+                sessionDurationMinutes: (Date.now() - conversationStartTime) / (60 * 1000),
                 userCharCountForThisSession: userCharCountInSession
             };
+
 
             let entryTypeForSave = (userRole === 'parent') ? 'child' : 'standard';
             let childIdForSave = (userRole === 'parent') ? targetChildId : null;
             let childNameForSave = (userRole === 'parent') ? (localStorage.getItem('lozee_childName') || '아이') : null; // index.html에서 저장한 자녀 이름
 
             await saveJournalEntry(
-                loggedInUserId, // ⭐ UID 사용
-                finalTopicForJournal,
-                journalDetailsToSave,
+                loggedInUserId,
+                finalTopicForJournal, // Firestore 'journals' 문서의 'topic' 필드
+                journalDetailsToSave, // Firestore 'journals' 문서의 다른 필드들 (title, summary, detailedAnalysis 등)
                 {
                     relatedChildId: childIdForSave,
                     entryType: entryTypeForSave,
