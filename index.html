@@ -158,9 +158,129 @@
     </div>
 
     <script type="module">
-        import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js';
-        import { db } from './js/firebase-config.js'; 
-        import { doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { db } from './js/firebase-config.js'; // db 인스턴스
+import { doc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+
+const auth = getAuth();
+
+async function initializeUserSessionAndProceed() {
+    const userNameInput = document.getElementById('userName').value.trim();
+    const userAgeInput = document.getElementById('userAge').value.trim();
+    const selectedRole = document.querySelector('input[name="userRole"]:checked').value;
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // 이미 익명 또는 다른 방식으로 로그인된 사용자
+            console.log('기존 사용자 UID:', user.uid);
+            localStorage.setItem('lozee_userId', user.uid);
+            await updateUserProfileInFirestore(user.uid, userNameInput, userAgeInput, selectedRole);
+            setupLocalStorageAndRedirect(userNameInput, userAgeInput, selectedRole);
+        } else {
+            // 새로 익명 로그인 시도
+            try {
+                const userCredential = await signInAnonymously(auth);
+                const newUser = userCredential.user;
+                console.log('새로운 익명 사용자 UID 생성 및 저장:', newUser.uid);
+                localStorage.setItem('lozee_userId', newUser.uid);
+                await updateUserProfileInFirestore(newUser.uid, userNameInput, userAgeInput, selectedRole);
+                setupLocalStorageAndRedirect(userNameInput, userAgeInput, selectedRole);
+            } catch (error) {
+                console.error("익명 로그인 실패:", error);
+                // 익명 로그인 실패 시 대체 로직 (예: 에러 메시지 표시)
+                alert("사용자 세션을 시작하는 데 실패했습니다. 다시 시도해주세요.");
+            }
+        }
+    });
+}
+
+async function updateUserProfileInFirestore(uid, name, age, role) {
+    const userRef = doc(db, "users", uid);
+    const userProfileData = {
+        uid: uid,
+        name: name || '친구',
+        role: role,
+        userType: (role === 'parent' ? 'caregiver' : 'directUser'),
+        createdAt: serverTimestamp(), // 최초 생성 시점
+        lastLogin: serverTimestamp()
+    };
+    // 나이 정보는 숫자 또는 null로 저장
+    const ageInt = parseInt(age);
+    if (!isNaN(ageInt)) {
+        userProfileData.age = ageInt;
+    }
+
+    // 보호자일 경우 자녀 정보 (예시, 실제 입력 필드에 따라 달라짐)
+    if (role === 'parent') {
+        const childNameInput = document.getElementById('childName').value.trim();
+        const childAgeFromInput = document.getElementById('childAgeInput').value.trim();
+        const parentIsNDInput = document.getElementById('parentIsND').value === 'true';
+
+        userProfileData.caregiverInfo = {
+            childName: childNameInput || '아이',
+            childAge: parseInt(childAgeFromInput) || null, // 숫자 또는 null
+            parentIsND: parentIsNDInput
+            // childLozeeUid 등 다른 필드도 필요시 추가
+        };
+        // 보호자 모드일 때 대화 맥락 나이(targetAge)는 자녀 나이
+         localStorage.setItem('lozee_userAge', childAgeFromInput || '8');
+
+    } else {
+        // 당사자 모드일 때 대화 맥락 나이(targetAge)는 본인 나이
+        localStorage.setItem('lozee_userAge', age || '10');
+    }
+
+
+    try {
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+            await setDoc(userRef, userProfileData);
+            console.log(`[initializeUserSession] Firestore에 새 사용자 문서 생성: ${uid}`);
+        } else {
+            await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true }); // 기존 문서에는 lastLogin만 업데이트
+            console.log(`[initializeUserSession] Firestore 사용자 문서 업데이트 (lastLogin): ${uid}`);
+        }
+    } catch (error) {
+         console.error(`[initializeUserSession] 사용자 문서 확인/생성/업데이트 실패 (${uid}):`, error);
+    }
+}
+
+function setupLocalStorageAndRedirect(userNameInput, userAgeInput, selectedRole) {
+    localStorage.setItem('lozee_username', userNameInput || '친구');
+    // lozee_userAge는 updateUserProfileInFirestore에서 역할에 따라 설정됨
+    localStorage.setItem('lozee_role', selectedRole);
+    localStorage.setItem('lozee_userType', selectedRole === 'parent' ? 'caregiver' : 'directUser');
+
+    if (selectedRole === 'parent') {
+        const childNameInput = document.getElementById('childName').value.trim();
+        const childAgeFromInput = document.getElementById('childAgeInput').value.trim();
+        const parentIsNDInput = document.getElementById('parentIsND').value;
+
+        localStorage.setItem('lozee_childName', childNameInput || '아이');
+        // lozee_userAge가 자녀 나이로 설정되므로, lozee_childAge는 중복일 수 있으나, 명시적으로 저장할 수도 있음
+        localStorage.setItem('lozee_childAge', childAgeFromInput || '8'); 
+        localStorage.setItem('lozee_parentIsND', parentIsNDInput);
+    } else {
+        localStorage.removeItem('lozee_childName');
+        localStorage.removeItem('lozee_childAge');
+        localStorage.removeItem('lozee_parentIsND');
+        localStorage.removeItem('lozee_childId');
+    }
+    window.location.href = 'talk.html';
+}
+
+// 시작 버튼 클릭 이벤트 리스너
+document.getElementById('startButton').addEventListener('click', () => {
+    // 이름, 나이, 역할 입력 값 가져오기
+    const userNameInput = document.getElementById('userName').value.trim();
+    const userAgeInput = document.getElementById('userAge').value.trim();
+
+    if (!userNameInput || !userAgeInput) {
+        alert("이름과 나이를 입력해주세요.");
+        return;
+    }
+    initializeUserSessionAndProceed();
+});
 
       document.addEventListener('DOMContentLoaded', () => {
         console.log("DOMContentLoaded 이벤트 발생: index.html");

@@ -30,19 +30,19 @@ import { ALL_NOTIFICATION_KEYWORDS, NOTIFICATION_KEYWORDS } from './constants.js
  * 또한 Firestore에 해당 사용자의 기본 문서를 확인/생성/업데이트합니다.
  * @returns {string|null} 사용자 UID 또는 null (localStorage 접근 불가 시)
  */
-export async function getOrCreateUserId() {
-    let userId = localStorage.getItem('lozee_userId');
 
-    if (!userId) {
-        // 이 부분은 index.html 등 앱 시작점에서 Firebase 익명 로그인 등으로 UID를 생성하고
-        // localStorage에 'lozee_userId'로 저장하는 로직이 선행되어야 가장 이상적입니다.
-        // 만약 여기서 UID를 새로 생성해야 한다면, 이는 인증되지 않은 임시 ID가 됩니다.
-        userId = 'guest_' + crypto.randomUUID();
-        localStorage.setItem('lozee_userId', userId);
-        console.log('[Firebase Utils] 새로운 임시 UID 생성 및 저장:', userId);
-    } else {
-        console.log('[Firebase Utils] 기존 사용자 UID 사용:', userId);
-    }
+
+ export function getOrCreateUserId() {
+  const userId = localStorage.getItem('lozee_userId');
+  if (!userId) {
+    console.error("getOrCreateUserId: localStorage에 lozee_userId가 없습니다. 앱 시작점에서 익명 로그인 또는 사용자 로그인이 필요합니다.");
+    // 필요하다면 여기서 다시 익명 로그인을 시도하거나, null을 반환하여 오류 처리를 유도할 수 있습니다.
+    // window.location.href = 'index.html'; // 또는 오류 페이지로
+    return null;
+  }
+  console.log('[Firebase Utils] 기존 사용자 UID 사용:', userId);
+  return userId;
+}
 
     // Firestore에 사용자 문서 확인/생성/업데이트
     if (userId && db) { // db 인스턴스가 유효할 때만 실행
