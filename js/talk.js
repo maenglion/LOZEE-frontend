@@ -52,18 +52,18 @@ const micButton = document.getElementById('mic-button');
 const meterLevel = document.getElementById('volume-level');
 // const topicArea = document.getElementById('topic-area'); // HTML에 실제 이 ID를 가진 요소가 없으므로 주석 처리
 
-  // 역할/나이 불러오기
-  const role = localStorage.getItem('lozee_role') || 'child'; // 기본을 child로 가정
-  const userId = localStorage.getItem('lozee_userId');
-  const childId = localStorage.getItem('lozee_childId');
-  const userAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
+// --- 사용자 정보 (일관성 있게 여기서 모두 정의) ---
+const role = localStorage.getItem('lozee_role') || 'child';
+const userId = localStorage.getItem('lozee_userId');
+const childId = localStorage.getItem('lozee_childId');
+const userAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
+const parentIsND = localStorage.getItem('lozee_parentIsND') === 'true';
 
-  // 부모가 신경다양성인 여부 (예: 프로필에서 설정해두었다고 가정)
-  const parentIsND = localStorage.getItem('lozee_parentIsND') === 'true';
-
-  // ⭐ currentUserEmail 및 userType을 여기서 명시적으로 정의 ⭐
-const currentUserEmail = localStorage.getItem('cbtUserEmail'); // 로그인한 사용자의 이메일 (ID로도 사용 가능)
-let userType = localStorage.getItem('lozee_userType') || ''; // directUser 또는 caregiver
+// ⭐ currentUserEmail 및 userType을 여기서 명시적으로 정의 ⭐
+const userName = localStorage.getItem('lozee_username') || '친구'; // 오류 발생 지점에서 사용될 변수
+const voc = getKoreanVocativeParticle(userName); // userName을 사용하는 voc도 여기에 위치
+const currentUserEmail = localStorage.getItem('cbtUserEmail');
+let userType = localStorage.getItem('lozee_userType') || '';
 
  
 async function fetchPreviousUserCharCount() {
@@ -113,6 +113,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    if (!startedWithInitTopic) {
+        // 이제 userName이 이 스코프에서 접근 가능합니다.
+        const greeting = getInitialGreeting(userName + voc, hasGreeted); // talk.js:141 (오류 발생 지점)
+        appendMessage(greeting, 'assistant');
+        hasGreeted = true;
+        showMainTopics();
+    }
+});
 
     conversationStartTime = Date.now();
     previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
@@ -137,13 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (e) { console.error("이어하기 주제(lozee_talk_init_topic) 파싱 오류:", e); localStorage.removeItem('lozee_talk_init_topic');}
     }
 
-    if (!startedWithInitTopic) {
-        const greeting = getInitialGreeting(userName + voc, hasGreeted);
-        appendMessage(greeting, 'assistant');
-        hasGreeted = true;
-        showMainTopics();
-    }
-});
+
 
 function appendMessage(text, role) {
     const bubble = document.createElement('div');
