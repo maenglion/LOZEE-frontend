@@ -83,7 +83,7 @@ import { ALL_NOTIFICATION_KEYWORDS, NOTIFICATION_KEYWORDS } from './constants.js
         }
     }
     return userId;
-}
+
 
 
 function detectRiskTags(text, detailedAnalysis = {}) {
