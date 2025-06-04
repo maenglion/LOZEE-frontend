@@ -14,10 +14,12 @@ const firebaseConfig = {
   measurementId: "G-C23DLE9GZ4"
 };
 
-// Firebase 앱 초기화 & Firestore 인스턴스 내보내기
+// Firebase 앱 초기화
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);  // 추가함
 
- // ★ 기본 내보내기 추가 ★
-export default firebaseConfig;
+// Firestore 및 Auth 인스턴스 내보내기
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+// firebaseConfig 객체 자체를 default export 할 필요는 일반적으로 없습니다.
+// export default firebaseConfig; // 이 라인 제거 또는 주석 처리
