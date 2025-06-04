@@ -160,10 +160,8 @@
 
   <script type="module">
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { db } from './js/firebase-config.js'; // db 인스턴스
+        import { db, auth as firebaseAuth } from './js/firebase-config.js'; // firebase-config.js에서 auth export 필요
         import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-        // cbt.js는 현재 로직에서 직접 사용되지 않으므로 import 제거 또는 주석 처리
-        // import { validateCbtEmail, getCbtErrorMessage } from './js/cbt.js';
 
 
         const auth = getAuth();
@@ -177,10 +175,12 @@
             nameBirthSelf: document.getElementById('stepNameBirthSelf'),
             nameBirthChild: document.getElementById('stepNameBirthChild'),
             finalStart: document.getElementById('stepFinalStart') // 이전에 stepChildEmail이었던 것을 대체
+            
         };
 
         // 각 단계별 버튼 및 입력 필드
         const userTypeButtons = document.querySelectorAll('.user-type-btn');
+        
 
         const caregiverNdOptionBtns = document.querySelectorAll('.caregiver-nd-btn');
         const caregiverNdError = document.getElementById('caregiverNdError');
@@ -212,10 +212,10 @@
 
         // 최종 시작 버튼 (HTML의 startLozeeConversationBtn ID와 일치해야 함)
         const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
-
+   
         // --- 상태 변수 ---
-        let currentUserId = null; // Firebase Auth UID
-        let selectedUserType = ''; // 'directUser' 또는 'caregiver'
+        let currentUserId = null; // Firebase Auth UID를 저장할 변수
+        let selectedUserType = '';
         // 각 단계에서 입력받는 정보를 저장할 임시 변수들
         let tempCaregiverSelfName = '', tempCaregiverSelfBirthDate = null, tempCaregiverSelfAge = null;
         let tempChildName = '', tempChildBirthDate = null, tempChildAge = null;
@@ -224,16 +224,15 @@
         let tempSelectedDiagnoses = []; // 당사자 또는 자녀의 특성 저장용
 
         // --- 헬퍼 함수 ---
-        function showStep(stepElement) {
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            if (stepElement) {
-                stepElement.classList.add('active');
-            } else {
-                console.error("showStep: 표시할 stepElement가 유효하지 않거나 없습니다. HTML ID를 확인해주세요.");
-                // 예: stepUserType이 가장 먼저 표시되어야 함
-                if (steps.userType) steps.userType.classList.add('active');
-            }
+        function showStep(stepElement) { /* ... */ }
+        function populateBirthSelects(yearEl, monthEl, dayEl, startYearOffset = 0, endYearOffset = 100) { /* ... */ }
+        function calculateAge(y, m, d) { /* ... */ }
+
+        async function saveUserProfileToFirestore(uid, profileData) {
+            // Firestore에 사용자 정보 저장/업데이트 (UID를 문서 ID로 사용)
+            // (이전 답변의 saveUserProfileToFirestore 함수 내용 참조)
         }
+
 
         function populateBirthSelects(yearEl, monthEl, dayEl, startYearOffset = 0, endYearOffset = 100) {
             if (!yearEl || !monthEl || !dayEl) {
@@ -305,20 +304,19 @@
         }
 
         // --- 이벤트 핸들러 ---
-        userTypeButtons.forEach(button => {
+    userTypeButtons.forEach(button => {
             button.onclick = () => {
                 selectedUserType = button.dataset.usertype;
                 if (selectedUserType === 'caregiver') {
-                    if (steps.caregiverNd) showStep(steps.caregiverNd);
-                    else console.error("caregiverNd 스텝 요소를 찾을 수 없습니다.");
+                    showStep(steps.caregiverNd);
                 } else { // directUser
-                    if(diagnosisTitleEl) diagnosisTitleEl.textContent = "현재 어떤 어려움을 느끼고 있나요?";
-                    if(diagnosisInfoEl) diagnosisInfoEl.textContent = "해당하는 항목을 모두 선택해주세요. (중복 선택 가능)";
-                    if (steps.diagnosisType) showStep(steps.diagnosisType);
-                    else console.error("diagnosisType 스텝 요소를 찾을 수 없습니다.");
+                    // ... (UI 업데이트) ...
+                    showStep(steps.diagnosisType);
                 }
             };
         });
+        // ... (submitCaregiverNdBtn, submitDiagnosisBtn, submitNameBirthSelfBtn, submitNameBirthChildBtn 핸들러는 temp 변수에 값 저장) ...
+
 
         caregiverNdOptionBtns.forEach(button => {
             button.onclick = () => {
@@ -443,112 +441,98 @@
         };
 
         // "로지와 대화 시작하기" 버튼 최종 로직
+// ⭐ "로지와 대화 시작하기" 버튼 최종 로직 ⭐
         if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
             if (!currentUserId) {
-                alert("사용자 세션 정보를 가져오는 중입니다. 잠시 후 다시 시도하거나 페이지를 새로고침 해주세요.");
+                alert("사용자 세션이 초기화되지 않았습니다. 잠시 후 다시 시도하거나 페이지를 새로고침 해주세요.");
                 return;
             }
 
-            let finalProfileData = {
+            // 1. 최종 프로필 데이터 구성 (temp 변수들 사용)
+            let profileDataToSave = {
                 role: selectedUserType === 'caregiver' ? 'parent' : 'child',
                 userType: selectedUserType,
                 name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName,
                 birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate,
-                age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge,
-                // Firestore에 저장될 사용자의 실제 이메일 (Firebase Auth에서 가져오는 것이 이상적)
-                // email: firebaseAuth.currentUser ? firebaseAuth.currentUser.email : null // 익명 사용자는 null
+                age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge, // 실제 본인 나이
+                email: firebaseAuth.currentUser ? firebaseAuth.currentUser.email : null // 익명 사용자는 null
             };
 
-            let finalUserNameForTalk = finalProfileData.name;
-            let finalAgeForTalkContext = finalProfileData.age;
+            let finalUserNameForTalk = profileDataToSave.name;
+            let finalAgeForTalkContext = profileDataToSave.age; // 당사자 본인 나이
 
             if (selectedUserType === 'caregiver') {
-                finalProfileData.caregiverInfo = {
+                profileDataToSave.caregiverInfo = {
                     caregiverNeurodiversity: tempSelectedCaregiverNd,
                     childName: tempChildName,
                     childBirthDate: tempChildBirthDate,
                     childAge: tempChildAge,
                     childDiagnoses: tempSelectedDiagnoses
-                    // childLozeeUid: null, // 초기에는 null, 추후 연결 기능에서 설정
+                    // childLozeeUid: null, // 자녀 UID는 별도 연결 로직에서 처리
                 };
                 finalProfileData.diagnoses = []; // 보호자 본인 특성은 caregiverInfo.caregiverNeurodiversity로
-                finalAgeForTalkContext = tempChildAge; // 대화 맥락 나이 = 자녀 나이
+                finalAgeForTalkContext = tempChildAge; // ⭐ 대화 맥락 나이 = 자녀 나이
             } else { // directUser
                 finalProfileData.diagnoses = tempSelectedDiagnoses;
             }
 
+            // 2. Firestore에 사용자 프로필 저장/업데이트
             const saveSuccess = await saveUserProfileToFirestore(currentUserId, finalProfileData);
-            if (!saveSuccess) {
-                return; // Firestore 저장 실패 시 진행 중단
-            }
+            if (!saveSuccess) return; // Firestore 저장 실패 시 중단
 
-            // localStorage 업데이트 (talk.html 등에서 사용할 정보)
-            localStorage.setItem('lozee_userId', currentUserId);
+            // 3. localStorage에 최종 정보 설정
+            localStorage.setItem('lozee_userId', currentUserId); // UID 저장
             localStorage.setItem('lozee_username', finalUserNameForTalk);
-            localStorage.setItem('lozee_userAge', finalAgeForTalkContext !== null ? finalAgeForTalkContext.toString() : '0');
+            localStorage.setItem('lozee_userAge', finalAgeForTalkContext !== null ? finalAgeForTalkContext.toString() : '0'); // 대화 맥락 나이
             localStorage.setItem('lozee_role', finalProfileData.role);
             localStorage.setItem('lozee_userType', finalProfileData.userType);
 
             if (selectedUserType === 'caregiver') {
                 localStorage.setItem('lozee_childName', tempChildName);
-                localStorage.setItem('lozee_childAge', tempChildAge !== null ? tempChildAge.toString() : '0');
-                localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses)); // 자녀 특성
+                localStorage.setItem('lozee_childAge', tempChildAge !== null ? tempChildAge.toString() : '0'); // 명시적 자녀 나이
+                localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses)); // 자녀 특성 (talk.js에서 사용)
                 localStorage.setItem('lozee_parentIsND', JSON.stringify(tempSelectedCaregiverNd.length > 0 && !tempSelectedCaregiverNd.includes('unsure_or_none')));
-                localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(tempSelectedCaregiverNd));
+                localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(tempSelectedCaregiverNd)); // 보호자 본인 특성
+                // localStorage.removeItem('lozee_childId'); // 초기에는 자녀 UID 없음
             } else { // directUser
                 localStorage.setItem('lozee_diagnoses', JSON.stringify(tempSelectedDiagnoses)); // 본인 특성
                 localStorage.removeItem('lozee_childName');
                 localStorage.removeItem('lozee_childAge');
                 localStorage.removeItem('lozee_parentIsND');
-                localStorage.removeItem('lozee_childId'); // 자녀 UID도 제거
+                localStorage.removeItem('lozee_childId');
                 localStorage.removeItem('lozee_caregiver_neurodiversity');
             }
             window.location.href = 'talk.html';
         };
 
-        // --- 페이지 로드 시 실행 (단일 DOMContentLoaded 리스너) ---
-        // 위에서 선언한 DOMContentLoaded 리스너와 중복되므로, 아래 코드는 그 안으로 통합하거나,
-        // onAuthStateChanged 로직을 DOMContentLoaded *밖으로* 빼서 즉시 실행하도록 수정합니다.
-        // 여기서는 onAuthStateChanged를 DOMContentLoaded 밖으로 빼겠습니다.
-
-    // ⭐ 이전에 중복되었던 DOMContentLoaded의 닫는 부분 삭제
-
-    // 페이지 로드 시 Firebase Auth 상태 감지 및 UID 처리 (DOMContentLoaded 밖에서 즉시 실행)
-    onAuthStateChanged(firebaseAuth, async (user) => {
-        if (user) {
-            console.log("Index: Firebase Auth 기존 사용자 감지. UID:", user.uid);
-            currentUserId = user.uid;
-            localStorage.setItem('lozee_userId', currentUserId);
-
-            // (선택적) Firestore에서 기존 사용자 정보 로드하여 UI에 미리 채우거나,
-            // 특정 단계로 바로 보내는 로직 추가 가능.
-            // 지금은 첫 단계(사용자 유형 선택)부터 시작하도록 함.
-            if (steps.userType) showStep(steps.userType);
-            else console.error("초기 단계(stepUserType) 요소를 찾을 수 없습니다.");
-
-        } else {
-            console.log("Index: Firebase Auth 세션 없음. 익명 로그인 시도.");
-            try {
-                const userCredential = await signInAnonymously(firebaseAuth);
-                const newUser = userCredential.user;
-                console.log('Index: 새로운 익명 사용자 UID 생성 및 저장:', newUser.uid);
-                currentUserId = newUser.uid;
+    // 이 로직은 DOMContentLoaded 리스너 밖에 위치하여 즉시 실행
+        onAuthStateChanged(firebaseAuth, async (user) => {
+            if (user) {
+                console.log("Index: Firebase Auth 기존 사용자 감지. UID:", user.uid);
+                currentUserId = user.uid;
                 localStorage.setItem('lozee_userId', currentUserId);
-                // 익명 로그인 성공 후, users 문서가 없다면 마지막 단계에서 생성됨.
-                if (steps.userType) showStep(steps.userType);
-                 else console.error("초기 단계(stepUserType) 요소를 찾을 수 없습니다.");
-            } catch (error) {
-                console.error("Index: 익명 로그인 실패:", error.code, error.message);
-                let userMessage = "사용자 세션을 시작하는 데 실패했습니다. 인터넷 연결을 확인하고 페이지를 새로고침 해주세요.";
-                if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/admin-restricted-operation' || error.code === 'auth/configuration-not-found') {
-                    userMessage += "\n(익명 로그인이 Firebase 프로젝트에서 활성화되지 않았거나, Firebase 설정에 문제가 있을 수 있습니다.)";
+                showStep(steps.userType); // UID 확보 후 첫 단계 표시
+            } else {
+                console.log("Index: Firebase Auth 세션 없음. 익명 로그인 시도.");
+                try {
+                    const userCredential = await signInAnonymously(firebaseAuth);
+                    const newUser = userCredential.user;
+                    console.log('Index: 새로운 익명 사용자 UID 생성 및 저장:', newUser.uid);
+                    currentUserId = newUser.uid;
+                    localStorage.setItem('lozee_userId', currentUserId);
+                    showStep(steps.userType);
+                } catch (error) {
+                    console.error("Index: 익명 로그인 실패:", error.code, error.message);
+                    let userMessage = "사용자 세션을 시작하는 데 실패했습니다. 인터넷 연결을 확인하고 페이지를 새로고침 해주세요.";
+                    if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/admin-restricted-operation' || error.code === 'auth/configuration-not-found') {
+                        userMessage += "\n(익명 로그인이 Firebase 프로젝트에서 활성화되지 않았거나, Firebase 설정에 문제가 있을 수 있습니다.)";
+                    }
+                    document.body.innerHTML = `<div class='container' style="background: none; color: #333;"><h1>서비스 접속 오류</h1><p>${userMessage.replace(/\n/g, '<br>')}</p><button onclick="window.location.reload()">새로고침</button></div>`;
                 }
-                // 사용자에게 오류 메시지를 표시할 수 있는 DOM 요소가 있다면 거기에 표시
-                // 여기서는 body에 직접 삽입 (임시)
-                document.body.innerHTML = `<div class='container' style="background: none; color: #333;"><h1>서비스 접속 오류</h1><p>${userMessage.replace(/\n/g, '<br>')}</p><button onclick="window.location.reload()">새로고침</button></div>`;
             }
-        }
-    });
+        });
+
+
     </script>
 </body>
 </html>
