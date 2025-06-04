@@ -189,6 +189,16 @@
                 }
 
                 const data = journalSnap.data();
+//보안 검사: 현재 로그인한 사용자가 이 저널의 소유자(userId) 또는 관련자(relatedChildId)인지 확인 (선택 사항)
+const journalOwnerUid = data.userId || data.ownerId; // ⭐ journals 문서의 userId 필드가 UID여야 함
+const journalRelatedChildUid = data.relatedChildId;
+const currentUserRole = localStorage.getItem('lozee_role');
+if (loggedInUserId !== journalOwnerUid && !(currentUserRole === 'parent' && loggedInUserId === data.ownerId && journalRelatedChildUid === localStorage.getItem('lozee_childId_being_viewed_by_parent'))) {
+journalPageTitleEl.innerText = "이 저널을 볼 권한이 없습니다.";
+//     // ... (화면 내용 지우기) ...
+  return;
+ }
+
                 // ─────────────────────────────────────────────────────────────────
                 // 1) 제목(title) 렌더링
                 //    - data.title이 있으면 그대로 사용
