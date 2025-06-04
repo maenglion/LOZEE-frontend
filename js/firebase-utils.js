@@ -217,6 +217,17 @@ export async function logSessionEnd(sessionId) {
     }
 }
 
+export function getOrCreateUserId() {
+  const userId = localStorage.getItem('lozee_userId');
+  if (!userId) {
+    // 이 함수가 호출되는 시점에는 index.html에서 UID가 설정되었어야 함
+    console.error("getOrCreateUserId (from firebase-utils): localStorage에 lozee_userId가 없습니다. 앱이 index.html부터 정상적으로 시작되었는지 확인하세요.");
+    // 비상시 talk.html 등에서 index.html로 리디렉션 고려
+    // window.location.href = 'index.html';
+    return null;
+  }
+  return userId;
+}
 
 export async function saveManualJournalEntry(userId, topic, content) {
     if (!userId || !topic || !content) {
