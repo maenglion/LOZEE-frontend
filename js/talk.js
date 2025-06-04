@@ -13,7 +13,7 @@ import {
   updateUserOverallStats,
   logSessionStart,
   logSessionEnd,
-  // getOrCreateUserId // index.html에서 UID를 생성하고 localStorage에 저장하므로, 여기서는 가져오기만 함
+
 } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
 
@@ -48,7 +48,7 @@ const micButton = document.getElementById('mic-button');
 const meterLevel = document.getElementById('volume-level');
 
 // --- 사용자 정보 (localStorage에서 가져옴) ---
-const loggedInUserId = localStorage.getItem('lozee_userId'); // index.html에서 Firebase Auth UID로 설정됨
+const loggedInUserId = localStorage.getItem('lozee_userId'); // ⭐ index.html에서 설정된 UID 사용const loggedInUserId = localStorage.getItem('lozee_userId'); // index.html에서 Firebase Auth UID로 설정됨
 const userRole = localStorage.getItem('lozee_role') || 'child';
 const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10); // 대화 맥락 나이
 const userNameToDisplay = localStorage.getItem('lozee_username') || '친구';
