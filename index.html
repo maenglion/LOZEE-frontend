@@ -880,6 +880,11 @@ if (startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
                             if (userData.userType === 'caregiver' && userData.caregiverInfo) {
                                 ageForTalk = userData.caregiverInfo.childAge;
                             }
+                            // 아래 호출 직전에 console.log 추가
+console.log("Calling setLocalStorageAndRedirect from onAuthStateChanged with:", 
+            "userData:", JSON.parse(JSON.stringify(userData)), // userData 전체 내용 확인
+            "ageForTalk:", ageForTalk, 
+            "caregiverInfo:", userData.caregiverInfo ? JSON.parse(JSON.stringify(userData.caregiverInfo)) : null);
                             setLocalStorageAndRedirect(userData, ageForTalk, userData.caregiverInfo);
                         } else { // 프로필 정보가 부족하면 역할 선택부터
                             console.log("Index: 기존 사용자 프로필 정보 부족. 역할 선택 단계부터 시작합니다.");
