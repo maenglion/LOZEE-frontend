@@ -442,6 +442,7 @@ startLozeeConversationBtn.onclick = async () => {
         marketing: agreeMarketingCheckbox.checked,
         agreedAt: serverTimestamp()
     };
+
 };
 
 
@@ -793,6 +794,8 @@ startLozeeConversationBtn.onclick = async () => {
         };
 
         if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
+            
+            
             if (!currentUserId) {
                 alert("사용자 인증 정보가 없습니다. 페이지를 새로고침하거나 다시 시도해주세요.");
                 return;
@@ -828,12 +831,31 @@ startLozeeConversationBtn.onclick = async () => {
             } else { // directUser
                 profileData.diagnoses = tempSelectedDiagnoses;
             }
-
+            
             const saveSuccess = await saveUserProfile(currentUserId, profileData);
             if (saveSuccess) {
                 setLocalStorageAndRedirect(profileData, ageForTalkContext, profileData.caregiverInfo);
             }
         };
+
+        //테스트 부분 
+console.log("setLocalStorageAndRedirect 호출 전 데이터 확인:");
+console.log("currentUserId:", currentUserId);
+console.log("profileData:", JSON.parse(JSON.stringify(profileData))); // 순환 참조 방지 및 객체 내용 확인
+console.log("ageForTalkContext:", ageForTalkContext);
+if (profileData.userType === 'caregiver') {
+    console.log("profileData.caregiverInfo:", JSON.parse(JSON.stringify(profileData.caregiverInfo)));
+}
+
+const saveSuccess = await saveUserProfile(currentUserId, profileData);
+if (saveSuccess) {
+    console.log("Firestore 저장 성공. 이제 setLocalStorageAndRedirect 호출"); // 이 로그가 뜨는지 확인
+    setLocalStorageAndRedirect(profileData, ageForTalkContext, profileData.caregiverInfo);
+} else {
+    alert("프로필 저장에 실패했습니다. 다시 시도해주세요.");
+}
+
+
 
         // --- 페이지 로드 시 Firebase Auth 상태 감지 (스크립트 최상단으로 이동하여 먼저 실행되도록 함) ---
         onAuthStateChanged(firebaseAuth, async (user) => {
