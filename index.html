@@ -23,6 +23,36 @@
         .select-row { display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 500px; margin-bottom: 12px; }
         .select-row select { width: calc(33% - 6px); }
 
+.terms-box {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            width: 85%;
+            max-width: 450px;
+            text-align: left;
+        }
+        .term-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .term-item input[type="checkbox"] {
+            width: auto; /* 체크박스 크기 조정 */
+            margin-right: 10px;
+            transform: scale(1.2); /* 체크박스 약간 크게 */
+        }
+        .term-item label {
+            font-size: 0.95em;
+            color: #f0f0f0;
+            font-weight: normal;
+        }
+        .term-item label a {
+            color: #fff2a8; /* 약관 링크 색상 */
+            text-decoration: underline;
+        }
+
+
         #stepUserType h2 { font-size: 2em; margin-bottom: 40px; }
         .user-type-options { display: flex; justify-content: center; align-items: center; gap: 30px; width: 100%; max-width: 700px; }
         .user-type-btn { flex: 1; padding: 25px 20px; font-size: 1.2em; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.4; background: rgba(255, 255, 255, 0.9); color: #5f73e0; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; }
@@ -62,6 +92,27 @@
     <div id="stepAuthChoice" class="step"> <h2>LOZEE에 오신 것을 환영합니다!</h2>
         <button id="goToLoginBtn">로그인</button>
         <button id="goToSignUpBtn">회원가입</button>
+    </div>
+
+        <div id="stepTermsAgreement" class="step">
+        <h2>서비스 이용 약관 및 개인정보처리방침 동의</h2>
+        <p class="info-text">로지 서비스 이용을 위해 아래 약관에 동의해주세요.</p>
+        <div class="terms-box">
+            <div class="term-item">
+                <input type="checkbox" id="agreeTerms" name="agreeTerms">
+                <label for="agreeTerms">(필수) <a href="terms.html" target="_blank">서비스 이용약관</a>에 동의합니다.</label>
+            </div>
+            <div class="term-item">
+                <input type="checkbox" id="agreePrivacy" name="agreePrivacy">
+                <label for="agreePrivacy">(필수) <a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다.</label>
+            </div>
+            <div class="term-item" style="margin-top:10px;">
+                <input type="checkbox" id="agreeMarketing" name="agreeMarketing">
+                <label for="agreeMarketing">(선택) 마케팅 정보 수신(이메일, 앱 푸시 등)에 동의합니다.</label>
+            </div>
+        </div>
+        <div class="error-message" id="termsError"></div>
+        <button id="submitTermsBtn">다음</button>
     </div>
 
     <div id="stepLogin" class="step">
@@ -242,6 +293,8 @@
             authChoice: document.getElementById('stepAuthChoice'),
             login: document.getElementById('stepLogin'),
             passwordReset: document.getElementById('stepPasswordReset'),
+            termsAgreement: document.getElementById('stepTermsAgreement'), // 약관 동의 단계 추가
+            // ...
             userType: document.getElementById('stepUserType'),
             signUpEmailPassword: document.getElementById('stepSignUpEmailPassword'),
             emailVerification: document.getElementById('stepEmailVerification'),
@@ -251,7 +304,11 @@
             nameBirthChild: document.getElementById('stepNameBirthChild'),
             childLink: document.getElementById('stepChildLink'),
             finalStart: document.getElementById('stepFinalStart')
+            
         };
+
+
+
 
         const goToLoginBtn = document.getElementById('goToLoginBtn');
         const goToSignUpBtn = document.getElementById('goToSignUpBtn');
@@ -259,6 +316,15 @@
         const loginPasswordInput = document.getElementById('loginPassword');
         const loginErrorEl = document.getElementById('loginError');
         const loginBtn = document.getElementById('loginBtn');
+
+        const agreeTermsCheckbox = document.getElementById('agreeTerms');
+        const agreePrivacyCheckbox = document.getElementById('agreePrivacy');
+        const agreeMarketingCheckbox = document.getElementById('agreeMarketing');
+        const termsErrorEl = document.getElementById('termsError');
+        const submitTermsBtn = document.getElementById('submitTermsBtn');
+
+
+
         const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
         const linkToSignUpFromLogin = document.getElementById('linkToSignUpFromLogin');
         const resetEmailInput = document.getElementById('resetEmail');
@@ -378,6 +444,35 @@
         // --- 이벤트 핸들러 바인딩 ---
         // (모든 DOM 요소 참조 변수가 위에 선언된 후에 핸들러 등록)
 
+        // 역할 선택 후, 이메일/비밀번호 입력 단계로 가기 전에 약관 동의 단계 표시
+        userTypeButtons.forEach(button => {
+            button.onclick = () => {
+                selectedUserType = button.dataset.usertype;
+                // localStorage.setItem('lozee_userType', selectedUserType); // 최종 저장 시 한번에
+                // localStorage.setItem('lozee_role', selectedUserType === 'caregiver' ? 'parent' : 'child');
+
+                if (steps.termsAgreement) showStep(steps.termsAgreement); // 약관 동의 단계로 이동
+                else { // 약관 동의 UI가 없다면 바로 다음 단계 (임시)
+                    console.warn("약관 동의 단계(stepTermsAgreement)가 없습니다. 바로 계정 정보 입력 단계로 이동합니다.");
+                    if(steps.signUpEmailPassword) showStep(steps.signUpEmailPassword);
+                }
+            };
+        });
+
+        if(submitTermsBtn) submitTermsBtn.onclick = () => {
+            if(termsErrorEl) termsErrorEl.textContent = '';
+            if (agreeTermsCheckbox && agreePrivacyCheckbox && !agreeTermsCheckbox.checked || !agreePrivacyCheckbox.checked) {
+                if(termsErrorEl) termsErrorEl.textContent = "필수 약관에 모두 동의해주세요.";
+                return;
+            }
+            // 선택 약관 동의 여부 저장 (필요시)
+            localStorage.setItem('lozee_agreeMarketing', agreeMarketingCheckbox ? agreeMarketingCheckbox.checked.toString() : 'false');
+
+            if(steps.signUpEmailPassword) showStep(steps.signUpEmailPassword); // 약관 동의 후 계정 정보 입력으로
+        };
+
+        
+       
         if(goToLoginBtn) {
             goToLoginBtn.onclick = () => {
                 clearInputFields(); // ⭐ 호출
