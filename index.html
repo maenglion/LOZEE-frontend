@@ -793,67 +793,66 @@ startLozeeConversationBtn.onclick = async () => {
             if(steps.finalStart) showStep(steps.finalStart);
         };
 
-        if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
-            
-            
-            if (!currentUserId) {
-                alert("사용자 인증 정보가 없습니다. 페이지를 새로고침하거나 다시 시도해주세요.");
-                return;
-            }
-            let profileData = {
-                role: selectedUserType === 'caregiver' ? 'parent' : 'child',
-                userType: selectedUserType,
-                name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName,
-                birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate,
-                age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge,
-                // 약관 동의 정보도 저장
-                agreements: {
-                    terms: tempAgreedTerms,
-                    privacy: tempAgreedPrivacy,
-                    marketing: tempAgreedMarketing,
-                    agreedAt: serverTimestamp()
-                }
-            };
-            let userNameForTalk = profileData.name;
-            let ageForTalkContext = profileData.age;
+    if (startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
+    // 1. currentUserId 유효성 검사 (가장 먼저!)
+    if (!currentUserId) {
+        alert("사용자 인증 정보가 유효하지 않습니다. 다시 로그인 후 시도해주세요.");
+        console.error("BUTTON CLICK ERROR: currentUserId is null when 'startLozeeConversationBtn' was clicked.");
+        showStep(steps.login); // 예: 로그인 단계로 강제 이동
+        return;
+    }
 
-            if (selectedUserType === 'caregiver') {
-                profileData.caregiverInfo = {
-                    caregiverNeurodiversity: tempSelectedCaregiverNd,
-                    childName: tempChildName,
-                    childBirthDate: tempChildBirthDate,
-                    childAge: tempChildAge,
-                    childDiagnoses: tempSelectedDiagnoses,
-                    childLozeeEmailToLink: childLinkEmailInput.value.trim() || null
-                };
-                profileData.diagnoses = []; // 보호자 본인의 특성은 caregiverInfo.caregiverNeurodiversity로
-                ageForTalkContext = tempChildAge;
-            } else { // directUser
-                profileData.diagnoses = tempSelectedDiagnoses;
-            }
-            
-            const saveSuccess = await saveUserProfile(currentUserId, profileData);
-            if (saveSuccess) {
-                setLocalStorageAndRedirect(profileData, ageForTalkContext, profileData.caregiverInfo);
-            }
+    // 2. profileData 생성 및 필수 값 할당 (모든 temp 변수가 이 시점에 값을 가지고 있어야 함)
+    let profileData = {
+        role: selectedUserType === 'caregiver' ? 'parent' : 'child', // selectedUserType 등이 이전에 설정되었어야 함
+        userType: selectedUserType,
+        name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName,
+        birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate,
+        age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge,
+        agreements: {
+            terms: tempAgreedTerms,
+            privacy: tempAgreedPrivacy,
+            marketing: tempAgreedMarketing,
+            agreedAt: serverTimestamp()
+        },
+        email: firebaseAuth.currentUser ? firebaseAuth.currentUser.email : null // 이메일도 추가
+    };
+
+    if (selectedUserType === 'caregiver') {
+        profileData.caregiverInfo = {
+            caregiverNeurodiversity: tempSelectedCaregiverNd,
+            childName: tempChildName,
+            childBirthDate: tempChildBirthDate,
+            childAge: tempChildAge,
+            childDiagnoses: tempSelectedDiagnoses,
+            childLozeeEmailToLink: childLinkEmailInput.value.trim() || null
         };
+        profileData.diagnoses = [];
+    } else { // directUser
+        profileData.diagnoses = tempSelectedDiagnoses;
+    }
 
-        //테스트 부분 
-console.log("setLocalStorageAndRedirect 호출 전 데이터 확인:");
-console.log("currentUserId:", currentUserId);
-console.log("profileData:", JSON.parse(JSON.stringify(profileData))); // 순환 참조 방지 및 객체 내용 확인
-console.log("ageForTalkContext:", ageForTalkContext);
-if (profileData.userType === 'caregiver') {
-    console.log("profileData.caregiverInfo:", JSON.parse(JSON.stringify(profileData.caregiverInfo)));
-}
+    // 3. 데이터 확인 로그 (profileData 생성 후)
+    console.log("Data before calling saveUserProfile:");
+    console.log("currentUserId:", currentUserId); // 유효한 UID여야 함
+    console.log("profileData:", JSON.parse(JSON.stringify(profileData))); // 이제 profileData는 정의됨
 
-const saveSuccess = await saveUserProfile(currentUserId, profileData);
-if (saveSuccess) {
-    console.log("Firestore 저장 성공. 이제 setLocalStorageAndRedirect 호출"); // 이 로그가 뜨는지 확인
-    setLocalStorageAndRedirect(profileData, ageForTalkContext, profileData.caregiverInfo);
-} else {
-    alert("프로필 저장에 실패했습니다. 다시 시도해주세요.");
-}
+    // 4. Firestore에 저장 시도
+    const saveSuccess = await saveUserProfile(currentUserId, profileData);
+
+    if (saveSuccess) {
+        console.log("Firestore save successful. Proceeding to setLocalStorageAndRedirect.");
+        // Firestore 저장 성공 시 나이 계산 (setLocalStorageAndRedirect에 필요)
+        let ageForTalkContext = profileData.age;
+        if (selectedUserType === 'caregiver' && profileData.caregiverInfo) {
+            ageForTalkContext = profileData.caregiverInfo.childAge;
+        }
+        setLocalStorageAndRedirect(profileData, ageForTalkContext, profileData.caregiverInfo);
+    } else {
+        alert("프로필 저장에 실패했습니다. Firestore 저장 중 오류가 발생했을 수 있습니다. 콘솔을 확인해주세요.");
+        console.error("Error during saveUserProfile or it returned false.");
+    }
+};  
 
 
 
