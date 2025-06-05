@@ -400,23 +400,33 @@
             } catch (e) { console.error("calculateAge 오류:", e); return null; }
         }
 
-async function saveUserProfile(uid, role, agreements) { // 예시 파라미터
+async function saveUserProfile(uid, profileDataOrRole, optionalAgreements = null) {
     try {
-        const userDocRef = doc(db, "users", uid); // db는 Firestore 인스턴스
-        await setDoc(userDocRef, {
-            uid: uid,
-            role: role, // 역할 선택 단계에서 받은 값
-            agreements: agreements, // 여기에 tempAgreements 객체가 전달됩니다.
-            createdAt: serverTimestamp(),
-            // 기타 필요한 사용자 정보
-        }, { merge: true }); // 기존 문서에 병합 (선택적)
+        const userRef = doc(db, "users", uid);
 
-        console.log("사용자 프로필이 성공적으로 저장되었습니다.");
-        // 다음 단계로 진행하는 로직 (예: 로지와 대화 시작 화면으로 이동)
-        // window.location.href = '/chat_with_lozee'; // 예시
-    } catch (error) {
-        console.error("사용자 프로필 저장 중 오류 발생: ", error);
-        // 사용자에게 오류 알림
+        let dataToSave = {};
+        if (typeof profileDataOrRole === 'object') {
+            // profileData 방식
+            dataToSave = {
+                uid,
+                ...profileDataOrRole,
+                lastLogin: serverTimestamp()
+            };
+        } else {
+            // role + agreements 방식
+            dataToSave = {
+                uid,
+                role: profileDataOrRole,
+                agreements: optionalAgreements,
+                createdAt: serverTimestamp()
+            };
+        }
+
+        await setDoc(userRef, dataToSave, { merge: true });
+        return true;
+    } catch (e) {
+        console.error("saveUserProfile 오류:", e);
+        return false;
     }
 }
 
@@ -432,9 +442,6 @@ startLozeeConversationBtn.onclick = async () => {
         marketing: agreeMarketingCheckbox.checked,
         agreedAt: serverTimestamp()
     };
-
-    // 정의된 saveUserProfile 함수 호출
-    await saveUserProfile(currentUserUID, selectedRole, tempAgreements);
 };
 
 
