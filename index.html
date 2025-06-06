@@ -138,7 +138,7 @@
     <div id="stepNameBirthChild" class="step">
         <h2 id="nameBirthChildTitle">아이(또는 가족)의 정보를 알려주세요.</h2>
         <div class="input-group"><label for="nameChildInput">로지가 아이(또는 가족)를 어떻게 부르면 좋을까요?</label><input type="text" id="nameChildInput" placeholder="아이(또는 가족) 이름" /><div class="error-message" id="nameChildError"></div></div>
-        <div class="input-group"><label for="birthChildYear">아이(또는 가족)의 생년월일을 선택해주세요.</label><div class="info-text">아이에게 더 적절한 대화를 제공합니다.</div><div class="select-row"><select id="birthChildYear"></select><select id="birthChildMonth"></select><select id="birthChildDay"></select></div><div class="error-message" id="birthChildError"></div></div>
+        <div class="input-group"><label for="birthChildYear">아이(또는 가족)의 생년월일을 선택해주세요.</label><div class="info-text">아이에게 더 적절한 대화 경험을 제공합니다.</div><div class="select-row"><select id="birthChildYear"></select><select id="birthChildMonth"></select><select id="birthChildDay"></select></div><div class="error-message" id="birthChildError"></div></div>
         <button id="submitNameBirthChildBtn">다음</button>
     </div>
     
@@ -159,7 +159,60 @@
 
             // --- DOM 요소 가져오기 ---
             const steps = { authChoice: document.getElementById('stepAuthChoice'), login: document.getElementById('stepLogin'), passwordReset: document.getElementById('stepPasswordReset'), userType: document.getElementById('stepUserType'), termsAgreement: document.getElementById('stepTermsAgreement'), signUpEmailPassword: document.getElementById('stepSignUpEmailPassword'), emailVerification: document.getElementById('stepEmailVerification'), caregiverNd: document.getElementById('stepCaregiverNeurodiversity'), diagnosisType: document.getElementById('stepDiagnosisType'), nameBirthSelf: document.getElementById('stepNameBirthSelf'), nameBirthChild: document.getElementById('stepNameBirthChild'), finalStart: document.getElementById('stepFinalStart') };
-            const goToLoginBtn = document.getElementById('goToLoginBtn'); const goToSignUpBtn = document.getElementById('goToSignUpBtn'); const loginEmailInput = document.getElementById('loginEmail'); const loginPasswordInput = document.getElementById('loginPassword'); const loginErrorEl = document.getElementById('loginError'); const loginBtn = document.getElementById('loginBtn'); const forgotPasswordBtn = document.getElementById('forgotPasswordBtn'); const linkToSignUpFromLogin = document.getElementById('linkToSignUpFromLogin'); const linkToLoginFromSignUp = document.getElementById('linkToLoginFromSignUp'); const resetEmailInput = document.getElementById('resetEmail'); const resetErrorEl = document.getElementById('resetError'); const resetSuccessEl = document.getElementById('resetSuccess'); const sendResetEmailBtn = document.getElementById('sendResetEmailBtn'); const backToLoginBtn = document.getElementById('backToLoginBtn'); const userTypeButtons = document.querySelectorAll('.user-type-btn'); const agreeTermsCheckbox = document.getElementById('agreeTerms'); const agreePrivacyCheckbox = document.getElementById('agreePrivacy'); const agreeMarketingCheckbox = document.getElementById('agreeMarketing'); const termsErrorEl = document.getElementById('termsError'); const submitTermsBtn = document.getElementById('submitTermsBtn'); const backToRoleChoiceBtn = document.getElementById('backToRoleChoiceBtn'); const signUpEmailInput = document.getElementById('signUpEmail'); const signUpPasswordInput = document.getElementById('signUpPassword'); const signUpPasswordConfirmInput = document.getElementById('signUpPasswordConfirm'); const signUpErrorEl = document.getElementById('signUpError'); const createAccountBtn = document.getElementById('createAccountBtn'); const verificationEmailDisplayEl = document.getElementById('verificationEmailDisplay'); const verificationErrorEl = document.getElementById('verificationError'); const checkVerificationBtn = document.getElementById('checkVerificationBtn'); const resendVerificationBtn = document.getElementById('resendVerificationBtn'); const caregiverNdOptionBtns = document.querySelectorAll('.caregiver-nd-btn'); const submitCaregiverNdBtn = document.getElementById('submitCaregiverNdBtn'); const diagnosisTitleEl = document.getElementById('diagnosisTitle'); const diagnosisInfoEl = document.getElementById('diagnosisInfo'); const diagnosisOptionBtns = document.querySelectorAll('.diagnosis-btn'); const diagnosisError = document.getElementById('diagnosisError'); const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn'); const nameBirthSelfTitleEl = document.getElementById('nameBirthSelfTitle'); const nameSelfInput = document.getElementById('nameSelfInput'); const nameSelfError = document.getElementById('nameSelfError'); const birthSelfYear = document.getElementById('birthSelfYear'); const birthSelfMonth = document.getElementById('birthSelfMonth'); const birthSelfDay = document.getElementById('birthSelfDay'); const birthSelfError = document.getElementById('birthSelfError'); const submitNameBirthSelfBtn = document.getElementById('submitNameBirthSelfBtn'); const nameBirthChildTitleEl = document.getElementById('nameBirthChildTitle'); const nameChildInput = document.getElementById('nameChildInput'); const nameChildError = document.getElementById('nameChildError'); const birthChildYear = document.getElementById('birthChildYear'); const birthChildMonth = document.getElementById('birthChildMonth'); const birthChildDay = document.getElementById('birthChildDay'); const birthChildError = document.getElementById('birthChildError'); const submitNameBirthChildBtn = document.getElementById('submitNameBirthChildBtn'); const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
+            const goToLoginBtn = document.getElementById('goToLoginBtn');
+            const goToSignUpBtn = document.getElementById('goToSignUpBtn');
+            const loginEmailInput = document.getElementById('loginEmail');
+            const loginPasswordInput = document.getElementById('loginPassword');
+            const loginErrorEl = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
+            const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+            const linkToSignUpFromLogin = document.getElementById('linkToSignUpFromLogin');
+            const linkToLoginFromSignUp = document.getElementById('linkToLoginFromSignUp');
+            const resetEmailInput = document.getElementById('resetEmail');
+            const resetErrorEl = document.getElementById('resetError');
+            const resetSuccessEl = document.getElementById('resetSuccess');
+            const sendResetEmailBtn = document.getElementById('sendResetEmailBtn');
+            const backToLoginBtn = document.getElementById('backToLoginBtn');
+            const userTypeButtons = document.querySelectorAll('.user-type-btn');
+            const agreeTermsCheckbox = document.getElementById('agreeTerms');
+            const agreePrivacyCheckbox = document.getElementById('agreePrivacy');
+            const agreeMarketingCheckbox = document.getElementById('agreeMarketing');
+            const termsErrorEl = document.getElementById('termsError');
+            const submitTermsBtn = document.getElementById('submitTermsBtn');
+            const backToRoleChoiceBtn = document.getElementById('backToRoleChoiceBtn');
+            const signUpEmailInput = document.getElementById('signUpEmail');
+            const signUpPasswordInput = document.getElementById('signUpPassword');
+            const signUpPasswordConfirmInput = document.getElementById('signUpPasswordConfirm');
+            const signUpErrorEl = document.getElementById('signUpError');
+            const createAccountBtn = document.getElementById('createAccountBtn');
+            const verificationEmailDisplayEl = document.getElementById('verificationEmailDisplay');
+            const verificationErrorEl = document.getElementById('verificationError');
+            const checkVerificationBtn = document.getElementById('checkVerificationBtn');
+            const resendVerificationBtn = document.getElementById('resendVerificationBtn');
+            const caregiverNdOptionBtns = document.querySelectorAll('.caregiver-nd-btn');
+            const submitCaregiverNdBtn = document.getElementById('submitCaregiverNdBtn');
+            const diagnosisTitleEl = document.getElementById('diagnosisTitle');
+            const diagnosisInfoEl = document.getElementById('diagnosisInfo');
+            const diagnosisOptionBtns = document.querySelectorAll('.diagnosis-btn');
+            const diagnosisError = document.getElementById('diagnosisError');
+            const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn');
+            const nameBirthSelfTitleEl = document.getElementById('nameBirthSelfTitle');
+            const nameSelfInput = document.getElementById('nameSelfInput');
+            const nameSelfError = document.getElementById('nameSelfError');
+            const birthSelfYear = document.getElementById('birthSelfYear');
+            const birthSelfMonth = document.getElementById('birthSelfMonth');
+            const birthSelfDay = document.getElementById('birthSelfDay');
+            const birthSelfError = document.getElementById('birthSelfError');
+            const submitNameBirthSelfBtn = document.getElementById('submitNameBirthSelfBtn');
+            const nameBirthChildTitleEl = document.getElementById('nameBirthChildTitle');
+            const nameChildInput = document.getElementById('nameChildInput');
+            const nameChildError = document.getElementById('nameChildError');
+            const birthChildYear = document.getElementById('birthChildYear');
+            const birthChildMonth = document.getElementById('birthChildMonth');
+            const birthChildDay = document.getElementById('birthChildDay');
+            const birthChildError = document.getElementById('birthChildError');
+            const submitNameBirthChildBtn = document.getElementById('submitNameBirthChildBtn');
+            const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
             
             // --- 상태 변수 ---
             let currentUserId = null; let selectedUserType = ''; let tempCaregiverSelfName = '', tempCaregiverSelfBirthDate = null, tempCaregiverSelfAge = null; let tempChildName = '', tempChildBirthDate = null, tempChildAge = null; let tempDirectUserName = '', tempDirectUserBirthDate = null, tempDirectUserAge = null; let tempSelectedCaregiverNd = []; let tempSelectedDiagnoses = []; let tempAgreedTerms = false, tempAgreedPrivacy = false, tempAgreedMarketing = false;
@@ -179,21 +232,23 @@
             if(forgotPasswordBtn) forgotPasswordBtn.onclick = () => { clearInputFields(); showStep('passwordReset'); };
             if(backToLoginBtn) backToLoginBtn.onclick = () => { clearInputFields(); showStep('login'); };
             if(backToRoleChoiceBtn) backToRoleChoiceBtn.onclick = () => showStep('userType');
-            if(loginBtn) loginBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
-            if(sendResetEmailBtn) sendResetEmailBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
+            
             userTypeButtons.forEach(button => { button.onclick = () => { selectedUserType = button.dataset.usertype; showStep('termsAgreement'); }; });
-            if(submitTermsBtn) submitTermsBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
-            if(createAccountBtn) createAccountBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
-            if(checkVerificationBtn) checkVerificationBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
-            if(resendVerificationBtn) resendVerificationBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
-            caregiverNdOptionBtns.forEach(button => { button.onclick = () => { /* ... 이전 답변과 동일 ... */ }; });
-            if(submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => showStep('diagnosisType');
-            diagnosisOptionBtns.forEach(button => { button.onclick = () => { /* ... 이전 답변과 동일 ... */ }; });
-            if(submitDiagnosisBtn) submitDiagnosisBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
-            if(submitNameBirthSelfBtn) submitNameBirthSelfBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
-            if(submitNameBirthChildBtn) submitNameBirthChildBtn.onclick = () => { showStep('finalStart'); };
-            if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
 
+            if(loginBtn) loginBtn.onclick = async () => { /* 이전 답변의 로그인 로직 */ };
+            if(sendResetEmailBtn) sendResetEmailBtn.onclick = async () => { /* 이전 답변의 비밀번호 재설정 로직 */ };
+            if(submitTermsBtn) submitTermsBtn.onclick = () => { if(termsErrorEl) termsErrorEl.textContent = ''; if (!agreeTermsCheckbox.checked || !agreePrivacyCheckbox.checked) { if(termsErrorEl) termsErrorEl.textContent = "필수 약관에 모두 동의해주세요."; return; } tempAgreedTerms = agreeTermsCheckbox.checked; tempAgreedPrivacy = agreePrivacyCheckbox.checked; tempAgreedMarketing = agreeMarketingCheckbox.checked; showStep('signUpEmailPassword'); };
+            if(createAccountBtn) createAccountBtn.onclick = async () => { /* 이전 답변의 계정 생성 로직 */ };
+            if(checkVerificationBtn) checkVerificationBtn.onclick = async () => { /* 이전 답변의 이메일 인증 확인 로직 */ };
+            if(resendVerificationBtn) resendVerificationBtn.onclick = async () => { /* 이전 답변의 인증 메일 재발송 로직 */ };
+            
+            if(submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => showStep('diagnosisType');
+            diagnosisOptionBtns.forEach(button => { button.onclick = () => { /* 이전 답변의 진단 선택 로직 */ }; });
+            if(submitDiagnosisBtn) submitDiagnosisBtn.onclick = () => { /* 이전 답변의 진단 선택 후 다음 단계 로직 */ };
+            if(submitNameBirthSelfBtn) submitNameBirthSelfBtn.onclick = () => { /* 이전 답변의 본인 정보 저장 및 분기 로직 */ };
+            if(submitNameBirthChildBtn) submitNameBirthChildBtn.onclick = () => { showStep('finalStart'); };
+            if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => { /* 이전 답변의 최종 저장 및 리디렉션 로직 */ };
+            
             // --- 페이지 로드 시 Firebase Auth 상태 감지 ---
             listenAuthState(
                 (user, userProfile) => {
