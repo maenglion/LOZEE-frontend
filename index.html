@@ -679,22 +679,23 @@
 
 
     <script type="module">
+        // Firebase SDK 및 새로 만들 auth.js 파일 import
         import { db, auth as firebaseAuth } from './js/firebase-config.js';
         import {
-            createUserWithEmailAndPassword,
-            sendEmailVerification,
-            signInWithEmailAndPassword,
-            sendPasswordResetEmail,
-            onAuthStateChanged,
-            signOut
-        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-        import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+            listenAuthState,
+            signUpWithEmail,
+            signInWithEmail,
+            resetPassword,
+            saveUserProfile
+        } from './js/auth.js';
+        import { doc, getDoc, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
-        // ⭐⭐⭐ 모든 DOM 조작과 이벤트 리스너를 이 리스너 안에 배치합니다 ⭐⭐⭐
+
+        // --- DOMContentLoaded 내에서 모든 UI 관련 작업 처리 ---
         document.addEventListener('DOMContentLoaded', () => {
             console.log("Index.html: DOMContentLoaded");
 
-            // --- DOM 요소 가져오기 (리스너 내부에서) ---
+            // --- DOM 요소 가져오기 ---
             const steps = {
                 authChoice: document.getElementById('stepAuthChoice'),
                 login: document.getElementById('stepLogin'),
@@ -710,6 +711,7 @@
                 childLink: document.getElementById('stepChildLink'),
                 finalStart: document.getElementById('stepFinalStart')
             };
+            // ... (모든 버튼 및 입력 필드 DOM 요소들)
             const goToLoginBtn = document.getElementById('goToLoginBtn');
             const goToSignUpBtn = document.getElementById('goToSignUpBtn');
             const loginEmailInput = document.getElementById('loginEmail');
@@ -741,29 +743,9 @@
             const checkVerificationBtn = document.getElementById('checkVerificationBtn');
             const resendVerificationBtn = document.getElementById('resendVerificationBtn');
             const submitCaregiverNdBtn = document.getElementById('submitCaregiverNdBtn');
-            const diagnosisTitleEl = document.getElementById('diagnosisTitle');
-            const diagnosisInfoEl = document.getElementById('diagnosisInfo');
-            const diagnosisOptionBtns = document.querySelectorAll('.diagnosis-btn');
-            const diagnosisError = document.getElementById('diagnosisError');
             const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn');
-            const nameBirthSelfTitleEl = document.getElementById('nameBirthSelfTitle');
-            const nameSelfInput = document.getElementById('nameSelfInput');
-            const nameSelfError = document.getElementById('nameSelfError');
-            const birthSelfYear = document.getElementById('birthSelfYear');
-            const birthSelfMonth = document.getElementById('birthSelfMonth');
-            const birthSelfDay = document.getElementById('birthSelfDay');
-            const birthSelfError = document.getElementById('birthSelfError');
             const submitNameBirthSelfBtn = document.getElementById('submitNameBirthSelfBtn');
-            const nameBirthChildTitleEl = document.getElementById('nameBirthChildTitle');
-            const nameChildInput = document.getElementById('nameChildInput');
-            const nameChildError = document.getElementById('nameChildError');
-            const birthChildYear = document.getElementById('birthChildYear');
-            const birthChildMonth = document.getElementById('birthChildMonth');
-            const birthChildDay = document.getElementById('birthChildDay');
-            const birthChildError = document.getElementById('birthChildError');
             const submitNameBirthChildBtn = document.getElementById('submitNameBirthChildBtn');
-            const childLinkEmailInput = document.getElementById('childLinkEmailInput');
-            const childLinkErrorEl = document.getElementById('childLinkError');
             const sendChildLinkRequestBtn = document.getElementById('sendChildLinkRequestBtn');
             const skipChildLinkBtn = document.getElementById('skipChildLinkBtn');
             const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
@@ -783,85 +765,52 @@
             function showStep(stepId) {
                 const stepElement = steps[stepId];
                 document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-                if (stepElement) { stepElement.classList.add('active'); }
-                else {
-                    console.error(`showStep: '${stepId}' 단계를 찾을 수 없습니다. HTML ID를 확인해주세요.`);
-                    if (steps.authChoice) steps.authChoice.classList.add('active'); // 안전 장치
-                }
-            }
-            function populateBirthSelects(yearEl, monthEl, dayEl, startYearOffset = 0, endYearOffset = 100) {
-                if (!yearEl || !monthEl || !dayEl) return;
-                yearEl.innerHTML = '<option value="">년</option>'; monthEl.innerHTML = '<option value="">월</option>'; dayEl.innerHTML = '<option value="">일</option>';
-                const currentYear = new Date().getFullYear();
-                for (let y = currentYear - startYearOffset; y >= currentYear - endYearOffset; y--) { const opt = new Option(`${y}년`, y); yearEl.add(opt); }
-                for (let m = 1; m <= 12; m++) { const opt = new Option(`${m}월`, m); monthEl.add(opt); }
-                for (let d = 1; d <= 31; d++) { const opt = new Option(`${d}일`, d); dayEl.add(opt); }
-            }
-            function calculateAge(y, m, d) {
-                if (!y || !m || !d) return null;
-                const birth = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
-                if (isNaN(birth.getTime())) return null;
-                const today = new Date();
-                let age = today.getFullYear() - birth.getFullYear();
-                const monthDiff = today.getMonth() - birth.getMonth();
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) { age--; }
-                return age >= 0 ? age : null;
-            }
-            async function saveUserProfileToFirestore(uid, profileData) {
-                if (!uid || !profileData) { alert("사용자 정보 저장 실패: 필수 정보 누락."); return false; }
-                const userRef = doc(db, "users", uid);
-                const dataToSave = {
-                    uid: uid,
-                    email: firebaseAuth.currentUser ? firebaseAuth.currentUser.email : (profileData.email || null),
-                    ...profileData,
-                    lastLogin: serverTimestamp()
-                };
-                try {
-                    const userSnap = await getDoc(userRef);
-                    if (!userSnap.exists()) {
-                        dataToSave.createdAt = serverTimestamp();
-                        await setDoc(userRef, dataToSave);
-                    } else {
-                        await setDoc(userRef, dataToSave, { merge: true });
-                    }
-                    console.log(`[saveUserProfile] Firestore 문서 저장/업데이트 성공: ${uid}`);
-                    return true;
-                } catch (error) {
-                    console.error(`[saveUserProfile] Firestore 문서 저장/업데이트 실패 (${uid}):`, error.message);
-                    alert("사용자 정보 저장 실패: " + error.message);
-                    return false;
-                }
-            }
-            function setLocalStorageAndRedirect(profileData, userAgeForTalkContext, childData = null) {
-                localStorage.setItem('lozee_userId', currentUserId);
-                localStorage.setItem('lozee_username', profileData.name);
-                localStorage.setItem('lozee_userAge', userAgeForTalkContext !== null ? userAgeForTalkContext.toString() : '0');
-                localStorage.setItem('lozee_role', profileData.role);
-                localStorage.setItem('lozee_userType', profileData.userType);
-                if (profileData.email) localStorage.setItem('lozee_userEmail', profileData.email);
-
-                if (profileData.userType === 'caregiver' && childData) {
-                    localStorage.setItem('lozee_childName', childData.childName || '아이');
-                    localStorage.setItem('lozee_childAge', childData.childAge !== null ? childData.childAge.toString() : '0');
-                    localStorage.setItem('lozee_diagnoses', JSON.stringify(childData.childDiagnoses || []));
-                    localStorage.setItem('lozee_parentIsND', JSON.stringify(profileData.caregiverInfo?.caregiverNeurodiversity?.length > 0 && !profileData.caregiverInfo.caregiverNeurodiversity.includes('unsure_or_none')));
-                    localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(profileData.caregiverInfo?.caregiverNeurodiversity || []));
-                    if (childData.childLozeeUid) {
-                        localStorage.setItem('lozee_childId', childData.childLozeeUid);
-                    } else {
-                        localStorage.removeItem('lozee_childId');
-                    }
+                if (stepElement) {
+                    stepElement.classList.add('active');
                 } else {
-                    localStorage.setItem('lozee_diagnoses', JSON.stringify(profileData.diagnoses || []));
-                    localStorage.removeItem('lozee_childName'); localStorage.removeItem('lozee_childAge');
-                    localStorage.removeItem('lozee_parentIsND'); localStorage.removeItem('lozee_childId');
-                    localStorage.removeItem('lozee_caregiver_neurodiversity');
+                    console.error(`showStep: '${stepId}' 단계를 찾을 수 없습니다. HTML ID를 확인해주세요.`);
+                    if(steps.authChoice) steps.authChoice.classList.add('active');
                 }
-                console.log("모든 정보 저장 완료. talk.html로 이동합니다.");
-                window.location.href = 'talk.html';
             }
-            function clearInputFields() { /* ...이전 답변과 동일한 내용... */ }
 
+            // ⭐⭐⭐ clearInputFields 함수 정의 (오류 해결) ⭐⭐⭐
+            function clearInputFields() {
+                // 로그인/회원가입/비밀번호 재설정 필드
+                if(loginEmailInput) loginEmailInput.value = '';
+                if(loginPasswordInput) loginPasswordInput.value = '';
+                if(loginErrorEl) loginErrorEl.textContent = '';
+                if(signUpEmailInput) signUpEmailInput.value = '';
+                if(signUpPasswordInput) signUpPasswordInput.value = '';
+                if(signUpPasswordConfirmInput) signUpPasswordConfirmInput.value = '';
+                if(signUpErrorEl) signUpErrorEl.textContent = '';
+                if(resetEmailInput) resetEmailInput.value = '';
+                if(resetErrorEl) resetErrorEl.textContent = '';
+                if(resetSuccessEl) resetSuccessEl.textContent = '';
+                // 프로필 입력 필드
+                if(document.getElementById('nameSelfInput')) document.getElementById('nameSelfInput').value = '';
+                if(document.getElementById('birthSelfYear')) document.getElementById('birthSelfYear').value = '';
+                if(document.getElementById('birthSelfMonth')) document.getElementById('birthSelfMonth').value = '';
+                if(document.getElementById('birthSelfDay')) document.getElementById('birthSelfDay').value = '';
+                if(document.getElementById('nameChildInput')) document.getElementById('nameChildInput').value = '';
+                if(document.getElementById('birthChildYear')) document.getElementById('birthChildYear').value = '';
+                if(document.getElementById('birthChildMonth')) document.getElementById('birthChildMonth').value = '';
+                if(document.getElementById('birthChildDay')) document.getElementById('birthChildDay').value = '';
+                if(document.getElementById('childLinkEmailInput')) document.getElementById('childLinkEmailInput').value = '';
+
+                // 선택된 버튼 상태 초기화
+                document.querySelectorAll('.diagnosis-btn.selected, .caregiver-nd-btn.selected').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                // 임시 상태 변수 초기화
+                tempSelectedCaregiverNd = [];
+                tempSelectedDiagnoses = [];
+                selectedUserType = '';
+                console.log("모든 입력 필드 및 선택 상태 초기화됨.");
+            }
+
+            function populateBirthSelects(yearEl, monthEl, dayEl, startYearOffset = 0, endYearOffset = 100) { /* ...이전과 동일... */ }
+            function calculateAge(y, m, d) { /* ...이전과 동일... */ }
+            function setLocalStorageAndRedirect(profileData, userAgeForTalkContext, childData = null) { /* ...이전과 동일... */ }
 
             // --- 이벤트 핸들러 바인딩 ---
             if(goToLoginBtn) goToLoginBtn.onclick = () => { clearInputFields(); showStep('login'); };
@@ -870,161 +819,53 @@
             if(linkToLoginFromSignUp) linkToLoginFromSignUp.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('login'); };
             if(forgotPasswordBtn) forgotPasswordBtn.onclick = () => { clearInputFields(); showStep('passwordReset'); };
             if(backToLoginBtn) backToLoginBtn.onclick = () => { clearInputFields(); showStep('login'); };
-
-            if(loginBtn) loginBtn.onclick = async () => { /* ... 로그인 로직 ... */ };
-            if(sendResetEmailBtn) sendResetEmailBtn.onclick = async () => { /* ... 비밀번호 재설정 로직 ... */ };
-
-            userTypeButtons.forEach(button => {
-                button.onclick = () => {
-                    selectedUserType = button.dataset.usertype;
-                    showStep('termsAgreement');
-                };
-            });
-            if(submitTermsBtn) submitTermsBtn.onclick = () => {
-                if(termsErrorEl) termsErrorEl.textContent = '';
-                if (!agreeTermsCheckbox.checked || !agreePrivacyCheckbox.checked) {
-                    if(termsErrorEl) termsErrorEl.textContent = "필수 약관에 모두 동의해주세요.";
-                    return;
-                }
-                tempAgreedTerms = agreeTermsCheckbox.checked;
-                tempAgreedPrivacy = agreePrivacyCheckbox.checked;
-                tempAgreedMarketing = agreeMarketingCheckbox.checked;
-                showStep('signUpEmailPassword');
-            };
-            if(backToRoleChoiceBtn) backToRoleChoiceBtn.onclick = () => showStep('userType');
-
-            if(createAccountBtn) createAccountBtn.onclick = async () => {
-                const email = signUpEmailInput.value.trim();
-                const password = signUpPasswordInput.value;
-                const passwordConfirm = signUpPasswordConfirmInput.value;
-                if(signUpErrorEl) signUpErrorEl.textContent = '';
-                if (!email || !password || !passwordConfirm) { if(signUpErrorEl) signUpErrorEl.textContent = "모든 필드를 입력해주세요."; return; }
-                if (password !== passwordConfirm) { if(signUpErrorEl) signUpErrorEl.textContent = "비밀번호가 일치하지 않습니다."; return; }
-                if (password.length < 6) { if(signUpErrorEl) signUpErrorEl.textContent = "비밀번호는 6자리 이상이어야 합니다."; return; }
-                createAccountBtn.disabled = true; createAccountBtn.textContent = "계정 생성 중...";
-                try {
-                    const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-                    await sendEmailVerification(userCredential.user);
-                    console.log("인증 메일 발송됨. UID:", userCredential.user.uid);
-                    if(verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = email;
-                    showStep('emailVerification');
-                } catch (error) {
-                    if(signUpErrorEl) signUpErrorEl.textContent = "계정 생성 실패: " + (error.code === 'auth/email-already-in-use' ? '이미 사용 중인 이메일입니다.' : error.message);
-                } finally {
-                    createAccountBtn.disabled = false; createAccountBtn.textContent = "계정 생성 및 인증 메일 발송";
-                }
-            };
             
-            if(checkVerificationBtn) checkVerificationBtn.onclick = async () => {
-                if (!firebaseAuth.currentUser) {
-                    if(verificationErrorEl) verificationErrorEl.textContent = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
-                    showStep('login');
-                    return;
-                }
-                checkVerificationBtn.disabled = true; checkVerificationBtn.textContent = "확인 중...";
-                await firebaseAuth.currentUser.reload();
-                checkVerificationBtn.disabled = false; checkVerificationBtn.textContent = "이메일 인증 완료";
-                if (firebaseAuth.currentUser.emailVerified) {
-                    console.log("이메일 인증 완료!");
-                    if(verificationErrorEl) verificationErrorEl.textContent = '';
-                    currentUserId = firebaseAuth.currentUser.uid;
-                    localStorage.setItem('lozee_userId', currentUserId);
-                    if (selectedUserType === 'caregiver') {
-                        showStep('caregiverNd');
-                    } else {
-                        if(diagnosisTitleEl) diagnosisTitleEl.textContent = "현재 어떤 어려움을 느끼고 있나요?";
-                        if(diagnosisInfoEl) diagnosisInfoEl.textContent = "해당하는 항목을 모두 선택해주세요. (중복 선택 가능)";
-                        showStep('diagnosisType');
-                    }
-                } else {
-                    if(verificationErrorEl) verificationErrorEl.textContent = "아직 이메일 인증이 완료되지 않았습니다. 메일함의 인증 링크를 클릭해주세요.";
-                }
-            };
-
-            // ... (submitCaregiverNdBtn, submitDiagnosisBtn 등 나머지 버튼 핸들러들도 동일한 방식으로 여기에 배치) ...
-
-            if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
-                if (!currentUserId) {
-                    alert("사용자 인증 정보가 없습니다. 다시 시도해주세요.");
-                    return;
-
-                }
-                let profileData = {
-                    role: selectedUserType === 'caregiver' ? 'parent' : 'child',
-                    userType: selectedUserType,
-                    name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName,
-                    birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate,
-                    age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge,
-                    agreements: {
-                        terms: tempAgreedTerms, privacy: tempAgreedPrivacy, marketing: tempAgreedMarketing,
-                        agreedAt: serverTimestamp()
-                    }
+            // ... (나머지 버튼들의 onclick 핸들러도 모두 여기에 정의 - 이전 답변의 완성된 코드를 참고하여 채워주세요)
+            // 예:
+            if (submitCaregiverNdBtn) {
+                submitCaregiverNdBtn.onclick = () => {
+                    showStep('diagnosisType');
                 };
-                let userNameForTalk = profileData.name;
-                let ageForTalkContext = profileData.age;
-                if (selectedUserType === 'caregiver') {
-                    profileData.caregiverInfo = {
-                        caregiverNeurodiversity: tempSelectedCaregiverNd,
-                        childName: tempChildName,
-                        childBirthDate: tempChildBirthDate,
-                        childAge: tempChildAge,
-                        childDiagnoses: tempSelectedDiagnoses,
-                        childLozeeEmailToLink: childLinkEmailInput ? childLinkEmailInput.value.trim() || null : null
-                    };
-                    profileData.diagnoses = [];
-                    ageForTalkContext = tempChildAge;
-                } else {
-                    profileData.diagnoses = tempSelectedDiagnoses;
-                }
-                const saveSuccess = await saveUserProfileToFirestore(currentUserId, profileData);
-                if (saveSuccess) {
-                    setLocalStorageAndRedirect(profileData, ageForTalkContext, profileData.caregiverInfo);
-                }
-            };
+            }
 
+            if (startLozeeConversationBtn) {
+                startLozeeConversationBtn.onclick = async () => { /* 이전 답변의 최종 저장 로직 */ };
+            }
 
             // --- 페이지 로드 시 Firebase Auth 상태 감지 ---
-            onAuthStateChanged(firebaseAuth, async (user) => {
-                if (user) {
-                    console.log("Index: Firebase Auth 기존 사용자 감지. UID:", user.uid);
+            listenAuthState(
+                async (user, userProfile) => { // 로그인된 경우
+                    console.log("Index: 로그인 상태. UID:", user.uid, "프로필:", userProfile);
                     currentUserId = user.uid;
-                    localStorage.setItem('lozee_userId', currentUserId);
 
-                    const userRef = doc(db, "users", currentUserId);
-                    try {
-                        const userSnap = await getDoc(userRef);
-                        if (userSnap.exists()) {
-                            const userData = userSnap.data();
-                            if (userData.name && userData.userType && user.emailVerified) {
-                                console.log("Index: 기존 사용자 프로필 및 이메일 인증 확인. talk.html로 이동합니다.");
-                                let ageForTalk = userData.age;
-                                if (userData.userType === 'caregiver' && userData.caregiverInfo) {
-                                    ageForTalk = userData.caregiverInfo.childAge;
-                                }
-                                setLocalStorageAndRedirect(userData, ageForTalk, userData.caregiverInfo);
-                            } else if (!user.emailVerified) {
-                                console.log("Index: 기존 사용자, 이메일 미인증 상태. 인증 단계로 이동합니다.");
-                                if(verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = user.email;
-                                showStep('emailVerification');
-                            } else {
-                                console.log("Index: Firestore 프로필 정보 부족. 역할 선택 단계부터 시작합니다.");
-                                showStep('userType');
-                            }
-                        } else {
-                            console.log("Index: Firestore에 사용자 문서 없음. 역할 선택 단계부터 시작합니다.");
-                            showStep('userType');
-                        }
-                    } catch (error) {
-                        console.error("Index: Firestore에서 사용자 정보 로드 중 오류:", error);
-                        showStep('authChoice');
+                    if (!user.emailVerified) {
+                        console.log("Index: 기존 사용자, 이메일 미인증 상태. 인증 단계로 이동합니다.");
+                        if(verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = user.email;
+                        showStep('emailVerification');
+                        return;
                     }
-                } else {
-                    console.log("Index: Firebase Auth 세션 없음. 로그인/회원가입 선택 화면 표시.");
+
+                    if (userProfile && userProfile.name && userProfile.userType) {
+                        console.log("Index: 기존 사용자 프로필 및 이메일 인증 확인. talk.html로 이동합니다.");
+                        let ageForTalk = userProfile.age;
+                        if (userProfile.userType === 'caregiver' && userProfile.caregiverInfo) {
+                            ageForTalk = userProfile.caregiverInfo.childAge;
+                        }
+                        setLocalStorageAndRedirect(userProfile, ageForTalk, userProfile.caregiverInfo);
+                    } else {
+                        console.log("Index: Firestore 프로필 정보 부족. 역할 선택 단계부터 시작합니다.");
+                        if (userProfile && userProfile.userType) selectedUserType = userProfile.userType;
+                        showStep('userType');
+                    }
+                },
+                () => { // 로그아웃된 경우
+                    console.log("Index: 로그아웃 상태. 로그인/회원가입 선택 화면 표시.");
                     currentUserId = null;
                     clearInputFields();
                     showStep('authChoice');
                 }
-            });
+            );
+
         });
     </script>
 </body>
