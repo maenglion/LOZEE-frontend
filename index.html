@@ -22,45 +22,27 @@
         button:disabled { background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; transform: none; box-shadow: none; }
         .select-row { display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 500px; margin-bottom: 12px; }
         .select-row select { width: calc(33% - 6px); }
-
         .terms-box { background-color: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 8px; margin-bottom: 20px; width: 85%; max-width: 450px; text-align: left; }
         .term-item { margin-bottom: 10px; display: flex; align-items: center; }
         .term-item input[type="checkbox"] { width: auto; margin-right: 10px; transform: scale(1.2); }
         .term-item label { font-size: 0.95em; color: #f0f0f0; font-weight: normal; }
         .term-item label a { color: #fff2a8; text-decoration: underline; }
-
         #stepUserType h2 { font-size: 2em; margin-bottom: 40px; }
         .user-type-options { display: flex; justify-content: center; align-items: center; gap: 30px; width: 100%; max-width: 700px; }
         .user-type-btn { flex: 1; padding: 25px 20px; font-size: 1.2em; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; line-height: 1.4; background: rgba(255, 255, 255, 0.9); color: #5f73e0; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; }
         .btn-subtitle { font-size: 0.8em; font-weight: normal; color: #7b8dda; margin-top: 8px; }
         .user-type-btn:hover { background: #fff; transform: translateY(-1px); }
-
         .diagnosis-options { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 20px; max-height: 60vh; overflow-y: auto; padding: 0 10px;}
         .diagnosis-btn, .caregiver-nd-btn { display: block; width: 85%; max-width: 480px; margin-bottom: 10px; padding: 12px; font-size: 1em; background: rgba(255, 255, 255, 0.9); color: #5f73e0; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; cursor: pointer; font-weight: 500; transition: background-color 0.2s; }
         .diagnosis-btn:hover, .caregiver-nd-btn:hover { background: #fff; }
         .diagnosis-btn.selected, .caregiver-nd-btn.selected { background-color: #FFEB3B; color: #333; border-color: #FBC02D; font-weight:bold;}
         .optional-text { font-size: 0.8em; color: #e0e0e0; font-weight: normal; }
-
         .secondary-btn { background: #78909c; color: white; margin-top: 10px; }
         .secondary-btn:hover { background: #607d8b; }
-
         .input-group { margin-bottom: 20px; width: 85%; max-width: 350px; }
         .input-group label { display: block; margin-bottom: 5px; font-size: 1em; color: #f0f0f0; text-align: left; }
         .input-group input, .input-group .select-row { width: 100%; margin-bottom: 0; }
-
-        @media (max-width: 600px) {
-            h2 { font-size: 1.6em; margin-bottom: 15px;}
-            p, .info-text { font-size: 0.95em; margin-bottom:10px;}
-            button { font-size: 0.9em; padding: 12px 20px; margin-top: 15px;}
-            input, select { padding: 10px; margin-bottom:10px; font-size: 0.95em;}
-            .select-row {max-width:100%;}
-            #stepUserType h2 { font-size: 1.7em; margin-bottom: 25px; }
-            .user-type-options { flex-direction: column; gap: 15px; }
-            .user-type-btn { width: 90%; min-height: auto; padding: 18px; font-size: 1.05em; }
-            .diagnosis-btn, .caregiver-nd-btn { max-width: 90%; font-size:0.95em; padding:10px; }
-            .diagnosis-options {max-height: 50vh;}
-            .input-group { width: 90%;}
-        }
+        @media (max-width: 600px) { h2 { font-size: 1.6em; } p, .info-text { font-size: 0.95em; } button { font-size: 0.9em; padding: 12px 20px; } input, select { padding: 10px; font-size: 0.95em;} .user-type-options { flex-direction: column; gap: 15px; } .user-type-btn { width: 90%; font-size: 1.05em; } }
     </style>
 </head>
 <body class="step-background-main">
@@ -267,7 +249,6 @@
         } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
         import { doc, setDoc, getDoc, serverTimestamp, updateDoc, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
-        // ⭐⭐⭐ 모든 UI 로직을 이 안에 배치하여 실행 순서 보장 ⭐⭐⭐
         document.addEventListener('DOMContentLoaded', () => {
             console.log("Index.html: DOMContentLoaded");
 
@@ -346,6 +327,7 @@
             const sendChildLinkRequestBtn = document.getElementById('sendChildLinkRequestBtn');
             const skipChildLinkBtn = document.getElementById('skipChildLinkBtn');
             const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
+
 
 
             // --- 상태 변수 ---
@@ -467,14 +449,14 @@
             }
 
 
-            // --- 이벤트 핸들러 바인딩 ---
+             // --- 이벤트 핸들러 바인딩 ---
             if(goToLoginBtn) goToLoginBtn.onclick = () => { clearInputFields(); showStep('login'); };
             if(goToSignUpBtn) goToSignUpBtn.onclick = () => { clearInputFields(); showStep('userType'); };
             if(linkToSignUpFromLogin) linkToSignUpFromLogin.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('userType'); };
             if(linkToLoginFromSignUp) linkToLoginFromSignUp.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('login'); };
             if(forgotPasswordBtn) forgotPasswordBtn.onclick = () => { clearInputFields(); showStep('passwordReset'); };
             if(backToLoginBtn) backToLoginBtn.onclick = () => { clearInputFields(); showStep('login'); };
-            if(backToRoleChoiceBtn) backToRoleChoiceBtn.onclick = () => showStep('userType');
+            if(backToRoleChoiceBtn) backToRoleChoiceBtn.onclick = () => { showStep('userType'); };
 
             if(loginBtn) loginBtn.onclick = async () => {
                 const email = loginEmailInput.value.trim();
@@ -482,38 +464,61 @@
                 if(loginErrorEl) loginErrorEl.textContent = '';
                 if (!email || !password) { if(loginErrorEl) loginErrorEl.textContent = "이메일과 비밀번호를 모두 입력해주세요."; return; }
                 loginBtn.disabled = true; loginBtn.textContent = "로그인 중...";
-                try {
-                    await signInWithEmailAndPassword(firebaseAuth, email, password);
-                } catch (error) {
-                    console.error("로그인 실패:", error.code, error.message);
-                    if(loginErrorEl) loginErrorEl.textContent = "이메일 또는 비밀번호가 올바르지 않습니다.";
-                } finally {
-                    loginBtn.disabled = false; loginBtn.textContent = "로그인";
-                }
+                const { error } = await signInWithEmail(email, password);
+                if (error) {
+                    if(loginErrorEl) loginErrorEl.textContent = "이메일 또는 비밀번호가 올바르지 않거나, 계정을 찾을 수 없습니다.";
+                } // 성공 시 onAuthStateChanged가 처리
+                loginBtn.disabled = false; loginBtn.textContent = "로그인";
             };
             if(sendResetEmailBtn) sendResetEmailBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
+
             userTypeButtons.forEach(button => {
                 button.onclick = () => {
                     selectedUserType = button.dataset.usertype;
                     showStep('termsAgreement');
                 };
             });
-            if(submitTermsBtn) submitTermsBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
+            if(submitTermsBtn) submitTermsBtn.onclick = () => {
+                if(termsErrorEl) termsErrorEl.textContent = '';
+                if (!agreeTermsCheckbox.checked || !agreePrivacyCheckbox.checked) {
+                    if(termsErrorEl) termsErrorEl.textContent = "필수 약관에 모두 동의해주세요."; return;
+                }
+                tempAgreedTerms = agreeTermsCheckbox.checked;
+                tempAgreedPrivacy = agreePrivacyCheckbox.checked;
+                tempAgreedMarketing = agreeMarketingCheckbox.checked;
+                showStep('signUpEmailPassword');
+            };
             if(createAccountBtn) createAccountBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
             if(checkVerificationBtn) checkVerificationBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
             if(resendVerificationBtn) resendVerificationBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
-            if(submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
-            if(submitDiagnosisBtn) submitDiagnosisBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
+
+            caregiverNdOptionBtns.forEach(button => { button.onclick = () => { /* ... 이전 답변과 동일 ... */ }; });
+            if(submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => showStep('diagnosisType');
+
+            diagnosisOptionBtns.forEach(button => { button.onclick = () => { /* ... 이전 답변과 동일 ... */ }; });
+            if(submitDiagnosisBtn) submitDiagnosisBtn.onclick = () => {
+                if (tempSelectedDiagnoses.length === 0) {
+                    if(diagnosisError) diagnosisError.textContent = "하나 이상 선택해주세요."; return;
+                }
+                if(diagnosisError) diagnosisError.textContent = '';
+                if (selectedUserType === 'caregiver') {
+                    if(nameBirthSelfTitleEl) nameBirthSelfTitleEl.textContent = "보호자님의 정보를 알려주세요.";
+                    populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 18, 70);
+                } else {
+                    if(nameBirthSelfTitleEl) nameBirthSelfTitleEl.textContent = "만나서 반가워요! 당신에 대해 알려주세요.";
+                    populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 3, 90);
+                }
+                showStep('nameBirthSelf');
+            };
+
             if(submitNameBirthSelfBtn) submitNameBirthSelfBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
             if(submitNameBirthChildBtn) submitNameBirthChildBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
             if(sendChildLinkRequestBtn) sendChildLinkRequestBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
             if(skipChildLinkBtn) skipChildLinkBtn.onclick = () => { /* ... 이전 답변과 동일 ... */ };
+            
             if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => { /* ... 이전 답변과 동일 ... */ };
-            caregiverNdOptionBtns.forEach(button => { button.onclick = () => { /* ... */ }; });
-            diagnosisOptionBtns.forEach(button => { button.onclick = () => { /* ... */ }; });
 
-
-            // --- 페이지 로드 시 Firebase Auth 상태 감지 및 UI 초기화 ---
+            // --- 페이지 로드 시 Firebase Auth 상태 감지 ---
             listenAuthState(
                 async (user, userProfile) => { // 로그인된 경우
                     console.log("Index: 로그인 상태. UID:", user.uid);
