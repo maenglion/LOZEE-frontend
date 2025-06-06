@@ -47,11 +47,10 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut) {
 export async function signUpWithEmail(email, password) {
     try {
         const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-        const user = userCredential.user;
-        await sendEmailVerification(user);
-        return { user, error: null };
+        await sendEmailVerification(userCredential.user);
+        return { user: userCredential.user, error: null };
     } catch (error) {
-        return { user: null, error };
+        return { user: null, error: error };
     }
 }
 
@@ -61,7 +60,7 @@ export async function signInWithEmail(email, password) {
         const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
         return { user: userCredential.user, error: null };
     } catch (error) {
-        return { user: null, error };
+        return { user: null, error: error };
     }
 }
 
@@ -71,7 +70,7 @@ export async function resetPassword(email) {
         await sendPasswordResetEmail(firebaseAuth, email);
         return { success: true, error: null };
     } catch (error) {
-        return { success: false, error };
+        return { success: false, error: error };
     }
 }
 
@@ -94,6 +93,7 @@ export async function saveUserProfile(uid, profileData) {
             dataToSave.createdAt = serverTimestamp();
         }
         await setDoc(userRef, dataToSave, { merge: true });
+        console.log(`[saveUserProfile] Firestore 문서 저장/업데이트 성공: ${uid}`);
         return true;
     } catch (error) {
         console.error(`[saveUserProfile] Firestore 문서 저장/업데이트 실패 (${uid}):`, error.message);
