@@ -1,4 +1,4 @@
-/// js/auth.js
+// js/auth.js
 import {
     createUserWithEmailAndPassword,
     sendEmailVerification,
@@ -100,3 +100,5 @@ export async function saveUserProfile(uid, profileData) {
         return false;
     }
 }
+
+// ⭐⭐⭐ 이 파일의 끝에는 더 이상 아무것도 없어야 합니다. ⭐⭐⭐
