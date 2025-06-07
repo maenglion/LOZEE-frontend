@@ -1,0 +1,38 @@
+/* css/common.css */
+body {
+    /* 배경에 index.html의 보라색 그라데이션을 적용합니다. */
+    background: linear-gradient(135deg, #6078ea, #a777e3);
+    font-family: 'KoPub World Dotum', sans-serif;
+    /* 콘텐츠를 중앙에 배치하기 위해 flexbox 사용 */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* 페이지가 길어질 경우를 대비해 상단 정렬 */
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px 0; /* 상하 여백 추가 */
+    box-sizing: border-box;
+}
+
+/* 모든 콘텐츠를 감싸는 중앙 컨테이너 */
+.app-container {
+    width: 100%;
+    max-width: 400px; /* 360px보다 약간 여유있게 설정 */
+    min-height: calc(100vh - 40px); /* body의 padding을 고려한 높이 */
+    background-color: #ffffff; /* 대부분 페이지의 실제 배경색 */
+    box-shadow: 0 0 25px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden; /* step 전환 애니메이션 등을 위해 */
+    border-radius: 20px; /* 모바일 느낌을 위해 둥근 모서리 추가 */
+}
+
+/* index.html의 step들이 새로운 컨테이너에 맞게 조정되도록 */
+.app-container .step {
+    height: 100%; /* vh 대신 % 사용 */
+    width: 100%;
+    border-radius: 20px; /* 컨테이너와 동일하게 */
+}
+
+/* talk.html, mypage.html 등 다른 페이지의 body 배경을 흰색으로 유지하고 싶다면,
+   해당 페이지의 <style> 태그에 'body { background: #f4f6f8; }'를 추가하면 됩니다.
+   여기서는 index.html의 배경을 전역으로 사용하는 것을 기본으로 합니다.
+*/
