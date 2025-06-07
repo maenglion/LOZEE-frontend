@@ -1,106 +1,82 @@
 /* gnb.css */
-/* GNB에서 사용하는 CSS 변수 (talk.html의 :root 에서 가져오거나 여기에 재정의) */
-:root { /* 또는 이 파일에 필요한 변수만 선언 */
-    --gnb-bg: #6878E9; /* 요청하신 GNB 배경색 */
-    --gnb-text-color: #ffffff; /* GNB 기본 텍스트 색 (드롭다운 등) */
-    --gnb-title-color: #ffffff; /* LOZEE 타이틀 색상 */
-    --gnb-menu-toggle-color: #ffffff; /* 햄버거 메뉴 색상 */
-    
-    --gnb-dropdown-bg: var(--gnb-bg); /* 드롭다운 배경은 GNB 배경과 동일하게 */
-    --gnb-dropdown-text-color: var(--gnb-text-color); /* 드롭다운 텍스트 색상 */
-    --gnb-dropdown-border-color: #4a5568; /* 드롭다운 구분선 색상 (기존 값 유지) */
-    /* --secondary-color를 직접 참조하는 대신, GNB 호버 전용 색상 변수 사용 또는 직접 값 지정 */
-    --gnb-dropdown-hover-bg: #5a7edf; /* 예: secondary-color 값을 직접 사용 */
-    
+:root {
     --gnb-height: 56px;
-
-        /* GNB와 관련된 다른 페이지들에서도 사용될 수 있는 공통 변수들 */
-    --primary-color: #6e8efb; /* talk.html 에서 사용되던 값 */
-    --secondary-color: #5a7edf; /* talk.html 에서 사용되던 값 */
+    --primary-color: #6e8efb;
 }
 
 body {
-    padding-top: var(--gnb-height); /* GNB 높이만큼 패딩 */
-    font-family: 'KoPub World Dotum', sans-serif; /* GNB 외 다른 페이지에도 영향 줄 수 있으니 주의 */
-
+    padding-top: var(--gnb-height);
 }
-
 
 #gnb {
-    padding: 0 15px; 
     position: fixed;
     top: 0;
-    left: 0;
+    left: 50%; /* 중앙 정렬을 위해 */
+    transform: translateX(-50%); /* 중앙 정렬을 위해 */
     width: 100%;
+    max-width: 400px; /* ⭐ app-container의 max-width와 일치 */
     height: var(--gnb-height);
-    background-color: var(--gnb-bg);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 1000;
+    background-color: var(--primary-color);
+    color: white;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between; /* 요소들을 양쪽 끝으로 배치 */
+    padding: 0 15px;
     box-sizing: border-box;
+    z-index: 1000;
+    border-top-left-radius: 20px; /* app-container와 맞춤 */
+    border-top-right-radius: 20px; /* app-container와 맞춤 */
 }
 
-/* 'LOZEE' 글씨를 가운데에 배치 */
 #gnb-title {
+    font-weight: bold;
+    font-size: 1.2em;
+    /* ⭐ 로고 중앙 배치를 위해 절대 위치 사용 */
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    /* 기존 스타일 유지 */
-    color: white;
-    font-weight: bold;
-    font-size: 1.2em;
 }
 
 #menu-toggle {
     background: none;
     border: none;
-    color: var(--gnb-menu-toggle-color);
-    font-size: 24px;
+    color: white;
+    font-size: 1.8em;
     cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0;
+    /* ⭐ 왼쪽 배치를 위해 별도 위치 지정 불필요 (flexbox 순서 따름) */
 }
 
 #dropdown-menu {
-    position: fixed;
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
     top: var(--gnb-height);
-    right: 0;
-    background-color: var(--gnb-dropdown-bg);
-    border-radius: 0 0 0 8px;
-    box-shadow: -3px 3px 6px rgba(0,0,0,0.2);
-    width: 200px;
-    z-index: 999;
+    left: 0; /* ⭐ 오른쪽이 아닌 왼쪽에서 시작 */
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-radius: 0 0 8px 8px;
     overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.3s ease-out;
+    z-index: 999;
+    min-width: 200px;
 }
 
 #dropdown-menu.show {
-    max-height: 300px; /* 필요시 talk.html의 값과 일치시키거나 조정 */
+    display: block; /* JS로 이 클래스 추가/제거 */
 }
 
 #dropdown-menu a {
     display: block;
-    padding: 12px 16px;
+    padding: 12px 18px;
+    color: #333;
     text-decoration: none;
-    color: var(--gnb-dropdown-text-color);
-    border-bottom: 1px solid var(--gnb-dropdown-border-color);
     font-size: 0.95em;
+    border-bottom: 1px solid #f0f0f0;
 }
+
 #dropdown-menu a:last-child {
     border-bottom: none;
 }
+
 #dropdown-menu a:hover {
-    background-color: var(--gnb-dropdown-hover-bg);
+    background-color: #f5f5f5;
 }
-
-/* GNB 반응형 스타일 (talk.html의 @media 규칙에서 가져오거나 여기에 통합) */
-@media (max-width: 600px) {
-  #gnb { padding: 0 20px; } 
-  #gnb-title { font-size: 1.1em; }
-}
-
