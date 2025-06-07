@@ -5,70 +5,81 @@
 }
 
 #gnb {
-    position: relative; /* 자식 요소의 absolute 위치 기준이 됨 */
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between; /* 요소들을 양쪽 끝으로 배치 */
+    justify-content: space-between;
     width: 100%;
     height: var(--gnb-height);
     background-color: var(--primary-color);
     color: white;
     padding: 0 15px;
     box-sizing: border-box;
-    z-index: 1000;
+    flex-shrink: 0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
 }
 
-
 #gnb-title {
-    font-weight: bold;
-    font-size: 1.2em;
-    /* ⭐ 로고 중앙 배치를 위해 절대 위치 사용 */
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    font-weight: bold;
+    font-size: 1.5em;
 }
 
 #menu-toggle {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.8em;
+    background: none; border: none; color: white;
+    font-size: 1.8em; cursor: pointer; padding: 0;
+    z-index: 1001;
+}
+
+/* GNB 오른쪽 버튼 그룹 */
+.gnb-right-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#tts-toggle-btn, #width-toggle-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid white;
+    background-color: white;
+    color: var(--primary-color);
+    font-size: 1.2em;
     cursor: pointer;
-    padding: 0;
-    z-index: 1001; /* 드롭다운 메뉴보다 위에 있도록 */
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+#tts-toggle-btn.off {
+    background-color: #f0f0f0;
+    color: #aaa;
+    border-color: #ddd;
+}
+
+/* TTS 꺼졌을 때 취소선 */
+#tts-toggle-btn.off::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 15%; right: 15%;
+    border-top: 2px solid #aaa;
+    transform: rotate(-45deg);
 }
 
 #dropdown-menu {
-    display: none;
-    position: absolute;
-    top: var(--gnb-height);
-    left: 0; /* ⭐ 왼쪽에서 드롭다운 */
+    display: none; position: absolute;
+    top: var(--gnb-height); left: 0;
     background-color: white;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     border-radius: 0 0 8px 8px;
-    overflow: hidden;
-    z-index: 1000;
-    min-width: 200px;
-    border: 1px solid #eee;
+    overflow: hidden; z-index: 999;
+    min-width: 200px; border: 1px solid #eee;
 }
 
-#dropdown-menu.show {
-    display: block; /* JS로 이 클래스 추가/제거 */
-}
-
-#dropdown-menu a {
-    display: block;
-    padding: 12px 18px;
-    color: #333;
-    text-decoration: none;
-    font-size: 0.95em;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-#dropdown-menu a:last-child {
-    border-bottom: none;
-}
-
-#dropdown-menu a:hover {
-    background-color: #f5f5f5;
-}
+#dropdown-menu.show { display: block; }
+#dropdown-menu a { display: block; padding: 12px 18px; color: #333; text-decoration: none; font-size: 0.95em; border-bottom: 1px solid #f0f0f0; }
+#dropdown-menu a:last-child { border-bottom: none; }
+#dropdown-menu a:hover { background-color: #f5f5f5; }

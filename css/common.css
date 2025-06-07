@@ -1,30 +1,44 @@
 /* css/common.css */
 body {
-    /* 배경에 index.html의 보라색 그라데이션을 적용합니다. */
     background: linear-gradient(135deg, #6078ea, #a777e3);
     font-family: 'KoPub World Dotum', sans-serif;
-    /* 콘텐츠를 화면 중앙에 배치하기 위해 flexbox 사용 */
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* 페이지가 길어질 경우를 대비해 상단 정렬 */
+    align-items: center; /* 수직 중앙 정렬을 위해 */
     min-height: 100vh;
     margin: 0;
-    padding: 20px 0; /* 상하 여백 추가 */
+    padding: 20px 0;
     box-sizing: border-box;
 }
 
 /* 모든 콘텐츠를 감싸는 중앙 컨테이너 */
 .app-container {
     width: 100%;
-    max-width: 400px; /* 360px보다 약간 여유있게 설정 */
-    min-height: calc(100vh - 40px); /* body의 상하 padding을 고려한 높이 */
-    background-color: #ffffff; /* talk.html, mypage.html 등은 흰색 배경 */
+    max-width: 640px; /* ⭐ 요청하신 기본 너비 640px */
+    height: calc(100vh - 40px); /* 화면 높이에 맞춤 */
+    max-height: 850px; /* 최대 높이 제한 */
+    background-color: #ffffff;
     box-shadow: 0 0 25px rgba(0,0,0,0.15);
     position: relative;
-    overflow: hidden; /* step 전환 애니메이션 등을 위해 */
-    border-radius: 20px; /* 모바일 느낌을 위해 둥근 모서리 추가 */
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
+    transition: max-width 0.3s ease-in-out; /* 너비 변경 애니메이션 */
+}
+
+/* ⭐ 전체화면 모드 스타일 */
+.app-container.wide-mode {
+    max-width: 95%;
+    max-height: 95vh;
+}
+
+/* 페이지 제목 공통 스타일 */
+.page-title {
+    color: #5f25e7;
+    text-align: center;
+    font-size: 1.5em;
+    margin: 20px 0 30px 0;
+    font-weight: 700;
 }
 
 /* index.html의 step들은 app-container의 그라데이션 배경을 사용하도록 */
