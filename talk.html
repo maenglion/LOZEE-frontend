@@ -4,60 +4,109 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE와 대화하기</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
     <link rel="stylesheet" href="css/common.css">
     <style>
-        .app-container { display: flex; flex-direction: column; height: 100%; background-color: #ffffff; }
+        :root {
+            --primary-color: #6e8efb;
+            --gnb-height: 56px;
+            --input-area-height: 70px;
+        }
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: #ffffff;
+        }
         body { padding: 0; }
-        #chat-window { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
-        .bubble { max-width: 75%; padding: 10px 15px; border-radius: 18px; line-height: 1.6; word-break: keep-all; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .bubble.user { background: #6e8efb; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .bubble.assistant { background: #F5E7A1; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .bubble.assistant_feedback { background: #e9ecef; color: #495057; align-self: center; font-size: 0.9em; border-radius: 8px; }
-        .bubble.thinking { font-style: italic; opacity: 0.8; }
-        .journal-save-notification.actionable { cursor: pointer; border-left: 5px solid #4CAF50 !important; background-color: #e8f5e9; color: #2e7d32; padding: 10px 16px; border-radius: 12px; font-size: 0.9em; margin: 5px auto; width: fit-content; text-align: center;}
-        .journal-save-notification.actionable:hover { background-color: #dcedc8; }
-        #input-area { padding: 0 10px; height: 70px; display: flex; align-items: center; gap: 8px; background: #f8f9fa; border-top: 1px solid #e0e0e0; box-sizing: border-box; }
-        #chat-input { flex: 1; padding: 10px 16px; border: 1px solid #ced4da; border-radius: 22px; font-size: 1em; }
-        #mic-button, #send-btn, #tts-toggle-btn { width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3em; flex-shrink: 0; transition: background-color 0.2s; }
-        #mic-button, #send-btn { background: #6e8efb; color: white; }
-        #mic-button.recording {
-    background: #e74c3c;
-   
-    /* ⭐ 출렁이는 애니메이션 효과 추가 */
-    animation: pulse-red 1.5s infinite;
-}
 
-/* ⭐ 출렁이는 효과를 위한 Keyframes 정의 */
-@keyframes purple-pulse {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(182, 11, 224, 0.7);
-    }
-    70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
-    }
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
-    }
-}
-        #tts-toggle-btn { background-color: #6e8efb; color: white; border: 1px solid #ccc; }
-        #tts-toggle-btn.off { background-color: #dcdcdc; color: #888; }
+        main {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: calc(var(--gnb-height) + 10px);
+            padding-bottom: calc(var(--input-area-height) + 10px);
+            position: relative;
+        }
+
+        #meter-container {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            max-width: 200px;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            z-index: 10;
+        }
+        #volume-level { width: 0%; height: 100%; background: var(--primary-color); transition: width 0.05s; }
+
+        .bubble { max-width: 75%; padding: 10px 15px; border-radius: 18px; line-height: 1.6; word-break: keep-all; }
+        .bubble.user { background: #6e8efb; color: white; align-self: flex-end; }
+        .bubble.assistant { background: #F5E7A1; color: #333; align-self: flex-start; }
+        .bubble.assistant_feedback { background: #e9ecef; color: #495057; align-self: center; font-size: 0.9em; }
+        
+        #input-area {
+            height: var(--input-area-height);
+            padding: 0 15px;
+            display: none; /* JS로 flex 처리 */
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+        #chat-input { flex: 1; padding: 10px 16px; border: 1px solid #ced4da; border-radius: 22px; font-size: 1em; }
+        #action-button {
+            width: 48px; height: 48px; border-radius: 50%; border: none;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5em; flex-shrink: 0;
+            background: var(--primary-color); color: white;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        #action-button.recording {
+            background-color: #e74c3c;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
         .chat-options-container { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; align-self: flex-start; width: 80%; }
         .chat-option-btn { background-color: #f1f1f1; color: #333; border: 1px solid #dcdcdc; border-radius: 12px; padding: 10px 15px; width: 100%; text-align: left; cursor: pointer; font-size: 0.95em; }
         .chat-option-btn:disabled { background-color: #f8f8f8; color: #aaaaaa; }
+
+        /* 플로팅 너비 조절 버튼 */
+        #width-toggle-btn-floating {
+            position: fixed;
+            bottom: calc(var(--chat-input-area-height) + 20px);
+            right: 20px;
+            width: 44px; height: 44px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none; border-radius: 50%;
+            font-size: 1.2em; cursor: pointer;
+            z-index: 2000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
         <nav id="gnb">
             <button id="menu-toggle">☰</button>
-            <button id="tts-toggle-btn" title="음성 듣기 ON">🔊</button>
             <div id="gnb-title">LOZEE</div>
-            <div style="width: 44px; visibility: hidden;"></div> 
+            <div class="gnb-right-buttons">
+                <button id="tts-toggle-btn" title="음성 듣기 ON">🔊</button>
+            </div>
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>
@@ -67,15 +116,19 @@
             </div>
         </nav>
 
-        <main id="chat-window"></main>
+        <main id="chat-window">
+            <div id="meter-container"><div id="volume-level"></div></div>
+        </main>
 
-<div id="input-area">
-    <button id="mic-button">🎤</button>
-    <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-    <button id="send-btn" style="display: none;">➤</button> </div>
+        <div id="input-area">
+            <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
+            <button id="action-button">🎤</button>
+        </div>
     </div>
+    
+    <button id="width-toggle-btn-floating" title="전체 화면 보기">↔</button>
 
     <script src="./js/gnb.js" defer></script>
-    <script type="module" src="./js/talk.js" defer></script> 
+    <script type="module" src="./js/talk.js"></script> 
 </body>
 </html>
