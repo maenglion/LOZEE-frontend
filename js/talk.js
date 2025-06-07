@@ -80,6 +80,40 @@ async function fetchPreviousUserCharCount() {
     }
 }
 
+
+// ⭐⭐⭐ 1. 이 함수를 추가해주세요. ⭐⭐⭐
+async function endSessionAndSave() {
+    if (isDataSaved) return;
+    isDataSaved = true;
+    appendMessage("대화를 안전하게 마무리하고 있어요...", 'assistant_feedback');
+    if (currentFirestoreSessionId) await logSessionEnd(currentFirestoreSessionId);
+
+    const finalTopicForJournal = selectedSubTopicDetails?.displayText || selectedMain || "알 수 없는 주제";
+    if (finalTopicForJournal !== "알 수 없는 주제" && chatHistory.length > 2) {
+        const journalDetailsToSave = {
+            summary: lastAiAnalysisData?.conversationSummary || "대화 요약이 생성되지 않았습니다.",
+            title: lastAiAnalysisData?.summaryTitle || finalTopicForJournal,
+            detailedAnalysis: lastAiAnalysisData || {},
+        };
+        const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
+        const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, { 
+            relatedChildId: targetChildId, 
+            entryType: entryTypeForSave,
+            childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
+        });
+        if (journalId) {
+            await updateTopicStats(loggedInUserId, finalTopicForJournal, entryTypeForSave);
+            await updateUserOverallStats(loggedInUserId, currentUserType, previousTotalUserCharCountOverall + userCharCountInSession);
+        }
+    }
+}
+
+// ⭐⭐⭐ 2. 이 함수도 추가해주세요. ⭐⭐⭐
+function resetSessionTimeout() {
+    clearTimeout(sessionTimeoutId);
+    sessionTimeoutId = setTimeout(endSessionAndSave, SESSION_TIMEOUT_DURATION);
+}
+
 function getTopicsForCurrentUser() {
     const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
     if (!counselingTopicsByAge) { console.error("counseling_topics.js 로드 실패!"); return {}; }
