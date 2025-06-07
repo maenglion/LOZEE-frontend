@@ -37,6 +37,7 @@ function startChat(initText, inputMethod, topicDetails) { /* 생략 없는 완�
 async function sendMessage(text, inputMethod) { /* 생략 없는 완성된 함수 */ }
 // ... (STT, 저널 저장 등 다른 모든 함수 정의 포함)
 
+
 // --- 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', () => {
     if (!loggedInUserId) {
@@ -82,6 +83,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+
+// ⭐⭐⭐ 이 함수를 추가해주세요 (appendMessage 함수 위) ⭐⭐⭐
+async function fetchPreviousUserCharCount() {
+    if (!loggedInUserId) return 0;
+    try {
+        const userRef = doc(db, 'users', loggedInUserId);
+        const userSnap = await getDoc(userRef);
+        return userSnap.exists() ? (userSnap.data().totalUserCharCount || 0) : 0;
+    } catch (error) {
+        console.error("Firestore 이전 누적 글자 수 로드 오류:", error);
+        return 0;
+    }
+}
+// ⭐⭐⭐ 여기까지 추가 ⭐⭐⭐
+
+
+    function appendMessage(text, role) {
+    if (!chatWindow) return;
+    const bubble = document.createElement('div');
+}
 
     // 대화 시작
     appendMessage(getInitialGreeting(userNameToDisplay + getKoreanVocativeParticle(userNameToDisplay), false), 'assistant');
