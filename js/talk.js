@@ -23,16 +23,19 @@ let conversationStartTime = null, lastAiAnalysisData = null;
 let userCharCountInSession = 0, previousTotalUserCharCountOverall = 0;
 let currentFirestoreSessionId = null, isDataSaved = false, journalReadyNotificationShown = false;
 let sessionTimeoutId = null;
-const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000;
+const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000; // 5분
+let micButtonCurrentlyProcessing = false;
 
 // --- 3. UI 요소 가져오기 ---
 const chatWindow = document.getElementById('chat-window');
 const inputArea = document.getElementById('input-area');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
+const micButton = document.getElementById('mic-button');
 const ttsToggleBtn = document.getElementById('tts-toggle-btn');
+const meterLevel = document.getElementById('volume-level');
 
-// --- 4. 사용자 정보 ---
+// --- 4. 사용자 정보 (UID 기반) ---
 const loggedInUserId = localStorage.getItem('lozee_userId');
 const userRole = localStorage.getItem('lozee_role') || 'child';
 const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
@@ -52,16 +55,6 @@ function appendMessage(text, role) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-async function playTTSWithControl(txt) {
-    const isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
-    if (!isTtsEnabled) return;
-    if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
-    if (skipTTS) { skipTTS = false; return; }
-    try {
-        if (typeof playTTSFromText === 'function') await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
-    } catch (error) { console.error("TTS 재생 오류:", error); }
-}
-
 function displayJournalCreatedNotification(journalId) {
     if (!journalId || !chatWindow) return;
     const notification = document.createElement('div');
@@ -78,13 +71,12 @@ async function endSessionAndSave() {
     isDataSaved = true;
     appendMessage("대화를 안전하게 마무리하고 있어요...", 'assistant_feedback');
     if (currentFirestoreSessionId) await logSessionEnd(currentFirestoreSessionId);
-
     const finalTopicForJournal = selectedSubTopicDetails?.displayText || selectedMain || "알 수 없는 주제";
     if (finalTopicForJournal !== "알 수 없는 주제" && chatHistory.length > 2) {
         const journalDetailsToSave = {
             summary: lastAiAnalysisData?.conversationSummary || "대화 요약이 생성되지 않았습니다.",
             title: lastAiAnalysisData?.summaryTitle || finalTopicForJournal,
-            detailedAnalysis: lastAiAnalysisData || {},
+            detailedAnalysis: lastAiAnalysisData || {}
         };
         const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
         const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, { 
@@ -105,11 +97,8 @@ function getTopicsForCurrentUser() {
     const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : '16-29세');
     if (!counselingTopicsByAge) { console.error("counseling_topics.js 로드 실패!"); return {}; }
     let topics = {};
-    if (currentUserType === 'directUser') {
-        topics = counselingTopicsByAge.directUser?.[ageGroupKey] || {};
-    } else if (currentUserType === 'caregiver') {
-        topics = counselingTopicsByAge.caregiver || {};
-    }
+    if (currentUserType === 'directUser') topics = counselingTopicsByAge.directUser?.[ageGroupKey] || {};
+    else if (currentUserType === 'caregiver') topics = counselingTopicsByAge.caregiver || {};
     return topics;
 }
 
@@ -139,14 +128,13 @@ function showMainTopics() {
     appendMessage('어떤 이야기를 나눠볼까?', 'assistant');
     const currentUserTopics = getTopicsForCurrentUser();
     let topicsWithOptions = Object.keys(currentUserTopics).map(categoryName => ({
-        icon: currentUserTopics[categoryName]?.[0]?.icon || '💬',
-        displayText: categoryName
+        icon: currentUserTopics[categoryName]?.[0]?.icon || '💬', displayText: categoryName
     }));
     topicsWithOptions.push({ icon: '🗣️', displayText: '자유주제' });
     displayOptionsInChat(topicsWithOptions, (selectedText) => {
         selectedMain = selectedText;
         if (selectedMain === '자유주제') {
-            selectedSubTopicDetails = { displayText: '자유주제', tags: ['자유대화'] };
+            selectedSubTopicDetails = { displayText: '자유주제' };
             appendMessage('자유주제 이야기를 선택했구나! 어떤 이야기가 하고 싶어?', 'assistant');
             if (inputArea) inputArea.style.display = 'flex';
             if (chatInput) chatInput.focus();
@@ -160,7 +148,7 @@ function showMainTopics() {
 function showSubTopics() {
     const subtopicOptions = getTopicsForCurrentUser()[selectedMain] || [];
     if (subtopicOptions.length === 0) {
-        startChat(`'${selectedMain}'에 대해 자유롭게 이야기해줘.`, 'topic_selection_init', { displayText: selectedMain, tags: [selectedMain] });
+        startChat(`'${selectedMain}'에 대해 자유롭게 이야기해줘.`, 'topic_selection_init', { displayText: selectedMain });
         return;
     }
     appendMessage('조금 더 구체적으로 이야기해 줄래?', 'assistant');
@@ -182,9 +170,7 @@ function startChat(initText, inputMethod = 'topic_selection_init', topicDetails 
 
 async function sendMessage(text, inputMethod = 'text') {
     if (!text || String(text).trim() === '' || isProcessing) return;
-    isDataSaved = false;
-    resetSessionTimeout();
-    isProcessing = true;
+    isDataSaved = false; resetSessionTimeout(); isProcessing = true;
     
     if (inputMethod !== 'topic_selection_init') appendMessage(text, 'user');
     chatHistory.push({ role: 'user', content: text });
@@ -203,22 +189,18 @@ async function sendMessage(text, inputMethod = 'text') {
         lastAiAnalysisData = d.analysis || {};
         
         appendMessage(cleanText, 'assistant');
-        await playTTSWithControl(cleanText); // TTS 호출
+        await playTTSWithControl(cleanText); // ⭐ TTS 호출 로직
         chatHistory.push({ role: 'assistant', content: cleanText });
         
-        // 중간 저장
         if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
             journalReadyNotificationShown = true;
             const topicForJournal = selectedSubTopicDetails?.displayText || selectedMain;
             const detailsToSave = {
                 summary: lastAiAnalysisData?.conversationSummary || "요약 진행 중...",
                 title: lastAiAnalysisData?.summaryTitle || `${topicForJournal}에 대한 대화`,
-                detailedAnalysis: lastAiAnalysisData,
+                detailedAnalysis: lastAiAnalysisData
             };
-            saveJournalEntry(loggedInUserId, topicForJournal, detailsToSave, {
-                relatedChildId: targetChildId,
-                entryType: (currentUserType === 'caregiver' ? 'child' : 'standard')
-            }).then(id => { if (id) displayJournalCreatedNotification(id); });
+            saveJournalEntry(loggedInUserId, topicForJournal, detailsToSave, {}).then(id => { if (id) displayJournalCreatedNotification(id); });
         }
     } catch (error) {
         console.error("sendMessage 내 예외 발생:", error);
@@ -229,7 +211,7 @@ async function sendMessage(text, inputMethod = 'text') {
     }
 }
 
-// --- 초기화 로직 ---
+// --- 6. 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
     if (!loggedInUserId) {
         alert("사용자 정보가 없습니다. 시작 페이지로 이동합니다.");
@@ -243,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     resetSessionTimeout();
     showMainTopics();
 
-    // ⭐ TTS 토글 버튼 초기화 및 이벤트 핸들러 등록 ⭐
+    // ⭐⭐ TTS 토글 버튼 초기화 및 이벤트 핸들러 등록 ⭐⭐
     if (ttsToggleBtn) {
         let isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
         const updateTtsButtonState = () => {
@@ -262,11 +244,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             isTtsEnabled = !isTtsEnabled;
             localStorage.setItem('lozee_tts_enabled', isTtsEnabled ? 'true' : 'false');
             updateTtsButtonState();
-            if (!isTtsEnabled) stopCurrentTTS();
+            if (!isTtsEnabled && typeof stopCurrentTTS === 'function') {
+                stopCurrentTTS();
+            }
         };
     }
+    
+    if(sendBtn) sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text'));
+    if(chatInput) chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendMessage(chatInput.value, 'text'); }});
 });
-
-// --- 이벤트 바인딩 ---
-if(sendBtn) sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text'));
-if(chatInput) chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendMessage(chatInput.value, 'text'); }});
