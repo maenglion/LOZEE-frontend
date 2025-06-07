@@ -32,6 +32,16 @@ body {
     border-radius: 20px; /* 컨테이너와 동일하게 */
 }
 
+
+/* ⭐ 모든 페이지의 메인 제목 스타일을 전역으로 정의 */
+.page-title {
+    color: #6e8efb; /* primary-color */
+    text-align: center;
+    font-size: 1.2em; /* gnb-title과 비슷하게 조정 */
+    margin: 15px 0 30px 0;
+    font-weight: 700;
+}
+
 /* talk.html, mypage.html 등 다른 페이지의 body 배경을 흰색으로 유지하고 싶다면,
    해당 페이지의 <style> 태그에 'body { background: #f4f6f8; }'를 추가하면 됩니다.
    여기서는 index.html의 배경을 전역으로 사용하는 것을 기본으로 합니다.
