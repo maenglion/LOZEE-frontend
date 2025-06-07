@@ -6,11 +6,18 @@ import { db } from './firebase-config.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './gpt-dialog.js';
 import { playTTSFromText, stopCurrentTTS } from './tts.js';
-import { saveJournalEntry, updateTopicStats, updateUserOverallStats, logSessionStart, logSessionEnd } from './firebase-utils.js';
+import LOZEE_ANALYSIS from './lozee-analysis.js';
+import {
+  saveJournalEntry,
+  updateTopicStats,
+  updateUserOverallStats,
+  logSessionStart,
+  logSessionEnd
+} from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
 
 // --- 2. 상태 변수 선언 ---
-let skipTTS = false, isProcessing = false;
+let skipTTS = false, hasGreeted = false, isProcessing = false;
 let chatHistory = [], selectedMain = null, selectedSubTopicDetails = null;
 let conversationStartTime = null, lastAiAnalysisData = null;
 let userCharCountInSession = 0, previousTotalUserCharCountOverall = 0;
@@ -24,7 +31,8 @@ const inputArea = document.getElementById('input-area');
 const chatInput = document.getElementById('chat-input');
 const actionButton = document.getElementById('action-button');
 const ttsToggleBtn = document.getElementById('tts-toggle-btn');
-const micButton = document.getElementById('mic-button'); // 이전 코드와의 호환성을 위해 유지
+const widthToggleBtn = document.getElementById('width-toggle-btn-floating');
+const appContainer = document.querySelector('.app-container');
 const meterContainer = document.getElementById('meter-container');
 const meterLevel = document.getElementById('volume-level');
 
@@ -35,7 +43,7 @@ const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
 const currentUserType = (localStorage.getItem('lozee_role') === 'parent') ? 'caregiver' : 'directUser';
 const voc = getKoreanVocativeParticle(userNameToDisplay);
 
-// --- 5. 함수 정의 (누락된 함수 모두 포함) ---
+// --- 5. 함수 정의 (누락된 모든 함수 포함) ---
 
 function appendMessage(text, role) {
     if (!chatWindow) return;
@@ -54,7 +62,7 @@ async function playTTSWithControl(txt) {
     }
     if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
     try {
-        await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
+        if (typeof playTTSFromText === 'function') await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
     } catch (error) {
         console.error("TTS 재생 오류:", error);
     }
@@ -73,7 +81,7 @@ async function fetchPreviousUserCharCount() {
 }
 
 function getTopicsForCurrentUser() {
-    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : '16-29세');
+    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
     if (!counselingTopicsByAge) { console.error("counseling_topics.js 로드 실패!"); return {}; }
     let topics = {};
     if (currentUserType === 'directUser') {
@@ -183,7 +191,6 @@ async function sendMessage(text, inputMethod = 'text') {
     }
 }
 
-
 // --- 6. 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
     if (!loggedInUserId) {
@@ -191,8 +198,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'index.html';
         return;
     }
+    console.log("talk.js 로드 완료. 사용자 UID:", loggedInUserId);
     
-    // TTS 토글 버튼 초기화 및 이벤트 핸들러
+    // 이전에 누락되었던 로직을 모두 여기에 포함합니다.
+    conversationStartTime = Date.now();
+    previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
+    resetSessionTimeout(); // resetSessionTimeout 정의는 아래에 있어야 함
+    
+    // TTS 토글 버튼 로직
     if (ttsToggleBtn) {
         let isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
         const updateTtsButtonState = () => {
