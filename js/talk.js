@@ -1,6 +1,6 @@
 // js/talk.js
 
-// --- 1. 모듈 Import (수정됨) ---
+// --- 1. 모듈 Import ---
 import './firebase-config.js';
 import { db } from './firebase-config.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
@@ -54,60 +54,30 @@ function appendMessage(text, role) {
 
 async function playTTSWithControl(txt) {
     const isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
-    if (!isTtsEnabled) { console.log("TTS 비활성화됨"); return; }
-    if (skipTTS) { skipTTS = false; return; }
+    if (!isTtsEnabled || skipTTS) {
+        skipTTS = false; return;
+    }
     if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
     try {
         if (typeof playTTSFromText === 'function') await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
     } catch (error) { console.error("TTS 재생 오류:", error); }
 }
 
-function displayJournalCreatedNotification(journalId) {
-    if (!journalId || !chatWindow) return;
-    const notification = document.createElement('div');
-    notification.className = 'journal-save-notification actionable';
-    notification.style.cursor = 'pointer';
-    notification.innerHTML = `📝 이야기가 기록되었어요! <br><strong>클릭해서 확인해보세요.</strong>`;
-    notification.onclick = () => window.open(`journal.html?journalId=${journalId}`, '_blank');
-    chatWindow.appendChild(notification);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
+async function fetchPreviousUserCharCount() {
+    if (!loggedInUserId) return 0;
+    try {
+        const userRef = doc(db, 'users', loggedInUserId);
+        const userSnap = await getDoc(userRef);
+        return userSnap.exists() ? (userSnap.data().totalUserCharCount || 0) : 0;
+    } catch (error) { console.error("Firestore 이전 누적 글자 수 로드 오류:", error); return 0; }
 }
-
-async function endSessionAndSave() {
-    if (isDataSaved) return;
-    isDataSaved = true;
-    appendMessage("대화를 안전하게 마무리하고 있어요...", 'assistant_feedback');
-    if (currentFirestoreSessionId) await logSessionEnd(currentFirestoreSessionId);
-    const finalTopicForJournal = selectedSubTopicDetails?.displayText || selectedMain || "알 수 없는 주제";
-    if (finalTopicForJournal !== "알 수 없는 주제" && chatHistory.length > 2) {
-        const journalDetailsToSave = {
-            summary: lastAiAnalysisData?.conversationSummary || "대화 요약이 생성되지 않았습니다.",
-            title: lastAiAnalysisData?.summaryTitle || finalTopicForJournal,
-            detailedAnalysis: lastAiAnalysisData || {},
-        };
-        const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, {
-            relatedChildId: targetChildId, 
-            entryType: currentUserType === 'caregiver' ? 'child' : 'standard',
-            childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
-        });
-        if (journalId) {
-            await updateTopicStats(loggedInUserId, finalTopicForJournal, (currentUserType === 'caregiver' ? 'child' : 'standard'));
-            await updateUserOverallStats(loggedInUserId, currentUserType, previousTotalUserCharCountOverall + userCharCountInSession);
-        }
-    }
-}
-
-function resetSessionTimeout() { clearTimeout(sessionTimeoutId); sessionTimeoutId = setTimeout(endSessionAndSave, SESSION_TIMEOUT_DURATION); }
 
 function getTopicsForCurrentUser() {
-    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
+    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : '16-29세');
     if (!counselingTopicsByAge) { console.error("counseling_topics.js 로드 실패!"); return {}; }
     let topics = {};
-    if (currentUserType === 'directUser') {
-        topics = counselingTopicsByAge.directUser?.[ageGroupKey] || {};
-    } else if (currentUserType === 'caregiver') {
-        topics = counselingTopicsByAge.caregiver || {};
-    }
+    if (currentUserType === 'directUser') topics = counselingTopicsByAge.directUser?.[ageGroupKey] || {};
+    else if (currentUserType === 'caregiver') topics = counselingTopicsByAge.caregiver || {};
     return topics;
 }
 
@@ -179,11 +149,10 @@ function startChat(initText, inputMethod = 'topic_selection_init', topicDetails 
 
 async function sendMessage(text, inputMethod = 'text') {
     if (!text || String(text).trim() === '' || isProcessing) return;
-    isDataSaved = false; resetSessionTimeout(); isProcessing = true;
+    isProcessing = true;
     
     if (inputMethod !== 'topic_selection_init') appendMessage(text, 'user');
     chatHistory.push({ role: 'user', content: text });
-    if (inputMethod !== 'topic_selection_init') userCharCountInSession += text.length;
     if (chatInput) chatInput.value = '';
     
     appendMessage('...', 'assistant thinking');
@@ -195,28 +164,11 @@ async function sendMessage(text, inputMethod = 'text') {
 
         const d = await res.json();
         const cleanText = d.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
-        
-        let detailedAnalysisData = d.analysis || {};
-        const entireConversationText = chatHistory.map(m => m.content).join(' ');
-        if (LOZEE_ANALYSIS?.extractEntityEmotionPairs) {
-            detailedAnalysisData.entityEmotionPairs = LOZEE_ANALYSIS.extractEntityEmotionPairs(entireConversationText);
-        }
-        lastAiAnalysisData = detailedAnalysisData;
+        lastAiAnalysisData = d.analysis || {};
         
         appendMessage(cleanText, 'assistant');
         await playTTSWithControl(cleanText);
         chatHistory.push({ role: 'assistant', content: cleanText });
-        
-        if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
-            journalReadyNotificationShown = true;
-            const topicForJournal = selectedSubTopicDetails?.displayText || selectedMain;
-            const detailsToSave = {
-                summary: lastAiAnalysisData?.conversationSummary || "요약 진행 중...",
-                title: lastAiAnalysisData?.summaryTitle || `${topicForJournal}에 대한 대화`,
-                detailedAnalysis: lastAiAnalysisData,
-            };
-            saveJournalEntry(loggedInUserId, topicForJournal, detailsToSave, {}).then(id => { if (id) displayJournalCreatedNotification(id); });
-        }
     } catch (error) {
         console.error("sendMessage 내 예외 발생:", error);
         chatWindow.querySelector('.thinking')?.remove();
@@ -234,35 +186,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     console.log("talk.js 로드 완료. 사용자 UID:", loggedInUserId);
-    window.addEventListener('beforeunload', endSessionAndSave);
-    conversationStartTime = Date.now();
-    previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
-    resetSessionTimeout();
-    showMainTopics();
-
+    
     if (ttsToggleBtn) {
         let isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
         const updateTtsButtonState = () => {
-            if (isTtsEnabled) {
-                ttsToggleBtn.classList.remove('off');
-                ttsToggleBtn.innerHTML = '🔊';
-                ttsToggleBtn.title = '음성 듣기 ON';
-            } else {
-                ttsToggleBtn.classList.add('off');
-                ttsToggleBtn.innerHTML = '🔇';
-                ttsToggleBtn.title = '음성 듣기 OFF';
-            }
+            ttsToggleBtn.innerHTML = isTtsEnabled ? '🔊' : '🔇';
+            ttsToggleBtn.title = isTtsEnabled ? '음성 듣기 ON' : '음성 듣기 OFF';
+            ttsToggleBtn.classList.toggle('off', !isTtsEnabled);
         };
         updateTtsButtonState();
         ttsToggleBtn.onclick = () => {
             isTtsEnabled = !isTtsEnabled;
-            localStorage.setItem('lozee_tts_enabled', isTtsEnabled ? 'true' : 'false');
+            localStorage.setItem('lozee_tts_enabled', isTtsEnabled);
             updateTtsButtonState();
-            if (!isTtsEnabled && typeof stopCurrentTTS === 'function') {
-                stopCurrentTTS();
-            }
+            if (!isTtsEnabled && typeof stopCurrentTTS === 'function') stopCurrentTTS();
         };
     }
+    
+    previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
+    appendMessage(getInitialGreeting(userNameToDisplay + voc, false), 'assistant');
+    showMainTopics();
 });
 
 // --- 이벤트 바인딩 ---
