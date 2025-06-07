@@ -4,50 +4,38 @@ body {
     font-family: 'KoPub World Dotum', sans-serif;
     display: flex;
     justify-content: center;
-    align-items: center; /* 수직 중앙 정렬을 위해 */
+    align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 20px 0;
-    box-sizing: border-box;
 }
-
-/* 모든 콘텐츠를 감싸는 중앙 컨테이너 */
 .app-container {
     width: 100%;
-    max-width: 640px; /* ⭐ 요청하신 기본 너비 640px */
-    height: calc(100vh - 40px); /* 화면 높이에 맞춤 */
-    max-height: 850px; /* 최대 높이 제한 */
+    max-width: 640px; /* ⭐ PC 기준 최대 너비 640px 고정 */
+    height: 95vh;
+    max-height: 850px;
     background-color: #ffffff;
     box-shadow: 0 0 25px rgba(0,0,0,0.15);
     position: relative;
     border-radius: 20px;
     display: flex;
     flex-direction: column;
-    transition: max-width 0.3s ease-in-out; /* 너비 변경 애니메이션 */
 }
-
-/* ⭐ 전체화면 모드 스타일 */
-.app-container.wide-mode {
-    max-width: 95%;
-    max-height: 95vh;
+/* ⭐ 모바일 화면에서는 320px로 고정 */
+@media (max-width: 639px) {
+    .app-container {
+        max-width: 360px; /* 320px보다 약간 여유있게 */
+        height: 100vh;
+        max-height: none;
+        border-radius: 0;
+    }
+    body {
+        padding: 0;
+        align-items: stretch;
+    }
 }
-
-/* 페이지 제목 공통 스타일 */
 .page-title {
-    color: #5f25e7;
+    color: #6e8efb;
     text-align: center;
     font-size: 1.5em;
     margin: 20px 0 30px 0;
-    font-weight: 700;
-}
-
-/* index.html의 step들은 app-container의 그라데이션 배경을 사용하도록 */
-.app-container.index-bg {
-    background: linear-gradient(135deg, #6078ea, #a777e3);
-}
-
-.app-container .step {
-    height: 100%;
-    width: 100%;
-    border-radius: 20px;
 }
