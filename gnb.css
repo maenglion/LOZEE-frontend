@@ -5,19 +5,17 @@
 }
 
 #gnb {
-    position: relative;
+    position: relative; /* 자식 요소의 absolute 위치 기준 */
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between; /* 요소들을 양쪽 끝으로 배치 */
     width: 100%;
     height: var(--gnb-height);
     background-color: var(--primary-color);
     color: white;
     padding: 0 15px;
     box-sizing: border-box;
-    flex-shrink: 0;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
+    flex-shrink: 0; /* app-container의 flex 자식일 때 줄어들지 않도록 */
 }
 
 #gnb-title {
@@ -30,18 +28,17 @@
 
 #menu-toggle {
     background: none; border: none; color: white;
-    font-size: 1.8em; cursor: pointer; padding: 0;
-    z-index: 1001;
+    font-size: 1.8em; cursor: pointer; padding: 0; z-index: 1001;
 }
 
-/* GNB 오른쪽 버튼 그룹 */
+/* GNB 오른쪽 버튼들을 묶는 컨테이너 */
 .gnb-right-buttons {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 10px; /* 버튼 사이 간격 */
 }
 
-#tts-toggle-btn, #width-toggle-btn {
+#gnb #tts-toggle-btn {
     width: 38px; height: 38px;
     border-radius: 50%;
     border: 1.5px solid white;
@@ -50,18 +47,17 @@
     font-size: 1.2em;
     cursor: pointer;
     transition: all 0.2s;
-    position: relative;
+    position: relative; /* 취소선 위치 기준 */
     overflow: hidden;
 }
 
-#tts-toggle-btn.off {
+#gnb #tts-toggle-btn.off {
     background-color: #f0f0f0;
     color: #aaa;
     border-color: #ddd;
 }
 
-/* TTS 꺼졌을 때 취소선 */
-#tts-toggle-btn.off::after {
+#gnb #tts-toggle-btn.off::after {
     content: '';
     position: absolute;
     top: 50%; left: 15%; right: 15%;
@@ -75,11 +71,10 @@
     background-color: white;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     border-radius: 0 0 8px 8px;
-    overflow: hidden; z-index: 999;
-    min-width: 200px; border: 1px solid #eee;
+    z-index: 999;
+    min-width: 200px;
+    border: 1px solid #eee;
 }
-
 #dropdown-menu.show { display: block; }
-#dropdown-menu a { display: block; padding: 12px 18px; color: #333; text-decoration: none; font-size: 0.95em; border-bottom: 1px solid #f0f0f0; }
-#dropdown-menu a:last-child { border-bottom: none; }
+#dropdown-menu a { display: block; padding: 12px 18px; color: #333; text-decoration: none; font-size: 0.95em; }
 #dropdown-menu a:hover { background-color: #f5f5f5; }
