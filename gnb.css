@@ -4,29 +4,20 @@
     --primary-color: #6e8efb;
 }
 
-body {
-    padding-top: var(--gnb-height);
-}
-
 #gnb {
-    position: fixed;
-    top: 0;
-    left: 50%; /* 중앙 정렬을 위해 */
-    transform: translateX(-50%); /* 중앙 정렬을 위해 */
-    width: 100%;
-    max-width: 400px; /* ⭐ app-container의 max-width와 일치 */
-    height: var(--gnb-height);
-    background-color: var(--primary-color);
-    color: white;
+    position: relative; /* 자식 요소의 absolute 위치 기준이 됨 */
     display: flex;
     align-items: center;
     justify-content: space-between; /* 요소들을 양쪽 끝으로 배치 */
+    width: 100%;
+    height: var(--gnb-height);
+    background-color: var(--primary-color);
+    color: white;
     padding: 0 15px;
     box-sizing: border-box;
     z-index: 1000;
-    border-top-left-radius: 20px; /* app-container와 맞춤 */
-    border-top-right-radius: 20px; /* app-container와 맞춤 */
 }
+
 
 #gnb-title {
     font-weight: bold;
@@ -44,20 +35,21 @@ body {
     font-size: 1.8em;
     cursor: pointer;
     padding: 0;
-    /* ⭐ 왼쪽 배치를 위해 별도 위치 지정 불필요 (flexbox 순서 따름) */
+    z-index: 1001; /* 드롭다운 메뉴보다 위에 있도록 */
 }
 
 #dropdown-menu {
-    display: none; /* 기본적으로 숨김 */
+    display: none;
     position: absolute;
     top: var(--gnb-height);
-    left: 0; /* ⭐ 오른쪽이 아닌 왼쪽에서 시작 */
+    left: 0; /* ⭐ 왼쪽에서 드롭다운 */
     background-color: white;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     border-radius: 0 0 8px 8px;
     overflow: hidden;
-    z-index: 999;
+    z-index: 1000;
     min-width: 200px;
+    border: 1px solid #eee;
 }
 
 #dropdown-menu.show {

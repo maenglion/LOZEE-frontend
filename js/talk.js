@@ -1,6 +1,6 @@
 // js/talk.js
 
-// --- 1. 모듈 Import ---
+// --- 1. 모듈 Import (수정됨) ---
 import './firebase-config.js';
 import { db } from './firebase-config.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
@@ -23,19 +23,16 @@ let conversationStartTime = null, lastAiAnalysisData = null;
 let userCharCountInSession = 0, previousTotalUserCharCountOverall = 0;
 let currentFirestoreSessionId = null, isDataSaved = false, journalReadyNotificationShown = false;
 let sessionTimeoutId = null;
-const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000; // 5분
-let micButtonCurrentlyProcessing = false;
+const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000;
 
 // --- 3. UI 요소 가져오기 ---
 const chatWindow = document.getElementById('chat-window');
 const inputArea = document.getElementById('input-area');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
-const micButton = document.getElementById('mic-button');
 const ttsToggleBtn = document.getElementById('tts-toggle-btn');
-const meterLevel = document.getElementById('volume-level');
 
-// --- 4. 사용자 정보 (UID 기반) ---
+// --- 4. 사용자 정보 ---
 const loggedInUserId = localStorage.getItem('lozee_userId');
 const userRole = localStorage.getItem('lozee_role') || 'child';
 const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
@@ -53,6 +50,16 @@ function appendMessage(text, role) {
     bubble.textContent = text;
     chatWindow.appendChild(bubble);
     chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+async function playTTSWithControl(txt) {
+    const isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
+    if (!isTtsEnabled) { console.log("TTS 비활성화됨"); return; }
+    if (skipTTS) { skipTTS = false; return; }
+    if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
+    try {
+        if (typeof playTTSFromText === 'function') await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
+    } catch (error) { console.error("TTS 재생 오류:", error); }
 }
 
 function displayJournalCreatedNotification(journalId) {
@@ -76,16 +83,15 @@ async function endSessionAndSave() {
         const journalDetailsToSave = {
             summary: lastAiAnalysisData?.conversationSummary || "대화 요약이 생성되지 않았습니다.",
             title: lastAiAnalysisData?.summaryTitle || finalTopicForJournal,
-            detailedAnalysis: lastAiAnalysisData || {}
+            detailedAnalysis: lastAiAnalysisData || {},
         };
-        const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
-        const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, { 
+        const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, {
             relatedChildId: targetChildId, 
-            entryType: entryTypeForSave,
-            childName: (currentUserType === 'caregiver') ? localStorage.getItem('lozee_childName') : null
+            entryType: currentUserType === 'caregiver' ? 'child' : 'standard',
+            childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
         });
         if (journalId) {
-            await updateTopicStats(loggedInUserId, finalTopicForJournal, entryTypeForSave);
+            await updateTopicStats(loggedInUserId, finalTopicForJournal, (currentUserType === 'caregiver' ? 'child' : 'standard'));
             await updateUserOverallStats(loggedInUserId, currentUserType, previousTotalUserCharCountOverall + userCharCountInSession);
         }
     }
@@ -94,11 +100,14 @@ async function endSessionAndSave() {
 function resetSessionTimeout() { clearTimeout(sessionTimeoutId); sessionTimeoutId = setTimeout(endSessionAndSave, SESSION_TIMEOUT_DURATION); }
 
 function getTopicsForCurrentUser() {
-    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : '16-29세');
+    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
     if (!counselingTopicsByAge) { console.error("counseling_topics.js 로드 실패!"); return {}; }
     let topics = {};
-    if (currentUserType === 'directUser') topics = counselingTopicsByAge.directUser?.[ageGroupKey] || {};
-    else if (currentUserType === 'caregiver') topics = counselingTopicsByAge.caregiver || {};
+    if (currentUserType === 'directUser') {
+        topics = counselingTopicsByAge.directUser?.[ageGroupKey] || {};
+    } else if (currentUserType === 'caregiver') {
+        topics = counselingTopicsByAge.caregiver || {};
+    }
     return topics;
 }
 
@@ -186,10 +195,16 @@ async function sendMessage(text, inputMethod = 'text') {
 
         const d = await res.json();
         const cleanText = d.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
-        lastAiAnalysisData = d.analysis || {};
+        
+        let detailedAnalysisData = d.analysis || {};
+        const entireConversationText = chatHistory.map(m => m.content).join(' ');
+        if (LOZEE_ANALYSIS?.extractEntityEmotionPairs) {
+            detailedAnalysisData.entityEmotionPairs = LOZEE_ANALYSIS.extractEntityEmotionPairs(entireConversationText);
+        }
+        lastAiAnalysisData = detailedAnalysisData;
         
         appendMessage(cleanText, 'assistant');
-        await playTTSWithControl(cleanText); // ⭐ TTS 호출 로직
+        await playTTSWithControl(cleanText);
         chatHistory.push({ role: 'assistant', content: cleanText });
         
         if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
@@ -198,7 +213,7 @@ async function sendMessage(text, inputMethod = 'text') {
             const detailsToSave = {
                 summary: lastAiAnalysisData?.conversationSummary || "요약 진행 중...",
                 title: lastAiAnalysisData?.summaryTitle || `${topicForJournal}에 대한 대화`,
-                detailedAnalysis: lastAiAnalysisData
+                detailedAnalysis: lastAiAnalysisData,
             };
             saveJournalEntry(loggedInUserId, topicForJournal, detailsToSave, {}).then(id => { if (id) displayJournalCreatedNotification(id); });
         }
@@ -211,7 +226,7 @@ async function sendMessage(text, inputMethod = 'text') {
     }
 }
 
-// --- 6. 초기화 및 이벤트 바인딩 ---
+// --- 초기화 로직 ---
 document.addEventListener('DOMContentLoaded', async () => {
     if (!loggedInUserId) {
         alert("사용자 정보가 없습니다. 시작 페이지로 이동합니다.");
@@ -225,7 +240,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     resetSessionTimeout();
     showMainTopics();
 
-    // ⭐⭐ TTS 토글 버튼 초기화 및 이벤트 핸들러 등록 ⭐⭐
     if (ttsToggleBtn) {
         let isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
         const updateTtsButtonState = () => {
@@ -249,7 +263,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
     }
-    
-    if(sendBtn) sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text'));
-    if(chatInput) chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendMessage(chatInput.value, 'text'); }});
 });
+
+// --- 이벤트 바인딩 ---
+if(sendBtn) sendBtn.addEventListener('click', () => sendMessage(chatInput.value, 'text'));
+if(chatInput) chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendMessage(chatInput.value, 'text'); }});
