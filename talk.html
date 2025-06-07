@@ -6,111 +6,77 @@
     <title>LOZEE와 대화하기</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="css/common.css"> 
+    <link rel="stylesheet" href="css/common.css">
     <style>
-      :root {
-          --primary-color: #6e8efb;
-          --secondary-color: #5a7edf;
-          --background-color: #ffffff;
-          --text-color: #333333;
-          --user-bubble-bg: var(--primary-color);
-          --user-bubble-text: #ffffff;
-          --assistant-bubble-bg: #F5E7A1;
-          --assistant-bubble-text: #333333;
-          --input-area-bg: #f8f9fa;
-          --chat-input-bg: #ffffff;
-          --chat-input-text-color: #333333;
-          --chat-input-border-color: #ced4da;
-          --chat-input-placeholder-color: #777777;
-          --button-bg: var(--primary-color);
-          --button-text-color: #ffffff;
-          --button-hover-bg: var(--secondary-color);
-          --volume-meter-container-bg: #e9ecef;
-          --volume-meter-level-bg: var(--primary-color);
-          --meter-height: 6px;
-          --meter-top-margin: 8px;
-          --analysis-notification-bg: #fff3cd;
-          --analysis-notification-text: #856404;
-          --gnb-height: 56px;
-          --chat-input-area-height: 70px;
-      }
-      body { margin: 0; padding-top: var(--gnb-height); font-family: 'KoPub World Dotum', sans-serif; background: var(--background-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; overflow: hidden; }
-      #meter-container { position: fixed; top: calc(var(--gnb-height) + var(--meter-top-margin)); left: 50%; transform: translateX(-50%); width: 60%; max-width: 300px; height: var(--meter-height); background: var(--volume-meter-container-bg); border-radius: 3px; overflow: hidden; z-index: 998; }
-      #volume-level { width: 0%; height: 100%; background: var(--volume-meter-level-bg); border-radius: 3px; transition: width 0.05s linear, background-color 0.05s linear; }
-      #chat-window { flex: 1; padding: 16px; padding-top: calc(var(--meter-top-margin) + var(--meter-height) + 10px); padding-bottom: calc(var(--chat-input-area-height) + 10px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
-      #chat-window::-webkit-scrollbar { width: 8px; } #chat-window::-webkit-scrollbar-track { background: var(--background-color); } #chat-window::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; } #chat-window::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
-      .bubble { max-width: 75%; padding: 10px 15px; border-radius: 18px; line-height: 1.6; word-break: keep-all; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-      .bubble.user { background: var(--user-bubble-bg); color: var(--user-bubble-text); align-self: flex-end; border-bottom-right-radius: 4px; }
-      .bubble.assistant { background: var(--assistant-bubble-bg); color: var(--assistant-bubble-text); align-self: flex-start; border-bottom-left-radius: 4px; }
-      .bubble.assistant_feedback { background: #e9ecef; color: #495057; align-self: center; font-size: 0.9em; border-radius: 8px; }
-      .bubble.thinking { background: var(--assistant-bubble-bg); color: var(--assistant-bubble-text); align-self: flex-start; border-bottom-left-radius: 4px; font-style: italic; opacity: 0.8; }
-      .journal-save-notification { align-self: center; background: #e8f5e9; color: #2e7d32; padding: 10px 16px; border-radius: 12px; cursor: default; font-size: 0.9em; margin: 5px 0; border: 1px solid #c8e6c9; }
-      .analysis-notification { align-self: center; background: var(--analysis-notification-bg); color: var(--analysis-notification-text); padding: 10px 16px; border-radius: 12px; cursor: pointer; font-size: 0.9em; margin: 5px 0; }
-      #topic-area { display: none !important; } /* 주제 선택 영역은 현재 HTML에 없으므로 숨김 처리 */
-      #input-area { padding: 0 20px; position: fixed; bottom: 0; left: 0; width: 100%; height: var(--chat-input-area-height); display: none; align-items: center; gap: 8px; background: var(--input-area-bg); border-top: 1px solid #e0e0e0; box-sizing: border-box; }
-      #input-area button, #input-area input { font-size: 1em; height: 44px; box-sizing: border-box; }
-      #chat-input { flex: 1; min-width: 50px; padding: 10px 16px; border: 1px solid var(--chat-input-border-color); border-radius: 22px; outline: none; background-color: var(--chat-input-bg); color: var(--chat-input-text-color); }
-      #chat-input::placeholder { color: var(--chat-input-placeholder-color); }
-      /* talk.html의 <style> 태그 안 */
-#tts-toggle-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: 1px solid #ccc;
-    background-color: var(--primary-color);
-    color: white;
-    font-size: 1.3em;
-    flex-shrink: 0;
-    transition: all 0.2s;
-}
+        :root {
+            --primary-color: #6e8efb;
+            --secondary-color: #5a7edf;
+            --background-color: #ffffff;
+            --text-color: #333333;
+            --user-bubble-bg: var(--primary-color);
+            --user-bubble-text: #ffffff;
+            --assistant-bubble-bg: #F5E7A1;
+            --assistant-bubble-text: #333333;
+            --input-area-bg: #f8f9fa;
+            --gnb-height: 56px;
+            --chat-input-area-height: 70px;
+        }
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--background-color);
+        }
+        body { padding: 0; } /* common.css에서 body를 제어하므로, talk.html의 body padding은 제거합니다. */
 
-/* TTS가 꺼졌을 때의 스타일 */
-#tts-toggle-btn.off {
-    background-color: #dcdcdc;
-    color: #888;
-}
+        #chat-window { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .bubble { max-width: 75%; padding: 10px 15px; border-radius: 18px; line-height: 1.6; word-break: keep-all; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .bubble.user { background: var(--user-bubble-bg); color: var(--user-bubble-text); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .bubble.assistant { background: var(--assistant-bubble-bg); color: var(--assistant-bubble-text); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .bubble.assistant_feedback { background: #e9ecef; color: #495057; align-self: center; font-size: 0.9em; border-radius: 8px; }
+        .bubble.thinking { font-style: italic; opacity: 0.8; }
+        
+        .journal-save-notification.actionable { cursor: pointer; border-left: 5px solid #4CAF50 !important; transition: background-color 0.2s; }
+        .journal-save-notification.actionable:hover { background-color: #dcedc8; }
 
-@media (max-width: 600px) {
-    #tts-toggle-btn { width: 40px; height: 40px; font-size: 1.2em; }
-}
-@media (max-width: 360px) {
-    #tts-toggle-btn { width: 38px; height: 38px; font-size: 1.1em; }
-}
-      
-      #mic-button, #send-btn { width: 44px; min-width: 44px; height: 44px; border: none; border-radius: 50%; background: var(--button-bg); color: var(--button-text-color); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3em; transition: background-color 0.2s ease; flex-shrink: 0; }
-      #mic-button:hover, #send-btn:hover { background: var(--button-hover-bg); }
-      #mic-button.recording { background: #e74c3c; }
-      #send-btn.loading { background:#cccccc; cursor:default; }
-      @media (max-width: 600px) { #input-area { padding: 0 15px; gap: 5px; } .bubble { padding: 9px 13px; max-width: 85%; } #chat-input { padding: 9px 14px; } #mic-button, #send-btn { width: 40px; height: 40px; font-size: 1.2em;} #input-area { height: 65px; } #chat-window { padding-bottom: calc(65px + 10px); } }
-      @media (max-width: 360px) { #input-area { padding: 0 10px; gap: 5px; } #mic-button, #send-btn { width: 38px; height: 38px; font-size: 1.1em; } #chat-input { height: 38px; } }
-      .chat-options-container { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; align-items: flex-start; max-width: 80%; align-self: flex-start; }
-      .chat-option-btn { background-color: #f1f1f1; color: #333333; border: 1px solid #dcdcdc;; border-radius: 12px; padding: 10px 15px; width: 100%; text-align: left; cursor: pointer; font-size: 0.95em; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-      .chat-option-btn:hover { background-color: #e9e9e9; transform: translateY(-1px); }
-      .chat-option-btn.selected { background-color: #E4D2FD; color: #333; border-color: #c3b2e0; font-weight: bold; }
-      .chat-option-btn.continue-topic-btn { background-color: #FFDAB9; border-color: #FFA07A; }
-      .chat-option-btn:disabled { background-color: #f8f8f8; color: #aaaaaa; cursor: not-allowed; opacity: 0.7; }
-      .chat-option-btn.manual-save-btn { background-color: #4CAF50; color: #ffffff; border-color: #388E3C;}
+        #input-area { padding: 0 10px; height: var(--chat-input-area-height); display: flex; align-items: center; gap: 8px; background: var(--input-area-bg); border-top: 1px solid #e0e0e0; box-sizing: border-box; }
+        #chat-input { flex: 1; min-width: 50px; padding: 10px 16px; border: 1px solid #ced4da; border-radius: 22px; font-size: 1em; }
+        #mic-button, #send-btn, #tts-toggle-btn { width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.3em; flex-shrink: 0; transition: background-color 0.2s; }
+        #mic-button, #send-btn { background: var(--primary-color); color: white; }
+        #tts-toggle-btn { background-color: var(--primary-color); color: white; border: 1px solid #ccc; }
+        #tts-toggle-btn.off { background-color: #dcdcdc; color: #888; }
+        .chat-options-container { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; align-self: flex-start; width: 80%; }
+        .chat-option-btn { background-color: #f1f1f1; color: #333; border: 1px solid #dcdcdc; border-radius: 12px; padding: 10px 15px; width: 100%; text-align: left; cursor: pointer; font-size: 0.95em; }
+        .chat-option-btn:disabled { background-color: #f8f8f8; color: #aaaaaa; }
     </style>
 </head>
 <body>
-   <body>
     <div class="app-container">
 
         <nav id="gnb">
             <button id="menu-toggle">☰</button>
-            <div id="gnb-title">LOZEE</div>
-            <div class="gnb-placeholder"></div> </nav>
 
-        <div id="meter-container"><div id="volume-level"></div></div>
-        <div id="chat-window"></div>
+            <div id="gnb-title">LOZEE</div>
+            
+            <div class="gnb-placeholder" style="width: 44px; visibility: hidden;"></div> 
+            
+            <div id="dropdown-menu">
+                <a href="mypage.html">🎨 내 정보 보기</a>
+                <a href="index.html">✨ 새로운 이야기 시작!</a>
+                <a href="analysis.html">📊 우리 이야기 분석</a>
+                <a href="journal-list.html">📖 이야기 모음집</a>
+                <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
+            </div>
+        </nav>
+
+        <main id="chat-window"></main>
         <div id="input-area">
             <button id="mic-button">🎤</button>
             <button id="tts-toggle-btn" title="음성 듣기 On/Off">🔊</button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
             <button id="send-btn">➤</button>
         </div>
-
-    </div> <script src="./js/gnb.js" defer></script>
-    <script type="module" src="./js/talk.js"></script> 
-</body>
+        
+        </div> <script src="./js/gnb.js" defer></script> 
+    <script type="module" src="./js/talk.js"></script> </body>
 </html>
