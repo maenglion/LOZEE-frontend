@@ -27,7 +27,7 @@ body {
 
 
 #gnb {
-    padding: 0 30px; 
+    padding: 0 15px; 
     position: fixed;
     top: 0;
     left: 0;
@@ -42,10 +42,15 @@ body {
     box-sizing: border-box;
 }
 
+/* 'LOZEE' 글씨를 가운데에 배치 */
 #gnb-title {
-    font-size: 1.2em;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    /* 기존 스타일 유지 */
+    color: white;
     font-weight: bold;
-    color: var(--gnb-title-color);
+    font-size: 1.2em;
 }
 
 #menu-toggle {
