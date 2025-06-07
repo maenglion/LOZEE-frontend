@@ -1,128 +1,22 @@
-// js/talk.js
+// js/talk.js (테스트용 코드)
 
-import { db } from './firebase-config.js';
-import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './gpt-dialog.js';
-import { playTTSFromText, stopCurrentTTS } from './tts.js';
-import { saveJournalEntry, logSessionStart, logSessionEnd } from './firebase-utils.js';
-import { counselingTopicsByAge } from './counseling_topics.js';
+// 1. 이 로그가 콘솔에 찍히는지 확인합니다.
+console.log("✅ talk.js 파일이 성공적으로 로드 및 파싱되었습니다.");
 
-// --- 상태 변수 ---
-let isProcessing = false, chatHistory = [], selectedMain = null, selectedSubTopicDetails = null;
-
-// --- UI 요소 ---
-const chatWindow = document.getElementById('chat-window');
-const inputArea = document.getElementById('input-area');
-const chatInput = document.getElementById('chat-input');
-const actionButton = document.getElementById('action-button');
-const ttsToggleBtn = document.getElementById('tts-toggle-btn');
-
-// --- 사용자 정보 ---
-const loggedInUserId = localStorage.getItem('lozee_userId');
-const userNameToDisplay = localStorage.getItem('lozee_username') || '친구';
-const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
-const currentUserType = (localStorage.getItem('lozee_role') === 'parent') ? 'caregiver' : 'directUser';
-
-// --- 함수 정의 ---
-function appendMessage(text, role) { /* 생략 없는 완성된 함수 */ }
-async function playTTSWithControl(txt) { /* 생략 없는 완성된 함수 */ }
-function getTopicsForCurrentUser() { /* 생략 없는 완성된 함수 */ }
-function displayOptionsInChat(optionsArray, onSelectCallback) { /* 생략 없는 완성된 함수 */ }
-function showMainTopics() { /* 생략 없는 완성된 함수 */ }
-function showSubTopics() { /* 생략 없는 완성된 함수 */ }
-function startChat(initText, inputMethod, topicDetails) { /* 생략 없는 완성된 함수 */ }
-async function sendMessage(text, inputMethod) { /* 생략 없는 완성된 함수 */ }
-// ... (STT, 저널 저장 등 다른 모든 함수 정의 포함)
-
-// --- 초기화 및 이벤트 바인딩 ---
+// 2. DOMContentLoaded 이벤트가 정상적으로 실행되는지 확인합니다.
 document.addEventListener('DOMContentLoaded', () => {
-    if (!loggedInUserId) {
-        alert("사용자 정보가 없습니다. 시작 페이지로 이동합니다.");
-        window.location.href = 'index.html';
-        return;
+    console.log("✅ DOMContentLoaded 이벤트가 정상적으로 실행되었습니다.");
+
+    const chatWindow = document.getElementById('chat-window');
+    const inputArea = document.getElementById('input-area');
+
+    if (chatWindow && inputArea) {
+        // 3. HTML 요소를 찾고, 내용을 변경할 수 있는지 확인합니다.
+        console.log("✅ chat-window와 input-area 요소를 성공적으로 찾았습니다.");
+        chatWindow.innerHTML = '<p style="padding:20px; text-align:center; color: #1e88e5; font-weight:bold;">테스트 성공! talk.js가 연결되었습니다. 이제 이전 코드로 되돌린 후, 콘솔의 오류 메시지를 확인해주세요.</p>';
+        inputArea.style.display = 'flex'; // 입력창을 강제로 표시
+        inputArea.innerHTML = '<p style="width:100%; text-align:center; color:#555;">(테스트 중...)</p>';
+    } else {
+        console.error("❌ 'chat-window' 또는 'input-area' 요소를 찾을 수 없습니다. talk.html 파일의 id 속성을 확인해주세요.");
     }
-    
-    // TTS 토글 버튼 로직
-    if (ttsToggleBtn) {
-        let isTtsEnabled = localStorage.getItem('lozee_tts_enabled') !== 'false';
-        const updateTtsButtonState = () => {
-            ttsToggleBtn.classList.toggle('off', !isTtsEnabled);
-            ttsToggleBtn.innerHTML = isTtsEnabled ? '🔊' : '🔇';
-        };
-        updateTtsButtonState();
-        ttsToggleBtn.onclick = () => {
-            isTtsEnabled = !isTtsEnabled;
-            localStorage.setItem('lozee_tts_enabled', isTtsEnabled);
-            updateTtsButtonState();
-            if (!isTtsEnabled) stopCurrentTTS();
-        };
-    }
-    
-    // 마이크/전송 버튼 통합 로직
-    if (chatInput && actionButton) {
-        const updateActionButton = () => {
-            if (chatInput.value.trim().length > 0) {
-                actionButton.innerHTML = '➤';
-                actionButton.onclick = () => sendMessage(chatInput.value, 'text');
-            } else {
-                actionButton.innerHTML = '🎤';
-                actionButton.onclick = () => { /* STT 시작 로직 */ };
-            }
-        };
-        chatInput.addEventListener('input', updateActionButton);
-        updateActionButton();
-        
-        chatInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.isComposing) {
-                e.preventDefault();
-                if (chatInput.value.trim().length > 0) sendMessage(chatInput.value, 'text');
-            }
-        });
-    }
-
-
-// ⭐⭐⭐ 이 함수를 추가해주세요 (appendMessage 함수 위) ⭐⭐⭐
-async function fetchPreviousUserCharCount() {
-    if (!loggedInUserId) return 0;
-    try {
-        const userRef = doc(db, 'users', loggedInUserId);
-        const userSnap = await getDoc(userRef);
-        return userSnap.exists() ? (userSnap.data().totalUserCharCount || 0) : 0;
-    } catch (error) {
-        console.error("Firestore 이전 누적 글자 수 로드 오류:", error);
-        return 0;
-    }
-}
-// ⭐⭐⭐ 여기까지 추가 ⭐⭐⭐
-
-
-    function appendMessage(text, role) {
-    if (!chatWindow) return;
-    const bubble = document.createElement('div');
-}
-
-    // 대화 시작
-    appendMessage(getInitialGreeting(userNameToDisplay + getKoreanVocativeParticle(userNameToDisplay), false), 'assistant');
-    showMainTopics();
 });
-
-// 이벤트 바인딩
-if(actionButton && chatInput) {
-    const updateActionButton = () => {
-        if (chatInput.value.trim().length > 0) {
-            actionButton.innerHTML = '➤';
-            actionButton.onclick = () => sendMessage(chatInput.value, 'text');
-        } else {
-            actionButton.innerHTML = '🎤';
-            actionButton.onclick = () => { /* STT 시작 로직 */ };
-        }
-    };
-    chatInput.addEventListener('input', updateActionButton);
-    chatInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.isComposing) {
-            e.preventDefault();
-            if (chatInput.value.trim().length > 0) sendMessage(chatInput.value, 'text');
-        }
-    });
-    updateActionButton();
-}
