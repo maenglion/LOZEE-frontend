@@ -10,52 +10,23 @@
     <style>
         .app-container { background-color: #f4f6f8; }
         .container { max-width: 800px; margin: 20px auto; padding: 20px; box-sizing: border-box; }
-        
-        /* ⭐ 프로필 사진을 위한 별도 섹션 */
-        .profile-photo-section {
-            padding: 20px 0;
-            display: flex;
-            justify-content: center;
-        }
-        .profile-photo-placeholder {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background-color: #d0d9ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3em;
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        /* ⭐ 사용자 정보 카드 */
-        .info-card {
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .info-card h2 {
-            font-size: 1.2em; color: #6e8efb; margin-top: 0;
-            margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;
-        }
+        .profile-photo-section { padding: 20px 0; display: flex; justify-content: center; }
+        .profile-photo-placeholder { width: 120px; height: 120px; border-radius: 50%; background-color: #d0d9ff; display: flex; align-items: center; justify-content: center; font-size: 3em; color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .info-card { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .info-card h2 { font-size: 1.2em; color: #6e8efb; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .info-item { margin-bottom: 10px; font-size: 1em; display: flex; justify-content: space-between; }
         .info-item .label { font-weight: bold; color: #555; }
         .neurodiversity-info ul { list-style: none; padding:0; margin:0; }
         .neurodiversity-info li { background-color: #e9eaf6; color: #3f51b5; padding: 6px 10px; border-radius: 15px; font-size: 0.9em; display: inline-block; margin: 4px; }
-        
-        /* ⭐ 긴급 알림 섹션 */
-        .emergency-alerts-card h2 { color: #c62828; border-bottom-color: #e57373; }
-        .emergency-alerts-card li { background-color: #ffebee; color: #c62828; border: 1px solid #e57373; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
-        .emergency-alerts-card li .alert-date { font-size: 0.8em; display: block; color: #d32f2f; margin-top: 5px; }
-
-        /* 최근 저널 카드 */
         .recent-journals-section h2 { text-align: center; }
-        .recent-journal-card { background-color: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid #5a7edf; cursor: pointer; margin-bottom: 15px; }
+        .recent-journal-card-list { display: flex; flex-direction: column; gap: 15px; }
+        .session-card-wide { background-color: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid #5a7edf; cursor: pointer; }
+        .session-card-wide h3 { margin: 0 0 8px 0; }
+        .action-button { display: block; width: fit-content; margin: 20px auto 0 auto; }
+        .emergency-alerts-card { border: 2px solid #e57373; }
+        .emergency-alerts-card h2 { color: #c62828; border-bottom-color: #e57373; }
+        .emergency-alerts-card li { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
+        .emergency-alerts-card li .alert-date { font-size: 0.8em; display: block; color: #d32f2f; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -87,11 +58,6 @@
                 <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value"></span></div>
             </div>
 
-            <div class="info-card emergency-alerts-card" id="emergencyAlertsSection" style="display:none;">
-                <h2>🚨 확인이 필요한 이야기</h2>
-                <ul id="emergencyAlertsList"></ul>
-            </div>
-            
             <div class="info-card neurodiversity-info" id="directUserDiagnosisCard" style="display:none;">
                 <h2>✨ 나의 특성</h2>
                 <ul id="userDiagnosesList"></ul>
@@ -115,6 +81,11 @@
                 <div id="recentJournalCardList"></div>
                 <button id="goToJournalListBtn" class="action-button">전체 이야기 모음집 가기</button>
             </div>
+
+            <div class="info-card emergency-alerts-card" id="emergencyAlertsSection" style="display:none;">
+                <h2>🚨 확인이 필요한 이야기</h2>
+                <ul id="emergencyAlertsList"></ul>
+            </div>
         </main>
     </div>
 
@@ -127,6 +98,7 @@
         const pageTitleEl = document.querySelector('title'); const userNameDisplayEl = document.getElementById('userNameDisplay'); const userEmailDisplayEl = document.getElementById('userEmailDisplay'); const userFullAgeEl = document.getElementById('userFullAge'); const lastLoginDateEl = document.getElementById('lastLoginDate'); const directUserDiagnosisCardEl = document.getElementById('directUserDiagnosisCard'); const userDiagnosesListEl = document.getElementById('userDiagnosesList'); const caregiverPersonalNDCardEl = document.getElementById('caregiverPersonalNDCard'); const caregiverPersonalNeurodiversityListEl = document.getElementById('caregiverPersonalNeurodiversityList'); const childInfoCardEl = document.getElementById('childInfoCard'); const childNameDisplayEl = document.getElementById('childNameDisplay'); const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay'); const childDiagnosesListEl = document.getElementById('childDiagnosesList'); const recentJournalCardListEl = document.getElementById('recentJournalCardList'); const goToJournalListBtn = document.getElementById('goToJournalListBtn');
         const emergencyAlertsSectionEl = document.getElementById('emergencyAlertsSection');
         const emergencyAlertsListEl = document.getElementById('emergencyAlertsList');
+        const userPhotoPlaceholderEl = document.getElementById('userPhotoPlaceholder');
 
         // --- 헬퍼 함수 ---
         function getNeurodiversityText(code) { const map = { "ASD": "자폐 스펙트럼", "ADHD": "ADHD", "Asperger": "아스퍼거", "Tic": "틱 장애", "LD": "학습 장애", "Else": "기타 어려움", "Unsure": "진단 없음", "NotApplicable": "해당 없음", "self_asd": "본인: ASD 성향", "self_adhd": "본인: ADHD 성향", "spouse_asd": "배우자: ASD 성향", "spouse_adhd": "배우자: ADHD 성향", "unsure_or_none": "해당 없음" }; return map[code] || code; }
@@ -150,6 +122,7 @@
             userEmailDisplayEl.textContent = userData.email || '이메일 정보 없음';
             userFullAgeEl.textContent = userData.age !== null ? `만 ${userData.age}세` : '정보 없음';
             lastLoginDateEl.textContent = userData.lastLogin?.toDate().toLocaleString('ko-KR') || '기록 없음';
+            if (userPhotoPlaceholderEl) userPhotoPlaceholderEl.textContent = name.charAt(0).toUpperCase() || '😊';
             
             if (userType === 'directUser') {
                 directUserDiagnosisCardEl.style.display = 'block';
