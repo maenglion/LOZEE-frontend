@@ -343,29 +343,29 @@ async function sendMessage(text, inputMethod) {
 }
 
 // --- 6. STT (음성 인식) 및 입력 방식 제어 ---
+
+
+/** 음량바 시각화 함수 (수정됨) */
 let isRec = false;
 let micButtonCurrentlyProcessing = false;
 let audioContext, analyser, source, dataArray, animId, streamRef;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recog;
-
-if (SpeechRecognitionAPI) {
-    recog = new SpeechRecognitionAPI();
-    recog.continuous = true;
-    recog.interimResults = true;
-    recog.lang = 'ko-KR';
-    recog.onstart = () => { isRec = true; if (actionButton) actionButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
-    recog.onend = () => { isRec = false; if (actionButton) actionButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
-    recog.onresult = event => {
-        let final_transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) final_transcript += event.results[i][0].transcript; }
-        if (final_transcript) sendMessage(final_transcript.trim(), 'stt');
-    };
-    recog.onerror = event => { console.error('Speech recognition error:', event.error); if (isRec) recog.stop(); };
-} else {
-    console.warn('이 브라우저에서는 음성 인식을 지원하지 않습니다.');
+    
+    // ⭐ 더 이상 meterLevel의 너비를 조절하지 않고, sessionHeaderEl의 배경색을 조절합니다.
+  function draw() {
+    if (!analyser || !dataArray) return;
+    animId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
+    let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
+    if (meterLevel) {
+        meterLevel.style.width = norm + '%';
+        if(sessionHeaderEl) sessionHeaderEl.style.backgroundColor = `hsl(228, 50%, ${90 - (norm/5)}%)`;
+    }
 }
 
+/** 오디오 분석 설정 함수 */
 function setupAudioAnalysis(stream) {
     if (audioContext && audioContext.state !== 'closed') audioContext.close();
     audioContext = new AudioContext();
@@ -374,26 +374,77 @@ function setupAudioAnalysis(stream) {
     source.connect(analyser);
     dataArray = new Uint8Array(analyser.frequencyBinCount);
     streamRef = stream;
-    if (meterContainer) meterContainer.classList.add('active');
+    if (sessionHeaderEl) sessionHeaderEl.style.transition = 'background-color 0.05s'; // 부드러운 색상 전환 효과
     draw();
 }
 
-function draw() {
-    if (!analyser || !dataArray) return;
-    animId = requestAnimationFrame(draw);
-    analyser.getByteFrequencyData(dataArray);
-    let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
-    let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
-    if (meterLevel) meterLevel.style.width = norm + '%';
-}
-
+/** 오디오 스트림 및 시각화 중지 함수 (수정됨) */
 function stopAudio() {
     if (animId) cancelAnimationFrame(animId);
     if (source) source.disconnect();
     if (streamRef) streamRef.getTracks().forEach(track => track.stop());
     if (audioContext && audioContext.state !== 'closed') audioContext.close();
     if (meterContainer) meterContainer.classList.remove('active');
+    if (sessionHeaderEl) {
+        sessionHeaderEl.style.transition = 'background-color 0.3s';
+        sessionHeaderEl.style.backgroundColor = ''; // 원래 색으로 복원
+    }
 }
+// 마이크 버튼 클릭 로직
+function handleMicButtonClick() {
+    if (isProcessing || !recog) return;
+    if (isRec) {
+        recog.stop();
+    } else {
+        stopCurrentTTS();
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                setupAudioAnalysis(stream);
+                recog.start();
+            })
+            .catch(e => {
+                console.error('마이크 접근 오류:', e);
+                appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback');
+            });
+    }
+}
+
+/** 오디오 스트림 및 시각화 중지 함수 (수정됨) */
+function stopAudio() {
+    if (animId) cancelAnimationFrame(animId);
+    if (source) source.disconnect();
+    if (streamRef) streamRef.getTracks().forEach(track => track.stop());
+    if (audioContext && audioContext.state !== 'closed') audioContext.close();
+    
+    // ⭐ 녹음이 끝나면 헤더 배경색을 원래의 연한 회색으로 되돌립니다.
+    if (sessionHeaderEl) {
+        sessionHeaderEl.style.transition = 'background-color 0.3s'; // 천천히 원래 색으로
+        sessionHeaderEl.style.backgroundColor = '#f0f0f0';
+    }
+}
+
+// STT 초기 설정
+if (SpeechRecognitionAPI) {
+    recog = new SpeechRecognitionAPI();
+    recog.continuous = true;
+    recog.interimResults = false;
+    recog.lang = 'ko-KR';
+    
+    recog.onstart = () => { isRec = true; if(actionButton) actionButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
+    recog.onend = () => { isRec = false; if(actionButton) actionButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
+    recog.onresult = event => {
+        const final_transcript = event.results[event.results.length - 1][0].transcript;
+        if (final_transcript) {
+            sendMessage(final_transcript.trim(), 'stt');
+        }
+    };
+    recog.onerror = event => {
+        console.error('Speech recognition error:', event.error);
+        if (isRec) recog.stop();
+    };
+}
+
+
 
 function handleMicButtonClick() {
     if (chatInput && chatInput.value.trim() !== '') {
