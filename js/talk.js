@@ -14,7 +14,7 @@ import {
     logSessionEnd
 } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
-import LOZEE_ANALYSIS from './lozee-analysis.js'; // LOZEE_ANALYSIS 모듈 import 활성화
+import LOZEE_ANALYSIS from './lozee-analysis.js';
 
 // --- 2. 상태 변수 선언 ---
 let isProcessing = false;
@@ -27,7 +27,7 @@ let userCharCountInSession = 0;
 let previousTotalUserCharCountOverall = 0;
 let currentFirestoreSessionId = null;
 let isDataSaved = false;
-let isTtsMode = true; // ⭐ TTS 모드 상태 변수, 기본값은 true
+let isTtsMode = true;
 let journalReadyNotificationShown = false;
 let analysisNotificationShown = false;
 let sessionTimeoutId = null;
@@ -37,7 +37,7 @@ const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000; // 5분
 const chatWindow = document.getElementById('chat-window');
 const inputArea = document.getElementById('input-area');
 const chatInput = document.getElementById('chat-input');
-const actionButton = document.getElementById('action-button'); // 마이크/전송/'T' 버튼
+const actionButton = document.getElementById('action-button');
 const meterContainer = document.getElementById('meter-container');
 const meterLevel = document.getElementById('volume-level');
 const sessionHeaderTextEl = document.getElementById('session-header');
@@ -60,9 +60,6 @@ const voc = getKoreanVocativeParticle(userNameToDisplay);
 
 // --- 5. 모든 함수 정의 ---
 
-/**
- * 채팅창에 새로운 말풍선을 추가하는 함수
- */
 function appendMessage(text, role) {
     if (!chatWindow) return;
     const bubble = document.createElement('div');
@@ -72,9 +69,6 @@ function appendMessage(text, role) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-/**
- * 액션 버튼의 아이콘을 TTS 모드에 따라 업데이트하는 함수
- */
 function updateActionButtonIcon() {
     if (!actionButton) return;
     if (isTtsMode) {
@@ -86,15 +80,8 @@ function updateActionButtonIcon() {
     }
 }
 
-
-/**
- * 로지의 답변을 음성으로 재생하는 함수 (TTS)
- */
 async function playTTSWithControl(txt) {
-    // isTtsMode가 false이면 TTS를 재생하지 않음
-    if (!isTtsMode) {
-        return;
-    }
+    if (!isTtsMode) return;
     if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
     try {
         if (typeof playTTSFromText === 'function') await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
@@ -103,9 +90,6 @@ async function playTTSWithControl(txt) {
     }
 }
 
-/**
- * 여러 선택지를 버튼 형태로 채팅창에 표시하는 함수
- */
 function displayOptionsInChat(optionsArray, onSelectCallback) {
     if (!chatWindow) return;
     const optionsContainer = document.createElement('div');
@@ -127,13 +111,10 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-/**
- * 현재 사용자에게 맞는 상담 주제 목록을 가져오는 함수
- */
 function getTopicsForCurrentUser() {
     const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
-    if (!counselingTopicsByAge) {
-        console.error("counseling_topics.js 로드 실패! counselingTopicsByAge가 undefined입니다.");
+    if (!counselingTopicsByAge || typeof counselingTopicsByAge !== 'object') {
+        console.error("counseling_topics.js 로드 실패! counselingTopicsByAge가 유효한 객체가 아닙니다.");
         return {};
     }
     if (currentUserType === 'directUser') {
@@ -144,28 +125,28 @@ function getTopicsForCurrentUser() {
     return {};
 }
 
-/**
- * 세션 헤더(상단 주제 표시줄)를 업데이트하는 함수
- */
 function updateSessionHeader() {
     if (!sessionHeaderTextEl) return;
     const main = selectedMain || '';
     const sub = selectedSubTopicDetails?.displayText || '';
     const journalTitle = lastAiAnalysisData?.summaryTitle || '';
-
     let displayText = main;
     if (sub) displayText += ` > ${sub}`;
     if (journalTitle) displayText += ` > ${journalTitle}`;
-
     sessionHeaderTextEl.textContent = displayText;
 }
 
-/**
- * 메인 주제를 버튼으로 표시하는 함수
- */
 function showMainTopics() {
     appendMessage('어떤 이야기를 나눠볼까?', 'assistant');
     const currentUserTopics = getTopicsForCurrentUser();
+
+    // ⭐ 주제 로딩 실패 시 에러 메시지 표시
+    if (!currentUserTopics || Object.keys(currentUserTopics).length === 0) {
+        console.error("현재 사용자에게 맞는 상담 주제를 찾을 수 없습니다.");
+        appendMessage("상담 주제를 불러오는 데 실패했습니다. 페이지를 새로고침 하시거나 관리자에게 문의해주세요.", "assistant_feedback");
+        return; // 여기서 함수를 종료하여 더 이상 진행되지 않도록 함
+    }
+
     let topicsWithOptions = Object.keys(currentUserTopics).map(categoryName => ({
         icon: currentUserTopics[categoryName]?.[0]?.icon || '💬',
         displayText: categoryName
@@ -186,9 +167,6 @@ function showMainTopics() {
     });
 }
 
-/**
- * 서브 주제를 버튼으로 표시하는 함수
- */
 function showSubTopics() {
     const subtopicOptions = getTopicsForCurrentUser()[selectedMain] || [];
     if (subtopicOptions.length === 0) {
@@ -203,11 +181,10 @@ function showSubTopics() {
     });
 }
 
-/**
- * 주제 선택 후 실제 대화를 시작하는 함수
- */
 function startChat(initText, inputMethod = 'topic_selection_init', topicDetails = null) {
+    // ⭐ 주제 선택이 완료되면 입력창을 보여줌
     if (inputArea) inputArea.style.display = 'flex';
+    
     if (initText) {
         sendMessage(initText, inputMethod);
     } else if (chatInput) {
@@ -215,9 +192,6 @@ function startChat(initText, inputMethod = 'topic_selection_init', topicDetails 
     }
 }
 
-/**
- * 사용자의 이전 누적 대화량을 Firestore에서 가져오는 함수
- */
 async function fetchPreviousUserCharCount() {
     if (!loggedInUserId) return 0;
     try {
@@ -230,9 +204,6 @@ async function fetchPreviousUserCharCount() {
     }
 }
 
-/**
- * 세션을 종료하고 대화 기록을 최종 저장하는 함수
- */
 async function endSessionAndSave() {
     if (isDataSaved) return;
     isDataSaved = true;
@@ -263,69 +234,46 @@ async function endSessionAndSave() {
     }
 }
 
-/**
- * 세션 타임아웃 타이머를 리셋하는 함수
- */
 function resetSessionTimeout() {
     clearTimeout(sessionTimeoutId);
     sessionTimeoutId = setTimeout(endSessionAndSave, SESSION_TIMEOUT_DURATION);
 }
 
-
-/**
- * 저널이 생성되었음을 알리는 클릭 가능한 알림을 표시하는 함수
- */
 function displayJournalCreatedNotification(journalId) {
     if (!journalId || !chatWindow) return;
     const notification = document.createElement('div');
     notification.className = 'journal-save-notification actionable';
     notification.innerHTML = `📝 이야기가 기록되었어요! <br><strong>클릭해서 확인해보세요.</strong>`;
-    notification.onclick = () => {
-        window.open(`journal.html?journalId=${journalId}`, '_blank');
-    };
+    notification.onclick = () => { window.open(`journal.html?journalId=${journalId}`, '_blank'); };
     if (chatWindow) {
         chatWindow.appendChild(notification);
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 }
 
-/**
- * 분석이 완료되었음을 알리는 클릭 가능한 알림을 표시하는 함수
- */
 function showAnalysisNotification() {
     if (analysisNotificationShown || !chatWindow) return;
     analysisNotificationShown = true;
-
     const notification = document.createElement('div');
     notification.className = 'analysis-notification';
     notification.innerHTML = '📊 분석 완료! <strong>클릭해서 확인</strong>';
-
     notification.onclick = () => {
-        const redirectUrl = (targetAge >= 15 && currentUserType === 'directUser') ?
-            'analysis_adult.html' :
-            'analysis.html';
+        const redirectUrl = (targetAge >= 15 && currentUserType === 'directUser') ? 'analysis_adult.html' : 'analysis.html';
         window.location.href = redirectUrl;
     };
-
     if (chatWindow) {
         chatWindow.appendChild(notification);
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 }
 
-/**
- * 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 핵심 함수
- */
 async function sendMessage(text, inputMethod) {
     if (!text || String(text).trim() === '' || isProcessing) return;
-
     isProcessing = true;
     if (actionButton) actionButton.disabled = true;
     resetSessionTimeout();
 
-    if (inputMethod !== 'topic_selection_init') {
-        appendMessage(text, 'user');
-    }
+    if (inputMethod !== 'topic_selection_init') appendMessage(text, 'user');
     chatHistory.push({ role: 'user', content: text });
     if (chatInput) chatInput.value = '';
 
@@ -333,28 +281,20 @@ async function sendMessage(text, inputMethod) {
 
     try {
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
-        const res = await getGptResponse(text, {
-            chatHistory,
-            userId: loggedInUserId,
-            elapsedTime: elapsedTimeInMinutes
-        });
-        
+        const res = await getGptResponse(text, { chatHistory, userId: loggedInUserId, elapsedTime: elapsedTimeInMinutes });
         chatWindow.querySelector('.thinking')?.remove();
 
         if (!res.ok) throw new Error(`GPT API 응답 오류: ${res.status}`);
 
         const gptResponse = await res.json();
         const rawResponseText = gptResponse.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
-
         let cleanText = rawResponseText;
         let jsonString = null;
-        
         const jsonStartIndex = rawResponseText.indexOf('{"');
         if (jsonStartIndex !== -1) {
             cleanText = rawResponseText.substring(0, jsonStartIndex).trim();
             jsonString = rawResponseText.substring(jsonStartIndex);
         }
-
         if (jsonString) {
             try {
                 lastAiAnalysisData = JSON.parse(jsonString);
@@ -363,13 +303,10 @@ async function sendMessage(text, inputMethod) {
                 console.error("❌ GPT 응답 JSON 파싱 실패:", e);
             }
         }
-        
         appendMessage(cleanText, 'assistant');
         await playTTSWithControl(cleanText);
         chatHistory.push({ role: 'assistant', content: cleanText });
-
         userCharCountInSession = chatHistory.filter(m => m.role === 'user').reduce((sum, m) => sum + (m.content ? m.content.length : 0), 0);
-
         if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
             journalReadyNotificationShown = true;
             const topicForJournal = selectedSubTopicDetails?.displayText || selectedMain;
@@ -387,19 +324,14 @@ async function sendMessage(text, inputMethod) {
                 if (id) displayJournalCreatedNotification(id);
             });
         }
-
         const userTurnCount = chatHistory.filter(m => m.role === 'user').length;
         if (elapsedTimeInMinutes >= 10 && userTurnCount >= 10 && !analysisNotificationShown) {
-             if (lastAiAnalysisData) {
-                const dataToStore = {
-                    results: lastAiAnalysisData,
-                    accumulatedDurationMinutes: elapsedTimeInMinutes,
-                };
+            if (lastAiAnalysisData) {
+                const dataToStore = { results: lastAiAnalysisData, accumulatedDurationMinutes: elapsedTimeInMinutes };
                 localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
                 showAnalysisNotification();
-             }
+            }
         }
-
     } catch (error) {
         console.error("sendMessage 내 예외 발생:", error);
         chatWindow.querySelector('.thinking')?.remove();
@@ -409,7 +341,6 @@ async function sendMessage(text, inputMethod) {
         if (actionButton) actionButton.disabled = false;
     }
 }
-
 
 // --- 6. STT (음성 인식) 및 입력 방식 제어 ---
 let isRec = false;
@@ -423,14 +354,11 @@ if (SpeechRecognitionAPI) {
     recog.continuous = true;
     recog.interimResults = true;
     recog.lang = 'ko-KR';
-
     recog.onstart = () => { isRec = true; if (actionButton) actionButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
     recog.onend = () => { isRec = false; if (actionButton) actionButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
     recog.onresult = event => {
         let final_transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) final_transcript += event.results[i][0].transcript;
-        }
+        for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) final_transcript += event.results[i][0].transcript; }
         if (final_transcript) sendMessage(final_transcript.trim(), 'stt');
     };
     recog.onerror = event => { console.error('Speech recognition error:', event.error); if (isRec) recog.stop(); };
@@ -467,45 +395,29 @@ function stopAudio() {
     if (meterContainer) meterContainer.classList.remove('active');
 }
 
-/**
- * 액션 버튼 클릭 로직 (전송, STT, TTS 모드 전환)
- */
 function handleMicButtonClick() {
-    // 1. 입력창에 텍스트가 있으면 무조건 '전송'
     if (chatInput && chatInput.value.trim() !== '') {
         sendMessage(chatInput.value.trim(), 'text');
         return;
     }
-    
-    // 2. 텍스트가 없고, STT가 지원되지 않으면 아무 동작 안 함
     if (!SpeechRecognitionAPI) return;
-    
     if (isProcessing || micButtonCurrentlyProcessing) return;
     micButtonCurrentlyProcessing = true;
-
-    // 3. STT가 현재 녹음 중이면 -> 녹음 중지
     if (isRec) {
         if (recog) recog.stop();
         micButtonCurrentlyProcessing = false;
         return;
     }
-
-    // 4. TTS 모드이면 -> STT(음성인식) 시작
     if (isTtsMode) {
         if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
         navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                setupAudioAnalysis(stream);
-                if (recog) recog.start();
-            })
+            .then(stream => { setupAudioAnalysis(stream); if (recog) recog.start(); })
             .catch(e => {
                 console.error('마이크 접근 오류:', e);
                 appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback');
                 micButtonCurrentlyProcessing = false;
             });
-    } 
-    // 5. 텍스트 모드이면 ('T' 버튼) -> TTS 모드로 전환
-    else {
+    } else {
         isTtsMode = true;
         updateActionButtonIcon();
         appendMessage("음성 모드가 다시 켜졌어요. 이제 로지의 답변을 음성으로 들을 수 있습니다.", "assistant_feedback");
@@ -513,44 +425,39 @@ function handleMicButtonClick() {
     }
 }
 
-
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // --- 페이지 레이아웃 및 스타일 동적 적용 ---
         const style = document.createElement('style');
         style.textContent = `
-            body.talk-page-body {
-                overflow: hidden; /* talk 페이지 스크롤 방지 */
-            }
+            body.talk-page-body { overflow: hidden; }
             @media (min-width: 641px) {
-                .app-container.talk-page {
-                    max-width: 640px; /* PC에서 가로폭 640px 고정 */
-                    height: 90vh;
-                    margin: auto;
-                }
+                .app-container.talk-page { max-width: 640px; height: 90vh; margin: auto; }
             }
         `;
         document.head.appendChild(style);
         document.body.classList.add('talk-page-body');
         const appContainer = document.querySelector('.app-container');
-        if (appContainer) {
-            appContainer.classList.add('talk-page');
-        }
+        if (appContainer) appContainer.classList.add('talk-page');
 
-        // --- 초기화 ---
+        // ⭐ 불필요한 GNB 버튼 숨기기
+        const ttsToggleBtn = document.getElementById('tts-toggle-btn');
+        if (ttsToggleBtn) ttsToggleBtn.style.display = 'none';
+        const widthToggleBtn = document.getElementById('width-toggle-btn-floating');
+        if (widthToggleBtn) widthToggleBtn.style.display = 'none';
+        
+        // ⭐ 시작 시 입력창 숨기기
+        if (inputArea) inputArea.style.display = 'none';
+
+
         if (!loggedInUserId) {
             console.error("사용자 정보(userId)가 없습니다. 시작 페이지로 이동합니다.");
             window.location.href = 'index.html';
             return;
         }
 
-        updateActionButtonIcon(); // 초기 아이콘 설정
-
-        // --- 이벤트 리스너 바인딩 ---
-        if (actionButton) {
-            actionButton.addEventListener('click', handleMicButtonClick);
-        }
+        updateActionButtonIcon();
+        if (actionButton) actionButton.addEventListener('click', handleMicButtonClick);
         if (chatInput) {
             chatInput.addEventListener('keydown', e => {
                 if (e.key === 'Enter' && !e.isComposing) {
@@ -558,7 +465,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     handleMicButtonClick();
                 }
             });
-            // ⭐ 사용자가 텍스트를 입력하면 TTS 모드를 끔
             chatInput.addEventListener('input', () => {
                 if (isTtsMode && chatInput.value.length > 0) {
                     isTtsMode = false;
@@ -575,14 +481,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const greeting = getInitialGreeting(userNameToDisplay + voc, false);
         appendMessage(greeting, 'assistant');
         await playTTSWithControl(greeting);
-        
         showMainTopics();
-    
-        window.addEventListener('beforeunload', (event) => {
-            if (chatHistory.length > 2 && !isDataSaved) {
-                endSessionAndSave();
-            }
-        });
+        window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
 
     } catch (error) {
         console.error("페이지 초기화 중 심각한 오류가 발생했습니다:", error);
