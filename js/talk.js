@@ -195,25 +195,35 @@ function startChat(initText, inputMethod = 'topic_selection_init', topicDetails 
 async function sendMessage(text, inputMethod = 'text') {
     if (!text || String(text).trim() === '' || isProcessing) return;
     isProcessing = true;
-    
-    if (inputMethod !== 'topic_selection_init') appendMessage(text, 'user');
+    if (actionButton) actionButton.disabled = true;
+
+    if (inputMethod !== 'topic_selection_init') {
+        appendMessage(text, 'user');
+        userCharCountInSession += text.length;
+    }
     chatHistory.push({ role: 'user', content: text });
-    if (inputMethod !== 'topic_selection_init') userCharCountInSession += text.length;
     if (chatInput) chatInput.value = '';
     
     appendMessage('...', 'assistant thinking');
 
     try {
-        const res = await getGptResponse(text, { chatHistory, userId: loggedInUserId });
+        const res = await getGptResponse(text, { 
+            chatHistory, 
+            userId: loggedInUserId,
+            userTraits: JSON.parse(localStorage.getItem('lozee_diagnoses') || '[]')
+        });
+
         chatWindow.querySelector('.thinking')?.remove();
-        if (!res.ok) throw new Error(`GPT API 응답 오류: ${res.status}`);
+        if (!res.ok) {
+            throw new Error(`GPT API 응답 오류: ${res.status}`);
+        }
 
         const d = await res.json();
         const cleanText = d.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
         lastAiAnalysisData = d.analysis || {};
         
         appendMessage(cleanText, 'assistant');
-        await playTTSWithControl(cleanText);
+        await playTTSWithControl(cleanText); // TTS 호출 로직
         chatHistory.push({ role: 'assistant', content: cleanText });
         
     } catch (error) {
@@ -222,6 +232,7 @@ async function sendMessage(text, inputMethod = 'text') {
         appendMessage("오류가 발생했어요. 다시 시도해 주세요.", "assistant_feedback");
     } finally {
         isProcessing = false;
+        if (actionButton) actionButton.disabled = false;
     }
 }
 
@@ -255,26 +266,131 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
     
-    // 마이크/전송 버튼 통합 로직
-    if (chatInput && actionButton) {
-        const updateActionButton = () => {
-            if (chatInput.value.trim().length > 0) {
-                actionButton.innerHTML = '➤';
-                actionButton.onclick = () => sendMessage(chatInput.value, 'text');
-            } else {
-                actionButton.innerHTML = '🎤';
-                actionButton.onclick = () => { /* STT 시작 로직 */ };
-            }
-        };
-        chatInput.addEventListener('input', updateActionButton);
-        chatInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.isComposing) {
-                e.preventDefault();
-                if (chatInput.value.trim().length > 0) sendMessage(chatInput.value, 'text');
-            }
-        });
-        updateActionButton();
+    // STT 관련 상태 변수
+let isRec = false;
+let micButtonCurrentlyProcessing = false;
+let audioContext, analyser, source, dataArray, animId, streamRef;
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog;
+
+// 음량바 시각화 함수
+function draw() {
+    if (!analyser || !dataArray) return;
+    animId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
+    let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
+    if (meterLevel) meterLevel.style.width = norm + '%';
+}
+
+// 오디오 분석 설정 함수
+function setupAudioAnalysis(stream) {
+    if (audioContext && audioContext.state !== 'closed') audioContext.close();
+    audioContext = new AudioContext();
+    analyser = audioContext.createAnalyser();
+    source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    streamRef = stream;
+    if (meterContainer) meterContainer.classList.add('active');
+    draw();
+}
+
+// 오디오 스트림 및 시각화 중지 함수
+function stopAudio() {
+    if (animId) cancelAnimationFrame(animId);
+    if (source) source.disconnect();
+    if (streamRef) streamRef.getTracks().forEach(track => track.stop());
+    if (audioContext && audioContext.state !== 'closed') audioContext.close();
+    if (meterContainer) meterContainer.classList.remove('active');
+}
+
+// 마이크 버튼 클릭 로직
+function handleMicButtonClick() {
+    if (isProcessing || micButtonCurrentlyProcessing) return;
+    micButtonCurrentlyProcessing = true;
+    
+    if (isRec) {
+        if(recog) recog.stop();
+    } else {
+        if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                setupAudioAnalysis(stream);
+                if(recog) recog.start();
+            })
+            .catch(e => {
+                console.error('마이크 접근 오류:', e);
+                appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback');
+                micButtonCurrentlyProcessing = false;
+            });
     }
+}
+
+// STT 초기 설정
+if (SpeechRecognitionAPI) {
+    recog = new SpeechRecognitionAPI();
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.lang = 'ko-KR';
+    
+    recog.onstart = () => {
+        isRec = true;
+        if(actionButton) actionButton.classList.add('recording');
+        micButtonCurrentlyProcessing = false;
+    };
+    recog.onend = () => {
+        isRec = false;
+        if(actionButton) actionButton.classList.remove('recording');
+        stopAudio();
+        micButtonCurrentlyProcessing = false;
+    };
+    recog.onresult = event => {
+        let final_transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                final_transcript += event.results[i][0].transcript;
+            }
+        }
+        if (final_transcript) {
+            sendMessage(final_transcript.trim(), 'stt');
+        }
+    };
+    recog.onerror = event => {
+        console.error('Speech recognition error:', event.error);
+        if (isRec) recog.stop();
+    };
+} else {
+    if(actionButton) actionButton.innerHTML = '➤'; // STT 미지원 시 전송 기능만 제공
+    console.warn('이 브라우저에서는 음성 인식을 지원하지 않습니다.');
+}
+
+// ⭐ 마이크/전송 버튼 통합 로직 (초기화 및 이벤트 핸들러)
+if (chatInput && actionButton) {
+    const updateActionButton = () => {
+        if (chatInput.value.trim().length > 0) {
+            actionButton.innerHTML = '➤';
+            actionButton.onclick = () => sendMessage(chatInput.value, 'text');
+        } else {
+            actionButton.innerHTML = '🎤';
+            if (SpeechRecognitionAPI) {
+                actionButton.onclick = handleMicButtonClick;
+            } else {
+                actionButton.disabled = true; // STT 미지원 시 비활성화
+            }
+        }
+    };
+    chatInput.addEventListener('input', updateActionButton);
+    chatInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.isComposing) {
+            e.preventDefault();
+            if (chatInput.value.trim().length > 0) {
+                sendMessage(chatInput.value, 'text');
+            }
+        }
+    });
+    updateActionButton(); // 페이지 로드 시 초기 상태 설정
+}
     
     // 대화 시작
     appendMessage(getInitialGreeting(userNameToDisplay + voc, false), 'assistant');
