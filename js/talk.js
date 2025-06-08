@@ -419,6 +419,9 @@ async function sendMessage(text, inputMethod = 'text') {
          // 메시지 텍스트 정의
     const cleanText = d.text || "미안하지만, 지금은 답변이 어려워요.";
 
+         await playTTSWithControl(cleanText);
+     chatHistory.push({ role: 'assistant', content: cleanText });
+
      // 분석 1-1. 최상단 정의된 이름과 같게 함으로써 다른 함수(예: 세션 종료 시 저장 로직)에서도 동일한 분석 결과 참조 가능
         lastAiAnalysisData = d.analysis || {};
 
@@ -450,8 +453,7 @@ async function sendMessage(text, inputMethod = 'text') {
 }
 
 
-     await playTTSWithControl(cleanText);
-     chatHistory.push({ role: 'assistant', content: cleanText });
+
 
 // 6. ⭐ 페이지 로드 후 실행될 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
