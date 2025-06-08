@@ -355,21 +355,38 @@ function showAnalysisNotification() {
 
 //5-18. 사용자의 메시지를 gpt서버로 보내고 응답을 처리하는 가장 핵심적인 함수
 async function sendMessage(text, inputMethod = 'text') {
-   try {
+try {
+    // 1) 입력 검증 및 상태 초기화
     if (!text || String(text).trim() === '' || isProcessing) return;
     isProcessing = true;
     if (actionButton) actionButton.disabled = true;
-    
 
+    // 2) 사용자 메시지 화면 표시
     if (inputMethod !== 'topic_selection_init') {
-        appendMessage(text, 'user');
-        userCharCountInSession += text.length;
+      appendMessage(text, 'user');
+      userCharCountInSession += text.length;
     }
     chatHistory.push({ role: 'user', content: text });
     if (chatInput) chatInput.value = '';
 
+ // 3) GPT 서버 호출 및 응답 파싱
+    const res = await getGptResponse(text, {
+      chatHistory,
+      userId: loggedInUserId,
+      userTraits: JSON.parse(localStorage.getItem('lozee_diagnoses') || '[]')
+    });
+    const d = await res.json();
 
-       // ⭐ 저널 생성
+    // 4) AI 응답 텍스트 처리
+    const cleanText = d.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
+
+    // 5) 화면에 응답 표시 및 TTS
+    appendMessage(cleanText, 'assistant');
+    await playTTSWithControl(cleanText);
+    chatHistory.push({ role: 'assistant', content: cleanText });
+
+       
+    // 6) 저널 생성 
 
          const userCharCountInSession = chatHistory.filter(m => m.role === 'user').reduce((sum, m) => sum + m.content.length, 0);
         if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
@@ -393,43 +410,10 @@ async function sendMessage(text, inputMethod = 'text') {
             });
         }
 
-
-       // ⭐ 분석 생성
-        const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
-        const userTurnCount = chatHistory.filter(m => m.role === 'user').length;
-        const finalUserCharCountForAnalysis = previousTotalUserCharCountOverall + userCharCountInSession;
-        
-        // 조건: 대화 시간 10분 이상, 사용자 발화 10회 이상 등
-        if (elapsedTimeInMinutes >= 10 && userTurnCount >= 10 && !analysisNotificationShown) {
-            console.log(`[분석 조건 충족!] localStorage에 분석 결과 저장`);
-            
-            // 최종 분석 데이터를 localStorage에 저장
-            const dataToStore = {
-                results: lastAiAnalysisData || {}, // GPT가 제공한 분석 결과
-                accumulatedDurationMinutes: elapsedTimeInMinutes,
-            };
-            localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
-
-            // showAnalysisNotification 함수를 호출하여 화면에 알림 표시
-            showAnalysisNotification(); 
-        }
-
-     // GPT 응답 본문 파싱 d.analysis 같은 필드를 읽어올 수 있게 해주는 구문 
-        const d = await res.json();
-         // 메시지 텍스트 정의
-    const cleanText = d.text || "미안하지만, 지금은 답변이 어려워요.";
-
-         await playTTSWithControl(cleanText);
-     chatHistory.push({ role: 'assistant', content: cleanText });
-
-     // 분석 1-1. 최상단 정의된 이름과 같게 함으로써 다른 함수(예: 세션 종료 시 저장 로직)에서도 동일한 분석 결과 참조 가능
-        lastAiAnalysisData = d.analysis || {};
-
-     // 분석 1-2. 전체 대화 기록 생성
-        const entireConversation = chatHistory.map(msg => msg.content).join(' ');
-
-     // 분석 1-3. 로컬스토리지에 분석용 데이터 저장
-      localStorage.setItem(
+ // 7) 분석 데이터 저장 및 페이지 이동
+    lastAiAnalysisData = d.analysis || {};
+    const entireConversation = chatHistory.map(m => m.content).join(' ');
+    localStorage.setItem(
       'lozee_conversation_analysis',
       JSON.stringify({
         analysis: lastAiAnalysisData,
@@ -437,10 +421,28 @@ async function sendMessage(text, inputMethod = 'text') {
         sessionDurationMinutes: d.analysis?.sessionDurationMinutes || 0
       })
     );
-   
-    // 분석 1-4. 연령별 분기 페이지
-    const analysisPage = (targetAge <= 15) ? 'analysis.html' : 'analysis_adult.html';
-    window.location.href = analysispage; 
+    
+          const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
+        const userTurnCount = chatHistory.filter(m => m.role === 'user').length;
+        const finalUserCharCountForAnalysis = previousTotalUserCharCountOverall + userCharCountInSession;
+        
+        // 조건: 대화 시간 10분 이상, 사용자 발화 10회 이상 등
+        if (elapsedTimeInMinutes >= 10 && userTurnCount >= 10 && !analysisNotificationShown) {
+            console.log(`[분석 조건 충족!] localStorage에 분석 결과 저장`);
+            
+        // 최종 분석 데이터를 localStorage에 저장
+            const dataToStore = {
+                results: lastAiAnalysisData || {}, // GPT가 제공한 분석 결과
+                accumulatedDurationMinutes: elapsedTimeInMinutes,
+            };
+            localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
+
+        // showAnalysisNotification 함수를 호출하여 화면에 알림 표시
+            showAnalysisNotification(); 
+        }
+    
+        const analysisPage = (targetAge <= 15) ? 'analysis.html' : 'analysis_adult.html';
+    window.location.href = analysisPage;
 
   } catch (error) {
     console.error("sendMessage 내 예외 발생:", error);
@@ -451,8 +453,6 @@ async function sendMessage(text, inputMethod = 'text') {
     if (actionButton) actionButton.disabled = false;
   }
 }
-
-
 
 
 // 6. ⭐ 페이지 로드 후 실행될 초기화 및 이벤트 바인딩 ---
