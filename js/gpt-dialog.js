@@ -222,4 +222,4 @@ export function getInitialGreeting(fullUserNameWithVocative, greetedYet) {
     } else {
         return `${fullUserNameWithVocative}, 안녕! 나는 너의 마음친구 로지야. 오늘 어떤 이야기를 나누고 싶니?`;
     }
-}
+    }
