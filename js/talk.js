@@ -81,12 +81,16 @@ function updateActionButtonIcon() {
 }
 
 async function playTTSWithControl(txt) {
+    // ⭐ NOTE: The console log shows a CORS error for the TTS API.
+    // This is a SERVER-SIDE issue that must be fixed on the 'server-production-3e8f.up.railway.app' server.
+    // The server needs to send an 'Access-Control-Allow-Origin' header that includes 'https://lozee.netlify.app'.
+    // Until this is fixed, TTS will not work and will throw a fetch error in the console.
     if (!isTtsMode) return;
     if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
     try {
         if (typeof playTTSFromText === 'function') await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
     } catch (error) {
-        console.error("TTS 재생 오류:", error);
+        console.error("TTS 재생 오류 (CORS 문제일 수 있습니다):", error);
     }
 }
 
@@ -140,11 +144,10 @@ function showMainTopics() {
     appendMessage('어떤 이야기를 나눠볼까?', 'assistant');
     const currentUserTopics = getTopicsForCurrentUser();
 
-    // ⭐ 주제 로딩 실패 시 에러 메시지 표시
     if (!currentUserTopics || Object.keys(currentUserTopics).length === 0) {
         console.error("현재 사용자에게 맞는 상담 주제를 찾을 수 없습니다.");
         appendMessage("상담 주제를 불러오는 데 실패했습니다. 페이지를 새로고침 하시거나 관리자에게 문의해주세요.", "assistant_feedback");
-        return; // 여기서 함수를 종료하여 더 이상 진행되지 않도록 함
+        return;
     }
 
     let topicsWithOptions = Object.keys(currentUserTopics).map(categoryName => ({
@@ -182,9 +185,7 @@ function showSubTopics() {
 }
 
 function startChat(initText, inputMethod = 'topic_selection_init', topicDetails = null) {
-    // ⭐ 주제 선택이 완료되면 입력창을 보여줌
     if (inputArea) inputArea.style.display = 'flex';
-    
     if (initText) {
         sendMessage(initText, inputMethod);
     } else if (chatInput) {
@@ -273,7 +274,13 @@ async function sendMessage(text, inputMethod) {
     if (actionButton) actionButton.disabled = true;
     resetSessionTimeout();
 
+    // ⭐ FIX: Create a temporary copy of history *before* adding the new user message.
+    // This prevents sending a duplicate message to the getGptResponse function.
+    const historyForGpt = [...chatHistory];
+
     if (inputMethod !== 'topic_selection_init') appendMessage(text, 'user');
+    
+    // Add the new message to the main history for local display and state.
     chatHistory.push({ role: 'user', content: text });
     if (chatInput) chatInput.value = '';
 
@@ -281,7 +288,12 @@ async function sendMessage(text, inputMethod) {
 
     try {
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
-        const res = await getGptResponse(text, { chatHistory, userId: loggedInUserId, elapsedTime: elapsedTimeInMinutes });
+        
+        // ⭐ FIX: Pass the temporary history (historyForGpt) to the API call.
+        // The 'text' is still passed separately as getGptResponse expects it,
+        // but it will be added to `historyForGpt`, not `chatHistory` which already has it.
+        const res = await getGptResponse(text, { chatHistory: historyForGpt, userId: loggedInUserId, elapsedTime: elapsedTimeInMinutes });
+        
         chatWindow.querySelector('.thinking')?.remove();
 
         if (!res.ok) throw new Error(`GPT API 응답 오류: ${res.status}`);
@@ -343,29 +355,29 @@ async function sendMessage(text, inputMethod) {
 }
 
 // --- 6. STT (음성 인식) 및 입력 방식 제어 ---
-
-
-/** 음량바 시각화 함수 (수정됨) */
 let isRec = false;
 let micButtonCurrentlyProcessing = false;
 let audioContext, analyser, source, dataArray, animId, streamRef;
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recog;
-    
-    // ⭐ 더 이상 meterLevel의 너비를 조절하지 않고, sessionHeaderEl의 배경색을 조절합니다.
-  function draw() {
-    if (!analyser || !dataArray) return;
-    animId = requestAnimationFrame(draw);
-    analyser.getByteFrequencyData(dataArray);
-    let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
-    let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
-    if (meterLevel) {
-        meterLevel.style.width = norm + '%';
-        if(sessionHeaderEl) sessionHeaderEl.style.backgroundColor = `hsl(228, 50%, ${90 - (norm/5)}%)`;
-    }
+
+if (SpeechRecognitionAPI) {
+    recog = new SpeechRecognitionAPI();
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.lang = 'ko-KR';
+    recog.onstart = () => { isRec = true; if (actionButton) actionButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
+    recog.onend = () => { isRec = false; if (actionButton) actionButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
+    recog.onresult = event => {
+        let final_transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) final_transcript += event.results[i][0].transcript; }
+        if (final_transcript) sendMessage(final_transcript.trim(), 'stt');
+    };
+    recog.onerror = event => { console.error('Speech recognition error:', event.error); if (isRec) recog.stop(); };
+} else {
+    console.warn('이 브라우저에서는 음성 인식을 지원하지 않습니다.');
 }
 
-/** 오디오 분석 설정 함수 */
 function setupAudioAnalysis(stream) {
     if (audioContext && audioContext.state !== 'closed') audioContext.close();
     audioContext = new AudioContext();
@@ -374,77 +386,26 @@ function setupAudioAnalysis(stream) {
     source.connect(analyser);
     dataArray = new Uint8Array(analyser.frequencyBinCount);
     streamRef = stream;
-    if (sessionHeaderEl) sessionHeaderEl.style.transition = 'background-color 0.05s'; // 부드러운 색상 전환 효과
+    if (meterContainer) meterContainer.classList.add('active');
     draw();
 }
 
-/** 오디오 스트림 및 시각화 중지 함수 (수정됨) */
+function draw() {
+    if (!analyser || !dataArray) return;
+    animId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
+    let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
+    if (meterLevel) meterLevel.style.width = norm + '%';
+}
+
 function stopAudio() {
     if (animId) cancelAnimationFrame(animId);
     if (source) source.disconnect();
     if (streamRef) streamRef.getTracks().forEach(track => track.stop());
     if (audioContext && audioContext.state !== 'closed') audioContext.close();
     if (meterContainer) meterContainer.classList.remove('active');
-    if (sessionHeaderEl) {
-        sessionHeaderEl.style.transition = 'background-color 0.3s';
-        sessionHeaderEl.style.backgroundColor = ''; // 원래 색으로 복원
-    }
 }
-// 마이크 버튼 클릭 로직
-function handleMicButtonClick() {
-    if (isProcessing || !recog) return;
-    if (isRec) {
-        recog.stop();
-    } else {
-        stopCurrentTTS();
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                setupAudioAnalysis(stream);
-                recog.start();
-            })
-            .catch(e => {
-                console.error('마이크 접근 오류:', e);
-                appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback');
-            });
-    }
-}
-
-/** 오디오 스트림 및 시각화 중지 함수 (수정됨) */
-function stopAudio() {
-    if (animId) cancelAnimationFrame(animId);
-    if (source) source.disconnect();
-    if (streamRef) streamRef.getTracks().forEach(track => track.stop());
-    if (audioContext && audioContext.state !== 'closed') audioContext.close();
-    
-    // ⭐ 녹음이 끝나면 헤더 배경색을 원래의 연한 회색으로 되돌립니다.
-    if (sessionHeaderEl) {
-        sessionHeaderEl.style.transition = 'background-color 0.3s'; // 천천히 원래 색으로
-        sessionHeaderEl.style.backgroundColor = '#f0f0f0';
-    }
-}
-
-// STT 초기 설정
-if (SpeechRecognitionAPI) {
-    recog = new SpeechRecognitionAPI();
-    recog.continuous = true;
-    recog.interimResults = false;
-    recog.lang = 'ko-KR';
-    
-    recog.onstart = () => { isRec = true; if(actionButton) actionButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
-    recog.onend = () => { isRec = false; if(actionButton) actionButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
-    recog.onresult = event => {
-        const final_transcript = event.results[event.results.length - 1][0].transcript;
-        if (final_transcript) {
-            sendMessage(final_transcript.trim(), 'stt');
-        }
-    };
-    recog.onerror = event => {
-        console.error('Speech recognition error:', event.error);
-        if (isRec) recog.stop();
-    };
-}
-
-
 
 function handleMicButtonClick() {
     if (chatInput && chatInput.value.trim() !== '') {
@@ -491,13 +452,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const appContainer = document.querySelector('.app-container');
         if (appContainer) appContainer.classList.add('talk-page');
 
-        // ⭐ 불필요한 GNB 버튼 숨기기
         const ttsToggleBtn = document.getElementById('tts-toggle-btn');
         if (ttsToggleBtn) ttsToggleBtn.style.display = 'none';
         const widthToggleBtn = document.getElementById('width-toggle-btn-floating');
         if (widthToggleBtn) widthToggleBtn.style.display = 'none';
         
-        // ⭐ 시작 시 입력창 숨기기
         if (inputArea) inputArea.style.display = 'none';
 
 
