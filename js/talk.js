@@ -173,6 +173,19 @@ function startChat(initText, inputMethod = 'topic_selection_init', topicDetails 
     else if (chatInput) chatInput.focus();
 }
 
+// ⭐ FIX: `fetchPreviousUserCharCount` function restored.
+async function fetchPreviousUserCharCount() {
+    if (!loggedInUserId) return 0;
+    try {
+        const userRef = doc(db, 'users', loggedInUserId);
+        const userSnap = await getDoc(userRef);
+        return userSnap.exists() ? (userSnap.data().totalUserCharCount || 0) : 0;
+    } catch (error) {
+        console.error("Firestore 이전 누적 글자 수 로드 오류:", error);
+        return 0;
+    }
+}
+
 async function endSessionAndSave() {
     if (isDataSaved) return;
     isDataSaved = true;
@@ -319,7 +332,7 @@ async function sendMessage(text, inputMethod) {
     }
 }
 
-// --- 6. STT and other functions... (rest of the code is unchanged) ---
+// --- 6. STT and other functions... ---
 let isRec = false;
 let micButtonCurrentlyProcessing = false;
 let audioContext, analyser, source, dataArray, animId, streamRef;
@@ -449,6 +462,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         conversationStartTime = Date.now();
+        // ⭐ FIX: Call the restored function.
         previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
         currentFirestoreSessionId = await logSessionStart(loggedInUserId, "대화 시작");
         resetSessionTimeout();
