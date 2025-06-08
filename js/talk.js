@@ -165,6 +165,13 @@ function startChat(initText, inputMethod = 'topic_selection_init', topicDetails 
     if (initText) sendMessage(initText, inputMethod);
     else if (chatInput) chatInput.focus();
 
+     // 저널 제목용 카테고리 저장
+     localStorage.setItem('journal_mainCategory', selectedMain);
+     localStorage.setItem('journal_subCategory', selectedSubTopicDetails?.displayText || '');
+    // summaryTitle은 대화 후 업데이트 시 onAnalysisSaved에서 처리
+
+    // 헤더 최초 표시: main > sub
+     onTopicSelection();
 }
 
 
@@ -357,19 +364,21 @@ function showAnalysisNotification() {
 async function sendMessage(text, inputMethod = 'text') {
 try {
     // 1) 입력 검증 및 상태 초기화
-    if (!text || String(text).trim() === '' || isProcessing) return;
+    if (!text || text.trim() === '' || isProcessing) return;
     isProcessing = true;
     if (actionButton) actionButton.disabled = true;
 
     // 2) 사용자 메시지 화면 표시
     if (inputMethod !== 'topic_selection_init') {
       appendMessage(text, 'user');
-      userCharCountInSession += text.length;
+      // 전역 userCharCountInSession 사용
+       userCharCountInSession = chatHistory.filter(m => m.role === 'user')
+       .reduce((sum, m) => sum + m.content.length, 0);
     }
     chatHistory.push({ role: 'user', content: text });
     if (chatInput) chatInput.value = '';
 
- // 3) GPT 서버 호출 및 응답 파싱
+    // 3) GPT 서버 호출 및 응답 파싱
     const res = await getGptResponse(text, {
       chatHistory,
       userId: loggedInUserId,
@@ -464,6 +473,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     console.log("talk.js 로드 완료. 사용자 UID:", loggedInUserId);
 
+ // 대분류 > 중분류 > 요약 타이틀을 상단에 표시
+const header = document.getElementById('session-header');
+function updateSessionHeader() {
+  const main = selectedMain || '';
+  const sub = selectedSubTopicDetails?.displayText || '';
+  const title = lastAiAnalysisData?.summaryTitle || '';
+  header.textContent = `${main} > ${sub} > ${title}`;
+}
+
+// 세션 헤더 업데이트 시점 조정
+// 1) 토픽 선택 완료 직후(대분류/중분류 확정)에는 제목 없이 대분류>중분류만 표시
+function onTopicSelection() {
+  const main = selectedMain || '';
+  const sub = selectedSubTopicDetails?.displayText || '';
+  header.textContent = `${main} > ${sub}`;
+  showSubTopics();
+}
+
+function onAnalysisSaved() {
+ // 기존 분석 저장 로직...
+  localStorage.setItem('journal_summaryTitle', lastAiAnalysisData?.summaryTitle || '');
+  const main = selectedMain || '';
+  const sub = selectedSubTopicDetails?.displayText || '';
+  const title = lastAiAnalysisData?.summaryTitle || '';
+  header.textContent = `${main} > ${sub} > ${title}`;
+}
 
     
  // 7. 이전에 누락되었던 로직을 모두 여기에 포함합니다.
@@ -503,9 +538,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInput.addEventListener('input', updateActionButton);
         chatInput.addEventListener('keydown', e => {
             if (e.key === 'Enter' && !e.isComposing) {
-                e.preventDefault();
-                if (chatInput.value.trim().length > 0) sendMessage(chatInput.value, 'text');
-            }
+            e.preventDefault();
+            const txt = chatInput.value.trim();
+            if (txt) {  sendMessage(txt, 'text');
+            chatInput.value = '';      
+        }            
+      }
         });
         updateActionButton();
     }
