@@ -368,7 +368,6 @@ async function sendMessage(text, inputMethod = 'text') {
     chatHistory.push({ role: 'user', content: text });
     if (chatInput) chatInput.value = '';
 
-     appendMessage(cleanText, 'assistant');
      await playTTSWithControl(cleanText);
      chatHistory.push({ role: 'assistant', content: cleanText });
 
@@ -417,8 +416,11 @@ async function sendMessage(text, inputMethod = 'text') {
             showAnalysisNotification(); 
         }
 
-     // GPT 서버의 응답 본문(JSON)을 파싱해 d.analysis 같은 필드를 읽어올 수 있게 해주는 구문 
+     // GPT 응답 본문 파싱 d.analysis 같은 필드를 읽어올 수 있게 해주는 구문 
         const d = await res.json();
+         // 메시지 텍스트 정의
+    const cleanText = d.text || "미안하지만, 지금은 답변이 어려워요.";
+
      // 분석 1-1. 최상단 정의된 이름과 같게 함으로써 다른 함수(예: 세션 종료 시 저장 로직)에서도 동일한 분석 결과 참조 가능
         lastAiAnalysisData = d.analysis || {};
 
