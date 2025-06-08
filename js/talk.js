@@ -242,13 +242,11 @@ async function sendMessage(text, inputMethod) {
     try {
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
         
-        // ⭐ FIX: Pass a copy of the current history. The new user message is handled by `getGptResponse`.
         const res = await getGptResponse(text, { chatHistory: [...chatHistory], userId: loggedInUserId, elapsedTime: elapsedTimeInMinutes });
         
         chatWindow.querySelector('.thinking')?.remove();
         if (!res.ok) throw new Error(`GPT API 응답 오류: ${res.status}`);
 
-        // ⭐ FIX: Add the user message to history AFTER a successful request.
         chatHistory.push({ role: 'user', content: text });
 
         const gptResponse = await res.json();
@@ -263,6 +261,17 @@ async function sendMessage(text, inputMethod) {
             try {
                 lastAiAnalysisData = JSON.parse(jsonString);
                 updateSessionHeader();
+
+                // ⭐ ADDED: Call analysis functions from LOZEE_ANALYSIS module
+                if (LOZEE_ANALYSIS) {
+                    if (LOZEE_ANALYSIS.trackEmotionTone) {
+                        LOZEE_ANALYSIS.trackEmotionTone(lastAiAnalysisData);
+                    }
+                    if (LOZEE_ANALYSIS.trackSituation) {
+                        LOZEE_ANALYSIS.trackSituation(lastAiAnalysisData);
+                    }
+                }
+
             } catch (e) {
                 console.error("❌ GPT 응답 JSON 파싱 실패:", e);
             }
@@ -270,12 +279,35 @@ async function sendMessage(text, inputMethod) {
 
         appendMessage(cleanText, 'assistant');
         await playTTSWithControl(cleanText);
-        // ⭐ FIX: Add the assistant message to history.
         chatHistory.push({ role: 'assistant', content: cleanText });
 
         userCharCountInSession = chatHistory.filter(m => m.role === 'user').reduce((sum, m) => sum + (m.content ? m.content.length : 0), 0);
         
-        // ... (rest of the function for journal/analysis logic remains the same)
+        if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
+            journalReadyNotificationShown = true;
+            const topicForJournal = selectedSubTopicDetails?.displayText || selectedMain;
+            const detailsToSave = {
+                summary: lastAiAnalysisData?.conversationSummary || "요약 진행 중...",
+                title: lastAiAnalysisData?.summaryTitle || `${topicForJournal}에 대한 대화`,
+                detailedAnalysis: lastAiAnalysisData,
+                sessionDurationMinutes: elapsedTimeInMinutes,
+                userCharCountForThisSession: userCharCountInSession
+            };
+            saveJournalEntry(loggedInUserId, topicForJournal, detailsToSave, {
+                relatedChildId: (currentUserType === 'caregiver' ? localStorage.getItem('lozee_childId') : null),
+                entryType: (currentUserType === 'caregiver' ? 'child' : 'standard')
+            }).then(id => {
+                if (id) displayJournalCreatedNotification(id);
+            });
+        }
+        const userTurnCount = chatHistory.filter(m => m.role === 'user').length;
+        if (elapsedTimeInMinutes >= 10 && userTurnCount >= 10 && !analysisNotificationShown) {
+            if (lastAiAnalysisData) {
+                const dataToStore = { results: lastAiAnalysisData, accumulatedDurationMinutes: elapsedTimeInMinutes };
+                localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
+                showAnalysisNotification();
+            }
+        }
 
     } catch (error) {
         console.error("sendMessage 내 예외 발생:", error);
@@ -287,8 +319,89 @@ async function sendMessage(text, inputMethod) {
     }
 }
 
-// --- STT and other functions... (rest of the code is unchanged) ---
-// (The full code for STT, event listeners etc. would be here)
+// --- 6. STT and other functions... (rest of the code is unchanged) ---
+let isRec = false;
+let micButtonCurrentlyProcessing = false;
+let audioContext, analyser, source, dataArray, animId, streamRef;
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog;
+
+if (SpeechRecognitionAPI) {
+    recog = new SpeechRecognitionAPI();
+    recog.continuous = true;
+    recog.interimResults = true;
+    recog.lang = 'ko-KR';
+    recog.onstart = () => { isRec = true; if (actionButton) actionButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
+    recog.onend = () => { isRec = false; if (actionButton) actionButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
+    recog.onresult = event => {
+        let final_transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) final_transcript += event.results[i][0].transcript; }
+        if (final_transcript) sendMessage(final_transcript.trim(), 'stt');
+    };
+    recog.onerror = event => { console.error('Speech recognition error:', event.error); if (isRec) recog.stop(); };
+} else {
+    console.warn('이 브라우저에서는 음성 인식을 지원하지 않습니다.');
+}
+
+function setupAudioAnalysis(stream) {
+    if (audioContext && audioContext.state !== 'closed') audioContext.close();
+    audioContext = new AudioContext();
+    analyser = audioContext.createAnalyser();
+    source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    streamRef = stream;
+    if (meterContainer) meterContainer.classList.add('active');
+    draw();
+}
+
+function draw() {
+    if (!analyser || !dataArray) return;
+    animId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+    let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
+    let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
+    if (meterLevel) meterLevel.style.width = norm + '%';
+}
+
+function stopAudio() {
+    if (animId) cancelAnimationFrame(animId);
+    if (source) source.disconnect();
+    if (streamRef) streamRef.getTracks().forEach(track => track.stop());
+    if (audioContext && audioContext.state !== 'closed') audioContext.close();
+    if (meterContainer) meterContainer.classList.remove('active');
+}
+
+function handleMicButtonClick() {
+    if (chatInput && chatInput.value.trim() !== '') {
+        sendMessage(chatInput.value.trim(), 'text');
+        return;
+    }
+    if (!SpeechRecognitionAPI) return;
+    if (isProcessing || micButtonCurrentlyProcessing) return;
+    micButtonCurrentlyProcessing = true;
+    if (isRec) {
+        if (recog) recog.stop();
+        micButtonCurrentlyProcessing = false;
+        return;
+    }
+    if (isTtsMode) {
+        if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => { setupAudioAnalysis(stream); if (recog) recog.start(); })
+            .catch(e => {
+                console.error('마이크 접근 오류:', e);
+                appendMessage('마이크 사용 권한이 필요합니다.', 'assistant_feedback');
+                micButtonCurrentlyProcessing = false;
+            });
+    } else {
+        isTtsMode = true;
+        updateActionButtonIcon();
+        appendMessage("음성 모드가 다시 켜졌어요. 이제 로지의 답변을 음성으로 들을 수 있습니다.", "assistant_feedback");
+        micButtonCurrentlyProcessing = false;
+    }
+}
+
 
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
