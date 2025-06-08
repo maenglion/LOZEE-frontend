@@ -4,7 +4,8 @@
 const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.app/api/gpt-chat';
 
 // import 구문문
-import { neurodiversityInfo } from './neurodiversityData.js'; // 
+import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
+import { neurodiversityInfo } from './neurodiversityData.js';
 
 // 1) 호격 조사 결정: '아/야'
 export function getKoreanVocativeParticle(name) {
@@ -166,17 +167,36 @@ export function getSystemPrompt({ userName='친구', userAge=0, verbosity='defau
 
 // 6) GPT 호출 및 메시지 구성
 export async function getGptResponse(userText, { chatHistory=[], verbosity='default', elapsedTime=0, userTraits=[] }={}) {
-  const intent = detectIntent(userText); 
-  const userNameFromStorage = localStorage.getItem('lozee_username') || '친구';
-  const userInteractionAge = parseInt(localStorage.getItem('lozee_userage')||0, 10); 
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
 
-  const systemPrompt = getSystemPrompt({ 
-      userName: userNameFromStorage,
-      userAge: userInteractionAge, 
-      verbosity, 
-      elapsedTime, 
-      userTraits 
-  }, intent); 
+ // 1. Check if a user is logged in
+  if (!currentUser) {
+      console.error("Authentication Error: No user is currently signed in.");
+      // Return a response object that looks like a fetch error to be handled by the caller
+      return new Response(JSON.stringify({ error: 'Not authenticated. Please sign in.' }), {
+          status: 401,
+          statusText: 'Unauthorized'
+      });
+  }
+  
+try {
+    // 2. Get the Firebase ID token for the current user
+    const token = await currentUser.getIdToken();
+
+    // 3. Prepare the request payload (system prompt, history, etc.)
+    const intent = detectIntent(userText);
+    const userNameFromStorage = localStorage.getItem('lozee_username') || '친구';
+    const userInteractionAge = parseInt(localStorage.getItem('lozee_userage')||0, 10);
+    const systemPrompt = getSystemPrompt({
+        userName: userNameFromStorage,
+        userAge: userInteractionAge,
+        verbosity,
+        elapsedTime,
+        userTraits
+    }, intent);
+
+
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -188,18 +208,47 @@ export async function getGptResponse(userText, { chatHistory=[], verbosity='defa
   
   console.log("GPT 요청 메시지 (시스템 프롬프트 포함):", JSON.stringify(messages, null, 2)); // 시스템 프롬프트 내용까지 확인
 
-  const res = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
-    method: 'POST',
-    headers: { 
-      'Content-Type':'application/json', 
-      'Authorization':`Bearer ${localStorage.getItem('authToken')}` // 필요시 사용
-    },
-    body: JSON.stringify(payload)
-  });
-  return res;
+  // 4. Send the fetch request with the Authorization header
+    const res = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Add the token to the Authorization header
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    return res;
+
 }
 
+ } catch (error) {
+      console.error("Error getting Firebase token or fetching from API:", error);
+      return new Response(JSON.stringify({ error: 'Failed to authenticate or fetch API.' }), {
+          status: 500,
+          statusText: 'Internal Server Error'
+      });
+  }
+}
 
+// ... (getExitPrompt, getInitialGreeting functions remain the same)
+export function getExitPrompt(userName='친구') {
+  const voc = getKoreanVocativeParticle(userName);
+  const nameVoc = `${userName}${voc}`;
+  return `${nameVoc}, 오늘 이야기 나눠줘서 정말 고마워! 언제든 다시 찾아와도 괜찮아. 😊`;
+}
+
+export function getInitialGreeting(fullUserNameWithVocative, greetedYet) {
+  if (greetedYet) {
+    return `${fullUserNameWithVocative}, 다시 만나서 반가워! 오늘은 어떤 이야기를 해볼까?`;
+  } else {
+    return `${fullUserNameWithVocative}, 안녕! 나는 너의 마음친구 로지야. 오늘 어떤 이야기를 나누고 싶니?`;
+  }
+}
+
+// ... (other functions like detectIntent, getSystemPrompt etc.)
+// These functions should already be in your file and don't need to be changed.
 
 
 // 7) 대화 종료 메시지
