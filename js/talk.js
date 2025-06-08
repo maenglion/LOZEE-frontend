@@ -141,6 +141,9 @@ function showMainTopics() {
     });
 }
 
+
+
+
 // 5-6. 대화흐름 제어, 서브 카테고리 사용자에게 보여줌 
 function showSubTopics() {
     const subtopicOptions = getTopicsForCurrentUser()[selectedMain] || [];
@@ -155,6 +158,20 @@ function showSubTopics() {
     });
 }
 
+  // 서브 카테고리 이후 journal 타이틀 제목 
+function onTopicSelection() {
+  updateSessionHeader();   // main>sub만 표시
+  showSubTopics();
+
+     // 저널 제목용 카테고리 저장
+     localStorage.setItem('journal_mainCategory', selectedMain);
+     localStorage.setItem('journal_subCategory', selectedSubTopicDetails?.displayText || '');
+    // summaryTitle은 대화 후 업데이트 시 onAnalysisSaved에서 처리
+
++ updateSessionHeader();   // 바로 호출
+  if (initText) sendMessage(initText, inputMethod);
+}
+
 // 5-7. 사용자가 특정 주제를 선택했을 때 실제 대화를 시작하는 역할 
 function startChat(initText, inputMethod = 'topic_selection_init', topicDetails = null) {
     if (inputArea) inputArea.style.display = 'flex';
@@ -164,14 +181,6 @@ function startChat(initText, inputMethod = 'topic_selection_init', topicDetails 
     }
     if (initText) sendMessage(initText, inputMethod);
     else if (chatInput) chatInput.focus();
-
-     // 저널 제목용 카테고리 저장
-     localStorage.setItem('journal_mainCategory', selectedMain);
-     localStorage.setItem('journal_subCategory', selectedSubTopicDetails?.displayText || '');
-    // summaryTitle은 대화 후 업데이트 시 onAnalysisSaved에서 처리
-
-    // 헤더 최초 표시: main > sub
-     onTopicSelection();
 }
 
 
@@ -397,7 +406,9 @@ try {
        
     // 6) 저널 생성 
 
-         const userCharCountInSession = chatHistory.filter(m => m.role === 'user').reduce((sum, m) => sum + m.content.length, 0);
+    userCharCountInSession = chatHistory.filter(m => m.role === 'user')
+    .reduce((sum, m) => sum + m.content.length, 0);
+    chatHistory.push({ role: 'user', content: text }); 
         if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
             journalReadyNotificationShown = true; // 중복 실행 방지
             console.log("대화량 800자 충족. 중간 저널 생성을 시도합니다.");
@@ -485,11 +496,10 @@ function updateSessionHeader() {
 // 세션 헤더 업데이트 시점 조정
 // 1) 토픽 선택 완료 직후(대분류/중분류 확정)에는 제목 없이 대분류>중분류만 표시
 function onTopicSelection() {
-  const main = selectedMain || '';
-  const sub = selectedSubTopicDetails?.displayText || '';
-  header.textContent = `${main} > ${sub}`;
-  showSubTopics();
+updateSessionHeader();   // main>sub만 표시
+showSubTopics();
 }
+  
 
 function onAnalysisSaved() {
  // 기존 분석 저장 로직...
@@ -499,6 +509,19 @@ function onAnalysisSaved() {
   const title = lastAiAnalysisData?.summaryTitle || '';
   header.textContent = `${main} > ${sub} > ${title}`;
 }
+
+  // 음성인식 UI 복원 및 바인딩 ---
+  // 1) 마이크 버튼 클릭 시 handleMicButtonClick 연결
+  if (actionButton) {
+    actionButton.addEventListener('click', handleMicButtonClick);
+  } else {
+    console.warn('actionButton(마이크 버튼)가 없습니다.');
+  }
+
+  // 2) 볼륨바 시각화를 위한 요소 확인
+  if (!meterContainer || !meterLevel) {
+    console.warn('meterContainer 또는 meterLevel 요소가 없습니다. 시각화 UI가 표시되지 않을 수 있습니다.');
+  }
 
     
  // 7. 이전에 누락되었던 로직을 모두 여기에 포함합니다.
@@ -537,14 +560,15 @@ function onAnalysisSaved() {
         };
         chatInput.addEventListener('input', updateActionButton);
         chatInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.isComposing) {
-            e.preventDefault();
-            const txt = chatInput.value.trim();
-            if (txt) {  sendMessage(txt, 'text');
-            chatInput.value = '';      
-        }            
-      }
-        });
+  if (e.key === 'Enter' && !e.isComposing) {
+    e.preventDefault();
+    const txt = chatInput.value.trim();
+    if (txt) {
+      sendMessage(txt, 'text');
+      chatInput.value = '';
+    }
+  }
+});
         updateActionButton();
     }
     
