@@ -368,8 +368,6 @@ async function sendMessage(text, inputMethod = 'text') {
     chatHistory.push({ role: 'user', content: text });
     if (chatInput) chatInput.value = '';
 
-     await playTTSWithControl(cleanText);
-     chatHistory.push({ role: 'assistant', content: cleanText });
 
        // ⭐ 저널 생성
 
@@ -451,6 +449,9 @@ async function sendMessage(text, inputMethod = 'text') {
   }
 }
 
+
+     await playTTSWithControl(cleanText);
+     chatHistory.push({ role: 'assistant', content: cleanText });
 
 // 6. ⭐ 페이지 로드 후 실행될 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
