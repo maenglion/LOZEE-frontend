@@ -4,50 +4,30 @@ body {
     font-family: 'KoPub World Dotum', sans-serif;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 20px 0;
-    box-sizing: border-box;
 }
-
-/* ⭐ 모든 페이지에 공통으로 적용될 기본 컨테이너 스타일 */
 .app-container {
-    width: 100%;
-    max-width: 640px; /* ⭐ PC 기준 최대 너비 640px 고정 */
-    min-height: calc(100vh - 40px); /* ⭐ 최소 높이만 지정하여 내용에 따라 늘어남 */
-    background-color: #f4f6f8; /* mypage, analysis 등 콘텐츠 페이지 기본 배경색 */
+    width: 95%; /* ⭐ PC에서는 항상 넓게 */
+    max-width: 1200px; /* 너무 과하게 넓어지는 것 방지 */
+    height: 95vh;
+    max-height: 900px;
+    background-color: #ffffff;
     box-shadow: 0 0 25px rgba(0,0,0,0.15);
     border-radius: 20px;
-    transition: max-width 0.3s ease-in-out;
-}
-
-/* ⭐ talk.html 페이지에만 적용될 특별 레이아웃 스타일 */
-.app-container.is-talk-page {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 40px); /* talk.html은 고정 높이 유지 */
-    max-height: 850px;
-    overflow: hidden; /* talk.html은 내부 스크롤을 사용하므로 hidden 유지 */
-    background-color: #ffffff; /* talk.html의 배경색 */
 }
-
-/* ⭐ WIDE 모드 토글 버튼을 위한 스타일 */
-.app-container.wide-mode {
-    max-width: 95%;
-}
-
-/* ⭐ 모바일 화면에서는 360px로 고정 */
+/* ⭐ 모바일 화면에서는 360px 너비로 고정 */
 @media (max-width: 639px) {
     body { padding: 0; align-items: stretch; }
-    .app-container, .app-container.wide-mode {
+    .app-container {
         width: 100%;
-        max-width: 360px; /* 모바일에서는 360px 고정 */
+        max-width: 100%;
         height: 100vh;
-        min-height: 100vh;
         max-height: 100vh;
         border-radius: 0;
-        margin: 0 auto; /* 모바일에서 중앙 정렬 */
     }
 }
 

@@ -1,37 +1,42 @@
+// js/gnb.js
+
 document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.getElementById('menu-toggle');
     const dropdownMenu = document.getElementById('dropdown-menu');
-    const gnbElement = document.getElementById('gnb'); // gnb 전체 영역 참조
 
-    if (menuToggle && dropdownMenu && gnbElement) {
+    // 기존 드롭다운 메뉴 토글 기능
+    if (menuToggle && dropdownMenu) {
         menuToggle.addEventListener('click', (event) => {
-            event.stopPropagation(); // 이벤트 버블링 중단 (선택 사항)
+            event.stopPropagation(); // 이벤트 전파 중단
             dropdownMenu.classList.toggle('show');
         });
 
-        // 드롭다운 메뉴가 아닌 다른 곳을 클릭했을 때 메뉴 닫기
+        // 메뉴 바깥을 클릭하면 닫히도록 설정
         document.addEventListener('click', (event) => {
-            // 클릭된 요소가 gnb 영역 내부의 요소가 아니고,
-            // 그리고 토글 버튼 자체도 아니라면 메뉴를 닫음
-            if (!gnbElement.contains(event.target) && event.target !== menuToggle) {
+            if (!menuToggle.contains(event.target) && !dropdownMenu.contains(event.target)) {
                 dropdownMenu.classList.remove('show');
             }
-            // 만약 드롭다운 메뉴 내부의 링크를 클릭했을 때도 메뉴가 닫히게 하려면,
-            // 드롭다운 메뉴 링크들에 대한 이벤트 리스너를 추가하고 거기서도 remove('show')를 호출할 수 있습니다.
-            // 하지만 일반적으로 링크 클릭 시 페이지가 이동하므로 필수적이지 않을 수 있습니다.
-
-       const dropdownLinks = dropdownMenu.querySelectorAll('a');
-        dropdownLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                dropdownMenu.classList.remove('show'); // 링크 클릭 시 메뉴 닫기
-            });
         });
-
-        });
-    } else {
-        // 하나라도 요소를 찾지 못하면 콘솔에 경고를 남겨 디버깅 용이하게 함
-        if (!menuToggle) console.warn("GNB: menu-toggle 요소를 찾을 수 없습니다.");
-        if (!dropdownMenu) console.warn("GNB: dropdown-menu 요소를 찾을 수 없습니다.");
-        if (!gnbElement) console.warn("GNB: gnb 요소를 찾을 수 없습니다.");
     }
+
+    // --- ⭐ 추가된 로직 시작: 나이에 따라 분석 링크 동적 변경 ⭐ ---
+    const analysisLink = document.getElementById('gnb-analysis-link');
+    if (analysisLink) {
+        // localStorage에서 사용자 나이와 유형 정보를 가져옵니다.
+        const userAge = parseInt(localStorage.getItem('lozee_userAge'), 10) || 0;
+        const currentUserType = localStorage.getItem('lozee_userType');
+
+        // 조건: 15세 이상 '당사자(directUser)'일 경우에만 성인 분석 페이지로 링크
+        if (userAge >= 15 && currentUserType === 'directUser') {
+            analysisLink.href = 'analysis_adult.html';
+            // (선택 사항) 링크 텍스트도 변경하여 사용자에게 명확히 알려주기
+            analysisLink.innerHTML = '📊 나의 대화 성찰'; 
+        } else {
+            // 그 외의 경우(15세 미만, 보호자 등)는 기본 분석 페이지로
+            analysisLink.href = 'analysis.html';
+            analysisLink.innerHTML = '📊 우리 이야기 분석';
+        }
+        console.log(`GNB 분석 링크가 '${analysisLink.href}'로 설정되었습니다.`);
+    }
+    // --- ⭐ 추가된 로직 끝 ---
 });
