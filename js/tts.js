@@ -6,6 +6,24 @@ const TTS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/tts';
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 let currentAudioSource = null;
 
+// ⭐ FIX: Add a function to resume the AudioContext on the first user gesture.
+// This is required by modern browsers to play any audio.
+function initAudioContext() {
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+            console.log("AudioContext resumed successfully by user gesture.");
+        }).catch(e => console.error("Failed to resume AudioContext:", e));
+    }
+    // This listener should only run once.
+    document.body.removeEventListener('click', initAudioContext);
+    document.body.removeEventListener('touchend', initAudioContext);
+}
+
+// Add the event listeners to the page.
+document.body.addEventListener('click', initAudioContext);
+document.body.addEventListener('touchend', initAudioContext);
+
+
 /**
  * Stops any currently playing TTS audio.
  */
@@ -35,12 +53,17 @@ export async function playTTSFromText(text, voice) {
         console.error("TTS Error: User not authenticated.");
         throw new Error("User not authenticated.");
     }
-    
-    // ⭐ FIX: Provide a default voice if the one from localStorage is null or invalid.
+
     const voiceToUse = voice || 'alloy';
     console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
 
     try {
+        // If the context is still suspended, try to resume it.
+        // This might happen if the fetch is faster than the user's first click.
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
         const token = await currentUser.getIdToken();
 
         const response = await fetch(TTS_BACKEND_URL, {
@@ -49,7 +72,7 @@ export async function playTTSFromText(text, voice) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ text, voice: voiceToUse }) // Use the safe voiceToUse
+            body: JSON.stringify({ text, voice: voiceToUse })
         });
 
         if (!response.ok) {
@@ -59,9 +82,6 @@ export async function playTTSFromText(text, voice) {
         }
 
         const audioData = await response.arrayBuffer();
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
         const audioBuffer = await audioContext.decodeAudioData(audioData);
         
         const source = audioContext.createBufferSource();

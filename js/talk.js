@@ -54,6 +54,9 @@ const voc = getKoreanVocativeParticle(userNameToDisplay);
 
 // --- 5. 모든 함수 정의 ---
 
+/**
+ * 채팅창에 새로운 말풍선을 추가하는 함수
+ */
 function appendMessage(text, role) {
     if (!chatWindow) return;
     const bubble = document.createElement('div');
@@ -63,6 +66,10 @@ function appendMessage(text, role) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+
+/**
+ * 액션 버튼의 아이콘을 TTS 모드에 따라 업데이트하는 함수
+ */
 function updateActionButtonIcon() {
     if (!actionButton) return;
     if (isTtsMode) {
@@ -74,6 +81,9 @@ function updateActionButtonIcon() {
     }
 }
 
+/**
+ * 로지의 답변을 음성으로 재생하는 함수 (TTS)
+ */
 async function playTTSWithControl(txt) {
     if (!isTtsMode) return;
     if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
@@ -84,6 +94,9 @@ async function playTTSWithControl(txt) {
     }
 }
 
+/**
+ * 여러 선택지를 버튼 형태로 채팅창에 표시하는 함수
+ */
 function displayOptionsInChat(optionsArray, onSelectCallback) {
     if (!chatWindow) return;
     const optionsContainer = document.createElement('div');
@@ -105,6 +118,7 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+// ⭐ 복원된 함수: 현재 사용자에게 맞는 상담 주제 목록을 가져옵니다.
 function getTopicsForCurrentUser() {
     const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
     if (!counselingTopicsByAge || typeof counselingTopicsByAge !== 'object') {
@@ -116,6 +130,8 @@ function getTopicsForCurrentUser() {
     return {};
 }
 
+
+// ⭐ 복원된 함수: 세션 헤더(상단 주제 표시줄)를 업데이트합니다.
 function updateSessionHeader() {
     if (!sessionHeaderTextEl) return;
     const main = selectedMain || '';
@@ -126,6 +142,7 @@ function updateSessionHeader() {
     if (journalTitle) displayText += ` > ${journalTitle}`;
     sessionHeaderTextEl.textContent = displayText;
 }
+
 
 function showMainTopics() {
     appendMessage('어떤 이야기를 나눠볼까?', 'assistant');
@@ -153,6 +170,7 @@ function showMainTopics() {
     });
 }
 
+// ⭐ 복원된 함수: 서브 주제를 버튼으로 표시합니다.
 function showSubTopics() {
     const subtopicOptions = getTopicsForCurrentUser()[selectedMain] || [];
     if (subtopicOptions.length === 0) {
@@ -163,17 +181,18 @@ function showSubTopics() {
             selectedSubTopicDetails = fullOptionObject;
             updateSessionHeader();
             startChat(selectedSubtopicText, 'topic_selection_init', fullOptionObject);
-        });
+        });// ⭐ 복원된 함수: 메인 주제를 버튼으로 표시합니다.
     }
 }
 
+// ⭐ 복원된 함수: 주제 선택 후 실제 대화를 시작하고 입력창을 보여줍니다.
 function startChat(initText, inputMethod = 'topic_selection_init', topicDetails = null) {
     if (inputArea) inputArea.style.display = 'flex';
     if (initText) sendMessage(initText, inputMethod);
     else if (chatInput) chatInput.focus();
 }
 
-// ⭐ FIX: `fetchPreviousUserCharCount` function restored.
+// ⭐ 복원된 함수: 사용자의 이전 누적 대화량을 Firestore에서 가져옵니다.
 async function fetchPreviousUserCharCount() {
     if (!loggedInUserId) return 0;
     try {
@@ -186,6 +205,7 @@ async function fetchPreviousUserCharCount() {
     }
 }
 
+// ⭐ 복원된 함수: 세션을 종료하고 대화 기록을 최종 저장합니다.
 async function endSessionAndSave() {
     if (isDataSaved) return;
     isDataSaved = true;
@@ -213,11 +233,14 @@ async function endSessionAndSave() {
     }
 }
 
+// ⭐ 복원된 함수: 세션 타임아웃 타이머를 리셋합니다.
 function resetSessionTimeout() {
     clearTimeout(sessionTimeoutId);
     sessionTimeoutId = setTimeout(endSessionAndSave, SESSION_TIMEOUT_DURATION);
 }
 
+
+// ⭐ 복원된 함수: 저널 생성 알림을 표시합니다.
 function displayJournalCreatedNotification(journalId) {
     if (!journalId || !chatWindow) return;
     const notification = document.createElement('div');
@@ -228,6 +251,7 @@ function displayJournalCreatedNotification(journalId) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+// ⭐ 복원된 함수: 분석 완료 알림을 표시합니다.
 function showAnalysisNotification() {
     if (analysisNotificationShown || !chatWindow) return;
     analysisNotificationShown = true;
@@ -242,6 +266,7 @@ function showAnalysisNotification() {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+// ⭐ 복원된 함수: 사용자의 메시지를 GPT 서버로 보내고 응답을 처리합니다.
 async function sendMessage(text, inputMethod) {
     if (!text || String(text).trim() === '' || isProcessing) return;
     isProcessing = true;
@@ -275,7 +300,7 @@ async function sendMessage(text, inputMethod) {
                 lastAiAnalysisData = JSON.parse(jsonString);
                 updateSessionHeader();
 
-                // ⭐ ADDED: Call analysis functions from LOZEE_ANALYSIS module
+                // ⭐ FIX: 분석 엔진을 실시간으로 활성화하는 코드를 복원합니다.
                 if (LOZEE_ANALYSIS) {
                     if (LOZEE_ANALYSIS.trackEmotionTone) {
                         LOZEE_ANALYSIS.trackEmotionTone(lastAiAnalysisData);
@@ -290,13 +315,14 @@ async function sendMessage(text, inputMethod) {
             }
         }
 
+
         appendMessage(cleanText, 'assistant');
         await playTTSWithControl(cleanText);
         chatHistory.push({ role: 'assistant', content: cleanText });
 
         userCharCountInSession = chatHistory.filter(m => m.role === 'user').reduce((sum, m) => sum + (m.content ? m.content.length : 0), 0);
         
-        if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
+   if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
             journalReadyNotificationShown = true;
             const topicForJournal = selectedSubTopicDetails?.displayText || selectedMain;
             const detailsToSave = {
@@ -462,15 +488,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         conversationStartTime = Date.now();
-        // ⭐ FIX: Call the restored function.
         previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
         currentFirestoreSessionId = await logSessionStart(loggedInUserId, "대화 시작");
         resetSessionTimeout();
 
         const greeting = getInitialGreeting(userNameToDisplay + voc, false);
         appendMessage(greeting, 'assistant');
-        await playTTSWithControl(greeting);
+        
+        // ⭐ 수정된 부분: 초기 인사말 재생은 하되, 화면 로딩을 막지 않습니다.
+        playTTSWithControl(greeting);
+        
+        // 이 함수가 항상 실행되어 주제가 표시됩니다.
         showMainTopics();
+        
         window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
 
     } catch (error) {
