@@ -9,10 +9,10 @@ body {
     margin: 0;
 }
 .app-container {
-    width: 95%; /* ⭐ PC에서는 항상 넓게 */
-    max-width: 1200px; /* 너무 과하게 넓어지는 것 방지 */
-    height: 95vh;
-    max-height: 1000px;
+    width: 100%;
+    max-width: 640px;       /* PC 상단 너비 제한 */
+    height: 100vh;          /* 화면 전체 높이 */
+    overflow-y: auto;       /* 세로 스크롤 */
     background-color: #ffffff;
     box-shadow: 0 0 25px rgba(0,0,0,0.15);
     border-radius: 20px;
@@ -39,4 +39,28 @@ body {
     margin-top: 20px;
     margin-bottom: 30px;
     font-weight: 700;
+}
+
+/* 내부 모듈(섹션)도 컨테이너 너비에 맞춰 100%로 */
+.app-container > * {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#rosie-appointments {
+    padding: 16px;
+    border-top: 1px solid #eee;
+}
+#rosie-appointments .module-title {
+    font-size: 1.2em;
+    margin-bottom: 12px;
+    color: #375bd1;
+}
+#appointments-list .appointment-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+#appointments-list .empty-state {
+    color: #999;
+    font-size: 0.9em;
 }

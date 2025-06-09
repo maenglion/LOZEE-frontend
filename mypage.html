@@ -76,7 +76,15 @@
                 <ul id="childDiagnosesList" class="neurodiversity-info" style="text-align: right;"></ul>
             </div>
 
-            <div class="info-card emergency-alerts-card" id="emergencyAlertsSection" style="display:none;">
+            <section id="rosie-appointments" class="module">
+  <h2 class="module-title">로지와의 약속</h2>
+  <div id="appointments-list">
+    <!-- JS로 reservation 데이터를 불러와 이곳에 렌더링 -->
+    <p class="empty-state">아직 예약된 약속이 없습니다.</p>
+  </div>
+</section>
+
+              <div class="info-card emergency-alerts-card" id="emergencyAlertsSection" style="display:none;">
                 <h2>🚨 확인이 필요한 이야기</h2>
                 <ul id="emergencyAlertsList"></ul>
             </div>
@@ -96,6 +104,7 @@
     <script type="module">
         import { db } from './js/firebase-config.js';
         import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+
 
         // --- DOM 요소 ---
         const pageTitleEl = document.querySelector('title'); const userNameDisplayEl = document.getElementById('userNameDisplay'); const userEmailDisplayEl = document.getElementById('userEmailDisplay'); const userFullAgeEl = document.getElementById('userFullAge'); const lastLoginDateEl = document.getElementById('lastLoginDate'); const directUserDiagnosisCardEl = document.getElementById('directUserDiagnosisCard'); const userDiagnosesListEl = document.getElementById('userDiagnosesList'); const caregiverPersonalNDCardEl = document.getElementById('caregiverPersonalNDCard'); const caregiverPersonalNeurodiversityListEl = document.getElementById('caregiverPersonalNeurodiversityList'); const childInfoCardEl = document.getElementById('childInfoCard'); const childNameDisplayEl = document.getElementById('childNameDisplay'); const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay'); const childDiagnosesListEl = document.getElementById('childDiagnosesList'); const recentJournalCardListEl = document.getElementById('recentJournalCardList'); const goToJournalListBtn = document.getElementById('goToJournalListBtn');
@@ -142,6 +151,21 @@
             }
             displayRecentJournals(loggedInUserId, userType);
         }
+
+// 예약정보보
+async function loadReservations() {
+  const q = query(
+    collection(db, 'reservations'),
+    where('userId', '==', loggedInUserId)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(doc => doc.data());
+}
+
+// 페이지 렌더링 시
+const reservations = await loadReservations();
+reservations.forEach(r => renderReservation(r));
+
 
         async function displayEmergencyAlerts(parentId, childName) {
             emergencyAlertsSectionEl.style.display = 'block';

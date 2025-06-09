@@ -145,6 +145,41 @@ export function getSystemPrompt({ userName = '친구', userAge = 0, verbosity = 
 }
 
 // 7) GPT 호출 및 메시지 구성
+// js/gpt-dialog.js
+
+import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
+import { neurodiversityInfo } from './neurodiversityData.js';
+
+// ... (getKoreanVocativeParticle and other helper functions remain the same) ...
+export function getKoreanVocativeParticle(name) {
+    if (!name || typeof name !== 'string' || name.trim() === '') return '야';
+    const lastCharCode = name.charCodeAt(name.length - 1);
+    if (lastCharCode < 0xAC00 || lastCharCode > 0xD7A3) return '야';
+    return (lastCharCode - 0xAC00) % 28 === 0 ? '야' : '아';
+}
+
+export function getSystemPrompt({ userName = '친구', userAge = 0, verbosity = 'default', elapsedTime = 0, userTraits = [] } = {}, intent = 'fact') {
+    let prompt = `[상황] 당신은 'LOZEE'라는 이름의 AI 심리 코치입니다...`;
+    
+    // ⭐ NEW: Add instructions for the interactive question
+    prompt += `
+# 응답 형식 지침 (분석 JSON 포함 필수):
+1. 먼저 “사람이 읽는 형태의 자연어 답장”을 한두 문단 이상 작성한 뒤,  
+2. 반드시 **JSON** 형태의 분석 결과를 이어서 출력해야 합니다.  
+   JSON 객체에는 다음 필드들을 **모두 포함**해야 합니다:
+   - "summaryTitle": "..."
+   - "conversationSummary": "..."
+   - "keywords": ["..."]
+   - "overallSentiment": "..."
+   - "emotionToneData": { ... }
+   - "patterns": ["..."]
+   - "cognitiveDistortions": ["..."]
+   - ⭐ "interactive_question": { "question_text": "가장 힘든 시간은 언제야?", "options": ["아침에 준비할 때", "숙제할 때", "기타"] } (선택 사항: 사용자에게 명확한 선택지를 주고 싶을 때만 이 객체를 포함하세요. 클라이언트가 자동으로 선택 박스를 생성합니다.)
+`;
+    // ... (rest of the prompt remains the same) ...
+    return prompt;
+}
+
 export async function getGptResponse(userText, { chatHistory = [], verbosity = 'default', elapsedTime = 0, userTraits = [] } = {}) {
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -156,20 +191,16 @@ export async function getGptResponse(userText, { chatHistory = [], verbosity = '
             statusText: 'Unauthorized'
         });
     }
-
+  
     try {
         const token = await currentUser.getIdToken();
-
-        const intent = detectIntent(userText);
-        const userNameFromStorage = localStorage.getItem('lozee_username') || '친구';
-        const userInteractionAge = parseInt(localStorage.getItem('lozee_userage') || 0, 10);
         const systemPrompt = getSystemPrompt({
-            userName: userNameFromStorage,
-            userAge: userInteractionAge,
+            userName: localStorage.getItem('lozee_username') || '친구',
+            userAge: parseInt(localStorage.getItem('lozee_userage') || 0, 10),
             verbosity,
             elapsedTime,
             userTraits
-        }, intent);
+        }, detectIntent(userText));
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -178,9 +209,7 @@ export async function getGptResponse(userText, { chatHistory = [], verbosity = '
         ];
 
         const payload = { model: 'gpt-4-turbo', messages, max_tokens: 300, temperature: 0.7 };
-
-        console.log("GPT 요청 메시지 (시스템 프롬프트 포함):", JSON.stringify(messages, null, 2));
-
+        
         const res = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
             method: 'POST',
             headers: {
@@ -189,9 +218,7 @@ export async function getGptResponse(userText, { chatHistory = [], verbosity = '
             },
             body: JSON.stringify(payload)
         });
-
         return res;
-
     } catch (error) {
         console.error("Error getting Firebase token or fetching from API:", error);
         return new Response(JSON.stringify({ error: 'Failed to authenticate or fetch API.' }), {

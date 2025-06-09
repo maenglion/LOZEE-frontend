@@ -346,7 +346,7 @@ async function sendMessage(text, inputMethod) {
                 localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
                 showAnalysisNotification();
          
-         // 로지와의 대화 예약약       
+         // 로지와의 대화 예약      
          if (lastAiAnalysisData?.cognitiveDistortions?.length > 0) {
             appendMessage(
                 '어떤 요일·시간대가 편하신가요? (예: 매주 화요일 오후 3시)',
@@ -367,10 +367,6 @@ async function sendMessage(text, inputMethod) {
             };
             chatWindow.appendChild(scheduleBtn);
         }
-
-
-
-
             }
         }
 
