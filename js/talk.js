@@ -345,6 +345,32 @@ async function sendMessage(text, inputMethod) {
                 const dataToStore = { results: lastAiAnalysisData, accumulatedDurationMinutes: elapsedTimeInMinutes };
                 localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
                 showAnalysisNotification();
+         
+         // 로지와의 대화 예약약       
+         if (lastAiAnalysisData?.cognitiveDistortions?.length > 0) {
+            appendMessage(
+                '어떤 요일·시간대가 편하신가요? (예: 매주 화요일 오후 3시)',
+                'assistant'
+            );
+
+            const scheduleBtn = document.createElement('button');
+            scheduleBtn.className = 'chat-option-btn';
+            scheduleBtn.textContent = '🗓️ 상담 예약하기';
+            scheduleBtn.onclick = () => {
+                const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
+                const params = new URLSearchParams({
+                    text: '로지와의 대화 예약',
+                    details: '이전 대화에서 엿보인 주제에 대하여 추가로 대화가 필요해요.',
+                    ctz: Intl.DateTimeFormat().resolvedOptions().timeZone
+                });
+                window.open(`${baseUrl}?${params.toString()}`, '_blank');
+            };
+            chatWindow.appendChild(scheduleBtn);
+        }
+
+
+
+
             }
         }
 
@@ -394,6 +420,7 @@ function setupAudioAnalysis(stream) {
     draw();
 }
 
+// audio analysis 시각화
 function draw() {
     if (!analyser || !dataArray) return;
     animId = requestAnimationFrame(draw);
@@ -401,6 +428,8 @@ function draw() {
     let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
     let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
     if (meterLevel) meterLevel.style.width = norm + '%';
+    if (sessionHeaderEl)   
+        sessionHeaderEl.style.backgroundColor = `hsl(228,50%,${90 - (norm/5)}%)`;
 }
 
 function stopAudio() {
@@ -409,6 +438,10 @@ function stopAudio() {
     if (streamRef) streamRef.getTracks().forEach(track => track.stop());
     if (audioContext && audioContext.state !== 'closed') audioContext.close();
     if (meterContainer) meterContainer.classList.remove('active');
+    if (sessionHeaderEl) {
+        sessionHeaderEl.style.transition = 'background-color 0.3s';
+        sessionHeaderEl.style.backgroundColor = ''; 
+    }
 }
 
 function handleMicButtonClick() {
