@@ -26,7 +26,7 @@ export function stopCurrentTTS() {
  * @param {string} voice The desired voice for the speech.
  */
 export async function playTTSFromText(text, voice) {
-    stopCurrentTTS(); // Stop any previous audio
+    stopCurrentTTS();
 
     const auth = getAuth();
     const currentUser = auth.currentUser;
@@ -36,21 +36,20 @@ export async function playTTSFromText(text, voice) {
         throw new Error("User not authenticated.");
     }
     
-    console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voice}"`);
+    // ⭐ FIX: Provide a default voice if the one from localStorage is null or invalid.
+    const voiceToUse = voice || 'alloy';
+    console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
 
     try {
-        // Get the Firebase ID token for authentication
         const token = await currentUser.getIdToken();
 
-        // Fetch the audio from the backend server
         const response = await fetch(TTS_BACKEND_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // ⭐ Add the authentication token to the header
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ text, voice })
+            body: JSON.stringify({ text, voice: voiceToUse }) // Use the safe voiceToUse
         });
 
         if (!response.ok) {
@@ -60,6 +59,9 @@ export async function playTTSFromText(text, voice) {
         }
 
         const audioData = await response.arrayBuffer();
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
         const audioBuffer = await audioContext.decodeAudioData(audioData);
         
         const source = audioContext.createBufferSource();
@@ -78,7 +80,7 @@ export async function playTTSFromText(text, voice) {
 
     } catch (error) {
         console.error("TTS playTTSFromText 함수 내 오류:", error);
-        stopCurrentTTS(); // Clean up on error
-        throw error; // Re-throw the error to be handled by the caller
+        stopCurrentTTS();
+        throw error;
     }
 }
