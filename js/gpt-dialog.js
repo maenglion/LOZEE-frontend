@@ -8,12 +8,30 @@ import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-aut
 import { neurodiversityInfo } from './neurodiversityData.js';
 
 // 1) 호격 조사 결정: '아/야'
+/**
+ * 이름에 따라 올바른 호격 조사를 반환하는 함수.
+ * 영어 이름인 경우 ','를, 한글 이름인 경우 받침 유무에 따라 '아' 또는 '야'를 반환합니다.
+ * @param {string} name - 사용자 이름
+ * @returns {string} - 계산된 호격 조사 (",", "아", "야")
+ */
 export function getKoreanVocativeParticle(name) {
-    if (!name || typeof name !== 'string' || name.trim() === '') return '야';
-    const lastCharCode = name.charCodeAt(name.length - 1);
-    if (lastCharCode < 0xAC00 || lastCharCode > 0xD7A3) {
-        return '야';
+    if (!name || typeof name !== 'string' || name.trim() === '') return ''; // 이름이 없으면 아무것도 붙이지 않음
+
+    // 정규식을 사용하여 영어 알파벳이 포함되어 있는지 확인
+    const hasEnglish = /[a-zA-Z]/.test(name);
+    if (hasEnglish) {
+        return ','; // 영어 이름이면 쉼표(,) 반환
     }
+
+    // --- 기존 한글 이름 처리 로직 ---
+    const lastCharCode = name.charCodeAt(name.length - 1);
+    
+    // 마지막 글자가 한글 음절 범위인지 확인
+    if (lastCharCode < 0xAC00 || lastCharCode > 0xD7A3) {
+        return ','; // 한글이 아니면 쉼표(,) 반환 (안전 장치)
+    }
+
+    // 받침 유무에 따라 '아' 또는 '야' 반환
     return (lastCharCode - 0xAC00) % 28 === 0 ? '야' : '아';
 }
 
@@ -144,96 +162,11 @@ export function getSystemPrompt({ userName = '친구', userAge = 0, verbosity = 
     return prompt;
 }
 
-// 7) GPT 호출 및 메시지 구성
-// js/gpt-dialog.js
-
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
-import { neurodiversityInfo } from './neurodiversityData.js';
-
-// ... (getKoreanVocativeParticle and other helper functions remain the same) ...
-export function getKoreanVocativeParticle(name) {
-    if (!name || typeof name !== 'string' || name.trim() === '') return '야';
-    const lastCharCode = name.charCodeAt(name.length - 1);
-    if (lastCharCode < 0xAC00 || lastCharCode > 0xD7A3) return '야';
-    return (lastCharCode - 0xAC00) % 28 === 0 ? '야' : '아';
-}
-
-export function getSystemPrompt({ userName = '친구', userAge = 0, verbosity = 'default', elapsedTime = 0, userTraits = [] } = {}, intent = 'fact') {
-    let prompt = `[상황] 당신은 'LOZEE'라는 이름의 AI 심리 코치입니다...`;
-    
-    // ⭐ NEW: Add instructions for the interactive question
-    prompt += `
-# 응답 형식 지침 (분석 JSON 포함 필수):
-1. 먼저 “사람이 읽는 형태의 자연어 답장”을 한두 문단 이상 작성한 뒤,  
-2. 반드시 **JSON** 형태의 분석 결과를 이어서 출력해야 합니다.  
-   JSON 객체에는 다음 필드들을 **모두 포함**해야 합니다:
-   - "summaryTitle": "..."
-   - "conversationSummary": "..."
-   - "keywords": ["..."]
-   - "overallSentiment": "..."
-   - "emotionToneData": { ... }
-   - "patterns": ["..."]
-   - "cognitiveDistortions": ["..."]
-   - ⭐ "interactive_question": { "question_text": "가장 힘든 시간은 언제야?", "options": ["아침에 준비할 때", "숙제할 때", "기타"] } (선택 사항: 사용자에게 명확한 선택지를 주고 싶을 때만 이 객체를 포함하세요. 클라이언트가 자동으로 선택 박스를 생성합니다.)
-`;
-    // ... (rest of the prompt remains the same) ...
-    return prompt;
-}
-
-export async function getGptResponse(userText, { chatHistory = [], verbosity = 'default', elapsedTime = 0, userTraits = [] } = {}) {
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    if (!currentUser) {
-        console.error("Authentication Error: No user is currently signed in.");
-        return new Response(JSON.stringify({ error: 'Not authenticated. Please sign in.' }), {
-            status: 401,
-            statusText: 'Unauthorized'
-        });
-    }
-  
-    try {
-        const token = await currentUser.getIdToken();
-        const systemPrompt = getSystemPrompt({
-            userName: localStorage.getItem('lozee_username') || '친구',
-            userAge: parseInt(localStorage.getItem('lozee_userage') || 0, 10),
-            verbosity,
-            elapsedTime,
-            userTraits
-        }, detectIntent(userText));
-
-        const messages = [
-            { role: 'system', content: systemPrompt },
-            ...chatHistory,
-            { role: 'user', content: userText }
-        ];
-
-        const payload = { model: 'gpt-4-turbo', messages, max_tokens: 300, temperature: 0.7 };
-        
-        const res = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
-        return res;
-    } catch (error) {
-        console.error("Error getting Firebase token or fetching from API:", error);
-        return new Response(JSON.stringify({ error: 'Failed to authenticate or fetch API.' }), {
-            status: 500,
-            statusText: 'Internal Server Error'
-        });
-    }
-}
-
-
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
     const voc = getKoreanVocativeParticle(userName);
     const nameVoc = `${userName}${voc}`;
-    return `${nameVoc}, 오늘 이야기 나눠줘서 정말 고마워! 언제든 다시 찾아와도 괜찮아. 항상 여기서 기다리고 있을게. 😊`;
+    return `${nameVoc}, 오늘 이야기 나눠줘서 정말 고마워! 언제든 다시 찾아와줘줘. 항상 여기서 기다리고 있을게. 😊`;
 }
 
 // 9) 초기 인사말
