@@ -266,6 +266,8 @@ function showAnalysisNotification() {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+
+
 // ⭐ 복원된 함수: 사용자의 메시지를 GPT 서버로 보내고 응답을 처리합니다.
 async function sendMessage(text, inputMethod) {
     if (!text || String(text).trim() === '' || isProcessing) return;
@@ -299,6 +301,9 @@ async function sendMessage(text, inputMethod) {
             try {
                 lastAiAnalysisData = JSON.parse(jsonString);
                 updateSessionHeader();
+
+                localStorage.setItem('lozee_last_summary', lastAiAnalysisData.conversationSummary);
+localStorage.setItem('lozee_last_keywords', JSON.stringify(lastAiAnalysisData.keywords || []));
 
                 // ⭐ FIX: 분석 엔진을 실시간으로 활성화하는 코드를 복원합니다.
                 if (LOZEE_ANALYSIS) {
