@@ -268,7 +268,7 @@ function showSubTopics() {
             selectedSubTopicDetails = fullOptionObject;
             updateSessionHeader();
             startChat(selectedSubtopicText, 'topic_selection_init', fullOptionObject);
-        });// ⭐ 복원된 함수: 메인 주제를 버튼으로 표시합니다.
+        }); 
     }
 }
 
@@ -356,6 +356,12 @@ function showAnalysisNotification() {
 
 // ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (오류 수정 버전)
 async function sendMessage(text, inputMethod) {
+    
+     if (!text || String(text).trim() === '') {
+    console.warn("빈 텍스트로 sendMessage 호출됨");
+    return;
+  }
+    
     if (!text || String(text).trim() === '' || isProcessing) return;
     isProcessing = true;
     if (actionButton) actionButton.disabled = true;
