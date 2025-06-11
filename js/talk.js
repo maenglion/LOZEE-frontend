@@ -337,8 +337,7 @@ function showAnalysisNotification() {
 }
 
 
-
-// ⭐ 복원된 함수: 사용자의 메시지를 GPT 서버로 보내고 응답을 처리합니다.
+// ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (오류 수정 버전)
 async function sendMessage(text, inputMethod) {
     if (!text || String(text).trim() === '' || isProcessing) return;
     isProcessing = true;
@@ -349,7 +348,7 @@ async function sendMessage(text, inputMethod) {
     if (chatInput) chatInput.value = '';
     appendMessage('...', 'assistant thinking');
 
-    
+    // 메인 try 블록 시작
     try {
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
         
@@ -369,56 +368,38 @@ async function sendMessage(text, inputMethod) {
         if (jsonStartIndex !== -1) {
             cleanText = rawResponseText.substring(0, jsonStartIndex).trim();
             jsonString = rawResponseText.substring(jsonStartIndex);
-    
-    
-            try {
-    lastAiAnalysisData = JSON.parse(jsonString);
-    updateSessionHeader();
-
-    localStorage.setItem('lozee_last_summary', lastAiAnalysisData.conversationSummary);
-    localStorage.setItem('lozee_last_keywords', JSON.stringify(lastAiAnalysisData.keywords || []));
-
-    // =================================================================
-    // ⭐ 실시간 클라이언트 분석 활성화 코드 ⭐
-    // =================================================================
-    if (LOZEE_ANALYSIS) {
-        // 1. 대화 시간 추적 시작 (세션당 한 번만 실행)
-        if (LOZEE_ANALYSIS.trackTime && !LOZEE_ANALYSIS.isTimeTracking) {
-             LOZEE_ANALYSIS.trackTime();
-             LOZEE_ANALYSIS.isTimeTracking = true; // 중복 실행 방지 플래그
-        }
-
-        // 2. 감정 어조 분석 (매 응답 시)
-        // analysis.html에 차트가 있다면 이 함수가 차트를 직접 그립니다.
-        // talk.html에 차트 요소가 없다면 이 함수는 아무것도 하지 않습니다.
-        if (LOZEE_ANALYSIS.trackEmotionTone) {
-            LOZEE_ANALYSIS.trackEmotionTone(lastAiAnalysisData);
-        }
-
-        // 3. 인지 왜곡/상황 분석 (매 응답 시)
-        // talk.html에 관련 요소가 없다면 이 또한 아무것도 하지 않습니다.
-        if (LOZEE_ANALYSIS.trackSituation) {
-            LOZEE_ANALYSIS.trackSituation(lastAiAnalysisData);
-        }
         
-        // 4. 인물-감정 태그 추출 및 저장
-        // 전체 대화 기록을 텍스트로 합쳐 분석 함수에 전달합니다.
-        if (LOZEE_ANALYSIS.extractEntityEmotionPairs) {
-            const fullConversationText = chatHistory.map(turn => turn.content).join('\n');
-            const entityEmotionTags = LOZEE_ANALYSIS.extractEntityEmotionPairs(fullConversationText);
-            
-            // 분석 결과를 localStorage에 저장해 analysis.html에서 사용
-            localStorage.setItem('lozee_entity_emotion_tags', JSON.stringify(entityEmotionTags));
-            console.log("인물-감정 태그 분석 결과:", entityEmotionTags);
-        }
-    }
-    // =================================================================
+            // JSON 파싱을 위한 별도 try...catch
+            try {
+                lastAiAnalysisData = JSON.parse(jsonString);
+                updateSessionHeader();
 
+                localStorage.setItem('lozee_last_summary', lastAiAnalysisData.conversationSummary);
+                localStorage.setItem('lozee_last_keywords', JSON.stringify(lastAiAnalysisData.keywords || []));
+
+                // 실시간 클라이언트 분석 활성화 코드
+                if (LOZEE_ANALYSIS) {
+                    if (LOZEE_ANALYSIS.trackTime && !LOZEE_ANALYSIS.isTimeTracking) {
+                        LOZEE_ANALYSIS.trackTime();
+                        LOZEE_ANALYSIS.isTimeTracking = true;
+                    }
+                    if (LOZEE_ANALYSIS.trackEmotionTone) {
+                        LOZEE_ANALYSIS.trackEmotionTone(lastAiAnalysisData);
+                    }
+                    if (LOZEE_ANALYSIS.trackSituation) {
+                        LOZEE_ANALYSIS.trackSituation(lastAiAnalysisData);
+                    }
+                    if (LOZEE_ANALYSIS.extractEntityEmotionPairs) {
+                        const fullConversationText = chatHistory.map(turn => turn.content).join('\n');
+                        const entityEmotionTags = LOZEE_ANALYSIS.extractEntityEmotionPairs(fullConversationText);
+                        localStorage.setItem('lozee_entity_emotion_tags', JSON.stringify(entityEmotionTags));
+                        console.log("인물-감정 태그 분석 결과:", entityEmotionTags);
+                    }
+                }
             } catch (e) {
                 console.error("❌ GPT 응답 JSON 파싱 실패:", e);
             }
         }
-
 
         appendMessage(cleanText, 'assistant');
         await playTTSWithControl(cleanText);
@@ -426,7 +407,7 @@ async function sendMessage(text, inputMethod) {
 
         userCharCountInSession = chatHistory.filter(m => m.role === 'user').reduce((sum, m) => sum + (m.content ? m.content.length : 0), 0);
         
-   if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
+        if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
             journalReadyNotificationShown = true;
             const topicForJournal = selectedSubTopicDetails?.displayText || selectedMain;
             const detailsToSave = {
@@ -443,43 +424,55 @@ async function sendMessage(text, inputMethod) {
                 if (id) displayJournalCreatedNotification(id);
             });
         }
+
         const userTurnCount = chatHistory.filter(m => m.role === 'user').length;
         if (elapsedTimeInMinutes >= 10 && userTurnCount >= 10 && !analysisNotificationShown) {
             if (lastAiAnalysisData) {
                 const dataToStore = { results: lastAiAnalysisData, accumulatedDurationMinutes: elapsedTimeInMinutes };
                 localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
                 showAnalysisNotification();
-         
-         // 로지와의 대화 예약      
-         // scheduleBtn 생성 부분
-    if (lastAiAnalysisData?.cognitiveDistortions?.length > 0) {
-        // ...
-        const scheduleBtn = document.createElement('button');
-        // ...
-        scheduleBtn.onclick = async () => { // << async 키워드 추가
-            try {
-                // ✅ 2. DB에 예약 정보를 저장하는 코드를 여기에 추가합니다.
-                await saveReservation(loggedInUserId, {
-                    type: 'conversation',
-                    dateExpression: '매주 화요일 오후 3시', // 실제 사용자 입력을 받아오도록 수정 필요
-                    createdAt: Date.now()
-                });
-                
-                // 구글 캘린더 로직은 그대로 둡니다.
-                const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
-                const params = new URLSearchParams({ /*...*/ });
-                window.open(`${baseUrl}?${params.toString()}`, '_blank');
-
-            } catch (error) {
-                console.error("예약 저장 중 오류 발생:", error);
+            
+                // 로지와의 대화 예약
+                if (lastAiAnalysisData?.cognitiveDistortions?.length > 0) {
+                    appendMessage('어떤 요일·시간대가 편하신가요? (예: 매주 화요일 오후 3시)', 'assistant');
+                    const scheduleBtn = document.createElement('button');
+                    scheduleBtn.className = 'chat-option-btn';
+                    scheduleBtn.textContent = '🗓️ 상담 예약하기';
+                    scheduleBtn.onclick = async () => {
+                        try {
+                            await saveReservation(loggedInUserId, {
+                                type: 'conversation',
+                                dateExpression: '매주 화요일 오후 3시',
+                                createdAt: Date.now()
+                            });
+                            
+                            const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
+                            const params = new URLSearchParams({
+                                text: '로지와의 대화 예약',
+                                details: '이전 대화에서 엿보인 주제에 대하여 추가로 대화가 필요해요.',
+                                ctz: Intl.DateTimeFormat().resolvedOptions().timeZone
+                            });
+                            window.open(`${baseUrl}?${params.toString()}`, '_blank');
+                        } catch (error) {
+                            console.error("예약 저장 중 오류 발생:", error);
+                        }
+                    };
+                    chatWindow.appendChild(scheduleBtn);
+                }
             }
-        };
-        chatWindow.appendChild(scheduleBtn);
- 
-  
+        }
+    // 메인 try 블록 끝
+    } catch (error) {
+        // catch 블록 시작 (오류 처리)
+        console.error("sendMessage 내 예외 발생:", error);
+        chatWindow.querySelector('.thinking')?.remove();
+        appendMessage("오류가 발생했어요. 잠시 후 다시 시도해 주세요.", "assistant_feedback");
+    // catch 블록 끝
     } finally {
+        // finally 블록 시작 (항상 실행)
         isProcessing = false;
         if (actionButton) actionButton.disabled = false;
+    // finally 블록 끝
     }
 }
 
