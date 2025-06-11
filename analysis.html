@@ -280,8 +280,58 @@
     </div>
 
     <script type="module">
-        // Chart.js import는 삭제하고, <head>에서 UMD 버전을 로드합니다.
-        let chartLibraryInitialized = false;
+    import { db } from './js/firebase-config.js';
+    import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+    import {
+      shouldRunModule,
+      renderEmotionChart,
+      renderEntityEmotionFishing,
+      alertCognitiveDistortions,
+      logTestCondition
+    } from './js/lozee-analysis.js';
+
+       async function loadChildAnalysis(userEmail) {
+      const userIdMap = {
+        'soul.minhoo.maeng@gmail.com': 'TEST_UID_1',
+        'maengnanyoung@gmail.com': 'Jwoqeuuwmwrbidakeydvrmyjih53', 
+        'minhoosoul77@gmail.com' : 'N7jWM28eGsVGbUowpVAuRROzhGD2' ,
+        'orchidyoung@naver.com': 'TEST_UID_3'
+         
+      };
+      const uid = userIdMap[userEmail];
+      if (!uid) return alert('테스트 UID를 찾을 수 없습니다.');
+
+        const snapshot = await getDocs(query(
+        collection(db, 'journals'),
+        where('userId', '==', uid)
+      ));
+
+ const sessions = snapshot.docs.map(doc => doc.data());
+      const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+      const userAge = sessions[0]?.userAge || 10;
+
+      const modules = ['emotionTone', 'entityEmotion', 'cognitiveDistortion', 'repetitivePattern'];
+
+      modules.forEach(mod => {
+        const pass = shouldRunModule(mod, { userAge, totalMinutes, sessions });
+        logTestCondition(mod, pass);
+        if (!pass) {
+          const div = document.createElement('div');
+          div.innerHTML = `🔎 ${mod} 분석 조건이 아직 충분하지 않아요.`;
+          document.body.appendChild(div);
+          return;
+        }
+
+        if (mod === 'emotionTone') renderEmotionChart('emotion-chart', sessions);
+        if (mod === 'entityEmotion') renderEntityEmotionFishing(sessions, 'fishing-chart');
+
+        if (mod === 'cognitiveDistortion' || mod === 'repetitivePattern') {
+          const last = sessions[sessions.length - 1];
+          if (last.detailedAnalysis) alertCognitiveDistortions('situation-container', last.detailedAnalysis.cognitiveDistortions || []);
+        }
+      });
+    }
+
 
         function initializeChartJsGlobal() {
             try {
@@ -310,6 +360,7 @@
         document.addEventListener('DOMContentLoaded', () => { // async 제거 가능
             console.log("Analysis Page: DOMContentLoaded 이벤트 시작");
             const chartJsIsReady = initializeChartJsGlobal(); 
+            loadChildAnalysis('soul.minhoo.maeng@gmail.com'); // ✳️ 테스트용 아동 계정
 
             // --- DOM 요소 가져오기 ---
             const languageAgeSection = document.getElementById('languageAgeSection');

@@ -175,3 +175,21 @@ scheduleBtn.onclick = async () => {
   // 2) 캘린더 편집 페이지 오픈
   window.open(`${baseUrl}?${params.toString()}`, '_blank');
 };
+
+
+// 사용자 분석 정보 불러오기 
+async function loadAnalysisDataFromFirestore(userId) {
+  const q = query(
+    collection(db, "journals"),
+    where("userId", "==", userId)
+  );
+  const snapshot = await getDocs(q);
+  const allResults = [];
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.detailedAnalysis) {
+      allResults.push(data.detailedAnalysis);
+    }
+  });
+  return allResults;
+}

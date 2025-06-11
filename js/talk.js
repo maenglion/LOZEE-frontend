@@ -84,15 +84,28 @@ function updateActionButtonIcon() {
 /**
  * 로지의 답변을 음성으로 재생하는 함수 (TTS)
  */
+
 async function playTTSWithControl(txt) {
-    if (!isTtsMode) return;
-    if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
-    try {
-        if (typeof playTTSFromText === 'function') await playTTSFromText(txt, localStorage.getItem('lozee_voice'));
-    } catch (error) {
-        console.error("TTS 재생 오류 (서버 CORS 설정을 확인하세요):", error);
+  if (!isTtsMode) return;
+
+  if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
+
+  try {
+    const voiceId = localStorage.getItem('lozee_voice') || "ko-KR-Chirp3-HD-leda"; // 💡 안전 기본값 추가
+    if (typeof playTTSFromText === 'function') {
+      await playTTSFromText(txt, voiceId);
     }
+  } catch (error) {
+    console.error("TTS 재생 오류 (서버 CORS 설정을 확인하세요):", error);
+  }
 }
+
+
+function handleGptReply(replyText) {
+  appendAssistantBubble(replyText);          // 화면에 말풍선 표시
+  playTTSWithControl(replyText);             // ✅ 음성 출력: 제어는 위임
+}
+
 
 /**
  * 여러 선택지를 버튼 형태로 채팅창에 표시하는 함수
@@ -279,6 +292,7 @@ async function sendMessage(text, inputMethod) {
     if (chatInput) chatInput.value = '';
     appendMessage('...', 'assistant thinking');
 
+    
     try {
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
         
@@ -525,6 +539,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
         currentFirestoreSessionId = await logSessionStart(loggedInUserId, "대화 시작");
         resetSessionTimeout();
+
+          const isReady = localStorage.getItem("lozee_user_ready");
+  if (isReady === "true") {
+    getFirstQuestion();  // GPT가 “오늘 기분이 어땠어?” 같은 질문 시작
+  }
 
         const greeting = getInitialGreeting(userNameToDisplay + voc, false);
         appendMessage(greeting, 'assistant');

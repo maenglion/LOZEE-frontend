@@ -190,7 +190,7 @@
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>
-                <a id="gnb-analysis-link" href="analysis.html">📊 우리 이야기 분석</a>
+                <a id="gnb-analysis-link" href="analysis.html">📊 이야기 분석</a>
                 <a href="journal-list.html">📖 이야기 모음집</a>
                 <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
             </div>
@@ -260,32 +260,56 @@
     </div>
 
     <script type="module">
-        let chartLibraryInitialized = false;
+    import { db } from './js/firebase-config.js';
+    import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+  import {
+      shouldRunModule,
+      renderEmotionChart,           // ✅ 기존 renderEmotionToneChart → LOZEE에서 쓰는 이름 기준 반영
+      renderEntityEmotionFishing,  // ✅ 감정-인물 페어 시각화
+      alertCognitiveDistortions,   // ✅ 인지왜곡 경고 시각화 함수
+      logTestCondition
+    } from './js/lozee-analysis.js';
 
-        function initializeChartJsGlobal() {
-            // ... (기존 analysis.html의 initializeChartJsGlobal 함수와 동일하게 사용) ...
-            try {
-                if (typeof Chart !== 'undefined' && Chart) {
-                    Chart.defaults.color = '#333';
-                    Chart.defaults.borderColor = '#e0e0e0';
-                    Chart.defaults.font.family = "'KoPub World Dotum', sans-serif";
-                    Chart.defaults.font.size = 12;
-                    console.log("Adult Analysis Page: Chart.js(UMD) 라이브러리가 인식되고 기본값이 설정되었습니다.");
-                    chartLibraryInitialized = true;
-                    return true;
-                } else {
-                    console.error("Adult Analysis Page: Chart.js(UMD) 라이브러리를 찾을 수 없습니다.");
-                    const emotionChartContainer = document.getElementById('emotionChartContainer');
-                    if (emotionChartContainer) {
-                        emotionChartContainer.innerHTML = '<p style="text-align:center; color:red; padding:20px;">차트 기능에 문제가 있어요. 😭<br>페이지를 새로고침 해보세요.</p>';
-                    }
-                    return false;
-                }
-            } catch (error) {
-                console.error("Adult Analysis Page: Chart.js(UMD) 초기화 중 오류!", error);
-                return false;
-            }
+    async function loadAdultAnalysis(userEmail) {
+      const userIdMap = {
+        'soul.minhoo.maeng@gmail.com': 'TEST_UID_1',
+        'maengnanyoung@gmail.com': 'Jwoqeuuwmwrbidakeydvrmyjih53', 
+        'minhoosoul77@gmail.com' : 'N7jWM28eGsVGbUowpVAuRROzhGD2' ,
+        'orchidyoung@naver.com': 'TEST_UID_3'
+      };
+      const uid = userIdMap[userEmail];
+      if (!uid) return alert('테스트 UID를 찾을 수 없습니다.');
+
+      const snapshot = await getDocs(query(
+        collection(db, 'journals'),
+        where('userId', '==', uid)
+      ));
+
+      const sessions = snapshot.docs.map(doc => doc.data());
+      const totalMinutes = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+      const userAge = sessions[0]?.userAge || 35;
+
+      const modules = ['emotionTone', 'entityEmotion', 'cognitiveDistortion', 'repetitivePattern'];
+
+      modules.forEach(mod => {
+        const pass = shouldRunModule(mod, { userAge, totalMinutes, sessions });
+        logTestCondition(mod, pass);
+        if (!pass) {
+          const div = document.createElement('div');
+          div.innerHTML = `❗ ${mod} 조건 미충족`;
+          document.body.appendChild(div);
+          return;
         }
+        if (mod === 'emotionTone') renderEmotionToneChart(sessions, 'emotion-chart');
+        if (mod === 'entityEmotion') renderEntityEmotionFishing(sessions, 'fishing-chart');
+
+        if (mod === 'cognitiveDistortion' || mod === 'repetitivePattern') {
+          const last = sessions[sessions.length - 1];
+          if (last.detailedAnalysis) trackSituation(last.detailedAnalysis);
+        }
+      });
+    }    
+
 
         // --- 페이지 접근 권한 확인 (15세 이상) ---
         const ADULT_ANALYSIS_MIN_AGE = 15;
@@ -333,6 +357,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log("Adult Analysis Page: DOMContentLoaded 이벤트 시작");
             const chartJsIsReady = initializeChartJsGlobal();
+             loadAdultAnalysis('orchidyoung@naver.com'); // ✳️ 테스트용 보호자 계정
 
 
             // --- DOM 요소 가져오기 ---

@@ -1,9 +1,25 @@
 // js/lozee-analysis.js
 // 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
 
+import { Chart } from 'chart.js';
 
-// 분석 백엔드 url 정의
-const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis'; 
+const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis';
+
+// --- 분석 조건 ---
+export function shouldRunModule(module, { userAge, totalMinutes, sessions }) {
+  const totalKeywords = sessions.flatMap(s => s.keywords || []).length;
+  switch (module) {
+    case 'emotionTone':
+    case 'entityEmotion': return true;
+    case 'cognitiveDistortion':
+    case 'repetitivePattern': return totalMinutes >= 120;
+    case 'literacy':
+    case 'inferLangAge': return userAge <= 12 && totalMinutes >= 30;
+    case 'emotionChart':
+    case 'keywordCloud': return sessions.length >= 3 || totalKeywords >= 5;
+    default: return false;
+  }
+}
 
 // --- 1) 대화 시간별 언어·나이 분석 ---
 const timeTracking = { 
@@ -41,15 +57,60 @@ export function stopTrackTime() {
 }
 
 // --- 2) 감정 어조 분석 트래킹 ---
-export function trackEmotionTone(analysisData) { 
+export function trackEmotionTone(analysisData) {
   console.log('[LOZEE_ANALYSIS] 감정 어조 분석:', analysisData);
-  // TODO: 차트/클라우드 렌더링 구현
+  const toneMap = analysisData?.emotionTone || {};
+  const container = document.getElementById("emotion-chart");
+  if (!container || !Object.keys(toneMap).length) return;
+
+  const ctx = container.getContext("2d");
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(toneMap),
+      datasets: [{
+        label: "감정 어조 점수",
+        data: Object.values(toneMap),
+        backgroundColor: "rgba(255, 159, 64, 0.6)"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
 }
 
+
 // --- 3) 상황 분석 (인지왜곡 패턴 탐지) ---
-export function trackSituation(analysisData) { 
+export function trackSituation(analysisData) {
   console.log('[LOZEE_ANALYSIS] 상황 분석:', analysisData);
-  // TODO: 상황 패턴 추출 및 매칭 구현
+  const container = document.getElementById("situation-container");
+  if (!container) return;
+
+  const distortions = analysisData?.distortions || [];
+  const repetitions = analysisData?.patterns || [];
+
+  let html = "<div class='analysis-section'><h4>🧠 인지 왜곡/반복 패턴</h4>";
+
+  if (distortions.length) {
+    html += "<p><strong>인지 왜곡 감지됨:</strong></p><ul>";
+    distortions.forEach(d => html += `<li>${d}</li>`);
+    html += "</ul>";
+  }
+
+  if (repetitions.length) {
+    html += "<p><strong>반복 주제:</strong></p><ul>";
+    repetitions.forEach(p => html += `<li>${p}</li>`);
+    html += "</ul>";
+  }
+
+  if (!distortions.length && !repetitions.length) {
+    html += "<p style='color:#888;'>특별한 반복 패턴이나 왜곡 감지 없음.</p>";
+  }
+
+  html += "</div>";
+  container.innerHTML = html;
 }
 
 // --- 4) 문해력/표현력 분석 렌더러 ---
@@ -145,22 +206,4 @@ export function extractEntityEmotionPairs(conversationText) {
   
   return unique;
 }
-
-
-
-
-
-// talk.html에서 import LOZEE_ANALYSIS from ... 로 사용하기 위해
-// 필요한 함수들을 모아 객체로 만들고 default export 합니다.
-const LOZEE_ANALYSIS = {
-  timeTracking, // timeTracking 객체도 내보낼 수 있습니다.
-  trackTime,
-  stopTrackTime,
-  trackEmotionTone,
-  trackSituation,
-  renderLiteracyAnalysis,
-  inferAgeAndLanguage
-};
-
-export default LOZEE_ANALYSIS;
 
