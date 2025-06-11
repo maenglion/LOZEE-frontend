@@ -371,6 +371,10 @@ async function sendMessage(text, inputMethod) {
     if (chatInput) chatInput.value = '';
     appendMessage('...', 'assistant thinking');
 
+// sendMessage() 함수 호출 시 text가 올바르게 전달되는지 콘솔에서 확인해보세요:
+    console.log("✅ GPT 요청 text:", text);
+    console.log("✅ GPT 요청 context:", context);
+
     // 메인 try 블록 시작
     try {
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
