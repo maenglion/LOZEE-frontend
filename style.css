@@ -54,7 +54,7 @@ body {
   cursor: default;
 }    
 
-#chat-container { 
+#chat-window {
   max-width: 640px;
   margin: 0 auto;
   overflow-x: auto;
@@ -68,16 +68,30 @@ body {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(0,0,0,0.05);
-
-  @media screen and (max-width: 480px) {
-  #chat-container {
+}
+@media screen and (max-width: 480px) {
+  #chat-window {
     padding: 12px;
     border-radius: 0;
     box-shadow: none;
     max-width: 100%;
   }
 }
+
+#chat-window::-webkit-scrollbar {
+  width: 8px;
 }
+#chat-window::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+#chat-window::-webkit-scrollbar-thumb {
+  background: #cccccc;
+  border-radius: 4px;
+}
+#chat-window::-webkit-scrollbar-thumb:hover {
+  background: #aaaaaa;
+}
+
 .bubble { 
     max-width:80%; 
     padding:0.9rem 1.2rem; 
