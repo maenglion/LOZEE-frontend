@@ -15,6 +15,8 @@ import {
 } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
+
+
 // --- 2. 상태 변수 선언 ---
 let isProcessing = false;
 let chatHistory = [];
