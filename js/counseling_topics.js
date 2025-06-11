@@ -172,54 +172,102 @@ export const counselingTopicsByAge = {
     }
   },
   caregiver: { // 양육자 모드
-    "육아 (일반 및 신경다양성 아동)": [
-      { icon: "😩", displayText: "육아 스트레스가 너무 심해서 지쳐요", tags: ["양육 스트레스", "소진", "번아웃"], type: "emotion_intensity" },
-      { icon: "👨‍👩‍👧‍👦💥", displayText: "아이 키우는 문제로 배우자와 자주 다퉈요", tags: ["양육관 차이", "부부 갈등", "소통 부족"], type: "situation" },
-      { icon: "🧩", displayText: "우리 아이가 다른 아이들과 좀 다른 것 같아요, 어떻게 이해해야 할까요?", tags: ["신경다양성 이해", "자폐 스펙트럼", "ADHD", "발달 차이"], type: "else" },
-      { icon: "💔", displayText: "아이의 진단(자폐, ADHD 등)을 받고 너무 힘들고 절망스러워요", tags: ["진단 수용 어려움", "충격", "슬픔", "미래 걱정"], type: "emotion_intensity" },
-      { icon: "🔁🤔", displayText: "아이의 특정 행동(상동행동, 감각 문제 등)에 어떻게 대처해야 할지 막막해요", tags: ["행동 문제 대처", "상동행동", "감각 민감성", "전문가 도움"], type: "situation" },
-      { icon: "🏃‍♂️💨", displayText: "ADHD 아이의 주의력 부족, 과잉행동, 충동성 때문에 너무 지쳐요", tags: ["ADHD 양육", "주의력 부족 관리", "과잉행동 중재", "충동성 조절"], type: "emotion_intensity" },
-      { icon: "💸😟", displayText: "아이 치료와 교육 과정이 너무 길고 경제적으로도 부담이 커요", tags: ["경제적 부담", "장기 치료", "심리적 소진", "지원 정보"], type: "situation" },
-      { icon: "👀😔", displayText: "주변 사람들의 시선이나 오해 때문에 상처받고 힘들어요", tags: ["사회적 편견", "낙인", "정서적 고립", "이해 부족"], type: "emotion_intensity" },
-      { icon: "😥", displayText: "아이 훈육, 어떻게 해야 할지 정말 모르겠어요", tags: ["훈육 어려움", "일관성 부족", "행동 문제"], type: "else" },
-      { icon: "❓", displayText: "내가 좋은 부모인지 자신이 없고, 죄책감이 들어요", tags: ["양육 효능감 저하", "죄책감", "부모 역할 부담"], type: "emotion_intensity" },
-      { icon: "⏰😔", displayText: "육아로 내 시간이 사라져서 너무 우울해요", tags: ["자기 돌봄 부족", "정체성 상실감", "우울감"], type: "emotion_intensity" },
-      { icon: "🔮😥", displayText: "우리 아이의 미래를 생각하면 너무 불안하고, 무엇을 해줘야 할지 막막해요", tags: ["자녀 미래 설계", "자립 지원", "교육 계획", "불안감"], type: "emotion_intensity" },
-      { icon: "👨‍👩‍👧", displayText: "신경다양성 아이 때문에 다른 형제자매가 힘들어하거나 소외감을 느끼는 것 같아요", tags: ["비장애 형제 지원", "가족 내 역동", "죄책감"], type: "situation" },
-      { icon: "💧", displayText: "너무 지치고 외로워서 모든 걸 다 포기하고 싶을 때가 있어요", tags: ["양육 소진", "극심한 우울감", "정서적 지지 부족"], type: "emotion_intensity" },
-      { icon: "💥😥", displayText: "아이의 공격적인 행동(때리기, 물건 던지기 등) 때문에 너무 힘들어요.", tags: ["행동 문제 대처", "공격성", "양육 스트레스", "안전 문제"], type: "situation" },
-      { icon: "😨💔", displayText: "아이에게 너무 화가 나서 나쁜 생각(체벌 등)을 할까 봐 제 자신이 두려워요.", tags: ["감정조절 어려움", "분노", "죄책감", "부모 정신건강"], type: "emotion_intensity" },
-      { icon: "😔💭", displayText: "아이의 어려움이 유전인 것 같아 죄책감이 들고 너무 속상해요.", tags: ["죄책감", "유전 걱정", "자책", "양육 부담"], type: "emotion_intensity" },
-      { icon: "🗣️💬", displayText: "다른 사람들에게 우리 아이의 특별함에 대해 어떻게 이야기해야 할지 어려워요.", tags: ["사회적 소통", "신경다양성 설명", "이해 구하기"], type: "else" }
+    "육아 (일반 및 신경다양성 아동)":  [
+      {
+        icon: "😩",
+        displayText: "양육 스트레스",
+        tags: ["양육 스트레스", "소진", "번아웃"],
+        type: "emotion_intensity"
+      },
+      {
+        icon: "🧩",
+        displayText: "진단·특성 혼란",
+        tags: ["신경다양성 이해", "자폐", "ADHD"],
+        type: "else"
+      },
+      {
+        icon: "💸",
+        displayText: "치료비 부담",
+        tags: ["경제적 부담", "장기 치료"],
+        type: "situation"
+      },
+      {
+        icon: "😥",
+        displayText: "훈육이 어려움",
+        tags: ["훈육 문제", "일관성 부족"],
+        type: "else"
+      },
+      {
+        icon: "💔",
+        displayText: "진단 수용 어려움",
+        tags: ["진단 수용", "미래 걱정"],
+        type: "emotion_intensity"
+      }
     ],
     "가족 관계 (양육자 관점)": [
-      { icon: "😥", displayText: "아이 문제로 배우자와의 관계가 점점 힘들어져요.", tags: ["가족 관계 어려움", "부부 갈등", "양육 스트레스", "소통 단절"], type: "situation" },
-      { icon: "👵🏻👴🏻❓", displayText: "부모님(시부모님)께 아이 문제로 지원받고 싶지만, 이해받기 어려워요.", tags: ["가족 관계 어려움", "조부모와 갈등", "세대 차이", "이해 부족"], type: "situation" },
-      { icon: "🗣️💔", displayText: "친척이나 주변 사람들의 (아이 관련) 말에 상처받을 때가 많아요.", tags: ["가족 관계 어려움", "사회적 편견", "정서적 고립", "상처"], type: "emotion_intensity" },
-      { icon: "👩‍❤️‍👨🚫", displayText: "육아 때문에 부부만의 시간이 거의 없어져서 소원해진 것 같아요.", tags: ["가족 관계 어려움", "부부 관계 소홀", "정서적 교류 부족"], type: "situation" },
-      { icon: "😥📅", displayText: "명절이나 가족 모임이 아이 때문에 더 부담스럽고 피하고 싶어요.", tags: ["가족 관계 어려움", "가족 행사 스트레스", "사회적 시선"], type: "emotion_intensity" },
-      { icon: "🧍‍♀️🚫", displayText: "아이를 돌보느라 친구 관계나 사회생활이 거의 단절되어 너무 외로워요.", tags: ["대인관계 어려움", "사회적 고립", "외로움", "우울감"], type: "situation" },
-      { icon: "🚶‍♀️💭", displayText: "아이가 커갈수록 사람들을 만나거나 사회생활 하는 게 점점 더 두려워져요.", tags: ["대인관계 어려움", "사회적 고립", "불안감", "양육자의 어려움"], type: "emotion_intensity"}
+      {
+        icon: "😥",
+        displayText: "부부 소통 단절",
+        tags: ["부부 갈등", "소통 문제"],
+        type: "situation"
+      },
+      {
+        icon: "👵🏻",
+        displayText: "조부모와 충돌",
+        tags: ["세대 차이", "육아 갈등"],
+        type: "situation"
+      },
+      {
+        icon: "🗣️",
+        displayText: "친척 말 상처",
+        tags: ["사회적 편견", "상처"],
+        type: "emotion_intensity"
+      },
+      {
+        icon: "🧍‍♀️",
+        displayText: "사회적 고립감",
+        tags: ["고립감", "외로움"],
+        type: "situation"
+      },
+      {
+        icon: "📂",
+        displayText: "기타",
+        tags: ["가족 기타"],
+        type: "else"
+      }
     ],
-    "직장생활과 양육 병행": [
-      { icon: "💼😥", displayText: "아이 치료나 학교 문제로 직장과 육아를 병행하기가 너무 벅차요.", tags: ["워라밸", "경력 유지 어려움", "만성 피로", "죄책감"], type: "situation" },
-      { icon: "👀😓", displayText: "아이 때문에 회사에 자주 빠져야 해서 직장 내 입지가 불안해요.", tags: ["워라밸", "직장 내 어려움", "경력 단절 우려"], type: "emotion_intensity" },
-      { icon: "📉🧠", displayText: "아이 걱정으로 일에 집중이 안 되고, 내 능력이 떨어지는 것 같아요.", tags: ["워라밸", "업무 효율 저하", "성과 부담", "정신적 피로"], type: "emotion_intensity" },
-      { icon: "⏳👩‍💼", displayText: "육아로 인한 경력 단절이나 직장 복귀가 너무 두렵고 막막해요.", tags: ["워라밸", "경력 공백", "재취업 어려움", "자신감 상실"], type: "situation" }
-    ],
-    "양육자 자신의 마음 돌봄": [
-      { icon: "🧘‍♀️❤️", displayText: "나 자신을 돌볼 시간이 전혀 없어서 몸도 마음도 너무 지쳐가요.", tags: ["자기 돌봄", "소진", "건강 문제", "정서적 고갈"], type: "emotion_intensity" },
-      { icon: "👤❓", displayText: "양육자로서의 역할에만 갇혀 내 본래의 모습을 잃어버린 것 같아요.", tags: ["자기 돌봄", "정체성 혼란", "자아실현 욕구", "상실감"], type: "else" },
-      { icon: "😭💔", displayText: "가끔 너무 우울하고 모든 걸 다 내려놓고 싶어져요.", tags: ["자기 돌봄", "우울감", "절망감", "전문적 도움 필요"], type: "emotion_intensity" },
-      { icon: "🤝🆘", displayText: "다른 비슷한 상황의 양육자들과 이야기 나누며 위로받고 싶어요.", tags: ["자기 돌봄", "지지 그룹", "공감대 형성", "정보 공유"], type: "else" },
-      { icon: "🕰️🎨", displayText: "나만의 시간이나 취미를 갖고 싶은데, 아이에게 미안해서 죄책감이 들어요.", tags: ["자기 돌봄", "죄책감", "리프레시"], type: "emotion_intensity" },
-      { icon: "😴😫", displayText: "밤낮없이 아이를 돌보느라 충분한 수면을 취하지 못해 항상 피곤해요.", tags: ["자기 돌봄", "수면 문제", "만성 피로", "건강 악화"], type: "situation" }
-    ],
-    "기타 현실적 문제 (경제, 건강 등)": [
-      { icon: "💰😟", displayText: "아이 치료비나 특수 교육비 때문에 경제적으로 너무 불안하고 힘들어요.", tags: ["경제적 어려움", "재정 계획", "미래 자금 걱정"], type: "emotion_intensity" },
-      { icon: "💊😥", displayText: "내 건강이 점점 나빠지는 것 같아서 아이를 계속 돌볼 수 있을지 걱정돼요.", tags: ["양육자 건강", "체력적 한계", "만성 질환"], type: "situation" },
-      { icon: "⏳❓", displayText: "나이가 들면서 아이의 미래와 나의 노후를 생각하면 막막해요.", tags: ["노후 준비", "자녀 독립 후 삶", "장기적 계획"], type: "else" },
-      { icon: "📄🤷‍♀️", displayText: "아이에게 필요한 정부나 기관의 지원 제도를 잘 모르겠고, 신청하기도 너무 복잡해요.", tags: ["복지 정보", "행정 절차 어려움", "정보 부족"], type: "situation" }
+    "감정상태": 
+     [
+      {
+        icon: "😔",
+        displayText: "자존감 저하",
+        tags: ["자존감", "무력감"],
+        type: "emotion_intensity"
+      },
+      {
+        icon: "😣",
+        displayText: "불안과 걱정",
+        tags: ["불안", "미래 걱정"],
+        type: "emotion_intensity"
+      },
+      {
+        icon: "😢",
+        displayText: "슬픔과 외로움",
+        tags: ["우울", "외로움"],
+        type: "emotion_intensity"
+      },
+      {
+        icon: "😡",
+        displayText: "분노와 짜증",
+        tags: ["분노", "충동성"],
+        type: "emotion_intensity"
+      },
+      {
+        icon: "📂",
+        displayText: "기타",
+        tags: ["감정 기타"],
+        type: "else"
+      }
     ]
   }
 };
