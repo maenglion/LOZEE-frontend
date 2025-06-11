@@ -156,33 +156,29 @@ export function getSystemPrompt({
 }
 
 
-// 7) GPT 응답 요청 함수 (인증 토큰 추가 버전)
+// 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
 export async function getGptResponse(text, context = {}) {
-  // 1. Firebase 인증 객체 및 현재 유저 가져오기
   const auth = getAuth();
   const user = auth.currentUser;
 
-  // 2. 로그인한 유저가 없으면 요청 중단 (안전 장치)
   if (!user) {
     console.error("인증 오류: 로그인된 사용자가 없습니다.");
-    // 필요시 로그인 페이지로 리다이렉트
     return { error: '사용자 인증 실패' };
   }
 
   try {
-    // 3. 현재 유저의 Firebase ID 토큰 가져오기
     const token = await user.getIdToken();
 
+    // ✅ context 객체를 펼쳐서 payload에 포함시킵니다.
     const payload = {
       message: text,
-      context
+      ...context // 이 부분이 핵심적인 수정 사항입니다.
     };
 
     const response = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 4. 'Authorization' 헤더에 토큰을 담아 전송
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(payload)
@@ -190,21 +186,20 @@ export async function getGptResponse(text, context = {}) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      // 401 오류를 더 명확하게 처리
       if (response.status === 401) {
         throw new Error(`GPT 서버 인증 오류: ${errorText}`);
       }
       throw new Error(`GPT 서버 오류: ${errorText}`);
     }
 
-    const json = await response.json();
-    return json;
+    return await response.json();
 
   } catch (err) {
     console.error('[getGptResponse 오류]', err);
     return { error: 'GPT 호출 실패' };
   }
 }
+
 
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {

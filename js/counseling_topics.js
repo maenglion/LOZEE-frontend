@@ -200,8 +200,14 @@ export const counselingTopicsByAge = {
       {
         icon: "💔",
         displayText: "진단 수용",
-        tags: ["진단 수용", "미래 걱정"],
+        tags: ["진단 수용", "양육 스트레스"],
         type: "emotion_intensity"
+      },
+       {
+        icon: "💔",
+        displayText: "아이의 진로",
+        tags: ["미래사회", "제도적 지원", "부모의 역할"],
+        type: "situation"
       },
       {
         icon: "📂",
@@ -213,14 +219,14 @@ export const counselingTopicsByAge = {
     "가족 친구 및 인간관계 (양육자 관점)": [
       {
         icon: "😥",
-        displayText: "부부 소통 단절",
-        tags: ["부부 갈등", "소통 문제"],
+        displayText: "양육으로 인한 의견충돌",
+        tags: ["부부 갈등", "양육 스트레스"],
         type: "situation"
       },
        {
         icon: "😩",
         displayText: "아이로 인한 인간관계",
-        tags: ["차별", "회피", "사회적시선"],
+        tags: ["차별", "회피", "사회적 편견"],
         type: "else"
       },
       {
@@ -231,7 +237,7 @@ export const counselingTopicsByAge = {
       },
       {
         icon: "🗣️",
-        displayText: "친척 말 상처",
+        displayText: "사회적 편견",
         tags: ["사회적 편견", "상처"],
         type: "emotion_intensity"
       },
