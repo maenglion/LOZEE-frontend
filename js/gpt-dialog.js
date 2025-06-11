@@ -158,53 +158,48 @@ export function getSystemPrompt({
 
 // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
 export async function getGptResponse(text, context = {}) {
-
-// 디버깅 코드 
-    console.log("📦 전송할 payload:", JSON.stringify({ text, context }));
-
-
-  const auth = getAuth();
-  const user = auth.currentUser;
-
-  if (!user) {
-    console.error("인증 오류: 로그인된 사용자가 없습니다.");
-    return { error: '사용자 인증 실패' };
-  }
-
   try {
-    const token = await user.getIdToken();
+    const idToken = await getIdToken();
+    if (!idToken) {
+      throw new Error("Firebase ID 토큰을 가져올 수 없습니다.");
+    }
 
-    // ✅ context 객체를 펼쳐서 payload에 포함시킵니다.
+    // --- 🔑 핵심 수정 부분 ---
+    // 서버가 요구하는 평평한(flat) 구조로 payload를 재구성합니다.
+    // 'text' 키를 'message'로 변경하고, context 안의 값들을 밖으로 꺼냅니다.
     const payload = {
       message: text,
-      ...context // 이 부분이 핵심적인 수정 사항입니다.
+      userId: context.userId,
+      chatHistory: context.chatHistory || [], // 기본값으로 빈 배열 보장
+      elapsedTime: context.elapsedTime || 0   // 기본값으로 0 보장
     };
+    
+    // 전송 직전에 최종 payload를 다시 한번 확인합니다.
+    console.log("📦 최종 전송될 payload:", payload);
 
-    const response = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
+    const res = await fetch(GPT_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${idToken}` // 인증 헤더 포함
       },
       body: JSON.stringify(payload)
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      if (response.status === 401) {
-        throw new Error(`GPT 서버 인증 오류: ${errorText}`);
-      }
-      throw new Error(`GPT 서버 오류: ${errorText}`);
+    // 서버 응답이 실패하면(400, 500 등) 에러를 발생시킵니다.
+    if (!res.ok) {
+        const errorData = await res.json();
+        // 서버가 보낸 에러 메시지를 포함하여 에러를 던집니다.
+        throw new Error(`GPT 서버 오류: ${JSON.stringify(errorData)}`);
     }
 
-    return await response.json();
+    return res;
 
-  } catch (err) {
-    console.error('[getGptResponse 오류]', err);
-    return { error: 'GPT 호출 실패' };
+  } catch (error) {
+    console.error("[getGptResponse 오류]", error);
+    throw error; // 에러를 상위로 전파하여 sendMessage에서 잡을 수 있도록 함
   }
 }
-
 
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {

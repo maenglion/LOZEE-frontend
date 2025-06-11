@@ -46,7 +46,37 @@ const sessionHeaderTextEl = document.getElementById('session-header');
 
 const micIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>`;
 
+/**
+ * 대화 세션을 공식적으로 시작하고 관련 UI를 활성화하는 함수
+ * @param {object} subTopic - 선택된 서브 주제의 상세 정보
+ */
+function startChat(subTopic) {
+    console.log("▶️ startChat이 호출되었습니다.", subTopic);
 
+    // 대화 시작 시간이 설정되지 않았다면 현재 시간으로 설정
+    if (!conversationStartTime) {
+        conversationStartTime = Date.now();
+    }
+    
+    selectedSubTopicDetails = subTopic;
+
+    // 비활성화된 UI 요소들을 활성화시킵니다.
+    const actionButton = document.getElementById('action-button');
+    const emotionStateButton = document.querySelector('.chat-option-btn'); // '나의 감정상태' 버튼
+    const chatInput = document.getElementById('chat-input');
+
+    if (actionButton) actionButton.disabled = false;
+    if (emotionStateButton) emotionStateButton.disabled = false;
+    if (chatInput) chatInput.disabled = false;
+    
+    // '자유주제'일 경우 텍스트 입력창을 바로 보여줍니다.
+    if (subTopic && subTopic.type === 'free') {
+        document.querySelector('.input-area').style.display = 'flex';
+        isTtsMode = false; // 텍스트 입력 모드로 전환
+        updateActionButtonIcon(); // 아이콘 업데이트 (이 함수가 있다면)
+        chatInput.focus();
+    }
+}
 
 // --- 4. 사용자 정보 ---
 const loggedInUserId = localStorage.getItem('lozee_userId');
@@ -173,89 +203,57 @@ function updateSessionHeader() {
 /**
  * 신규 주제와 이전 대화 주제를 함께 표시하는 통합 함수 (UI 수정 버전)
  */
+// 기존 renderUnifiedTopics 함수를 찾아서 아래 코드로 교체하세요.
+
 function renderUnifiedTopics() {
-  const container = document.getElementById('chat-window');
-  if (!container) return;
+    const container = document.getElementById('topic-selection-container');
+    container.innerHTML = ''; // 기존 내용 초기화
 
-  document.querySelectorAll('.topic-box, .chat-options-container').forEach(el => el.remove());
+    const topicsData = counselingTopicsByAge[currentUserAgeGroup] || counselingTopicsByAge['청년'];
 
-  const newTopics = getTopicsForCurrentUser();
-  const prevKeywords = JSON.parse(localStorage.getItem('lozee_last_keywords') || '[]');
-
-  const titleText = (currentUserType === 'caregiver') 
-    ? '어떤 점에 대해 이야기해볼까요?' 
-    : '📌 오늘 이야기할 수 있는 주제';
-
-  const mainBox = document.createElement('div');
-  // ✅ 클래스 이름을 sub-topic과 통일성을 주기 위해 변경
-  mainBox.className = 'chat-options-container'; 
-  
-  const titleEl = document.createElement('h4');
-  titleEl.style.margin = '0 0 10px 0'; // 제목과 버튼 사이 간격
-  titleEl.innerHTML = titleText;
-  mainBox.appendChild(titleEl);
-
-
-  if (!newTopics || Object.keys(newTopics).length === 0) {
-    appendMessage("상담 주제를 불러오는 데 실패했습니다. 페이지를 새로고침 하시거나 관리자에게 문의해주세요.", "assistant_feedback");
-  } else {
-    // ✅ 버튼 생성 로직 수정 (sub-topic과 동일한 스타일 적용)
-    Object.keys(newTopics).forEach(topic => {
-      const btn = document.createElement('button');
-      const icon = newTopics[topic]?.[0]?.icon || '💬'; // 각 카테고리의 첫 아이콘 사용
-      btn.innerHTML = `${icon} ${topic}`;
-      btn.className = 'chat-option-btn'; // sub-topic과 동일한 클래스 사용
-      btn.onclick = () => {
-        mainBox.querySelectorAll('.chat-option-btn').forEach(b => b.disabled = true);
-        btn.classList.add('selected');
-        selectedMain = topic;
-        updateSessionHeader();
-        appendMessage(topic + ' 이야기를 선택했구나!', 'assistant');
-        setTimeout(() => showSubTopics(topic), 200);
-      };
-      mainBox.appendChild(btn);
+    // '자유주제' 생성
+    const freeTopicElement = document.createElement('div');
+    freeTopicElement.className = 'main-topic-card';
+    freeTopicElement.innerHTML = `<h3>자유주제</h3>`;
+    freeTopicElement.addEventListener('click', () => {
+        selectedMain = '자유주제';
+        const freeSubTopic = { displayText: '자유주제', tags: ['자유주제'], type: 'free' };
+        
+        appendMessage('자유로운 주제로 이야기하는 걸 선택했구나! 어떤 이야기를 하고 싶어?', 'assistant');
+        hideTopicSelectionScreen();
+        startChat(freeSubTopic); // 🔑 핵심: 자유주제 선택 시 startChat 호출
     });
-  }
-
-  const freeBtn = document.createElement('button');
-  freeBtn.innerHTML = '🗣️ 자유주제';
-  freeBtn.className = 'chat-option-btn';
-  freeBtn.onclick = () => {
-    mainBox.querySelectorAll('.chat-option-btn').forEach(b => b.disabled = true);
-    freeBtn.classList.add('selected');
-    selectedMain = '자유주제';
-    updateSessionHeader();
-    appendMessage('자유주제 이야기를 선택했구나! 어떤 이야기가 하고 싶어?', 'assistant');
-    startChat('', 'topic_selection_init', { displayText: '자유주제' });
-  };
-  mainBox.appendChild(freeBtn);
-  
-  container.prepend(mainBox);
-
-  if (prevKeywords.length > 0) {
-    const prevBox = document.createElement('div');
-    prevBox.className = 'chat-options-container'; // 동일한 컨테이너 클래스 사용
-    prevBox.style.marginTop = '15px';
-
-    const prevTitleEl = document.createElement('h5');
-    prevTitleEl.style.margin = '0 0 10px 0';
-    prevTitleEl.innerHTML = '📎 예전에 이야기한 주제에서 이어서 할 수도 있어요';
-    prevBox.appendChild(prevTitleEl);
-
-    prevKeywords.forEach(keyword => {
-      const btn = document.createElement('button');
-      btn.innerHTML = `🔁 ${keyword}`;
-      btn.className = 'chat-option-btn secondary'; // 동일한 버튼 클래스 사용
-      btn.onclick = () => {
-        appendUserBubble(keyword);
-        sendMessage(keyword);
-      };
-      prevBox.appendChild(btn);
-    });
+    container.appendChild(freeTopicElement);
     
-    container.insertBefore(prevBox, mainBox.nextSibling);
-  }
+    // 나머지 주제들 렌더링
+    topicsData.forEach(mainTopic => {
+        const mainTopicElement = document.createElement('div');
+        mainTopicElement.className = 'main-topic-card';
+        mainTopicElement.innerHTML = `<h3>${mainTopic.name}</h3>`;
+        
+        const subTopicsList = document.createElement('div');
+        subTopicsList.className = 'sub-topics-list';
+
+        mainTopic.subTopics.forEach(subTopic => {
+            const subTopicElement = document.createElement('button');
+            subTopicElement.className = 'chat-option-btn sub-topic-btn';
+            subTopicElement.textContent = subTopic.displayText;
+            
+            subTopicElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectedMain = mainTopic.name;
+
+                appendMessage(`'${subTopic.displayText}'에 대해 이야기하고 싶구나. 좋아!`, 'assistant');
+                hideTopicSelectionScreen();
+                startChat(subTopic); // 🔑 핵심: 서브 주제 선택 시 startChat 호출
+            });
+            subTopicsList.appendChild(subTopicElement);
+        });
+        mainTopicElement.appendChild(subTopicsList);
+        container.appendChild(mainTopicElement);
+    });
 }
+
 
 // ⭐ 복원된 함수: 서브 주제를 버튼으로 표시합니다.
 function showSubTopics() {
@@ -366,6 +364,12 @@ async function sendMessage(text, inputMethod) {
     if (!text || String(text).trim() === '') {
         console.warn("빈 텍스트로 sendMessage 호출됨");
         return;
+    }
+
+    if (!loggedInUserId) {
+       console.error("필수 정보(userId) 누락!");
+       appendMessage("사용자 정보가 없어 대화를 시작할 수 없어요. 페이지를 새로고침 해주세요.", "assistant_feedback");
+       return;
     }
     
     if (isProcessing) return;
