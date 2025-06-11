@@ -164,18 +164,30 @@ export async function updateUserOverallStats(userId, userType, totalUserCharsToS
     }
 }
 
-// 로지와의 예약 정보 
-//scheduleBtn.onclick = async () => {
-  // 1) Firestore에 예약 문서 저장
-  //await saveReservation(loggedInUserId, {
-  //  type: 'conversation',
-  //  dateExpression: '매주 화요일 오후 3시',
-   // createdAt: Date.now()
- // });
-  // 2) 캘린더 편집 페이지 오픈
- // window.open(`${baseUrl}?${params.toString()}`, '_blank');
-//};
-
+/**
+ * 상담 예약 시도 정보를 Firestore에 저장하는 함수
+ * @param {string} userId - 현재 로그인한 사용자 ID
+ * @param {object} reservationData - 저장할 예약 데이터
+ * @returns {Promise<string|null>} - 성공 시 문서 ID, 실패 시 null
+ */
+export async function saveReservation(userId, reservationData) {
+  if (!userId) {
+    console.error("예약 저장을 위한 사용자 ID가 없습니다.");
+    return null;
+  }
+  try {
+    const reservationsColRef = collection(db, 'users', userId, 'reservations');
+    const docRef = await addDoc(reservationsColRef, {
+      ...reservationData,
+      timestamp: serverTimestamp() // 서버 시간을 기준으로 저장
+    });
+    console.log("예약 정보가 성공적으로 저장되었습니다:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("Firestore에 예약 정보 저장 중 오류 발생:", error);
+    return null;
+  }
+}
 
 // 사용자 분석 정보 불러오기 
 async function loadAnalysisDataFromFirestore(userId) {
