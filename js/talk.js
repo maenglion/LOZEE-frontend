@@ -560,11 +560,7 @@ function handleMicButtonClick() {
 
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
-      const previousKeywords = JSON.parse(localStorage.getItem('lozee_last_keywords') || '[]');
-  renderMainAndHistoryTopic(previousKeywords); // ✅ 주제 목록 표시
-   
-       
+      
     
     try {
         const style = document.createElement('style');
