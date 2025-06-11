@@ -172,7 +172,7 @@ export const counselingTopicsByAge = {
     }
   },
   caregiver: { // 양육자 모드
-    "육아 (일반 및 신경다양성 아동)":  [
+    "양육의 어려움":  [
       {
         icon: "😩",
         displayText: "양육 스트레스",
@@ -216,7 +216,7 @@ export const counselingTopicsByAge = {
         type: "else"
       }
     ],
-    "가족 친구 및 인간관계 (양육자 관점)": [
+    "신경다양성 아이로 인한 나의 인간관계": [
       {
         icon: "😥",
         displayText: "양육으로 인한 의견충돌",
@@ -254,7 +254,7 @@ export const counselingTopicsByAge = {
         type: "else"
       }
     ],
-    "감정상태": 
+    "나의 감정상태": 
      [
       {
         icon: "😔",

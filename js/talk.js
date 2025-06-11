@@ -168,37 +168,46 @@ function updateSessionHeader() {
  * 규칙 2: 이전 대화 주제 선택 시, 서브 토픽 없이 바로 대화 시작
  * 규칙 3: 신규 주제 선택 시, 서브 토픽 목록 표시
  */
+
+
+/**
+ * 신규 주제와 이전 대화 주제를 함께 표시하는 통합 함수 (UI 수정 버전)
+ */
 function renderUnifiedTopics() {
   const container = document.getElementById('chat-window');
   if (!container) return;
 
-  // 이전에 생성된 모든 주제 버튼 상자를 깨끗이 지웁니다.
   document.querySelectorAll('.topic-box, .chat-options-container').forEach(el => el.remove());
 
-  // 데이터 가져오기
   const newTopics = getTopicsForCurrentUser();
   const prevKeywords = JSON.parse(localStorage.getItem('lozee_last_keywords') || '[]');
 
-  // ✅ 보호자인 경우와 아닌 경우에 따라 제목을 다르게 설정
   const titleText = (currentUserType === 'caregiver') 
     ? '어떤 점에 대해 이야기해볼까요?' 
     : '📌 오늘 이야기할 수 있는 주제';
 
-  // --- 신규 주제 박스 (규칙 3 적용) ---
   const mainBox = document.createElement('div');
-  mainBox.className = 'topic-box';
-  mainBox.innerHTML = `<h4>${titleText}</h4>`; // ✅ 변경된 제목 적용
+  // ✅ 클래스 이름을 sub-topic과 통일성을 주기 위해 변경
+  mainBox.className = 'chat-options-container'; 
+  
+  const titleEl = document.createElement('h4');
+  titleEl.style.margin = '0 0 10px 0'; // 제목과 버튼 사이 간격
+  titleEl.innerHTML = titleText;
+  mainBox.appendChild(titleEl);
+
 
   if (!newTopics || Object.keys(newTopics).length === 0) {
     appendMessage("상담 주제를 불러오는 데 실패했습니다. 페이지를 새로고침 하시거나 관리자에게 문의해주세요.", "assistant_feedback");
   } else {
-    // 신규 주제 버튼 생성
+    // ✅ 버튼 생성 로직 수정 (sub-topic과 동일한 스타일 적용)
     Object.keys(newTopics).forEach(topic => {
       const btn = document.createElement('button');
-      btn.textContent = `👉 ${topic}`;
-      btn.className = 'topic-btn';
+      const icon = newTopics[topic]?.[0]?.icon || '💬'; // 각 카테고리의 첫 아이콘 사용
+      btn.innerHTML = `${icon} ${topic}`;
+      btn.className = 'chat-option-btn'; // sub-topic과 동일한 클래스 사용
       btn.onclick = () => {
-        // [규칙 3] 서브 토픽을 보여주는 기존 로직 실행
+        mainBox.querySelectorAll('.chat-option-btn').forEach(b => b.disabled = true);
+        btn.classList.add('selected');
         selectedMain = topic;
         updateSessionHeader();
         appendMessage(topic + ' 이야기를 선택했구나!', 'assistant');
@@ -208,11 +217,12 @@ function renderUnifiedTopics() {
     });
   }
 
-  // 자유 주제 버튼 추가
   const freeBtn = document.createElement('button');
-  freeBtn.textContent = '🗣️ 자유주제';
-  freeBtn.className = 'topic-btn';
+  freeBtn.innerHTML = '🗣️ 자유주제';
+  freeBtn.className = 'chat-option-btn';
   freeBtn.onclick = () => {
+    mainBox.querySelectorAll('.chat-option-btn').forEach(b => b.disabled = true);
+    freeBtn.classList.add('selected');
     selectedMain = '자유주제';
     updateSessionHeader();
     appendMessage('자유주제 이야기를 선택했구나! 어떤 이야기가 하고 싶어?', 'assistant');
@@ -220,28 +230,29 @@ function renderUnifiedTopics() {
   };
   mainBox.appendChild(freeBtn);
   
-  container.prepend(mainBox); // 채팅창 맨 위에 신규 주제 박스 추가
+  container.prepend(mainBox);
 
-  // --- 이전 대화 주제 박스 (규칙 2 적용) ---
   if (prevKeywords.length > 0) {
     const prevBox = document.createElement('div');
-    prevBox.className = 'topic-box';
-    prevBox.innerHTML = '<h5>📎 예전에 이야기한 주제에서 이어서 할 수도 있어요</h5>';
+    prevBox.className = 'chat-options-container'; // 동일한 컨테이너 클래스 사용
+    prevBox.style.marginTop = '15px';
+
+    const prevTitleEl = document.createElement('h5');
+    prevTitleEl.style.margin = '0 0 10px 0';
+    prevTitleEl.innerHTML = '📎 예전에 이야기한 주제에서 이어서 할 수도 있어요';
+    prevBox.appendChild(prevTitleEl);
 
     prevKeywords.forEach(keyword => {
       const btn = document.createElement('button');
-      btn.textContent = `🔁 ${keyword}`;
-      btn.className = 'topic-btn secondary';
+      btn.innerHTML = `🔁 ${keyword}`;
+      btn.className = 'chat-option-btn secondary'; // 동일한 버튼 클래스 사용
       btn.onclick = () => {
-        // [규칙 2] 서브 토픽 없이 바로 대화 시작
         appendUserBubble(keyword);
         sendMessage(keyword);
-        suggestRelatedSummary(keyword); // 관련 요약 이어 말하기 제안
       };
       prevBox.appendChild(btn);
     });
-
-    // 신규 주제 박스 바로 다음에 이전 대화 주제 박스 추가
+    
     container.insertBefore(prevBox, mainBox.nextSibling);
   }
 }
