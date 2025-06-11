@@ -1,4 +1,4 @@
-media// js/talk.js
+// js/talk.js
 
 // --- 1. 모듈 Import ---
 import './firebase-config.js';
