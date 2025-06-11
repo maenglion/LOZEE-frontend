@@ -11,7 +11,8 @@ import {
     updateTopicStats,
     updateUserOverallStats,
     logSessionStart,
-    logSessionEnd
+    logSessionEnd, 
+    saveReservation
 } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
@@ -450,33 +451,32 @@ async function sendMessage(text, inputMethod) {
                 showAnalysisNotification();
          
          // 로지와의 대화 예약      
-         if (lastAiAnalysisData?.cognitiveDistortions?.length > 0) {
-            appendMessage(
-                '어떤 요일·시간대가 편하신가요? (예: 매주 화요일 오후 3시)',
-                'assistant'
-            );
-
-            const scheduleBtn = document.createElement('button');
-            scheduleBtn.className = 'chat-option-btn';
-            scheduleBtn.textContent = '🗓️ 상담 예약하기';
-            scheduleBtn.onclick = () => {
-                const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
-                const params = new URLSearchParams({
-                    text: '로지와의 대화 예약',
-                    details: '이전 대화에서 엿보인 주제에 대하여 추가로 대화가 필요해요.',
-                    ctz: Intl.DateTimeFormat().resolvedOptions().timeZone
+         // scheduleBtn 생성 부분
+    if (lastAiAnalysisData?.cognitiveDistortions?.length > 0) {
+        // ...
+        const scheduleBtn = document.createElement('button');
+        // ...
+        scheduleBtn.onclick = async () => { // << async 키워드 추가
+            try {
+                // ✅ 2. DB에 예약 정보를 저장하는 코드를 여기에 추가합니다.
+                await saveReservation(loggedInUserId, {
+                    type: 'conversation',
+                    dateExpression: '매주 화요일 오후 3시', // 실제 사용자 입력을 받아오도록 수정 필요
+                    createdAt: Date.now()
                 });
+                
+                // 구글 캘린더 로직은 그대로 둡니다.
+                const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
+                const params = new URLSearchParams({ /*...*/ });
                 window.open(`${baseUrl}?${params.toString()}`, '_blank');
-            };
-            chatWindow.appendChild(scheduleBtn);
-        }
-            }
-        }
 
-    } catch (error) {
-        console.error("sendMessage 내 예외 발생:", error);
-        chatWindow.querySelector('.thinking')?.remove();
-        appendMessage("오류가 발생했어요. 잠시 후 다시 시도해 주세요.", "assistant_feedback");
+            } catch (error) {
+                console.error("예약 저장 중 오류 발생:", error);
+            }
+        };
+        chatWindow.appendChild(scheduleBtn);
+ 
+  
     } finally {
         isProcessing = false;
         if (actionButton) actionButton.disabled = false;
