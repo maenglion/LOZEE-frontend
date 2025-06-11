@@ -158,6 +158,11 @@ export function getSystemPrompt({
 
 // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
 export async function getGptResponse(text, context = {}) {
+
+// 디버깅 코드 
+    console.log("📦 전송할 payload:", JSON.stringify({ text, context }));
+
+
   const auth = getAuth();
   const user = auth.currentUser;
 
