@@ -210,7 +210,7 @@ export const counselingTopicsByAge = {
         type: "else"
       }
     ],
-    "인간관계 (양육자 관점)": [
+    "가족 친구 및 인간관계 (양육자 관점)": [
       {
         icon: "😥",
         displayText: "부부 소통 단절",
