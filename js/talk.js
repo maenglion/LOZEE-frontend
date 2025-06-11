@@ -137,14 +137,14 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
 
 // ⭐ 복원된 함수: 현재 사용자에게 맞는 상담 주제 목록을 가져옵니다.
 function getTopicsForCurrentUser() {
-  const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
-  if (!COUNSELING_TOPICS || typeof COUNSELING_TOPICS !== 'object') {
-    console.error("counseling_topics.js 로드 실패!");
+    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
+    if (!counselingTopicsByAge || typeof counselingTopicsByAge !== 'object') {
+        console.error("counseling_topics.js 로드 실패!");
+        return {};
+    }
+    if (currentUserType === 'directUser') return counselingTopicsByAge.directUser?.[ageGroupKey] || counselingTopicsByAge.directUser['11-15세'] || {};
+    if (currentUserType === 'caregiver') return counselingTopicsByAge.caregiver || {};
     return {};
-  }
-  if (currentUserType === 'directUser') return COUNSELING_TOPICS.directUser?.[ageGroupKey] || COUNSELING_TOPICS.directUser['11-15세'] || {};
-  if (currentUserType === 'caregiver') return COUNSELING_TOPICS.caregiver || {};
-  return {};
 }
 
 
