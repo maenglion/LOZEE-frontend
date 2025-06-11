@@ -355,56 +355,83 @@ function showAnalysisNotification() {
 
 
 // ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (오류 수정 버전)
+/**
+ * ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (최종 수정 버전)
+ * @param {string} text - 사용자 또는 시스템이 입력한 메시지 텍스트
+ * @param {string} inputMethod - 메시지 입력 방식 (e.g., 'user_input', 'topic_selection_init')
+ */
 async function sendMessage(text, inputMethod) {
     
-     if (!text || String(text).trim() === '') {
-    console.warn("빈 텍스트로 sendMessage 호출됨");
-    return;
-  }
+    // 메시지가 비어있거나, 이미 다른 요청이 처리 중인 경우 함수 종료
+    if (!text || String(text).trim() === '') {
+        console.warn("빈 텍스트로 sendMessage 호출됨");
+        return;
+    }
     
-    if (!text || String(text).trim() === '' || isProcessing) return;
-    isProcessing = true;
-    if (actionButton) actionButton.disabled = true;
-    resetSessionTimeout();
+    if (isProcessing) return;
+    isProcessing = true; // 처리 중 상태로 설정
+    if (actionButton) actionButton.disabled = true; // 액션 버튼 비활성화
+    resetSessionTimeout(); // 세션 타임아웃 리셋
 
-    if (inputMethod !== 'topic_selection_init') appendMessage(text, 'user');
-    if (chatInput) chatInput.value = '';
-    appendMessage('...', 'assistant thinking');
+    // UI에 사용자 메시지 표시 (초기 주제 선택이 아닌 경우)
+    if (inputMethod !== 'topic_selection_init') {
+        appendMessage(text, 'user');
+    }
 
-// sendMessage() 함수 호출 시 text가 올바르게 전달되는지 콘솔에서 확인해보세요:
-    console.log("✅ GPT 요청 text:", text);
-    console.log("✅ GPT 요청 context:", context);
+    if (chatInput) chatInput.value = ''; // 입력창 비우기
+    appendMessage('...', 'assistant thinking'); // '생각 중...' 메시지 표시
 
-    // 메인 try 블록 시작
+    // 메인 try 블록: API 요청 및 응답 처리
     try {
+        // 1. API 요청에 필요한 context 객체를 생성합니다.
+        // 이 블록 안에서 실제 사용하는 변수들로 구성해야 합니다.
         const elapsedTimeInMinutes = (Date.now() - conversationStartTime) / (1000 * 60);
-        
-        const res = await getGptResponse(text, { chatHistory: [...chatHistory], userId: loggedInUserId, elapsedTime: elapsedTimeInMinutes });
-        
-        chatWindow.querySelector('.thinking')?.remove();
-        if (!res.ok) throw new Error(`GPT API 응답 오류: ${res.status}`);
+        const context = {
+            chatHistory: [...chatHistory],
+            userId: loggedInUserId,
+            elapsedTime: elapsedTimeInMinutes
+        };
 
+        // 2. ✅ 디버깅: 실제로 서버에 전송될 데이터를 콘솔에서 확인합니다.
+        console.log("✅ GPT 요청 text:", text);
+        console.log("✅ GPT 요청 context:", context);
+
+        // 3. API를 단 한 번만 호출하고, 응답(res)을 기다립니다.
+        const res = await getGptResponse(text, context);
+        
+        // '생각 중...' 메시지 삭제
+        chatWindow.querySelector('.thinking')?.remove();
+
+        // API 응답이 실패한 경우 에러를 발생시켜 catch 블록으로 넘깁니다.
+        if (!res.ok) {
+            throw new Error(`GPT API 응답 오류: ${res.status}`);
+        }
+
+        // 사용자 메시지를 채팅 기록(chatHistory)에 추가
         chatHistory.push({ role: 'user', content: text });
 
         const gptResponse = await res.json();
         const rawResponseText = gptResponse.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
+        
         let cleanText = rawResponseText;
         let jsonString = null;
         const jsonStartIndex = rawResponseText.indexOf('{"');
 
+        // 응답 텍스트에 JSON 데이터가 포함되어 있는지 확인하고 분리
         if (jsonStartIndex !== -1) {
             cleanText = rawResponseText.substring(0, jsonStartIndex).trim();
             jsonString = rawResponseText.substring(jsonStartIndex);
         
-            // JSON 파싱을 위한 별도 try...catch
+            // JSON 파싱 시도
             try {
                 lastAiAnalysisData = JSON.parse(jsonString);
-                updateSessionHeader();
+                updateSessionHeader(); // 세션 헤더 정보 업데이트
 
+                // 분석 결과를 LocalStorage에 저장
                 localStorage.setItem('lozee_last_summary', lastAiAnalysisData.conversationSummary);
                 localStorage.setItem('lozee_last_keywords', JSON.stringify(lastAiAnalysisData.keywords || []));
 
-                // 실시간 클라이언트 분석 활성화 코드
+                // 실시간 클라이언트 분석 모듈(LOZEE_ANALYSIS)이 활성화된 경우 데이터 전달
                 if (LOZEE_ANALYSIS) {
                     if (LOZEE_ANALYSIS.trackTime && !LOZEE_ANALYSIS.isTimeTracking) {
                         LOZEE_ANALYSIS.trackTime();
@@ -428,12 +455,17 @@ async function sendMessage(text, inputMethod) {
             }
         }
 
+        // UI에 GPT의 답변(순수 텍스트)을 표시하고 TTS로 재생
         appendMessage(cleanText, 'assistant');
         await playTTSWithControl(cleanText);
+
+        // GPT 답변을 채팅 기록(chatHistory)에 추가
         chatHistory.push({ role: 'assistant', content: cleanText });
 
+        // 세션 동안 사용자가 입력한 총 글자 수 계산
         userCharCountInSession = chatHistory.filter(m => m.role === 'user').reduce((sum, m) => sum + (m.content ? m.content.length : 0), 0);
         
+        // 특정 조건 충족 시 '마음일지' 저장 로직 실행
         if (userCharCountInSession >= 800 && !journalReadyNotificationShown && selectedMain) {
             journalReadyNotificationShown = true;
             const topicForJournal = selectedSubTopicDetails?.displayText || selectedMain;
@@ -452,6 +484,7 @@ async function sendMessage(text, inputMethod) {
             });
         }
 
+        // 특정 조건 충족 시 분석 결과 알림 및 상담 예약 제안
         const userTurnCount = chatHistory.filter(m => m.role === 'user').length;
         if (elapsedTimeInMinutes >= 10 && userTurnCount >= 10 && !analysisNotificationShown) {
             if (lastAiAnalysisData) {
@@ -459,7 +492,7 @@ async function sendMessage(text, inputMethod) {
                 localStorage.setItem('lozee_conversation_analysis', JSON.stringify(dataToStore));
                 showAnalysisNotification();
             
-                // 로지와의 대화 예약
+                // 인지 왜곡이 발견된 경우, 상담 예약 버튼 표시
                 if (lastAiAnalysisData?.cognitiveDistortions?.length > 0) {
                     appendMessage('어떤 요일·시간대가 편하신가요? (예: 매주 화요일 오후 3시)', 'assistant');
                     const scheduleBtn = document.createElement('button');
@@ -473,6 +506,7 @@ async function sendMessage(text, inputMethod) {
                                 createdAt: Date.now()
                             });
                             
+                            // 구글 캘린더 이벤트 생성 링크 열기
                             const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
                             const params = new URLSearchParams({
                                 text: '로지와의 대화 예약',
@@ -488,18 +522,17 @@ async function sendMessage(text, inputMethod) {
                 }
             }
         }
-    // 메인 try 블록 끝
+    
+    // catch 블록: try 블록 내에서 발생한 모든 에러 처리
     } catch (error) {
-        // catch 블록 시작 (오류 처리)
         console.error("sendMessage 내 예외 발생:", error);
-        chatWindow.querySelector('.thinking')?.remove();
-        appendMessage("오류가 발생했어요. 잠시 후 다시 시도해 주세요.", "assistant_feedback");
-    // catch 블록 끝
+        chatWindow.querySelector('.thinking')?.remove(); // '생각 중...' 메시지 제거
+        appendMessage("오류가 발생했어요. 잠시 후 다시 시도해 주세요.", "assistant_feedback"); // 사용자에게 오류 알림
+    
+    // finally 블록: try/catch 결과와 상관없이 항상 실행
     } finally {
-        // finally 블록 시작 (항상 실행)
-        isProcessing = false;
-        if (actionButton) actionButton.disabled = false;
-    // finally 블록 끝
+        isProcessing = false; // 처리 중 상태 해제
+        if (actionButton) actionButton.disabled = false; // 액션 버튼 활성화
     }
 }
 
