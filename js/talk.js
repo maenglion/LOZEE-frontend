@@ -14,8 +14,7 @@ import {
     logSessionEnd
 } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
-import LOZEE_ANALYSIS from './lozee-analysis.js';
-
+import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 // --- 2. 상태 변수 선언 ---
 let isProcessing = false;
 let chatHistory = [];
@@ -367,22 +366,50 @@ async function sendMessage(text, inputMethod) {
         if (jsonStartIndex !== -1) {
             cleanText = rawResponseText.substring(0, jsonStartIndex).trim();
             jsonString = rawResponseText.substring(jsonStartIndex);
+    
+    
             try {
-                lastAiAnalysisData = JSON.parse(jsonString);
-                updateSessionHeader();
+    lastAiAnalysisData = JSON.parse(jsonString);
+    updateSessionHeader();
 
-                localStorage.setItem('lozee_last_summary', lastAiAnalysisData.conversationSummary);
-localStorage.setItem('lozee_last_keywords', JSON.stringify(lastAiAnalysisData.keywords || []));
+    localStorage.setItem('lozee_last_summary', lastAiAnalysisData.conversationSummary);
+    localStorage.setItem('lozee_last_keywords', JSON.stringify(lastAiAnalysisData.keywords || []));
 
-                // ⭐ FIX: 분석 엔진을 실시간으로 활성화하는 코드를 복원합니다.
-                if (LOZEE_ANALYSIS) {
-                    if (LOZEE_ANALYSIS.trackEmotionTone) {
-                        LOZEE_ANALYSIS.trackEmotionTone(lastAiAnalysisData);
-                    }
-                    if (LOZEE_ANALYSIS.trackSituation) {
-                        LOZEE_ANALYSIS.trackSituation(lastAiAnalysisData);
-                    }
-                }
+    // =================================================================
+    // ⭐ 실시간 클라이언트 분석 활성화 코드 ⭐
+    // =================================================================
+    if (LOZEE_ANALYSIS) {
+        // 1. 대화 시간 추적 시작 (세션당 한 번만 실행)
+        if (LOZEE_ANALYSIS.trackTime && !LOZEE_ANALYSIS.isTimeTracking) {
+             LOZEE_ANALYSIS.trackTime();
+             LOZEE_ANALYSIS.isTimeTracking = true; // 중복 실행 방지 플래그
+        }
+
+        // 2. 감정 어조 분석 (매 응답 시)
+        // analysis.html에 차트가 있다면 이 함수가 차트를 직접 그립니다.
+        // talk.html에 차트 요소가 없다면 이 함수는 아무것도 하지 않습니다.
+        if (LOZEE_ANALYSIS.trackEmotionTone) {
+            LOZEE_ANALYSIS.trackEmotionTone(lastAiAnalysisData);
+        }
+
+        // 3. 인지 왜곡/상황 분석 (매 응답 시)
+        // talk.html에 관련 요소가 없다면 이 또한 아무것도 하지 않습니다.
+        if (LOZEE_ANALYSIS.trackSituation) {
+            LOZEE_ANALYSIS.trackSituation(lastAiAnalysisData);
+        }
+        
+        // 4. 인물-감정 태그 추출 및 저장
+        // 전체 대화 기록을 텍스트로 합쳐 분석 함수에 전달합니다.
+        if (LOZEE_ANALYSIS.extractEntityEmotionPairs) {
+            const fullConversationText = chatHistory.map(turn => turn.content).join('\n');
+            const entityEmotionTags = LOZEE_ANALYSIS.extractEntityEmotionPairs(fullConversationText);
+            
+            // 분석 결과를 localStorage에 저장해 analysis.html에서 사용
+            localStorage.setItem('lozee_entity_emotion_tags', JSON.stringify(entityEmotionTags));
+            console.log("인물-감정 태그 분석 결과:", entityEmotionTags);
+        }
+    }
+    // =================================================================
 
             } catch (e) {
                 console.error("❌ GPT 응답 JSON 파싱 실패:", e);
