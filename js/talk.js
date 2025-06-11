@@ -570,9 +570,8 @@ function handleMicButtonClick() {
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
  
- const previousKeywords = JSON.parse(localStorage.getItem('lozee_last_keywords') || '[]');
-  renderMainAndHistoryTopic(previousKeywords); // ✅ 주제 목록 표시    
-    
+ // ✅ 아래 한 줄을 제외하고 모두 삭제 또는 주석 처리합니다.
+    renderUnifiedTopics(); 
     try {
         const style = document.createElement('style');
         style.textContent = `
@@ -632,9 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // ⭐ 수정된 부분: 초기 인사말 재생은 하되, 화면 로딩을 막지 않습니다.
         playTTSWithControl(greeting);
         
-        // 이 함수가 항상 실행되어 주제가 표시됩니다.
-        showMainTopics();
-        
+         
         window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
 
     } catch (error) {
