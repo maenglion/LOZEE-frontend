@@ -278,7 +278,8 @@
 
         <p class="footer-assistant-notice">본 분석은 로지 AI가 마음을 담아 준비했어요.</p>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="./js/lozee-analysis-charts.js"></script>
     <script type="module">
     import { db } from './js/firebase-config.js';
     import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
@@ -289,6 +290,7 @@
       alertCognitiveDistortions,
       logTestCondition
     } from './js/lozee-analysis.js';
+
 
        async function loadChildAnalysis(userEmail) {
       const userIdMap = {

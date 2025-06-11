@@ -1,8 +1,6 @@
 // js/lozee-analysis.js
 // 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
 
-import { Chart } from 'chart.js';
-
 const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis';
 
 // --- 분석 조건 ---
