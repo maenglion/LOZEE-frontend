@@ -95,12 +95,13 @@ async function playTTSWithControl(txt) {
   if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
 
   try {
-    const voiceId = localStorage.getItem('lozee_voice') || "ko-KR-Chirp3-HD-leda"; // 💡 안전 기본값 추가
+    // ✅ OpenAI가 지원하는 목소리 이름 중 하나인 'alloy'로 변경 (또는 nova, shimmer 등 다른 이름 사용 가능)
+    const voiceId = localStorage.getItem('lozee_voice') || "alloy"; 
     if (typeof playTTSFromText === 'function') {
       await playTTSFromText(txt, voiceId);
     }
   } catch (error) {
-    console.error("TTS 재생 오류 (서버 CORS 설정을 확인하세요):", error);
+    console.error("TTS 재생 오류:", error); // CORS 메시지는 혼동을 줄 수 있어 제거
   }
 }
 
