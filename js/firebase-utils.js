@@ -165,16 +165,16 @@ export async function updateUserOverallStats(userId, userType, totalUserCharsToS
 }
 
 // 로지와의 예약 정보 
-scheduleBtn.onclick = async () => {
+//scheduleBtn.onclick = async () => {
   // 1) Firestore에 예약 문서 저장
-  await saveReservation(loggedInUserId, {
-    type: 'conversation',
-    dateExpression: '매주 화요일 오후 3시',
-    createdAt: Date.now()
-  });
+  //await saveReservation(loggedInUserId, {
+  //  type: 'conversation',
+  //  dateExpression: '매주 화요일 오후 3시',
+   // createdAt: Date.now()
+ // });
   // 2) 캘린더 편집 페이지 오픈
-  window.open(`${baseUrl}?${params.toString()}`, '_blank');
-};
+ // window.open(`${baseUrl}?${params.toString()}`, '_blank');
+//};
 
 
 // 사용자 분석 정보 불러오기 
