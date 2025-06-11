@@ -202,7 +202,7 @@ export const counselingTopicsByAge = {
         displayText: "진단 수용",
         tags: ["진단 수용", "미래 걱정"],
         type: "emotion_intensity"
-      }
+      },
       {
         icon: "📂",
         displayText: "기타",
