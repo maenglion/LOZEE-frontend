@@ -179,37 +179,49 @@ export const counselingTopicsByAge = {
         tags: ["양육 스트레스", "소진", "번아웃"],
         type: "emotion_intensity"
       },
-      {
+       {
         icon: "🧩",
-        displayText: "진단·특성 혼란",
+        displayText: "진단·특성에 대한 이해",
         tags: ["신경다양성 이해", "자폐", "ADHD"],
         type: "else"
       },
-      {
+     {
         icon: "💸",
-        displayText: "치료비 부담",
+        displayText: "치료비 교육 부담",
         tags: ["경제적 부담", "장기 치료"],
         type: "situation"
       },
       {
         icon: "😥",
-        displayText: "훈육이 어려움",
+        displayText: "녹록치 않은 훈육",
         tags: ["훈육 문제", "일관성 부족"],
         type: "else"
       },
       {
         icon: "💔",
-        displayText: "진단 수용 어려움",
+        displayText: "진단 수용",
         tags: ["진단 수용", "미래 걱정"],
         type: "emotion_intensity"
       }
+      {
+        icon: "📂",
+        displayText: "기타",
+        tags: ["가족 기타"],
+        type: "else"
+      }
     ],
-    "가족 관계 (양육자 관점)": [
+    "인간관계 (양육자 관점)": [
       {
         icon: "😥",
         displayText: "부부 소통 단절",
         tags: ["부부 갈등", "소통 문제"],
         type: "situation"
+      },
+       {
+        icon: "😩",
+        displayText: "아이로 인한 인간관계",
+        tags: ["차별", "회피", "사회적시선"],
+        type: "else"
       },
       {
         icon: "👵🏻",
