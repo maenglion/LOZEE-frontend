@@ -164,6 +164,9 @@ function showMainTopics() {
         appendMessage("상담 주제를 불러오는 데 실패했습니다. 페이지를 새로고침 하시거나 관리자에게 문의해주세요.", "assistant_feedback");
         return;
     }
+ // ✅ 상담 주제 렌더링과 중복방지지
+    document.querySelectorAll('.chat-options-container').forEach(box => box.remove());
+
     let topicsWithOptions = Object.keys(currentUserTopics).map(categoryName => ({
         icon: currentUserTopics[categoryName]?.[0]?.icon || '💬',
         displayText: categoryName
@@ -180,8 +183,71 @@ function showMainTopics() {
             appendMessage(selectedMain + ' 이야기를 선택했구나!', 'assistant');
             setTimeout(showSubTopics, 200);
         }
+       
     });
 }
+
+// ✅ 상담 주제 렌더링 함수 (기본 + 이전 키워드)
+function renderMainAndHistoryTopic(previousKeywords = []) {
+  const container = document.getElementById('chat-window');
+  if (!container) return;
+
+  // 이전 렌더링된 topic-box가 있으면 제거
+document.querySelectorAll('.topic-box').forEach(box => box.remove());
+
+  const mainTopics = ["기분", "가족", "학교", "친구", "혼자 있고 싶을 때"];
+
+  // 메인 토픽 박스
+  const mainBox = document.createElement('div');
+  mainBox.className = 'topic-box';
+  mainBox.innerHTML = '<h4>📌 오늘 이야기할 수 있는 주제</h4>';
+
+  mainTopics.forEach(topic => {
+    const btn = document.createElement('button');
+    btn.textContent = `👉 ${topic}`;
+    btn.className = 'topic-btn';
+    btn.onclick = () => {
+      appendUserBubble(topic);
+      sendMessage(topic);           // 기존 흐름
+      suggestRelatedSummary(topic); // ✅ 요약 이어 말하기
+    };
+    mainBox.appendChild(btn);
+  });
+
+  container.prepend(mainBox);
+
+  // 이전 주제 (옵션)
+  if (previousKeywords.length > 0) {
+    const prevBox = document.createElement('div');
+    prevBox.className = 'topic-box';
+    prevBox.innerHTML = '<h5>📎 예전에 이야기한 주제에서 이어서 할 수도 있어요</h5>';
+
+    previousKeywords.forEach(keyword => {
+      const btn = document.createElement('button');
+      btn.textContent = `🔁 ${keyword}`;
+      btn.className = 'topic-btn secondary';
+      btn.onclick = () => {
+        appendUserBubble(keyword);
+        sendMessage(keyword);
+      };
+      prevBox.appendChild(btn);
+    });
+
+    container.insertBefore(prevBox, mainBox.nextSibling);
+  }
+}
+
+// ✅ 이전 요약 이어 말하기
+function suggestRelatedSummary(topic) {
+  const summary = localStorage.getItem('lozee_last_summary');
+  if (!summary) return;
+
+  const message = `예전에 이런 얘기를 했었지: "${summary.slice(0, 60)}..." 그 얘기에서 이어서 이야기해볼까?`;
+  handleGptReply(message);  // 말풍선 + TTS 실행
+}
+
+
+
 
 // ⭐ 복원된 함수: 서브 주제를 버튼으로 표시합니다.
 function showSubTopics() {
@@ -492,6 +558,12 @@ function handleMicButtonClick() {
 
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
+    
+      const previousKeywords = JSON.parse(localStorage.getItem('lozee_last_keywords') || '[]');
+  renderMainAndHistoryTopic(previousKeywords); // ✅ 주제 목록 표시
+   
+       
+    
     try {
         const style = document.createElement('style');
         style.textContent = `
