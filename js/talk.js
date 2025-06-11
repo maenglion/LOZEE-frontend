@@ -96,7 +96,7 @@ async function playTTSWithControl(txt) {
 
   try {
     // ✅ OpenAI가 지원하는 목소리 이름 중 하나인 'alloy'로 변경 (또는 nova, shimmer 등 다른 이름 사용 가능)
-    const voiceId = localStorage.getItem('lozee_voice') || "alloy"; 
+    const voiceId = localStorage.getItem('lozee_voice') || "nova"; 
     if (typeof playTTSFromText === 'function') {
       await playTTSFromText(txt, voiceId);
     }

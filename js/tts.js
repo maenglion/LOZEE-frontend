@@ -54,7 +54,7 @@ export async function playTTSFromText(text, voice) {
         throw new Error("User not authenticated.");
     }
 
-    const voiceToUse = voice || 'alloy';
+    const voiceToUse = voice || 'nova';
     console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
 
     try {
