@@ -155,6 +155,35 @@ export function getSystemPrompt({
     return prompt;
 }
 
+
+// 7) GPT 응답 요청 함수
+export async function getGptResponse(text, context = {}) {
+  const payload = {
+    message: text,
+    context
+  };
+
+  try {
+    const response = await fetch(GPT_BACKEND_URL_GPT_DIALOG, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GPT 서버 오류: ${errorText}`);
+    }
+
+    const json = await response.json();
+    return json;
+  } catch (err) {
+    console.error('[getGptResponse 오류]', err);
+    return { error: 'GPT 호출 실패' };
+  }
+}
+
+
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
     const voc = getKoreanVocativeParticle(userName);
