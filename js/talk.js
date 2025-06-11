@@ -13,7 +13,7 @@ import {
     logSessionStart,
     logSessionEnd
 } from './firebase-utils.js';
-import COUNSELING_TOPICS from './counseling_topics.js';
+import { counselingTopicsByAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
 
