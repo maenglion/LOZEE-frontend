@@ -178,10 +178,15 @@ function renderUnifiedTopics() {
   const newTopics = getTopicsForCurrentUser();
   const prevKeywords = JSON.parse(localStorage.getItem('lozee_last_keywords') || '[]');
 
+  // ✅ 보호자인 경우와 아닌 경우에 따라 제목을 다르게 설정
+  const titleText = (currentUserType === 'caregiver') 
+    ? '어떤 점에 대해 이야기해볼까요?' 
+    : '📌 오늘 이야기할 수 있는 주제';
+
   // --- 신규 주제 박스 (규칙 3 적용) ---
   const mainBox = document.createElement('div');
   mainBox.className = 'topic-box';
-  mainBox.innerHTML = '<h4>📌 오늘 이야기할 수 있는 주제</h4>';
+  mainBox.innerHTML = `<h4>${titleText}</h4>`; // ✅ 변경된 제목 적용
 
   if (!newTopics || Object.keys(newTopics).length === 0) {
     appendMessage("상담 주제를 불러오는 데 실패했습니다. 페이지를 새로고침 하시거나 관리자에게 문의해주세요.", "assistant_feedback");
@@ -569,9 +574,8 @@ function handleMicButtonClick() {
 
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 ---
 document.addEventListener('DOMContentLoaded', async () => {
- 
- // ✅ 아래 한 줄을 제외하고 모두 삭제 또는 주석 처리합니다.
-    renderUnifiedTopics(); 
+    
+    
     try {
         const style = document.createElement('style');
         style.textContent = `
@@ -620,18 +624,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentFirestoreSessionId = await logSessionStart(loggedInUserId, "대화 시작");
         resetSessionTimeout();
 
-          const isReady = localStorage.getItem("lozee_user_ready");
-  if (isReady === "true") {
-    getFirstQuestion();  // GPT가 “오늘 기분이 어땠어?” 같은 질문 시작
-  }
+        const isReady = localStorage.getItem("lozee_user_ready");
+        if (isReady === "true") {
+            // getFirstQuestion();  // GPT가 “오늘 기분이 어땠어?” 같은 질문 시작
+            // getFirstQuestion은 sendMessage를 호출하므로, 초기 주제 선택과 충돌할 수 있어 주석 처리하거나 흐름을 재설계하는 것을 권장합니다.
+        }
 
         const greeting = getInitialGreeting(userNameToDisplay + voc, false);
         appendMessage(greeting, 'assistant');
         
-        // ⭐ 수정된 부분: 초기 인사말 재생은 하되, 화면 로딩을 막지 않습니다.
         playTTSWithControl(greeting);
         
-         
+        // ✅ 바로 이 위치입니다.
+        // 첫 인사를 한 직후, 사용자에게 선택할 주제를 보여줍니다.
+        renderUnifiedTopics(); 
+        
         window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
 
     } catch (error) {

@@ -6,6 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
     <link rel="stylesheet" href="gnb.css">
     <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         :root {
             --primary-color: #6e8efb;
@@ -38,6 +39,43 @@
             text-overflow: ellipsis;
         }
 
+        /* 1. 채팅창 레이아웃 수정 */
+#chat-window {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px; /* 내부 여백 추가 */
+    display: flex;
+    flex-direction: column; /* 아이템을 세로로 정렬 */
+    gap: 10px; /* 말풍선 사이 간격 추가 */
+}
+
+/* 2. 시작 버튼 및 오버레이 스타일 */
+#start-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#start-button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
         .bubble { max-width: 75%; padding: 10px 15px; border-radius: 18px; line-height: 1.6; word-break: keep-all; }
         .bubble.user { background: var(--primary-color); color: white; align-self: flex-end; }
         .bubble.assistant { background: #F5E7A1; color: #333; align-self: flex-start; }
@@ -61,13 +99,14 @@
         .chat-option-btn { background-color: #f1f1f1; color: #333; border: 1px solid #dcdcdc; border-radius: 12px; padding: 10px 15px; text-align: left; cursor: pointer; }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <nav id="gnb">
             <button id="menu-toggle">☰</button>
             <div id="gnb-title">LOZEE</div>
             <div class="gnb-right-buttons">
-                            </div>
+            </div>
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>
@@ -81,6 +120,10 @@
         
         <main id="chat-window"></main>
         
+        <div id="start-cover">
+            <button id="start-button">로지와 대화 시작하기</button>
+        </div>
+
         <div id="input-area">
             <button id="mic-button">🎤</button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
@@ -89,8 +132,9 @@
     </div>
     
     <script src="./js/gnb.js" defer></script>
-    <script src="./js/counseling_topics.js"></script>
-    <script type="module" src="./js/talk.js"></script> 
     
+    <script src="./js/counseling_topics.js"></script> 
+    
+    <script type="module" src="./js/talk.js"></script> 
 </body>
 </html>
