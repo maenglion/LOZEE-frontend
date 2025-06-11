@@ -573,77 +573,86 @@ function handleMicButtonClick() {
 }
 
 
-// --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 ---
+// --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 (최종 수정본) ---
 document.addEventListener('DOMContentLoaded', async () => {
     
-    
-    try {
-        const style = document.createElement('style');
-        style.textContent = `
-            body.talk-page-body { overflow: hidden; }
-            @media (min-width: 641px) {
-                .app-container.talk-page { max-width: 640px; height: 90vh; margin: auto; }
+    // UI 요소 가져오기
+    const startCover = document.getElementById('start-cover');
+    const startButton = document.getElementById('start-button');
+    const appContainer = document.querySelector('.app-container');
+
+    // talk.html에만 적용될 스타일 동적 추가
+    const style = document.createElement('style');
+    style.textContent = `
+        body.talk-page-body { overflow: hidden; }
+        @media (min-width: 641px) {
+            .app-container.talk-page { max-width: 640px; height: 90vh; margin: auto; }
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.classList.add('talk-page-body');
+    if (appContainer) appContainer.classList.add('talk-page');
+
+
+    // ✅ 시작 버튼에 클릭 이벤트 할당
+    if (startButton) {
+        startButton.onclick = async () => {
+            // 오디오 컨텍스트 잠금 해제 (TTS 안정적 재생을 위해)
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
             }
-        `;
-        document.head.appendChild(style);
-        document.body.classList.add('talk-page-body');
-        const appContainer = document.querySelector('.app-container');
-        if (appContainer) appContainer.classList.add('talk-page');
+            
+            // 시작 화면 숨기기
+            if (startCover) startCover.style.display = 'none';
 
-        const ttsToggleBtn = document.getElementById('tts-toggle-btn');
-        if (ttsToggleBtn) ttsToggleBtn.style.display = 'none';
-        const widthToggleBtn = document.getElementById('width-toggle-btn-floating');
-        if (widthToggleBtn) widthToggleBtn.style.display = 'none';
-        
-        if (inputArea) inputArea.style.display = 'none';
+            // --- 모든 실제 초기화 로직은 버튼 클릭 이후에 실행 ---
+            try {
+                if (inputArea) inputArea.style.display = 'none';
 
-        if (!loggedInUserId) {
-            console.error("사용자 정보(userId)가 없습니다. 시작 페이지로 이동합니다.");
-            window.location.href = 'index.html';
-            return;
-        }
-
-        updateActionButtonIcon();
-        if (actionButton) actionButton.addEventListener('click', handleMicButtonClick);
-        if (chatInput) {
-            chatInput.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.isComposing) {
-                    e.preventDefault();
-                    handleMicButtonClick();
+                if (!loggedInUserId) {
+                    console.error("사용자 정보(userId)가 없습니다. 시작 페이지로 이동합니다.");
+                    window.location.href = 'index.html';
+                    return;
                 }
-            });
-            chatInput.addEventListener('input', () => {
-                if (isTtsMode && chatInput.value.length > 0) {
-                    isTtsMode = false;
-                    updateActionButtonIcon();
+
+                updateActionButtonIcon();
+                if (actionButton) actionButton.addEventListener('click', handleMicButtonClick);
+                if (chatInput) {
+                    chatInput.addEventListener('keydown', e => {
+                        if (e.key === 'Enter' && !e.isComposing) {
+                            e.preventDefault();
+                            handleMicButtonClick();
+                        }
+                    });
+                    chatInput.addEventListener('input', () => {
+                        if (isTtsMode && chatInput.value.length > 0) {
+                            isTtsMode = false;
+                            updateActionButtonIcon();
+                        }
+                    });
                 }
-            });
-        }
 
-        conversationStartTime = Date.now();
-        previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
-        currentFirestoreSessionId = await logSessionStart(loggedInUserId, "대화 시작");
-        resetSessionTimeout();
+                conversationStartTime = Date.now();
+                previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
+                currentFirestoreSessionId = await logSessionStart(loggedInUserId, "대화 시작"); // ✅ 로그 기록 정상 확인됨
+                resetSessionTimeout();
 
-        const isReady = localStorage.getItem("lozee_user_ready");
-        if (isReady === "true") {
-            // getFirstQuestion();  // GPT가 “오늘 기분이 어땠어?” 같은 질문 시작
-            // getFirstQuestion은 sendMessage를 호출하므로, 초기 주제 선택과 충돌할 수 있어 주석 처리하거나 흐름을 재설계하는 것을 권장합니다.
-        }
+                const greeting = getInitialGreeting(userNameToDisplay + voc, false);
+                appendMessage(greeting, 'assistant');
+                
+                // ✅ TTS 요청 정상 확인됨
+                playTTSWithControl(greeting);
+                
+                // 주제 표시
+                renderUnifiedTopics(); 
+                
+                window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
 
-        const greeting = getInitialGreeting(userNameToDisplay + voc, false);
-        appendMessage(greeting, 'assistant');
-        
-        playTTSWithControl(greeting);
-        
-        // ✅ 바로 이 위치입니다.
-        // 첫 인사를 한 직후, 사용자에게 선택할 주제를 보여줍니다.
-        renderUnifiedTopics(); 
-        
-        window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
-
-    } catch (error) {
-        console.error("페이지 초기화 중 심각한 오류가 발생했습니다:", error);
-        appendMessage("페이지를 불러오는 중 문제가 발생했어요.", "assistant_feedback");
+            } catch (error) {
+                console.error("페이지 초기화 중 심각한 오류가 발생했습니다:", error);
+                appendMessage("페이지를 불러오는 중 문제가 발생했어요.", "assistant_feedback");
+            }
+        };
     }
 });
