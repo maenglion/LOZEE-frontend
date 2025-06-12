@@ -270,13 +270,6 @@ function showSubTopics() {
     }
 }
 
-// ⭐ 복원된 함수: 주제 선택 후 실제 대화를 시작하고 입력창을 보여줍니다.
-function startChat(initText, inputMethod = 'topic_selection_init', topicDetails = null) {
-    if (inputArea) inputArea.style.display = 'flex';
-    if (initText) sendMessage(initText, inputMethod);
-    else if (chatInput) chatInput.focus();
-}
-
 // ⭐ 복원된 함수: 사용자의 이전 누적 대화량을 Firestore에서 가져옵니다.
 async function fetchPreviousUserCharCount() {
     if (!loggedInUserId) return 0;
