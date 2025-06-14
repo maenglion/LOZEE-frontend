@@ -629,7 +629,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // UI 요소 가져오기
     const startCover = document.getElementById('start-cover');
-    const startButton = document.getElementById('start-button');
     const appContainer = document.querySelector('.app-container');
 
     // talk.html에만 적용될 스타일 동적 추가
@@ -690,15 +689,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 resetSessionTimeout();
 
                 const greeting = getInitialGreeting(userNameToDisplay + voc, false);
-                appendMessage(greeting, 'assistant');
-                
-                // ✅ TTS 요청 정상 확인됨
-                playTTSWithControl(greeting);
-                
-                // 주제 표시
-                renderUnifiedTopics(); 
-                
-                window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
+        appendMessage(greeting, 'assistant');
+        playTTSWithControl(greeting);
+        
+        // ▼▼▼ 여기에 이 코드를 추가하거나, 기존 위치에서 이곳으로 옮기세요. ▼▼▼
+        renderUnifiedTopics(); 
+        
+        window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
 
             } catch (error) {
                 console.error("페이지 초기화 중 심각한 오류가 발생했습니다:", error);
