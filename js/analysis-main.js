@@ -20,18 +20,54 @@ const deepContentEl = document.getElementById('deep-analysis-content');
 
 // --- 렌더링 호출 함수 ---
 
+/** 1. 기본 분석 탭 렌더링 (연령 분기 로직 강화) */
 function renderBasicAnalysis(journal, userType) {
-    const langSection = basicContentEl.querySelector('#languageAgeSection');
+    const container = document.getElementById('basic-analysis-content');
     
-    // [핵심 분기 로직] 사용자 유형(아이/성인)에 따라 언어 모듈 표시 여부 결정
-    if (userType === 'child' && langSection) {
-        langSection.style.display = 'block';
-    } else if (langSection) {
-        langSection.style.display = 'none';
-    }
+    if (userType === 'child') {
+        // 아이용 레이아웃 렌더링
+        container.innerHTML = `
+            <div class="section" id="languageAgeSection">
+                 <h2>🗣️ 내 말솜씨 나이는 몇 살일까?</h2>
+                 </div>
+            <div class="section" id="emotionToneSection">
+                <h2>🌈 내 마음 색깔은 뭘까?</h2>
+                <div id="emotionChartContainer" style="max-width: 400px; margin: auto;"><canvas id="emotionChart"></canvas></div>
+                <h3 style="margin-top: 30px; font-size: 1.2em;">주요 키워드</h3>
+                <div id="tagCloud"></div>
+            </div>
+        `;
+        // 차트 및 태그 렌더링 함수 호출
+        renderEmotionChart('emotionChart', journal.detailedAnalysis.emotionToneData);
+        renderTagCloud('tagCloud', journal.detailedAnalysis.keywords);
 
-    renderEmotionChart('emotionChart', journal.detailedAnalysis.emotionToneData);
-    renderTagCloud('tagCloud', journal.detailedAnalysis.keywords);
+    } else { // userType === 'adult'
+        // 성인용 레이아웃 렌더링 (analysis_adult.html의 구조를 가져옴)
+        container.innerHTML = `
+            <div class="section" id="conversationSummarySection">
+                <h2>📝 로지와의 대화 요약</h2>
+                <p class="module-explanation">최근 대화 내용을 한눈에 볼 수 있도록 요약했어요.</p>
+                <div id="summaryContent" style="white-space: pre-wrap;"></div>
+            </div>
+            <div class="section">
+                <h2>🌊 감정 흐름 살펴보기</h2>
+                <div id="emotionChartContainer" style="max-width: 400px; margin: auto;"><canvas id="emotionChart"></canvas></div>
+            </div>
+            <div class="section">
+                <h2>🔑 나의 대화 키워드</h2>
+                <div id="tagCloud"></div>
+            </div>
+            <div class="section">
+                <h2>💡 함께 생각해 볼 점</h2>
+                <div id="situationAlerts"></div>
+            </div>
+        `;
+        // 각 영역에 데이터 채우기 및 렌더링 함수 호출
+        container.querySelector('#summaryContent').textContent = journal.summary;
+        renderEmotionChart('emotionChart', journal.detailedAnalysis.emotionToneData);
+        renderTagCloud('tagCloud', journal.detailedAnalysis.keywords);
+        // ... situationAlerts 렌더링 로직
+    }
 }
 
 function renderCumulativeAnalysis(journals) {
