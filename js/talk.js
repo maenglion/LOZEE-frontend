@@ -51,7 +51,7 @@ const micIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="2
 
 
 /**
- * 대화 세션을 공식적으로 시작하고 관련 UI를 활성화하는 함수
+ * 대화 세션을 공식적으로 시작하고 관련 UI를 활성화하며, 첫 메시지를 전송하는 함수
  * @param {object} subTopic - 선택된 서브 주제의 상세 정보
  */
 function startChat(subTopic) {
@@ -63,24 +63,31 @@ function startChat(subTopic) {
     }
     
     selectedSubTopicDetails = subTopic;
+    updateSessionHeader(); // 세션 헤더 업데이트
 
     // 비활성화된 UI 요소들을 활성화시킵니다.
     const actionButton = document.getElementById('action-button');
-    const emotionStateButton = document.querySelector('.chat-option-btn'); // '나의 감정상태' 버튼
     const chatInput = document.getElementById('chat-input');
-
     if (actionButton) actionButton.disabled = false;
-    if (emotionStateButton) emotionStateButton.disabled = false;
     if (chatInput) chatInput.disabled = false;
     
     // '자유주제'일 경우 텍스트 입력창을 바로 보여줍니다.
     if (subTopic && subTopic.type === 'free') {
-        document.querySelector('.input-area').style.display = 'flex';
+        if (inputArea) inputArea.style.display = 'flex';
         isTtsMode = false; // 텍스트 입력 모드로 전환
-        updateActionButtonIcon(); // 아이콘 업데이트 (이 함수가 있다면)
+        updateActionButtonIcon();
         chatInput.focus();
+    } else {
+        // [핵심 수정] 주제 선택 후, 해당 주제로 AI와의 대화를 시작합니다.
+        // sendMessage 함수를 호출하여 첫 번째 메시지를 보냅니다.
+        const initialMessage = `'${subTopic.displayText}'(이)라는 주제로 이야기하고 싶어요.`;
+        
+        // 'topic_selection_init'은 시스템이 보낸 메시지임을 구분하기 위함입니다.
+        // 이 메시지는 사용자 말풍선으로 보이지 않게 처리됩니다.
+        sendMessage(initialMessage, 'topic_selection_init');
     }
 }
+
 // --- 4. 사용자 정보 ---
 const loggedInUserId = localStorage.getItem('lozee_userId');
 const userNameToDisplay = localStorage.getItem('lozee_username') || '친구';
