@@ -81,11 +81,19 @@ function startChat(subTopic) {
         chatInput.focus();
     }
 }
-
 // --- 4. 사용자 정보 ---
 const loggedInUserId = localStorage.getItem('lozee_userId');
 const userNameToDisplay = localStorage.getItem('lozee_username') || '친구';
 const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
+
+// [수정] 사용자의 나이에 맞는 상담 주제 키를 미리 계산합니다.
+const currentUserAgeGroup = (() => {
+    if (targetAge < 11) return '10세미만';
+    if (targetAge <= 15) return '11-15세';
+    if (targetAge <= 29) return '16-29세';
+    return '30-55세'; // 기본값
+})();
+
 const currentUserType = (localStorage.getItem('lozee_role') === 'parent') ? 'caregiver' : 'directUser';
 const targetChildId = (currentUserType === 'caregiver') ? localStorage.getItem('lozee_childId') : null;
 const voc = getKoreanVocativeParticle(userNameToDisplay);
