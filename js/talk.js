@@ -219,7 +219,7 @@ function updateSessionHeader() {
 
 function renderUnifiedTopics() {
     const container = document.getElementById('topic-selection-container');
-    if (!container) return;
+    if (!container) return; // 안전장치
     container.innerHTML = '';
 
     // --- [수정된 로직] ---
@@ -234,7 +234,7 @@ function renderUnifiedTopics() {
     }
 
     // 3. 선택된 그룹 안에서 나이대에 맞는 최종 주제 목록을 가져옵니다.
-    const topicsData = topicsForUserType[currentUserAgeGroup] || topicsForUserType['16-29세']; // 기본값
+    const topicsData = topicsForUserType[currentUserAgeGroup] || topicsForUserType['16-29세']; // 나이대에 맞는 데이터가 없을 경우를 대비한 기본값
     
     // 4. (안전장치) 만약 최종 주제 목록이 없으면 함수를 중단합니다.
     if (!topicsData) {
@@ -243,6 +243,8 @@ function renderUnifiedTopics() {
     }
 
     // 이제 topicsData는 반드시 배열이므로 forEach를 안전하게 사용할 수 있습니다.
+    // '자유주제' 카드 생성 로직 등 기존 로직을 여기에 이어서 구현합니다.
+    // 예시: 나머지 주제들 렌더링
     topicsData.forEach(mainTopic => {
         const mainTopicElement = document.createElement('div');
         mainTopicElement.className = 'main-topic-card';
@@ -261,8 +263,8 @@ function renderUnifiedTopics() {
                 selectedMain = mainTopic.name;
 
                 appendMessage(`'${subTopic.displayText}'에 대해 이야기하고 싶구나. 좋아!`, 'assistant');
-                hideTopicSelectionScreen();
-                startChat(subTopic); // 🔑 핵심: 서브 주제 선택 시 startChat 호출
+                hideTopicSelectionScreen(); // 이 함수가 있다면 호출
+                startChat(subTopic);
             });
             subTopicsList.appendChild(subTopicElement);
         });
@@ -270,7 +272,6 @@ function renderUnifiedTopics() {
         container.appendChild(mainTopicElement);
     });
 }
-
 
 // ⭐ 복원된 함수: 서브 주제를 버튼으로 표시합니다.
 function showSubTopics() {
