@@ -219,25 +219,30 @@ function updateSessionHeader() {
 
 function renderUnifiedTopics() {
     const container = document.getElementById('topic-selection-container');
-    container.innerHTML = ''; // 기존 내용 초기화
+    if (!container) return;
+    container.innerHTML = '';
 
-    const topicsData = counselingTopicsByAge[currentUserAgeGroup] || counselingTopicsByAge['청년'];
+    // --- [수정된 로직] ---
 
-    // '자유주제' 생성
-    const freeTopicElement = document.createElement('div');
-    freeTopicElement.className = 'main-topic-card';
-    freeTopicElement.innerHTML = `<h3>자유주제</h3>`;
-    freeTopicElement.addEventListener('click', () => {
-        selectedMain = '자유주제';
-        const freeSubTopic = { displayText: '자유주제', tags: ['자유주제'], type: 'free' };
-        
-        appendMessage('자유로운 주제로 이야기하는 걸 선택했구나! 어떤 이야기를 하고 싶어?', 'assistant');
-        hideTopicSelectionScreen();
-        startChat(freeSubTopic); // 🔑 핵심: 자유주제 선택 시 startChat 호출
-    });
-    container.appendChild(freeTopicElement);
+    // 1. 사용자 유형('directUser' 또는 'caregiver')에 맞는 주제 그룹을 먼저 선택합니다.
+    const topicsForUserType = counselingTopicsByAge[currentUserType];
     
-    // 나머지 주제들 렌더링
+    // 2. (안전장치) 만약 해당 유형의 데이터가 없으면 함수를 중단합니다.
+    if (!topicsForUserType) {
+        console.error(`상담 주제 데이터에서 '${currentUserType}' 유형을 찾을 수 없습니다.`);
+        return;
+    }
+
+    // 3. 선택된 그룹 안에서 나이대에 맞는 최종 주제 목록을 가져옵니다.
+    const topicsData = topicsForUserType[currentUserAgeGroup] || topicsForUserType['16-29세']; // 기본값
+    
+    // 4. (안전장치) 만약 최종 주제 목록이 없으면 함수를 중단합니다.
+    if (!topicsData) {
+        console.error(`상담 주제 데이터에서 '${currentUserAgeGroup}' 나이대를 찾을 수 없습니다.`);
+        return;
+    }
+
+    // 이제 topicsData는 반드시 배열이므로 forEach를 안전하게 사용할 수 있습니다.
     topicsData.forEach(mainTopic => {
         const mainTopicElement = document.createElement('div');
         mainTopicElement.className = 'main-topic-card';
