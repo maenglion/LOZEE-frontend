@@ -1,5 +1,5 @@
 // 테스트에 사용할 고정 사용자 ID
-const TEST_USER_ID = "test-user-01"; 
+const TEST_USER_ID = "XftpyFinzZaTMHsM8dt8nW4KzVC2"; 
 
 // Firestore 타임스탬프 객체를 생성하는 헬퍼 함수
 const createTimestamp = (day) => {
