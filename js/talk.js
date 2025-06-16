@@ -690,6 +690,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // UI 요소 가져오기
     const startCover = document.getElementById('start-cover');
     const appContainer = document.querySelector('.app-container');
+      // [수정] 아래 한 줄을 추가하여 startButton 변수를 선언합니다.
+    const startButton = document.getElementById('start-button');
 
     // talk.html에만 적용될 스타일 동적 추가
     const style = document.createElement('style');
@@ -704,8 +706,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (appContainer) appContainer.classList.add('talk-page');
 
 
-    // ✅ 시작 버튼에 클릭 이벤트 할당
-    if (startButton) {
+    /// ✅ 시작 버튼에 클릭 이벤트 할당
+    if (startButton) { // << 이제 startButton이 무엇인지 알 수 있습니다.
         startButton.onclick = async () => {
             // 오디오 컨텍스트 잠금 해제 (TTS 안정적 재생을 위해)
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
