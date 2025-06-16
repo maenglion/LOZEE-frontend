@@ -166,33 +166,6 @@ export function renderTagCloud(elementId, keywords) {
 
 
 
-/**
- * conversationText(전체 대화 로그 문자열)에서
- * “인물(사람)”과 “감정” 페어 태그를 추출하는 예시 함수.
- * (이 함수는 그대로 두거나 필요에 따라 다른 용도로 사용할 수 있습니다.)
- */
-export function extractEntityEmotionPairs(conversationText) {
-  const personKeywords = ["엄마", "아빠", "형", "동생", "친구", "선생님", "아스퍼거", "형아"];
-  const emotionKeywords = ["기쁨", "슬픔", "속상", "불안", "우울", "당황", "신남", "후회"];
-
-  const result = [];
-
-  conversationText.split(/[\n.!?]+/).forEach(sentence => {
-    const foundPerson = personKeywords.find(p => sentence.includes(p));
-    const foundEmotion = emotionKeywords.find(e => sentence.includes(e));
-
-    if (foundPerson && foundEmotion) {
-      const pair = { entity: foundPerson, emotion: foundEmotion };
-      const exists = result.some(r => r.entity === pair.entity && r.emotion === pair.emotion);
-      if (!exists) result.push(pair);
-    }
-  });
-
-  return result;
-}
-
-
-
 // --- 3) 상황 분석 (인지왜곡 패턴 탐지) ---
 export function trackSituation(analysisData) {
   console.log('[LOZEE_ANALYSIS] 상황 분석:', analysisData);
