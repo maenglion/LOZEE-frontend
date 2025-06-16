@@ -217,60 +217,65 @@ function updateSessionHeader() {
  */
 // 기존 renderUnifiedTopics 함수를 찾아서 아래 코드로 교체하세요.
 
+// renderUnifiedTopics 함수를 찾아 아래 코드로 전체를 교체해주세요.
 function renderUnifiedTopics() {
     const container = document.getElementById('topic-selection-container');
-    if (!container) return; // 안전장치
-    container.innerHTML = '';
+    if (!container) return;
+    container.innerHTML = ''; // 이전 내용 초기화
 
     // --- [수정된 로직] ---
-
-    // 1. 사용자 유형('directUser' 또는 'caregiver')에 맞는 주제 그룹을 먼저 선택합니다.
     const topicsForUserType = counselingTopicsByAge[currentUserType];
-    
-    // 2. (안전장치) 만약 해당 유형의 데이터가 없으면 함수를 중단합니다.
-    if (!topicsForUserType) {
-        console.error(`상담 주제 데이터에서 '${currentUserType}' 유형을 찾을 수 없습니다.`);
-        return;
-    }
+    if (!topicsForUserType) return;
 
-    // 3. 선택된 그룹 안에서 나이대에 맞는 최종 주제 목록을 가져옵니다.
-    const topicsData = topicsForUserType[currentUserAgeGroup] || topicsForUserType['16-29세']; // 나이대에 맞는 데이터가 없을 경우를 대비한 기본값
+    // 양육자(caregiver)는 나이 구분이 없으므로 'common' 키를 사용합니다.
+    const topicsData = (currentUserType === 'caregiver') 
+        ? topicsForUserType['common']
+        : (topicsForUserType[currentUserAgeGroup] || topicsForUserType['16-29세']);
     
-    // 4. (안전장치) 만약 최종 주제 목록이 없으면 함수를 중단합니다.
-    if (!topicsData) {
-        console.error(`상담 주제 데이터에서 '${currentUserAgeGroup}' 나이대를 찾을 수 없습니다.`);
-        return;
-    }
+    if (!topicsData) return;
 
-    // 이제 topicsData는 반드시 배열이므로 forEach를 안전하게 사용할 수 있습니다.
-    // '자유주제' 카드 생성 로직 등 기존 로직을 여기에 이어서 구현합니다.
-    // 예시: 나머지 주제들 렌더링
+    // 선택지들을 담을 컨테이너를 만듭니다.
+    const optionsContainer = document.createElement('div');
+    optionsContainer.className = 'chat-options-container';
+
+    // 각 주제(mainTopic)를 버튼으로 생성합니다.
     topicsData.forEach(mainTopic => {
-        const mainTopicElement = document.createElement('div');
-        mainTopicElement.className = 'main-topic-card';
-        mainTopicElement.innerHTML = `<h3>${mainTopic.name}</h3>`;
+        const button = document.createElement('button');
+        button.className = 'chat-option-btn'; // ✅ 버튼 스타일을 적용하기 위한 클래스
+        button.innerHTML = mainTopic.name;     // ✅ 버튼에 주제 이름 표시
         
-        const subTopicsList = document.createElement('div');
-        subTopicsList.className = 'sub-topics-list';
-
-        mainTopic.subTopics.forEach(subTopic => {
-            const subTopicElement = document.createElement('button');
-            subTopicElement.className = 'chat-option-btn sub-topic-btn';
-            subTopicElement.textContent = subTopic.displayText;
-            
-            subTopicElement.addEventListener('click', (e) => {
-                e.stopPropagation();
-                selectedMain = mainTopic.name;
-
-                appendMessage(`'${subTopic.displayText}'에 대해 이야기하고 싶구나. 좋아!`, 'assistant');
-                hideTopicSelectionScreen(); // 이 함수가 있다면 호출
-                startChat(subTopic);
+        button.onclick = () => {
+            // 1. 모든 버튼을 비활성화하여 중복 클릭 방지
+            optionsContainer.querySelectorAll('.chat-option-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
             });
-            subTopicsList.appendChild(subTopicElement);
-        });
-        mainTopicElement.appendChild(subTopicsList);
-        container.appendChild(mainTopicElement);
+            button.classList.add('selected'); // 선택된 버튼에 표시
+
+            // 2. 사용자가 선택한 주제를 채팅창에 표시
+            selectedMain = mainTopic.name;
+            appendMessage(`'${mainTopic.name}'(을)를 선택했구나.`, 'user');
+            
+            // 3. 기존 주제 선택 버튼들 제거
+            container.innerHTML = ''; 
+            
+            // 4. 세부 주제가 있으면 표시, 없으면 바로 대화 시작
+            if (mainTopic.subTopics && mainTopic.subTopics.length > 0) {
+                appendMessage('더 자세한 이야기를 들려줄래?', 'assistant');
+                displayOptionsInChat(mainTopic.subTopics, (selectedText, fullOption) => {
+                    selectedSubTopicDetails = fullOption;
+                    updateSessionHeader();
+                    startChat(fullOption); // startChat 함수 호출
+                });
+            } else {
+                // 세부 주제가 없는 경우 (예: 자유주제)
+                startChat({ displayText: mainTopic.name, tags: [mainTopic.name] });
+            }
+        };
+        optionsContainer.appendChild(button);
     });
+
+    container.appendChild(optionsContainer);
 }
 
 // ⭐ 복원된 함수: 서브 주제를 버튼으로 표시합니다.

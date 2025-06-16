@@ -107,13 +107,13 @@ body {
 }
 
 /* 추가: sub-topic과 동일한 스타일을 적용하기 위한 버튼 스타일 */
-.chat-options-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    align-self: stretch; /* 컨테이너가 꽉 차도록 */
-    box-sizing: border-box;
+.chat-options-container { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    margin: 10px 0; 
+    align-self: flex-start; 
+    width: 80%;
 }
 
 .chat-option-btn {
@@ -121,7 +121,7 @@ body {
     color: #333;
     border: 1px solid #dcdcdc;
     border-radius: 12px;
-    padding: 12px 15px;
+    padding: 10px 15px;
     text-align: left;
     cursor: pointer;
     width: 100%;
@@ -130,7 +130,7 @@ body {
 }
 
 .chat-option-btn:hover {
-    background-color: #e9e9e9;
+    background-color: #e0e0e0;
 }
 
 .chat-option-btn.selected {
