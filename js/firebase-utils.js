@@ -38,6 +38,40 @@ function detectRiskTags(text, detailedAnalysis = {}) {
 }
 
 /**
+ * [신규 추가 또는 수정]
+ * 생성된 저널 데이터를 Firestore에 저장(또는 업데이트)하는 함수
+ * @param {string} sessionId - 저장할 저널의 고유 세션 ID
+ * @param {object} journalData - 저장할 저널 데이터 객체
+ * @returns {Promise<void>}
+ */
+export async function saveJournalToFirestore(sessionId, journalData) {
+  if (!sessionId || !journalData) {
+    console.error("세션 ID 또는 저널 데이터가 없어 저장할 수 없습니다.");
+    return;
+  }
+
+  try {
+    const journalRef = doc(db, 'journals', sessionId);
+
+    await setDoc(journalRef, {
+      ...journalData,
+      // journal.html에서 사용하던 toDate()를 위해 서버 시간을 기록
+      createdAt: serverTimestamp(), 
+      updatedAt: serverTimestamp()
+    }, { merge: true }); // merge: true 옵션으로 기존 문서를 덮어쓰지 않고 병합
+
+    console.log(`저널이 성공적으로 저장되었습니다 (ID: ${sessionId})`);
+
+  } catch (error) {
+    console.error("Firestore에 저널 저장 중 오류:", error);
+    throw error; // 오류 발생 시 상위로 전파
+  }
+}
+
+
+
+
+/**
  * Journal을 저장하고, 조건에 따라 notifications 컬렉션에도 알림 생성
  * @returns {Promise<string|null>} 저장된 저널 문서 ID 또는 null
  */

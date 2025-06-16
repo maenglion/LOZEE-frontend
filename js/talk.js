@@ -284,32 +284,92 @@ async function fetchPreviousUserCharCount() {
 }
 
 // ⭐ 복원된 함수: 세션을 종료하고 대화 기록을 최종 저장합니다.
+// ⭐ 복원된 함수: 세션을 종료하고 대화 기록을 최종 저장합니다. (수정된 버전)
 async function endSessionAndSave() {
-    if (isDataSaved) return;
-    isDataSaved = true;
-    appendMessage("대화를 안전하게 마무리하고 있어요...", 'assistant_feedback');
-    if (currentFirestoreSessionId) await logSessionEnd(currentFirestoreSessionId);
-    const finalTopicForJournal = selectedSubTopicDetails?.displayText || selectedMain || "알 수 없는 주제";
-    if (finalTopicForJournal !== "알 수 없는 주제" && chatHistory.length > 2) {
-        const journalDetailsToSave = {
-            summary: lastAiAnalysisData?.conversationSummary || "대화 요약이 생성되지 않았습니다.",
-            title: lastAiAnalysisData?.summaryTitle || finalTopicForJournal,
-            detailedAnalysis: lastAiAnalysisData || {},
-            sessionDurationMinutes: (Date.now() - conversationStartTime) / (1000 * 60),
-            userCharCountForThisSession: userCharCountInSession
-        };
-        const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
-        const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, {
-            relatedChildId: targetChildId, entryType: entryTypeForSave,
-            childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
-        });
-        if (journalId) {
-            await updateTopicStats(loggedInUserId, finalTopicForJournal, entryTypeForSave);
-            const totalChars = (await fetchPreviousUserCharCount()) + userCharCountInSession;
-            await updateUserOverallStats(loggedInUserId, currentUserType, totalChars);
+  if (isDataSaved) return;
+  isDataSaved = true;
+  
+  appendMessage("대화를 안전하게 마무리하고 있어요. 잠시만 기다려 주세요...", 'assistant_feedback');
+  if (currentFirestoreSessionId) await logSessionEnd(currentFirestoreSessionId); // 세션 종료 로그
+
+  // 대화 내용이 충분하지 않으면 저장을 건너뜁니다.
+  if (chatHistory.length <= 2) {
+    console.log("대화 내용이 부족하여 저장을 건너뜁니다.");
+    return;
+  }
+
+  try {
+    // [1단계] AI에게 최종 요약을 요청합니다. 
+    // 기존에는 마지막 분석(lastAiAnalysisData)을 재사용했지만, 
+    // 더 정확한 최종 요약을 위해 대화 전체를 기반으로 다시 요청하는 것이 좋습니다.
+    console.log("최종 저장을 위한 AI 분석 시작...");
+    const finalAnalysisResponse = await getGptResponse(
+        "지금까지의 대화 전체를 최종적으로 요약하고 분석해줘.", {
+            chatHistory: chatHistory,
+            userId: loggedInUserId,
+            elapsedTime: (Date.now() - conversationStartTime) / (1000 * 60)
         }
+    );
+
+    if (!finalAnalysisResponse.ok) throw new Error("최종 AI 분석 실패");
+    
+    const finalGptData = await finalAnalysisResponse.json();
+    let finalAnalysis = {};
+    const jsonStartIndex = finalGptData.text.indexOf('{"');
+    if (jsonStartIndex !== -1) {
+        finalAnalysis = JSON.parse(finalGptData.text.substring(jsonStartIndex));
+    } else {
+        // JSON이 없는 경우를 대비한 최소한의 데이터
+        finalAnalysis = {
+            conversationSummary: finalGptData.text,
+            summaryTitle: selectedSubTopicDetails?.displayText || selectedMain || "대화",
+            keywords: [],
+        };
     }
+    
+    const summaryText = finalAnalysis.conversationSummary || "요약이 생성되지 않았습니다.";
+    
+    // [2단계] 생성된 최종 요약문으로 의미 기반 키워드를 추출합니다. (신규 단계)
+    console.log("의미 기반 키워드 추출 시작...");
+    const semanticKeywords = await extractSemanticKeywords(summaryText);
+    
+    // 기존 분석 키워드와 합치거나, 새로운 키워드로 대체할 수 있습니다.
+    // 여기서는 새로운 의미 기반 키워드를 최종본으로 사용합니다.
+    finalAnalysis.keywords = semanticKeywords;
+
+
+    // [3단계] Firestore에 저장할 최종 데이터 객체를 구성합니다.
+    const finalTopicForJournal = selectedSubTopicDetails?.displayText || selectedMain || "알 수 없는 주제";
+    const journalDetailsToSave = {
+        summary: summaryText,
+        title: finalAnalysis.summaryTitle || finalTopicForJournal,
+        detailedAnalysis: finalAnalysis, // 키워드가 업데이트된 최종 분석 결과
+        sessionDurationMinutes: (Date.now() - conversationStartTime) / (1000 * 60),
+        userCharCountForThisSession: userCharCountInSession
+    };
+
+    // [4단계] Firestore에 최종 데이터를 저장합니다.
+    const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
+    const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, {
+        relatedChildId: targetChildId, 
+        entryType: entryTypeForSave,
+        childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
+    });
+
+    if (journalId) {
+        await updateTopicStats(loggedInUserId, finalTopicForJournal, entryTypeForSave);
+        const totalChars = (await fetchPreviousUserCharCount()) + userCharCountInSession;
+        await updateUserOverallStats(loggedInUserId, currentUserType, totalChars);
+        console.log("모든 데이터가 성공적으로 저장되었습니다. Journal ID:", journalId);
+        displayJournalCreatedNotification(journalId); // 저장 완료 후 사용자에게 알림
+    }
+
+  } catch (error) {
+    console.error("endSessionAndSave 과정에서 오류 발생:", error);
+    appendMessage("대화 내용을 저장하는 중 문제가 발생했어요. 😥", 'assistant_feedback');
+  }
 }
+
 
 // ⭐ 복원된 함수: 세션 타임아웃 타이머를 리셋합니다.
 function resetSessionTimeout() {

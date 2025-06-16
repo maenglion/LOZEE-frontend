@@ -34,14 +34,15 @@ export const counselingTopicsByAge = {
         { icon: "🤯", displayText: "재미없는 수업에 집중하기 힘들어", tags: ["학업 어려움", "주의력 부족", "산만함"], type: "emotion_intensity" },
         { icon: "🤸", displayText: "가만히 있기 너무 답답해", tags: ["과잉행동", "충동성", "감정조절 어려움"], type: "emotion_intensity" },
         { icon: "🧠", displayText: "자꾸 뭘 잃어버리거나 깜빡해", tags: ["부주의", "실행 기능 저하", "건망증"], type: "situation" },
+        { icon: "🚧", displayText: "좋은 일이 있었어", tags: ["성취", "긍정", "기쁨"], type: "situation" },
         { icon: "🌪️", displayText: "주변이 바뀌면 너무 불안해", tags: ["강박적 성향", "변화저항", "불안감"], type: "emotion_intensity" },
         { icon: "📐", displayText: "규칙이 갑자기 바뀌거나 다르면 너무 화가 나", tags: ["강박적 성향", "규칙집착", "융통성 부족"], type: "situation" },
         { icon: "🙉", displayText: "소리/빛/냄새 같은 것에 남들보다 너무 예민해", tags: ["감각 민감성", "청각 민감", "시각 민감", "후각 민감"], type: "emotion_intensity" },
         { icon: "❓", displayText: "다른 애들은 괜찮은데, 왜 나만 불편할까?", tags: ["자기 인식", "감각 차이"], type: "situation" },
         { icon: "⏰", displayText: "시간 약속 못 지켜서 혼나거나 불안해", tags: ["시간 관리 어려움", "계획성 부족", "지각"], type: "situation" },
-        { icon: "📚", displayText: "숙제나 공부가 너무 어렵고 하기 싫어", tags: ["학업 어려움", "학습 동기 저하", "학업 스트레스"], type: "situation" },
+        { icon: "📚", displayText: "숙제나 공부가 재미없어", tags: ["학업 어려움", "학습 동기 저하", "학업 스트레스"], type: "situation" },
         { icon: "📉", displayText: "글씨 쓰기나 그림 그리기가 너무 힘들어", tags: ["소근육 발달 지연", "학습 어려움"], type: "situation" },
-        { icon: "🚧", displayText: "내가 하려던 순서나 방식이 바뀌면 너무 화가 나", tags: ["강박적 성향", "계획 수정 어려움", "융통성 부족"], type: "situation" },
+    
       ],
       "가족 이야기": [
         { icon: "😠", displayText: "엄마(아빠)랑 맨날 싸워", tags: ["가족 관계 어려움", "부모와 갈등"], type: "situation" },
