@@ -3,6 +3,13 @@
 // --- 모듈 Import ---
 import { getJournalsForUser } from './firebase-utils.js';
 import { renderEmotionChart, renderTagCloud, renderCumulativeEmotionChart } from './lozee-analysis-charts.js';
+import { 
+    analyzeRelationalEmotions,
+    analyzeCommunicationGrowth,
+    analyzeHabitTracking,
+    renderRelationRadarChart,
+    renderGrowthReport,
+    renderHabitTrackingChart} from './lozee-analysis.js';
 
 // --- DOM 요소 ---
 const tabs = document.querySelectorAll('.tab-btn');
@@ -47,6 +54,50 @@ function renderCumulativeAnalysis(journals) {
 function renderDeepAnalysis(journals) {
     // 이전 답변에서 제안한 심층 분석 내용
     deepContentEl.innerHTML = `...`; 
+}
+
+
+/** 3. 심층 분석 탭 렌더링 */
+function renderDeepAnalysis(journals) {
+    // 1. 심층 분석 탭의 기본 HTML 구조를 먼저 삽입
+    deepContentEl.innerHTML = `
+        <div class="section">
+            <h2>🔬 10회+ 심층 분석 리포트</h2>
+            <p class="module-explanation">10번 이상의 깊은 대화를 통해 발견한 너만의 특별한 점들을 알려줄게!</p>
+            
+            <div class="deep-analysis-module" style="margin-top: 20px;">
+                <h4>📊 관계별 감정 분석</h4>
+                <p>'엄마', '친구' 등 특정 인물과 이야기할 때 어떤 감정을 주로 느끼는지 분석해봤어. 관계의 힌트를 얻을 수 있을 거야.</p>
+                <div style="position: relative; max-width: 500px; margin: auto;">
+                    <canvas id="relationRadarChart"></canvas>
+                </div>
+            </div>
+
+            <div class="deep-analysis-module" style="margin-top: 30px;">
+                <h4>🌱 성장 리포트: 의사소통 스타일 변화</h4>
+                <p>처음과 지금, 너의 감정 표현이 얼마나 더 풍부해지고 다양해졌는지 알려줄게. 함께한 시간이 너를 어떻게 성장시켰는지 볼 수 있어!</p>
+                <div id="growthReportContainer"></div>
+            </div>
+
+            <div class="deep-analysis-module" style="margin-top: 30px;">
+                <h4>🧠 생각 습관 변화 추적</h4>
+                <p>혹시 반복되던 생각 습관이 있었다면, 최근에는 어떻게 변화하고 있는지 그 흐름을 추적해봤어.</p>
+                <div style="position: relative; max-width: 600px; margin: auto;">
+                     <canvas id="habitTrackingChart"></canvas>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 2. 데이터 분석 함수 호출
+    const relationalData = analyzeRelationalEmotions(journals);
+    const growthData = analyzeCommunicationGrowth(journals);
+    const habitData = analyzeHabitTracking(journals);
+
+    // 3. 분석된 데이터를 바탕으로 렌더링 함수 호출
+    renderRelationRadarChart('relationRadarChart', relationalData);
+    renderGrowthReport('growthReportContainer', growthData);
+    renderHabitTrackingChart('habitTrackingChart', habitData);
 }
 
 // --- 페이지 초기화 및 이벤트 설정 ---
@@ -102,3 +153,4 @@ function setupTabEvents() {
 }
 
 document.addEventListener('DOMContentLoaded', initializeAnalysisPage);
+

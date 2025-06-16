@@ -291,3 +291,179 @@ export function extractEntityEmotionPairs(conversationText) {
   return unique;
 }
 
+// --- 심층 분석 (10회+)을 위한 데이터 처리 함수들 ---
+
+/**
+ * [심층] 관계별 감정 데이터를 분석하고 가공합니다.
+ * @param {object[]} journals - 10개 이상의 저널 데이터 배열
+ * @returns {object} - 레이더 차트에 필요한 데이터 형식
+ */
+export function analyzeRelationalEmotions(journals) {
+    const relationKeywords = ['엄마', '아빠', '친구', '선생님'];
+    const emotionTypes = ['기쁨', '슬픔', '불안', '분노']; // 분석할 주요 감정
+    const relationStats = {}; // { 엄마: { 기쁨: [0.6, 0.5], 슬픔: [0.1], ... }, 친구: { ... } }
+
+    journals.forEach(journal => {
+        const text = (journal.summary || '') + (journal.detailedAnalysis.keywords || []).join(' ');
+        const emotions = journal.detailedAnalysis.emotionToneData;
+
+        relationKeywords.forEach(keyword => {
+            if (text.includes(keyword)) {
+                if (!relationStats[keyword]) {
+                    relationStats[keyword] = {};
+                }
+                emotionTypes.forEach(emotion => {
+                    if (!relationStats[keyword][emotion]) {
+                        relationStats[keyword][emotion] = [];
+                    }
+                    if (emotions[emotion]) {
+                        relationStats[keyword][emotion].push(emotions[emotion]);
+                    }
+                });
+            }
+        });
+    });
+
+    // 평균 계산하여 Chart.js 데이터셋 형태로 변환
+    const datasets = Object.keys(relationStats).map(keyword => {
+        const data = emotionTypes.map(emotion => {
+            const scores = relationStats[keyword][emotion] || [];
+            if (scores.length === 0) return 0;
+            const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+            return avg.toFixed(2); // 소수점 2자리까지
+        });
+        return { label: keyword, data: data, fill: true, tension: 0.1 };
+    });
+
+    return { labels: emotionTypes, datasets: datasets };
+}
+
+/**
+ * [심층] 의사소통 성장 데이터를 분석합니다.
+ * @param {object[]} journals - 10개 이상의 저널 데이터 배열
+ * @returns {object} - 성장 분석 결과 객체
+ */
+export function analyzeCommunicationGrowth(journals) {
+    const initialJournals = journals.slice(0, 3);
+    const recentJournals = journals.slice(-3);
+
+    const getVocabDiversity = (arr) => {
+        const keywords = arr.flatMap(j => j.detailedAnalysis.keywords || []);
+        return new Set(keywords).size; // 고유한 키워드의 개수
+    };
+
+    const getAvgSummaryLength = (arr) => {
+        if(arr.length === 0) return 0;
+        const totalLength = arr.reduce((sum, j) => sum + (j.summary || '').length, 0);
+        return Math.round(totalLength / arr.length);
+    };
+
+    return {
+        initialDiversity: getVocabDiversity(initialJournals),
+        recentDiversity: getVocabDiversity(recentJournals),
+        initialLength: getAvgSummaryLength(initialJournals),
+        recentLength: getAvgSummaryLength(recentJournals),
+    };
+}
+
+/**
+ * [심층] 생각 습관(인지왜곡) 변화를 추적합니다.
+ * @param {object[]} journals - 10개 이상의 저널 데이터 배열
+ * @returns {object} - 인지왜곡별 초기/최근 빈도수
+ */
+export function analyzeHabitTracking(journals) {
+    const initialJournals = journals.slice(0, 5);
+    const recentJournals = journals.slice(-5);
+
+    const getDistortionCounts = (arr) => {
+        const distortions = arr.flatMap(j => j.detailedAnalysis.cognitiveDistortions || []);
+        const counts = {};
+        distortions.forEach(d => {
+            counts[d] = (counts[d] || 0) + 1;
+        });
+        return counts;
+    };
+
+    const initialCounts = getDistortionCounts(initialJournals);
+    const recentCounts = getDistortionCounts(recentJournals);
+    const allKeys = [...new Set([...Object.keys(initialCounts), ...Object.keys(recentCounts)])];
+
+    const result = {};
+    allKeys.forEach(key => {
+        result[key] = {
+            initial: initialCounts[key] || 0,
+            recent: recentCounts[key] || 0
+        };
+    });
+
+    return result;
+}
+
+
+// --- 차트 렌더링 함수들 ---
+
+/**
+ * [심층] 관계별 감정 레이더 차트를 렌더링합니다.
+ */
+export function renderRelationRadarChart(canvasId, analysisData) {
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx) return;
+    
+    new Chart(ctx, { type: 'radar', data: analysisData });
+}
+
+/**
+ * [심층] 성장 리포트를 텍스트로 렌더링합니다.
+ */
+export function renderGrowthReport(elementId, growthData) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    const diversityChange = growthData.recentDiversity - growthData.initialDiversity;
+    const lengthChange = growthData.recentLength - growthData.initialLength;
+
+    let html = `
+        <p><strong>감정 어휘 다양성:</strong> 처음(${growthData.initialDiversity}개) → 최근(${growthData.recentDiversity}개)
+           <span style="color: ${diversityChange >= 0 ? 'blue' : 'red'}; font-weight: bold;">(${diversityChange >= 0 ? '+' : ''}${diversityChange}개)</span>
+        </p>
+        <p><strong>평균 대화 길이:</strong> 처음(${growthData.initialLength}자) → 최근(${growthData.recentLength}자)
+           <span style="color: ${lengthChange >= 0 ? 'blue' : 'red'}; font-weight: bold;">(${lengthChange >= 0 ? '+' : ''}${lengthChange}자)</span>
+        </p>
+        <p class="feedback positive" style="margin-top:10px;">
+            ${diversityChange > 0 ? '다양한 감정 단어를 사용하기 시작했어!' : ''}
+            ${lengthChange > 50 ? '이야기를 더 길고 풍부하게 표현하고 있구나! 정말 멋진 성장이야!' : ''}
+            ${diversityChange <= 0 && lengthChange <= 50 ? '꾸준히 이야기하는 것만으로도 대단한 일이야!' : ''}
+        </p>
+    `;
+    el.innerHTML = html;
+}
+
+/**
+ * [심층] 생각 습관 변화 막대 차트를 렌더링합니다.
+ */
+export function renderHabitTrackingChart(canvasId, habitData) {
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx || Object.keys(habitData).length === 0) {
+        if(ctx) {
+            const container = document.getElementById(canvasId).parentElement;
+            container.innerHTML = `<p class="feedback neutral">최근 10번의 대화에서 특별히 반복되는 생각 습관은 발견되지 않았어. 아주 좋아!</p>`;
+        }
+        return;
+    }
+
+    const labels = Object.keys(habitData);
+    const initialData = labels.map(key => habitData[key].initial);
+    const recentData = labels.map(key => habitData[key].recent);
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: '처음 5회', data: initialData, backgroundColor: 'rgba(255, 159, 64, 0.5)' },
+                { label: '최근 5회', data: recentData, backgroundColor: 'rgba(75, 192, 192, 0.5)' }
+            ]
+        },
+        options: { indexAxis: 'y' } // 가로 막대 그래프
+    });
+}
