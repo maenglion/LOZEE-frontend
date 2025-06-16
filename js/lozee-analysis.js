@@ -80,6 +80,58 @@ export function trackEmotionTone(analysisData) {
 }
 
 
+/**
+ * [신규 추가]
+ * AI를 사용하여 텍스트의 의미를 분석하고, 핵심 키워드를 추출하는 함수
+ * @param {string} journalText - AI가 생성한 5문단 분량의 저널 요약문
+ * @returns {Promise<string[]>} - 추출된 핵심 키워드 배열 (예: ["성취감", "도전", "즐거움"])
+ */
+export async function extractSemanticKeywords(journalText) {
+  if (!journalText) {
+    console.warn("키워드 추출을 위한 텍스트가 없습니다.");
+    return [];
+  }
+
+  try {
+    const response = await fetch(LOZEE_ANALYSIS_BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        // 백엔드 API에 새로운 분석 타입을 정의하여 요청
+        analysisType: 'semanticKeywords', 
+        text: journalText,
+        prompt: "다음 글의 내용과 감정선을 분석하여, 이 글 전체를 대표할 수 있는 핵심 키워드를 5개 추출해 줘. 비슷한 의미의 감정들은 '성취감', '유대감', '자신감' 등과 같이 대표적인 개념의 키워드로 묶어서 표현해 줘. 결과는 JSON 배열 형태로만 반환해 줘."
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`서버 응답 오류: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    // 백엔드에서 { keywords: ["성취감", "도전", ...] } 형태로 반환한다고 가정
+    return result.keywords || [];
+
+  } catch (error) {
+    console.error('의미 기반 키워드 추출 중 오류:', error);
+    // 오류가 발생하면 빈 배열을 반환하여 다른 기능에 영향을 주지 않도록 함
+    return [];
+  }
+}
+
+
+/**
+ * conversationText(전체 대화 로그 문자열)에서
+ * “인물(사람)”과 “감정” 페어 태그를 추출하는 예시 함수.
+ * (이 함수는 그대로 두거나 필요에 따라 다른 용도로 사용할 수 있습니다.)
+ */
+export function extractEntityEmotionPairs(conversationText) {
+  // ... (기존 코드)
+}
+
+
+
 // --- 3) 상황 분석 (인지왜곡 패턴 탐지) ---
 export function trackSituation(analysisData) {
   console.log('[LOZEE_ANALYSIS] 상황 분석:', analysisData);
