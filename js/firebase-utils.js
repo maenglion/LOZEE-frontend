@@ -158,6 +158,36 @@ export async function logSessionEnd(sessionId) {
     }
 }
 
+
+/**
+ * [신규 추가]
+ * 특정 사용자의 모든 저널 데이터를 시간순으로 정렬하여 가져오는 함수
+ * @param {string} userId - Firestore의 사용자 UID
+ * @returns {Promise<object[]>} - 저널 데이터 배열
+ */
+export async function getJournalsForUser(userId) {
+    if (!userId) return [];
+    
+    try {
+        const journalsRef = collection(db, 'journals');
+        const q = query(journalsRef, where('userId', '==', userId), orderBy('createdAt', 'asc'));
+        
+        const querySnapshot = await getDocs(q);
+        
+        const journals = [];
+        querySnapshot.forEach((doc) => {
+            journals.push({ id: doc.id, ...doc.data() });
+        });
+        
+        return journals;
+
+    } catch (error) {
+        console.error("사용자 저널 데이터 로드 중 오류:", error);
+        return []; // 오류 발생 시 빈 배열 반환
+    }
+}
+
+
 /** 사용자 주제별 통계 업데이트 */
 export async function updateTopicStats(userId, topicName, entryType = "standard") {
     if (!userId || !topicName) return;

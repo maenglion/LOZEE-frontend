@@ -167,6 +167,55 @@
             border-radius: 8px;
         }
 
+                .tab-navigation {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 25px;
+            flex-wrap: wrap; /* 작은 화면에서 탭이 줄바꿈 되도록 */
+        }
+        .tab-btn {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            font-size: 1.05em;
+            color: #888;
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover {
+            color: #333;
+        }
+        .tab-btn.active {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        .tab-btn:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            background-color: #f9f9f9;
+        }
+        
+        /* 탭 콘텐츠 기본 숨김 */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+
         #situationAlerts { margin-top: 15px; min-height: 50px; }
         #situationAlerts .cognitive-distortion-item { background:#fff3cd; border-left: 5px solid #ffc107; color: #856404; padding: 10px 15px; margin-bottom: 10px; border-radius: 4px; font-size: 0.9em; }
         .footer-assistant-notice { text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 0.8em; color: #78909c; }

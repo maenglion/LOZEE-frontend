@@ -3,7 +3,11 @@
 
 const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis';
 
-// --- 분석 조건 ---
+/// --- 1. 분석 조건 및 유틸리티 함수 ---
+
+/**
+ * 특정 분석 모듈을 실행할 조건이 되는지 확인합니다.
+ */
 export function shouldRunModule(module, { userAge, totalMinutes, sessions }) {
   const totalKeywords = sessions.flatMap(s => s.keywords || []).length;
   switch (module) {
@@ -18,6 +22,7 @@ export function shouldRunModule(module, { userAge, totalMinutes, sessions }) {
     default: return false;
   }
 }
+
 
 // --- 1) 대화 시간별 언어·나이 분석 ---
 const timeTracking = { 
@@ -79,11 +84,12 @@ export function trackEmotionTone(analysisData) {
   });
 }
 
-
+// --- 3. 렌더링(Rendering) 함수 ---
 /**
  * [신규 추가]
  * AI를 사용하여 텍스트의 의미를 분석하고, 핵심 키워드를 추출하는 함수
  * @param {string} journalText - AI가 생성한 5문단 분량의 저널 요약문
+ * @param {object} emotionData - { "기쁨": 0.6, "슬픔": 0.2, ... }
  * @returns {Promise<string[]>} - 추출된 핵심 키워드 배열 (예: ["성취감", "도전", "즐거움"])
  */
 export async function extractSemanticKeywords(journalText) {
@@ -120,6 +126,45 @@ export async function extractSemanticKeywords(journalText) {
   }
 }
 
+export function renderEmotionChart(canvasId, emotionData) {
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx) return;
+    
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) existingChart.destroy();
+
+    const emotionColors = { '기쁨': 'rgba(255, 205, 86, 0.8)','슬픔': 'rgba(54, 162, 235, 0.8)','분노': 'rgba(255, 99, 132, 0.8)','불안': 'rgba(153, 102, 255, 0.8)','중립': 'rgba(201, 203, 207, 0.8)'};
+    const labels = Object.keys(emotionData);
+    const dataValues = Object.values(emotionData);
+    const backgroundColors = labels.map(label => emotionColors[label] || 'rgba(100, 100, 100, 0.8)');
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{ label: '감정 비율', data: dataValues, backgroundColor: backgroundColors }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+}
+
+/**
+ * [신규 통합] 태그 클라우드를 렌더링합니다.
+ * @param {string} elementId - 태그 클라우드를 표시할 div의 ID
+ * @param {string[]} keywords - 키워드 문자열 배열
+ */
+export function renderTagCloud(elementId, keywords) {
+    const cloudEl = document.getElementById(elementId);
+    if (!cloudEl) return;
+
+    if (keywords && keywords.length > 0) {
+        cloudEl.innerHTML = keywords.map(kw => `<span class="badge">${kw}</span>`).join('');
+    } else {
+        cloudEl.innerHTML = '<p style="text-align:center; color:#888;">표시할 키워드가 없어요.</p>';
+    }
+}
+
+
 
 /**
  * conversationText(전체 대화 로그 문자열)에서
@@ -127,7 +172,23 @@ export async function extractSemanticKeywords(journalText) {
  * (이 함수는 그대로 두거나 필요에 따라 다른 용도로 사용할 수 있습니다.)
  */
 export function extractEntityEmotionPairs(conversationText) {
-  // ... (기존 코드)
+  const personKeywords = ["엄마", "아빠", "형", "동생", "친구", "선생님", "아스퍼거", "형아"];
+  const emotionKeywords = ["기쁨", "슬픔", "속상", "불안", "우울", "당황", "신남", "후회"];
+
+  const result = [];
+
+  conversationText.split(/[\n.!?]+/).forEach(sentence => {
+    const foundPerson = personKeywords.find(p => sentence.includes(p));
+    const foundEmotion = emotionKeywords.find(e => sentence.includes(e));
+
+    if (foundPerson && foundEmotion) {
+      const pair = { entity: foundPerson, emotion: foundEmotion };
+      const exists = result.some(r => r.entity === pair.entity && r.emotion === pair.emotion);
+      if (!exists) result.push(pair);
+    }
+  });
+
+  return result;
 }
 
 
