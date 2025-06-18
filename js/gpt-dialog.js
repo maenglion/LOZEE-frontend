@@ -6,6 +6,7 @@ const GPT_BACKEND_URL_GPT_DIALOG = 'https://server-production-3e8f.up.railway.ap
 // import 구문
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 import { neurodiversityInfo } from './neurodiversityData.js';
+import { getIdToken } from './firebase-utils.js'; //
 
 // 1) 호격 조사 결정: '아/야'
 /**

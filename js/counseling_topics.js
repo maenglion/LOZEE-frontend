@@ -11,12 +11,12 @@ export const counselingTopicsByAge = {
           { icon: "😡", displayText: "나 엄청 화나!", tags: ["감정조절 어려움", "분노"], type: "emotion_intensity" },
           { icon: "😭", displayText: "뭐든지 참을 수는 없을까? 마음을 조절하기 어려워", tags: ["감정조절 어려움", "충동성"], type: "else" },
           { icon: "😢", displayText: "나 요즘 속상한 일이 있어.", tags: ["슬픔", "우울감"], type: "else" },
-          { icon: "😟", displayText: "무서워서 밤에 잠을 못자.", tags: ["불안감", "수면 문제", "악몽"], type: "situation" },
+          { icon: "😟", displayText: "잠을 잘 못자겠어.", tags: ["불안감", "수면 문제", "악몽"], type: "situation" },
           { icon: "😥", displayText: "작은 일에도 쉽게 속상해.", tags: ["예민함", "소심함", "감정기복"], type: "else" },
           { icon: "🎉", displayText: "한번 화가나면 멈출 수 없어. 나중에 후회가 돼", tags: ["감정조절 어려움", "분노", "충동성", "후회"], type: "situation" },
           { icon: "😒", displayText: "자꾸 혼나니까 나쁜 마음이 생겨", tags: ["반항심", "분노", "억울함"], type: "emotion_intensity" },
-          { icon: "🤫", displayText: "내 감정을 말로 하기 어려워", tags: ["감정표현 어려움", "소통"], type: "situation" },
-          { icon: "💬", displayText: "거절을 받아들이기 어려워", tags: ["감정조절 어려움", "사회적 상호작용", "떼쓰기","회피"], type: "emotion_intensity" }
+          { icon: "🤫", displayText: "내 감정을 말로 하기 어려워", tags: ["언어문제","표현언어", "소통"], type: "situation" },
+          { icon: "💬", displayText: "거절은 싫어", tags: ["감정조절 어려움", "사회적 상호작용", "떼쓰기","회피"], type: "emotion_intensity" }
         ]
       },
       {
@@ -99,6 +99,7 @@ export const counselingTopicsByAge = {
           { icon: "😔", displayText: "자존감 저하", tags: ["자존감", "무력감"], type: "emotion_intensity" },
           { icon: "😣", displayText: "불안과 걱정", tags: ["불안", "미래 걱정"], type: "emotion_intensity" },
           { icon: "😢", displayText: "슬픔과 외로움", tags: ["우울", "외로움"], type: "emotion_intensity" },
+          { icon: "😢", displayText: "기타", tags: ["자유주제"], type: "else" },
         ]
       }
     ]
