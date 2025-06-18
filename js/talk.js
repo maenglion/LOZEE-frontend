@@ -227,10 +227,8 @@ function updateSessionHeader() {
 // renderUnifiedTopics 함수를 찾아 아래 코드로 전체를 교체해주세요.
 
 function renderUnifiedTopics() {
-    // ▼▼▼▼▼ 이 코드 블록을 함수 맨 위에 추가하세요 ▼▼▼▼▼
 
-    // --- 자유주제 옵션을 동적으로 추가하는 로직 ---
-    const addFreeTopicOption = () => {
+  const addFreeTopicOption = () => {
         const freeTopicOption = {
             icon: "💬",
             displayText: "기타 (자유롭게 이야기하기)",
@@ -508,7 +506,9 @@ async function sendMessage(text, inputMethod) {
         const context = {
             chatHistory: [...chatHistory],
             userId: loggedInUserId,
-            elapsedTime: elapsedTimeInMinutes
+            elapsedTime: elapsedTimeInMinutes,
+            // ▼▼▼ systemPrompt - 카운셀링 토픽별 대응 프롬프트를 context에 추가 ▼▼▼
+            systemPrompt: selectedSubTopicDetails?.systemPrompt || null 
         };
 
         // 2. ✅ 디버깅: 실제로 서버에 전송될 데이터를 콘솔에서 확인합니다.
