@@ -225,7 +225,39 @@ function updateSessionHeader() {
 // 기존 renderUnifiedTopics 함수를 찾아서 아래 코드로 교체하세요.
 
 // renderUnifiedTopics 함수를 찾아 아래 코드로 전체를 교체해주세요.
+
 function renderUnifiedTopics() {
+    // ▼▼▼▼▼ 이 코드 블록을 함수 맨 위에 추가하세요 ▼▼▼▼▼
+
+    // --- 자유주제 옵션을 동적으로 추가하는 로직 ---
+    const addFreeTopicOption = () => {
+        const freeTopicOption = {
+            icon: "💬",
+            displayText: "기타 (자유롭게 이야기하기)",
+            tags: ["자유주제", "기타"],
+            type: "free_form" // 자유주제 구분을 위한 타입
+        };
+
+        // '10세 미만'을 제외한 모든 연령대 그룹
+        const targetAgeGroups = ['청소년', '청년', '중장년', '노년'];
+
+        targetAgeGroups.forEach(ageGroup => {
+            if (counselingTopicsByAge[ageGroup]) {
+                // 각 연령대의 모든 메인 주제에 '기타' 옵션을 추가
+                counselingTopicsByAge[ageGroup].forEach(mainTopic => {
+                    // 이미 '기타' 항목이 있는지 확인하여 중복 추가 방지
+                    const alreadyExists = mainTopic.subTopics.some(sub => sub.type === 'free_form');
+                    if (!alreadyExists) {
+                        mainTopic.subTopics.push(freeTopicOption);
+                    }
+                });
+            }
+        });
+    };
+
+    // 함수 실행
+    addFreeTopicOption();
+
     const container = document.getElementById('topic-selection-container');
     if (!container) return;
     container.innerHTML = ''; // 이전 내용 초기화
