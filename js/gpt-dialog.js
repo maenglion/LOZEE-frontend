@@ -217,3 +217,25 @@ export function getInitialGreeting(fullUserNameWithVocative, greetedYet) {
         return `${fullUserNameWithVocative}, 안녕! 나는 너의 마음친구 로지야. 오늘 어떤 이야기를 나누고 싶니?`;
     }
 }
+
+
+// 위험감지
+export function detectSensitiveRisk(text) {
+    const suicideKeywords = ["죽고 싶", "사라지고 싶", "손목", "동맥", "붉은 선", "끝내고 싶"]; 
+    const sexualKeywords = ["성기", "자위", "삽입", "강간", "딥키스", "사정", "음란"];
+
+    const isSuicideRisk = suicideKeywords.some(k => text.includes(k));
+    const isSexualRisk = sexualKeywords.some(k => text.includes(k));
+
+    const suicideContext = ["정리", "조용히", "고요하게", "내가 사라지면", "살 가치"];
+    const sexualFantasy = ["하고 싶어", "느끼고 싶어", "참을 수 없어"];
+
+    const hasSuicideContext = suicideContext.some(k => text.includes(k));
+    const hasSexualFantasy = sexualFantasy.some(k => text.includes(k));
+
+    let riskLevel = "safe";
+    if (isSuicideRisk && hasSuicideContext) riskLevel = "suicide";
+    else if (isSexualRisk && hasSexualFantasy) riskLevel = "sexual";
+
+    return riskLevel; // "safe" | "suicide" | "sexual"
+}
