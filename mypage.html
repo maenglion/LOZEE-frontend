@@ -157,91 +157,91 @@
         }
 
         // 예약정보 로드 및 렌더링 함수 (loggedInUserId를 인자로 받도록 수정)
-        async function loadAndRenderReservations(userId) { // userId로 인자명 변경
-            const appointmentsListEl = document.getElementById('appointments-list');
-            appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 중...</p>'; // 로딩 메시지
-            try {
-                const q = query(
-                    collection(db, 'users', userId, 'reservations'), // users/{userId}/reservations 경로로 변경
-                    orderBy('timestamp', 'asc') // 시간순 정렬
-                );
-                const snap = await getDocs(q);
-                
-                if (snap.empty) {
-                    appointmentsListEl.innerHTML = '<p class="empty-state">아직 예약된 약속이 없습니다.</p>';
-                } else {
-                    appointmentsListEl.innerHTML = ''; // 기존 로딩 메시지 지우기
-                    snap.docs.forEach(doc => {
-                        const reservation = doc.data();
-                        const date = reservation.date?.toDate ? reservation.date.toDate().toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) : '날짜 미정';
-                        const type = reservation.type || '상담';
-                        const status = reservation.status || '대기 중';
-                        
-                        const p = document.createElement('p');
-                        p.textContent = `• ${date} - ${type} (${status})`;
-                        appointmentsListEl.appendChild(p);
-                    });
-                }
-            } catch (error) {
-                console.error("예약 정보를 불러오는 중 오류 발생:", error);
-                appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 데 실패했습니다.</p>';
+        async function loadAndRenderReservations(userId) {
+        appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 중입니다...</p>'; // 로딩 메시지 변경
+        try {
+            const q = query(
+                collection(db, 'users', userId, 'reservations'),
+                orderBy('timestamp', 'asc')
+            );
+            const snap = await getDocs(q);
+            
+            if (snap.empty) {
+                appointmentsListEl.innerHTML = '<p class="empty-state">예약이 존재하지 않습니다.</p>'; // 메시지 변경
+            } else {
+                appointmentsListEl.innerHTML = '';
+                snap.docs.forEach(doc => {
+                    const reservation = doc.data();
+                    const date = reservation.date?.toDate ? reservation.date.toDate().toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) : '날짜 미정';
+                    const type = reservation.type || '상담';
+                    const status = reservation.status || '대기 중';
+                    
+                    const p = document.createElement('p');
+                    p.textContent = `• ${date} - ${type} (${status})`;
+                    appointmentsListEl.appendChild(p);
+                });
             }
+        } catch (error) {
+            console.error("예약 정보를 불러오는 중 오류 발생:", error);
+            // 오류 발생 시에도 사용자에게 친근한 메시지 유지
+            appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 데 문제가 발생했습니다. 다시 시도해주세요.</p>'; 
         }
+    }
 
-        async function displayEmergencyAlerts(parentId, childName) {
-            emergencyAlertsSectionEl.style.display = 'block';
-            emergencyAlertsListEl.innerHTML = '<li>알림을 불러오는 중...</li>';
-            try {
-                const q = query(collection(db, "notifications"), where("parentId", "==", parentId), orderBy("createdAt", "desc"), limit(5));
-                const querySnapshot = await getDocs(q);
-                if (querySnapshot.empty) {
-                    emergencyAlertsListEl.innerHTML = '<li><p>확인이 필요한 새로운 알림이 없습니다. 😊</p></li>';
-                } else {
-                    emergencyAlertsListEl.innerHTML = '';
-                    querySnapshot.forEach(docSnap => {
-                        const alertData = docSnap.data();
-                        const listItem = document.createElement('li');
-                        const alertDate = alertData.createdAt?.toDate ? alertData.createdAt.toDate().toLocaleString('ko-KR') : '';
-                        listItem.innerHTML = `<strong>[${childName}] ${alertData.message}</strong><span class="alert-date">${alertDate}</span>`;
-                        listItem.onclick = () => { window.location.href = `journal.html?journalId=${alertData.journalId}`; };
-                        emergencyAlertsListEl.appendChild(listItem);
-                    });
-                }
-            } catch (error) {
-                console.error("긴급 알림 로드 중 오류:", error);
-                emergencyAlertsListEl.innerHTML = '<li><p>알림을 불러오는 데 실패했습니다.</p></li>';
+    async function displayEmergencyAlerts(parentId, childName) {
+        emergencyAlertsSectionEl.style.display = 'block';
+        emergencyAlertsListEl.innerHTML = '<li>알림을 불러오는 중입니다...</li>'; // 로딩 메시지 변경
+        try {
+            const q = query(collection(db, "notifications"), where("parentId", "==", parentId), orderBy("createdAt", "desc"), limit(5));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                emergencyAlertsListEl.innerHTML = '<li><p>응급상황이 발생하지 않았어요. 😊</p></li>'; // 메시지 변경
+            } else {
+                emergencyAlertsListEl.innerHTML = '';
+                querySnapshot.forEach(docSnap => {
+                    const alertData = docSnap.data();
+                    const listItem = document.createElement('li');
+                    const alertDate = alertData.createdAt?.toDate ? alertData.createdAt.toDate().toLocaleString('ko-KR') : '';
+                    listItem.innerHTML = `<strong>[${childName}] ${alertData.message}</strong><span class="alert-date">${alertDate}</span>`;
+                    listItem.onclick = () => { window.location.href = `journal.html?journalId=${alertData.journalId}`; };
+                    emergencyAlertsListEl.appendChild(listItem);
+                });
             }
+        } catch (error) {
+            console.error("긴급 알림 로드 중 오류:", error);
+            // 오류 발생 시에도 사용자에게 친근한 메시지 유지
+            emergencyAlertsListEl.innerHTML = '<li><p>알림을 불러오는 데 문제가 발생했습니다. 다시 시도해주세요.</p></li>';
         }
+    }
 
-
-
-        async function displayRecentJournals(userId, userType) {
-            recentJournalCardListEl.innerHTML = '<p>최근 이야기 목록을 불러오는 중...</p>';
-            try {
-                let q = query(collection(db, 'journals'), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(3));
-                const querySnapshot = await getDocs(q);
-                if (querySnapshot.empty) {
-                    recentJournalCardListEl.innerHTML = `<p>아직 로지와 나눈 이야기가 없어요.</p>`;
-                } else {
-                    recentJournalCardListEl.innerHTML = '';
-                    querySnapshot.forEach(docSnap => {
-                        const journal = docSnap.data();
-                        const card = document.createElement('div');
-                        card.className = 'session-card-wide';
-                        card.innerHTML = `<h3>${journal.title || '제목 없는 이야기'}</h3><p>${journal.summary?.substring(0, 100) || ''}...</p>`;
-                        card.onclick = () => { window.location.href = `journal.html?journalId=${docSnap.id}`; };
-                        recentJournalCardListEl.appendChild(card);
-                    });
-                }
-            } catch (error) {
-                console.error("최근 저널 로드 중 오류:", error);
-                recentJournalCardListEl.innerHTML = '<p>이야기를 불러오는 데 실패했습니다.</p>';
+    async function displayRecentJournals(userId, userType) {
+        recentJournalCardListEl.innerHTML = '<p>최근 이야기 목록을 불러오는 중...</p>';
+        try {
+            let q = query(collection(db, 'journals'), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(3));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) {
+                recentJournalCardListEl.innerHTML = `<p>아직 로지와 나눈 이야기가 없어요.</p>`;
+            } else {
+                recentJournalCardListEl.innerHTML = '';
+                querySnapshot.forEach(docSnap => {
+                    const journal = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = 'session-card-wide';
+                    card.innerHTML = `<h3>${journal.title || '제목 없는 이야기'}</h3><p>${journal.summary?.substring(0, 100) || ''}...</p>`;
+                    card.onclick = () => { window.location.href = `journal.html?journalId=${docSnap.id}`; };
+                    recentJournalCardListEl.appendChild(card);
+                });
             }
+        } catch (error) {
+            console.error("최근 저널 로드 중 오류:", error);
+            recentJournalCardListEl.innerHTML = '<p>이야기를 불러오는 데 실패했습니다.</p>';
         }
+    }
 
-        if(goToJournalListBtn) goToJournalListBtn.onclick = () => { window.location.href = 'journal-list.html'; };
-        
-        document.addEventListener('DOMContentLoaded', loadPage);
+    if(goToJournalListBtn) goToJournalListBtn.onclick = () => { window.location.href = 'journal-list.html'; };
+    
+    document.addEventListener('DOMContentLoaded', loadPage);
+
     </script>
 </body>
 </html>
