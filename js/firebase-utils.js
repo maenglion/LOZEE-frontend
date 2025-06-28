@@ -1,5 +1,6 @@
 // js/firebase-utils.js
 import { db } from './firebase-config.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 import {
     collection,
     addDoc,
