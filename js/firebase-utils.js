@@ -38,6 +38,22 @@ function detectRiskTags(text, detailedAnalysis = {}) {
     return Array.from(tags);
 }
 
+export async function getIdToken() { // <-- 여기에 'export' 키워드가 반드시 있어야 합니다.
+    const auth = getAuth(); // Firebase Auth 인스턴스 가져오기
+    const user = auth.currentUser; // 현재 로그인된 사용자 가져오기
+    if (user) {
+        try {
+            return await user.getIdToken(); // 사용자의 ID 토큰 반환
+        } catch (error) {
+            console.error("ID 토큰 가져오기 오류:", error);
+            return null;
+        }
+    }
+    return null; // 사용자가 로그인되어 있지 않으면 null 반환
+}
+
+
+
 /**
  * [신규 추가 또는 수정]
  * 생성된 저널 데이터를 Firestore에 저장(또는 업데이트)하는 함수
