@@ -150,22 +150,43 @@
                 displayEmergencyAlerts(loggedInUserId, caregiverInfo.childName || '아이');
             }
             displayRecentJournals(loggedInUserId, userType);
+        
+
+     // --- 예약 정보 로드 및 렌더링 호출 위치 변경 ---
+            await loadAndRenderReservations(loggedInUserId); // loggedInUserId를 인자로 전달
         }
 
-// 예약정보보
-async function loadReservations() {
-  const q = query(
-    collection(db, 'reservations'),
-    where('userId', '==', loggedInUserId)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(doc => doc.data());
-}
-
-// 페이지 렌더링 시
-const reservations = await loadReservations();
-reservations.forEach(r => renderReservation(r));
-
+        // 예약정보 로드 및 렌더링 함수 (loggedInUserId를 인자로 받도록 수정)
+        async function loadAndRenderReservations(userId) { // userId로 인자명 변경
+            const appointmentsListEl = document.getElementById('appointments-list');
+            appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 중...</p>'; // 로딩 메시지
+            try {
+                const q = query(
+                    collection(db, 'users', userId, 'reservations'), // users/{userId}/reservations 경로로 변경
+                    orderBy('timestamp', 'asc') // 시간순 정렬
+                );
+                const snap = await getDocs(q);
+                
+                if (snap.empty) {
+                    appointmentsListEl.innerHTML = '<p class="empty-state">아직 예약된 약속이 없습니다.</p>';
+                } else {
+                    appointmentsListEl.innerHTML = ''; // 기존 로딩 메시지 지우기
+                    snap.docs.forEach(doc => {
+                        const reservation = doc.data();
+                        const date = reservation.date?.toDate ? reservation.date.toDate().toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) : '날짜 미정';
+                        const type = reservation.type || '상담';
+                        const status = reservation.status || '대기 중';
+                        
+                        const p = document.createElement('p');
+                        p.textContent = `• ${date} - ${type} (${status})`;
+                        appointmentsListEl.appendChild(p);
+                    });
+                }
+            } catch (error) {
+                console.error("예약 정보를 불러오는 중 오류 발생:", error);
+                appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 데 실패했습니다.</p>';
+            }
+        }
 
         async function displayEmergencyAlerts(parentId, childName) {
             emergencyAlertsSectionEl.style.display = 'block';
@@ -191,6 +212,8 @@ reservations.forEach(r => renderReservation(r));
                 emergencyAlertsListEl.innerHTML = '<li><p>알림을 불러오는 데 실패했습니다.</p></li>';
             }
         }
+
+
 
         async function displayRecentJournals(userId, userType) {
             recentJournalCardListEl.innerHTML = '<p>최근 이야기 목록을 불러오는 중...</p>';
