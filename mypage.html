@@ -111,6 +111,7 @@
         const emergencyAlertsSectionEl = document.getElementById('emergencyAlertsSection');
         const emergencyAlertsListEl = document.getElementById('emergencyAlertsList');
         const userPhotoPlaceholderEl = document.getElementById('userPhotoPlaceholder');
+        const appointmentsListEl = document.getElementById('appointments-list'); //
 
         // --- 헬퍼 함수 ---
         function getNeurodiversityText(code) { const map = { "ASD": "자폐 스펙트럼", "ADHD": "ADHD", "Asperger": "아스퍼거", "Tic": "틱 장애", "LD": "학습 장애", "Else": "기타 어려움", "Unsure": "진단 없음", "NotApplicable": "해당 없음", "self_asd": "본인: ASD 성향", "self_adhd": "본인: ADHD 성향", "spouse_asd": "배우자: ASD 성향", "spouse_adhd": "배우자: ADHD 성향", "unsure_or_none": "해당 없음" }; return map[code] || code; }
