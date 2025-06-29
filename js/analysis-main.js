@@ -2,14 +2,21 @@
 
 // --- 모듈 Import ---
 import { getJournalsForUser } from './firebase-utils.js';
-import { renderEmotionChart, renderTagCloud, renderCumulativeEmotionChart } from './lozee-analysis.js';
+
+// 기존: import { renderEmotionChart, renderTagCloud, renderCumulativeEmotionChart } from './lozee-analysis-charts.js';
+// 수정: lozee-analysis.js에서 필요한 모든 렌더링 및 분석 함수를 임포트
 import { 
     analyzeRelationalEmotions,
     analyzeCommunicationGrowth,
     analyzeHabitTracking,
     renderRelationRadarChart,
     renderGrowthReport,
-    renderHabitTrackingChart} from './lozee-analysis.js';
+    renderHabitTrackingChart,
+    renderEmotionChart, // 이 함수는 lozee-analysis.js에 있습니다.
+    renderTagCloud // 이 함수도 lozee-analysis.js에 있습니다.
+    // renderCumulativeEmotionChart는 현재 lozee-analysis.js에 없으므로 임포트하지 않습니다.
+    // 만약 renderCumulativeEmotionChart가 필요하다면 lozee-analysis.js에 구현 후 export 해야 합니다.
+} from './lozee-analysis.js'; // <- lozee-analysis.js에서 불러옵니다.
 
 // --- DOM 요소 ---
 const tabs = document.querySelectorAll('.tab-btn');
