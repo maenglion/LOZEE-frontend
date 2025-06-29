@@ -2,7 +2,7 @@
 
 // --- 모듈 Import ---
 import { getJournalsForUser } from './firebase-utils.js';
-import { renderEmotionChart, renderTagCloud, renderCumulativeEmotionChart } from './lozee-analysis-charts.js';
+import { renderEmotionChart, renderTagCloud, renderCumulativeEmotionChart } from './lozee-analysis.js';
 import { 
     analyzeRelationalEmotions,
     analyzeCommunicationGrowth,
