@@ -474,19 +474,7 @@ function showAnalysisNotification() {
  */
 async function sendMessage(text, inputMethod) {
 
-   //  위험 탐지
-    const riskType = detectSensitiveRisk(text);
-if (riskType !== "safe") {
-  appendMessage("지금 이 주제는 아주 조심스러운 이야기 같아. 조금 더 안전한 방법으로 마음을 들여다보자.", 'assistant_feedback');
-  if (riskType === "suicide") {
-    appendMessage("혹시 지금 너무 힘들다면, 어른이나 믿을 수 있는 사람과 바로 이야기해보는 건 어때? 난 네가 여기 있다는 게 정말 소중해.", 'assistant');
-  } else if (riskType === "sexual") {
-    appendMessage("성에 대한 생각은 자연스러운 거야. 그런데 그걸 나누는 방식도 안전해야 해. 우리 조금 다르게 얘기해볼까?", 'assistant');
-  }
-  return; // GPT 응답 차단
-}
-    
-    // 메시지가 비어있거나, 이미 다른 요청이 처리 중인 경우 함수 종료
+     // 메시지가 비어있거나, 이미 다른 요청이 처리 중인 경우 함수 종료
     if (!text || String(text).trim() === '') {
         console.warn("빈 텍스트로 sendMessage 호출됨");
         return;
