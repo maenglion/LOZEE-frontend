@@ -7,6 +7,7 @@ const GPT_API_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'
 //import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 import { neurodiversityInfo } from './neurodiversityData.js';
 import { getIdToken } from './firebase-utils.js';
+import { waitForIdToken } from './firebase-utils';
 // 1) 호격 조사 결정: '아/야'
 /**
  * 이름에 따라 올바른 호격 조사를 반환하는 함수.
@@ -158,6 +159,7 @@ export function getSystemPrompt({
 
 // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
 export async function getGptResponse(text, context = {}) {
+      const token = await waitForIdToken();  // ⬅️ 바뀐 부분
   try {
     const idToken = await getIdToken();
     if (!idToken) {
