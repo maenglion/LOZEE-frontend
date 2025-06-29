@@ -1,6 +1,6 @@
 // js/firebase-utils.js
 import { db } from './firebase-config.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
+import { getAuth, onAuthStateChanged } from "firebase-auth"; // ✅ 경로 수정: 'firebase/auth' ➜ 'firebase-auth' 또는 사용 중인 빌드 시스템에 맞게 조정
 import {
     collection,
     addDoc,
@@ -41,21 +41,41 @@ function detectRiskTags(text, detailedAnalysis = {}) {
 
 const auth = getAuth();
 let IDTOKEN = null;
+let tokenWaiters = [];
 
-export async function initToken() {
-  const user = auth.currentUser;
-  if (!user) throw new Error("User not logged in");
-  try {
-    IDTOKEN = await user.getIdToken();
-  } catch (error) {
-    console.error("ID 토큰 가져오기 오류:", error);
+// 자동으로 토큰 설정
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    try {
+      IDTOKEN = await user.getIdToken();
+      console.log("[FirebaseUtils] 🔐 토큰 초기화 완료");
+      tokenWaiters.forEach(cb => cb(IDTOKEN));
+      tokenWaiters = [];
+    } catch (err) {
+      console.error("[FirebaseUtils] ❌ 토큰 초기화 실패:", err);
+    }
+  } else {
     IDTOKEN = null;
+    tokenWaiters = [];
   }
-}
+});
 
 export function getIdToken() {
   return IDTOKEN;
 }
+
+// 🔁 토큰 준비될 때까지 기다림
+export function waitForIdToken(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    if (IDTOKEN) return resolve(IDTOKEN);
+    const timer = setTimeout(() => reject(new Error("ID 토큰 대기 시간 초과")), timeout);
+    tokenWaiters.push(token => {
+      clearTimeout(timer);
+      resolve(token);
+    });
+  });
+}
+
 
 
 /**
