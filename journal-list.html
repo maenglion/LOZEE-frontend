@@ -412,7 +412,7 @@
 
         // --- Firestore에서 초기 데이터 로드 함수 ---
         async function loadInitialPageData() {
-            const userId = localStorage.getItem('cbtUserEmail');
+            const userId = localStorage.getItem('lozee_userId');
             if (!userId) {
                 if(pageMainTitleEl) pageMainTitleEl.textContent = `${localStorage.getItem('lozee_username') || '나'}의 이야기 모음집 📖 (예시)`;
                 console.log("사용자 ID 없음, 예시 데이터를 표시합니다.");
