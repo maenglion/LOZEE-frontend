@@ -64,3 +64,29 @@ body {
     color: #999;
     font-size: 0.9em;
 }
+
+/* 새로 추가: main 태그에 적용되는 .container 클래스에 패딩 및 최대 너비 설정 */
+.container {
+    max-width: 800px;       /* PC 환경에서의 최대 너비 */
+    margin: 20px auto;      /* 상하 마진 20px, 좌우 자동 (중앙 정렬) */
+    padding: 0 20px;        /* 상하 0, 좌우 20px 패딩 (가장자리 여백 생성) */
+    box-sizing: border-box; /* 패딩이 요소의 총 너비에 포함되도록 설정 */
+}
+
+/* ⭐ 모바일 화면 대응: 모바일 환경에서는 너비를 100%로 하고 좌우 패딩만 유지 */
+@media (max-width: 639px) {
+    body { padding: 0; align-items: stretch; }
+    .app-container {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+    /* 모바일에서 .container의 너비를 100%로 설정 (max-width를 오버라이드) */
+    .container {
+        max-width: 100%; /* 모바일에서는 컨테이너의 최대 너비를 화면 전체로 */
+        margin: 0 auto;  /* 중앙 정렬 */
+        padding: 0 15px; /* 모바일에서는 좌우 패딩을 15px 정도로 조절 (필요에 따라 조절) */
+    }
+}
