@@ -83,15 +83,46 @@ function renderCumulativeAnalysis(journals) {
             <h2>📈 최근 5회 누적 분석</h2>
             <p class="module-explanation">최근 5번의 대화를 통해 발견된 변화의 흐름을 보여줄게!</p>
             <h3>감정 변화 추이</h3>
-            <canvas id="cumulativeEmotionChart" style="max-height: 300px;"></canvas>
+            <div id="cumulativeEmotionChartContainer" style="position: relative; max-width: 400px; margin: auto;">
+                <canvas id="cumulativeEmotionChart"></canvas>
+            </div>
             <h3>자주 나타난 키워드</h3>
             <div id="cumulativeTagCloud"></div>
         </div>
     `;
-    renderCumulativeEmotionChart('cumulativeEmotionChart', journals);
-    const cumulativeKeywords = journals.flatMap(j => j.detailedAnalysis.keywords);
-    // TODO: 중복 키워드 개수 세서 상위 5개만 렌더링 하는 로직 추가
-    renderTagCloud('cumulativeTagCloud', [...new Set(cumulativeKeywords)]);
+
+    // 1. 누적 감정 데이터를 계산합니다.
+    // 각 저널의 detailedAnalysis.emotionToneData를 합산하여 누적 감정 비율을 계산합니다.
+    const cumulativeEmotionData = journals.reduce((acc, journal) => {
+        if (journal.detailedAnalysis && journal.detailedAnalysis.emotionToneData) {
+            for (const emotion in journal.detailedAnalysis.emotionToneData) {
+                acc[emotion] = (acc[emotion] || 0) + journal.detailedAnalysis.emotionToneData[emotion];
+            }
+        }
+        return acc;
+    }, {});
+
+    // 2. renderEmotionChart 함수를 사용하여 누적 감정 차트를 렌더링합니다.
+    // renderEmotionChart는 이미 도넛 차트를 그리도록 되어 있습니다.
+    renderEmotionChart('cumulativeEmotionChart', cumulativeEmotionData);
+
+    // 3. 누적 키워드를 처리하고 렌더링합니다.
+    const allKeywords = journals.flatMap(j => j.detailedAnalysis?.keywords || []);
+
+    // TODO: 중복 키워드 개수를 세서 상위 N개 (예: 5개)만 렌더링 하는 로직 추가
+    // 여기서는 일단 모든 고유 키워드를 보여주되, 빈도수 계산 로직을 포함합니다.
+    const keywordCounts = {};
+    allKeywords.forEach(keyword => {
+        keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
+    });
+
+    // 빈도수를 기준으로 내림차순 정렬하고 상위 5개만 선택
+    const topKeywords = Object.entries(keywordCounts)
+        .sort(([,countA], [,countB]) => countB - countA)
+        .slice(0, 5) // 상위 5개만 선택
+        .map(([keyword]) => keyword); // 키워드 이름만 추출
+
+    renderTagCloud('cumulativeTagCloud', topKeywords);
 }
 
 /** 3. 심층 분석 탭 렌더링 */
