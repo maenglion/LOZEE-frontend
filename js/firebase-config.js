@@ -1,7 +1,7 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/auth.js";
 
 // 실제 LOZEE 프로젝트 설정값으로 교체한 firebaseConfig
 const firebaseConfig = {
