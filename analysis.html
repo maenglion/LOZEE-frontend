@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LOZEE와 함께하는 마음 탐험!</title>
+    <title>LOZEE 상세분석</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css"> 
     <link rel="stylesheet" href="css/common.css"> 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <style>
-        /* 이전 답변에 제공된 전체 CSS 코드 */
+        /* CSS 코드는 그대로 유지 */
         .tab-navigation { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 25px; }
         .tab-btn { padding: 10px 15px; cursor: pointer; border: none; background-color: transparent; font-size: 1.05em; color: #888; }
         .tab-btn.active { color: #6e8efb; font-weight: 700; border-bottom: 2px solid #6e8efb; margin-bottom: -2px;}
@@ -23,12 +22,23 @@
 <body>
    <div class="app-container">
         <nav id="gnb">
-            </nav>
+            <button id="menu-toggle">☰</button>
+            <div id="gnb-title">LOZEE</div>
+            <div class="gnb-right-buttons">
+            </div>
+            <div id="dropdown-menu">
+                <a href="mypage.html">🎨 내 정보 보기</a>
+                <a href="index.html">✨ 새로운 이야기 시작!</a>
+                <a id="gnb-analysis-link" href="analysis.html">📊 우리 이야기 분석</a>
+                <a href="journal-list.html">📖 이야기 모음집</a>
+                <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
+            </div>
+        </nav>
 
         <main class="container">
-            <h1>🚀 로지와 함께한 이야기 탐험!</h1>
+            <h1> LOZEE의 데이터 해석</h1>
             
-            <div class="tab-navigation">
+ <div class="tab-navigation">
                 <button class="tab-btn" data-tab="basic" disabled>기본 분석</button>
                 <button class="tab-btn" data-tab="cumulative" disabled>누적 분석 (5회+)</button>
                 <button class="tab-btn" data-tab="deep" disabled>심층 분석 (10회+)</button>
@@ -58,8 +68,6 @@
     
     <script src="./js/gnb.js" defer></script>
     <script type="module" src="./js/firebase-utils.js"></script>
-    <script type="module" src="./js/lozee-analysis-charts.js"></script>
-    <script type="module" src="./js/analysis-main.js"></script>
+    <script type="module" src="./js/lozee-analysis.js"></script> <script type="module" src="./js/analysis-main.js"></script>
 </body>
 </html>
-

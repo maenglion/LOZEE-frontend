@@ -1,6 +1,10 @@
 // js/lozee-analysis.js
 // 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
+// Chart.js ESM 빌드 경로 및 등록
+import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
+Chart.register(...registerables);
 
+// 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
 const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis';
 
 /// --- 1. 분석 조건 및 유틸리티 함수 ---
