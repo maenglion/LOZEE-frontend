@@ -1,6 +1,6 @@
 // js/firebase-utils.js
 import { db } from './firebase-config.js';
-import { getAuth, onAuthStateChanged } from "firebase-auth"; // ✅ 경로 수정: 'firebase/auth' ➜ 'firebase-auth' 또는 사용 중인 빌드 시스템에 맞게 조정
+import { getAuth, onAuthStateChanged } from "./auth.js"; // ✅ 경로 수정: 'firebase/auth' ➜ 'firebase-auth' 또는 사용 중인 빌드 시스템에 맞게 조정
 import {
     collection,
     addDoc,
