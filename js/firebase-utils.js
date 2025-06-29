@@ -13,7 +13,8 @@ import {
     query,
     orderBy,
     limit,
-    getDocs
+    getDocs,
+    Where
 } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 import { ALL_NOTIFICATION_KEYWORDS, NOTIFICATION_KEYWORDS } from './constants.js';
 
