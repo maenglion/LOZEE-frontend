@@ -14,6 +14,7 @@ import {
     logSessionEnd, 
     saveReservation
 } from './firebase-utils.js';
+import { detectSensitiveRisk } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
