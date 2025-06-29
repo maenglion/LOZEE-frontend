@@ -4,7 +4,6 @@
 const GPT_API_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'; //
 
 // import 구문
-//import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 import { neurodiversityInfo } from './neurodiversityData.js';
 import { getIdToken } from './firebase-utils.js';
 import { waitForIdToken } from './firebase-utils.js';

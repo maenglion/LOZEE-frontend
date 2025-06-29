@@ -1,6 +1,7 @@
 // js/firebase-utils.js
 import { db } from './firebase-config.js';
-import { getAuth, onAuthStateChanged } from "./auth.js"; // ✅ 경로 수정: 'firebase/auth' ➜ 'firebase-auth' 또는 사용 중인 빌드 시스템에 맞게 조정
+import { auth as firebaseAuth } from './firebase-config.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import {
     collection,
     addDoc,
@@ -43,8 +44,8 @@ const auth = getAuth();
 let IDTOKEN = null;
 let tokenWaiters = [];
 
-// 자동으로 토큰 설정
-onAuthStateChanged(auth, async (user) => {
+// Firebase 인증 상태 변화 감지 → ID 토큰 초기화
+onAuthStateChanged(firebaseAuth, async (user) => {
   if (user) {
     try {
       IDTOKEN = await user.getIdToken();
@@ -57,6 +58,7 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     IDTOKEN = null;
     tokenWaiters = [];
+    console.warn("[FirebaseUtils] 로그아웃 상태로 토큰 제거됨.");
   }
 });
 
@@ -64,7 +66,6 @@ export function getIdToken() {
   return IDTOKEN;
 }
 
-// 🔁 토큰 준비될 때까지 기다림
 export function waitForIdToken(timeout = 5000) {
   return new Promise((resolve, reject) => {
     if (IDTOKEN) return resolve(IDTOKEN);
