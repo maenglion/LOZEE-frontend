@@ -87,12 +87,6 @@ function renderCumulativeAnalysis(journals) {
     renderTagCloud('cumulativeTagCloud', [...new Set(cumulativeKeywords)]);
 }
 
-function renderDeepAnalysis(journals) {
-    // 이전 답변에서 제안한 심층 분석 내용
-    deepContentEl.innerHTML = `...`; 
-}
-
-
 /** 3. 심층 분석 탭 렌더링 */
 function renderDeepAnalysis(journals) {
     // 1. 심층 분석 탭의 기본 HTML 구조를 먼저 삽입
