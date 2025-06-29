@@ -291,7 +291,7 @@ function renderUnifiedTopics() {
 
             // 2. 사용자가 선택한 주제를 채팅창에 표시
             selectedMain = mainTopic.name;
-            appendMessage(`'${mainTopic.name}'(을)를 선택했구나.`, 'user');
+            appendMessage(`${mainTopic.name}`, 'user'); // `(을)를 선택했구나.` 부분을 제거하여 간단하게 만듦
             
             // 3. 기존 주제 선택 버튼들 제거
             container.innerHTML = ''; 
