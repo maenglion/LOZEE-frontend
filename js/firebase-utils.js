@@ -1,7 +1,7 @@
 // js/firebase-utils.js
 import { db } from './firebase-config.js';
 import { auth as firebaseAuth } from './firebase-config.js';
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { onAuthStateChanged, getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import {
     collection,
     addDoc,
