@@ -271,6 +271,47 @@ export async function saveReservation(userId, reservationData) {
   }
 }
 
+// ** 새로 추가할 함수: detectSensitiveRisk **
+/**
+ * 텍스트에서 민감하거나 위험한 내용을 감지하는 함수
+ * 자살, 자해, 학폭, 폭력 등 위험 키워드를 포함합니다.
+ * @param {string} text - 감지할 텍스트
+ * @returns {boolean} - 위험 내용 감지 시 true, 아니면 false
+ */
+export function detectSensitiveRisk(text) {
+    if (!text || typeof text !== 'string') {
+        return false;
+    }
+    const lowerText = text.toLowerCase();
+
+    // 자살, 자해, 학폭, 폭력 등 민감하거나 위험한 키워드 목록
+    const sensitiveKeywords = [
+        '자살', '죽고싶다', '죽을까', '살고싶지않아', '극단적선택', '삶을포기', '세상끝내고싶다', // 자살 관련
+        '자해', '상처내다', '피나다', '때리다', '칼', '아프게하다', // 자해/폭력 관련
+        '학폭', '학교폭력', '괴롭힘', '따돌림', '왕따', '맞았다', '때렸다', // 학폭 관련
+        '위험해', '죽을래', '죽여', '끝내버리자' // 기타 위험 표현
+    ];
+    
+    for (const keyword of sensitiveKeywords) {
+        if (lowerText.includes(keyword)) {
+            console.warn(`[민감/위험 감지] 키워드: "${keyword}"`);
+            return true; // 위험 키워드 감지 시 true 반환
+        }
+    }
+
+    // 만약 기존의 detectRiskTags 함수가 더 일반적인 위험 태그를 감지한다면,
+    // 필요에 따라 detectRiskTags의 결과도 여기에 포함시킬 수 있습니다.
+    // (단, detectRiskTags가 이 파일 내에서 선언되었거나 import 되어야 합니다.)
+    // const riskTags = detectRiskTags(text); 
+    // if (riskTags.length > 0) {
+    //     // detectRiskTags가 감지한 내용도 민감하다고 판단한다면
+    //     // console.warn(`[민감/위험 감지] Risk Tags: ${riskTags.join(', ')}`);
+    //     // return true;
+    // }
+
+    return false; // 위험 내용 없음
+}
+
 // 사용자 분석 정보 불러오기 
 async function loadAnalysisDataFromFirestore(userId) {
   const q = query(
