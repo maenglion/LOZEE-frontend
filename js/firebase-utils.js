@@ -39,20 +39,23 @@ function detectRiskTags(text, detailedAnalysis = {}) {
     return Array.from(tags);
 }
 
-export async function getIdToken() { // <-- 여기에 'export' 키워드가 반드시 있어야 합니다.
-    const auth = getAuth(); // Firebase Auth 인스턴스 가져오기
-    const user = auth.currentUser; // 현재 로그인된 사용자 가져오기
-    if (user) {
-        try {
-            return await user.getIdToken(); // 사용자의 ID 토큰 반환
-        } catch (error) {
-            console.error("ID 토큰 가져오기 오류:", error);
-            return null;
-        }
-    }
-    return null; // 사용자가 로그인되어 있지 않으면 null 반환
+const auth = getAuth();
+let IDTOKEN = null;
+
+export async function initToken() {
+  const user = auth.currentUser;
+  if (!user) throw new Error("User not logged in");
+  try {
+    IDTOKEN = await user.getIdToken();
+  } catch (error) {
+    console.error("ID 토큰 가져오기 오류:", error);
+    IDTOKEN = null;
+  }
 }
 
+export function getIdToken() {
+  return IDTOKEN;
+}
 
 
 /**
