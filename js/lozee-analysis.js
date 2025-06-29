@@ -1,8 +1,20 @@
 // js/lozee-analysis.js
-// 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
-// Chart.js ESM 빌드 경로 및 등록
-import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
-Chart.register(...registerables);
+// Chart.js ESM 빌드 경로 및 등록 (이전 코드)
+// import { Chart, registerables } from 'https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.esm.js';
+// Chart.register(...registerables);
+
+// **새로운 Chart.js 임포트 (UMD 버전 사용 권장)**
+// 이 파일에서는 Chart 객체를 직접 사용하지 않고, 전역으로 로드된 Chart 객체를 사용한다고 가정합니다.
+// 만약 lozee-analysis.js 내에서 Chart 객체를 직접 import하여 사용해야 한다면,
+// 아래 CDN 대신 'https://cdn.jsdelivr.net/npm/chart.js'를 import하고 registerables를 등록해야 합니다.
+// 하지만 현재 analysis.html에서 이미 CDN을 통해 Chart.js를 불러오고 있으므로,
+// lozee-analysis.js에서는 Chart 객체가 전역에 있다고 가정하고 별도 import를 제거합니다.
+// (만약 analysis.html에서 Chart.js CDN을 제거했다면, lozee-analysis.js에서 다시 import 해야 합니다.)
+
+// **일단은 lozee-analysis.js에서 Chart.js 관련 import 라인을 제거합니다.**
+// **Chart.js는 analysis.html에서 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>로 불러오는 것이 더 안정적입니다.**
+// **따라서 lozee-analysis.js에서는 Chart 객체를 전역 변수로 사용하도록 가정합니다.**
+
 
 // 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
 const LOZEE_ANALYSIS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-analysis';
