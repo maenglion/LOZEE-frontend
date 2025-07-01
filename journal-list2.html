@@ -114,10 +114,22 @@
             padding-left: 0;
             border-left: none;
             cursor: pointer;
+     overflow: hidden; /* ✅ 추가: overflow도 함께 정의 */
+    text-overflow: ellipsis; /* ✅ 추가: 말줄임표도 함께 정의 */
+    line-clamp: 3; /* ✅ 이 줄을 추가합니다. */
+    box-orient: vertical; /* ✅ 표준 box-orient도 추가 (flexbox와 함께 사용 시) */
+
+
         }
         .session-card-wide .session-summary.expanded {
             -webkit-line-clamp: unset;
             max-height: none;
+              overflow: hidden; /* ✅ 추가: overflow도 함께 정의 */
+    text-overflow: ellipsis; /* ✅ 추가: 말줄임표도 함께 정의 */
+    line-clamp: 3; /* ✅ 이 줄을 추가합니다. */
+    box-orient: vertical; /* ✅ 표준 box-orient도 추가 (flexbox와 함께 사용 시) */
+
+
         }
         .session-card-wide .more-summary-btn {
             font-size: 0.85em;

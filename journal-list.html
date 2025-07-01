@@ -144,9 +144,10 @@
         display: -webkit-box;
         -webkit-line-clamp: 3; 
         -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        min-height: calc(0.95em * 1.7 * 3); /* 대략적인 3줄 높이 */
+    overflow: hidden; /* ✅ 추가: overflow도 함께 정의 */
+    text-overflow: ellipsis; /* ✅ 추가: 말줄임표도 함께 정의 */
+    line-clamp: 3; /* ✅ 이 줄을 추가합니다. */
+    box-orient: vertical; /* ✅ 표준 box-orient도 추가 */
     }
     .journal-analysis-banner { 
         padding: 8px 12px; 

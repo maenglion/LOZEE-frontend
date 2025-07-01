@@ -399,22 +399,20 @@ async function endSessionAndSave() {
 
 
     // [3단계] Firestore에 저장할 최종 데이터 객체를 구성합니다.
-    const finalTopicForJournal = selectedSubTopicDetails?.displayText || selectedMain || "알 수 없는 주제";
-    const journalDetailsToSave = {
-        summary: summaryText,
-        title: finalAnalysis.summaryTitle || finalTopicForJournal,
-        detailedAnalysis: finalAnalysis, // 키워드가 업데이트된 최종 분석 결과
-        sessionDurationMinutes: (Date.now() - conversationStartTime) / (1000 * 60),
-        userCharCountForThisSession: userCharCountInSession
-    };
+const journalDetailsToSave = {
+    summary: summaryText,
+    title: finalAnalysis.summaryTitle || finalTopicForJournal,
+    detailedAnalysis: finalAnalysis, // 키워드가 업데이트된 최종 분석 결과
+    sessionDurationMinutes: (Date.now() - conversationStartTime) / (1000 * 60),
+    userCharCountForThisSession: userCharCountInSession
+};
 
-    // [4단계] Firestore에 최종 데이터를 저장합니다.
-    const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
-    const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, {
-        relatedChildId: targetChildId, 
-        entryType: entryTypeForSave,
-        childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
-    });
+const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
+const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, {
+    relatedChildId: targetChildId,
+    entryType: entryTypeForSave,
+    childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
+});
 
     if (journalId) {
         await updateTopicStats(loggedInUserId, finalTopicForJournal, entryTypeForSave);
