@@ -536,37 +536,7 @@ const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가
                     limit(ITEMS_PER_PAGE)
                 );
 
-             
-if (userType === 'caregiver') {
-    q = query(q, where("entryType", "==", "standard"));
-    console.log("보호자이므로 entryType 'standard' 저널만 필터링합니다.");
-}
-                if (page > 1 && lastDoc) {
-                    q = query(q, startAfter(lastDoc));
-                }
 
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty && page === 1) {
-                    sessionCardListEl.innerHTML =
-                        `<div class="no-data-message"><h2>“${topicDisplayName}” 주제로 나눈 이야기가 아직 없어요.</h2><p>대화를 시작해보세요! 😊</p></div>`;
-                    if (paginationControlsEl) paginationControlsEl.style.display = 'none';
-                    return;
-                }
-
-                querySnapshot.forEach((docSnap, index) => {
-                    const sessionData = { id: docSnap.id, ...docSnap.data() };
-                    // Firestore 문서 순서대로 불러와, 세션 번호는 현재 사용하지 않지만 필요 시 계산 가능
-                    sessionData.sessionNumber =
-                        totalJournalDocsForTopic - ((page - 1) * ITEMS_PER_PAGE) - index;
-                    const card = createSessionCard(sessionData);
-                    sessionCardListEl.appendChild(card);
-                });
-
-                if (querySnapshot.docs.length > 0) {
-                    lastVisibleDocForPaging = querySnapshot.docs[querySnapshot.docs.length - 1];
-                }
-                updatePaginationUI(currentPageNum);
 
             } catch (error) {
                 console.error(`'${topicKeyFromUrl}' 주제 로드 중 오류:`, error);
