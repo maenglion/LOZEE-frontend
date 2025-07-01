@@ -156,15 +156,15 @@ export function getSystemPrompt({
 
 
 // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
-export async function getGptResponse(userMessage, context = {}) { // userMessage로 인자명 변경 (더 명확하게)
-  const token = await waitForIdToken(); // ⬅️ 바뀐 부분 - 토큰 대기
+export async function getGptResponse(userMessage, context = {}) {
+  const token = await waitForIdToken();
   try {
     const idToken = await getIdToken();
     if (!idToken) {
       throw new Error("Firebase ID 토큰을 가져올 수 없습니다.");
     }
 
-    // --- 🔑 핵심 수정 부분: GPT API messages 배열 구성 방식 변경 ---
+    // ⭐⭐⭐ 핵심 수정 부분: messages 배열 구성 ⭐⭐⭐
     let messages = [];
 
     // 1. systemPrompt가 있다면 messages 배열의 가장 첫 요소로 추가
@@ -173,7 +173,6 @@ export async function getGptResponse(userMessage, context = {}) { // userMessage
     }
 
     // 2. chatHistory를 messages 배열에 추가
-    // chatHistory의 각 요소는 { role: 'user'/'assistant', content: '...' } 형태여야 합니다.
     // context.chatHistory가 빈 배열일 수 있으므로 || [] 사용
     (context.chatHistory || []).forEach(chatTurn => {
         messages.push({ role: chatTurn.role, content: chatTurn.content });
@@ -188,7 +187,6 @@ export async function getGptResponse(userMessage, context = {}) { // userMessage
         model: "gpt-3.5-turbo", // 또는 사용하는 모델 이름
         temperature: 0.7,
         max_tokens: 500,
-        // GPT 서버가 추가로 필요로 할 수 있는 메타데이터 (context에서 직접 전달)
         userId: context.userId,
         elapsedTime: context.elapsedTime,
     };
@@ -199,7 +197,7 @@ export async function getGptResponse(userMessage, context = {}) { // userMessage
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}` // 인증 헤더 포함
+        'Authorization': `Bearer ${idToken}`
       },
       body: JSON.stringify(payload)
     });
@@ -212,7 +210,7 @@ export async function getGptResponse(userMessage, context = {}) { // userMessage
     return res;
 
   } catch (error) {
-    console.error("[getGptResponse 오류]", error); //
+    console.error("[getGptResponse 오류]", error);
     throw error;
   }
 }
