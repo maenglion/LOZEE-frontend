@@ -5,8 +5,7 @@ const GPT_API_URL = 'https://server-production-3e8f.up.railway.app/api/gpt-chat'
 
 // import 구문
 import { neurodiversityInfo } from './neurodiversityData.js';
-import { getIdToken } from './firebase-utils.js';
-import { waitForIdToken } from './firebase-utils.js';
+import { getIdToken, waitForIdToken } from './firebase-utils.js'; // getIdToken과 waitForIdToken을 한 줄로
 // 1) 호격 조사 결정: '아/야'
 /**
  * 이름에 따라 올바른 호격 조사를 반환하는 함수.
@@ -157,26 +156,44 @@ export function getSystemPrompt({
 
 
 // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
-export async function getGptResponse(text, context = {}) {
-      const token = await waitForIdToken();  // ⬅️ 바뀐 부분
+export async function getGptResponse(userMessage, context = {}) { // userMessage로 인자명 변경 (더 명확하게)
+  const token = await waitForIdToken(); // ⬅️ 바뀐 부분 - 토큰 대기
   try {
     const idToken = await getIdToken();
     if (!idToken) {
       throw new Error("Firebase ID 토큰을 가져올 수 없습니다.");
     }
 
-    // --- 🔑 핵심 수정 부분 ---
-    // 서버가 요구하는 평평한(flat) 구조로 payload를 재구성합니다.
-    // 'text' 키를 'message'로 변경하고, context 안의 값들을 밖으로 꺼냅니다.
+    // --- 🔑 핵심 수정 부분: GPT API messages 배열 구성 방식 변경 ---
+    let messages = [];
+
+    // 1. systemPrompt가 있다면 messages 배열의 가장 첫 요소로 추가
+    if (context.systemPrompt) {
+        messages.push({ role: 'system', content: context.systemPrompt });
+    }
+
+    // 2. chatHistory를 messages 배열에 추가
+    // chatHistory의 각 요소는 { role: 'user'/'assistant', content: '...' } 형태여야 합니다.
+    // context.chatHistory가 빈 배열일 수 있으므로 || [] 사용
+    (context.chatHistory || []).forEach(chatTurn => {
+        messages.push({ role: chatTurn.role, content: chatTurn.content });
+    });
+
+    // 3. 현재 사용자 메시지를 messages 배열의 마지막에 추가
+    messages.push({ role: 'user', content: userMessage });
+
+
     const payload = {
-      message: text,
-      userId: context.userId,
-      chatHistory: context.chatHistory || [], // 기본값으로 빈 배열 보장
-      elapsedTime: context.elapsedTime || 0   // 기본값으로 0 보장
+        messages: messages, // ✅ 이렇게 구성된 messages 배열을 payload에 넣습니다.
+        model: "gpt-3.5-turbo", // 또는 사용하는 모델 이름
+        temperature: 0.7,
+        max_tokens: 500,
+        // GPT 서버가 추가로 필요로 할 수 있는 메타데이터 (context에서 직접 전달)
+        userId: context.userId,
+        elapsedTime: context.elapsedTime,
     };
-    
-    // 전송 직전에 최종 payload를 다시 한번 확인합니다.
-    console.log("📦 최종 전송될 payload:", payload);
+
+    console.log("📦 최종 전송될 payload:", payload); //
 
     const res = await fetch(GPT_API_URL, {
       method: 'POST',
@@ -187,20 +204,19 @@ export async function getGptResponse(text, context = {}) {
       body: JSON.stringify(payload)
     });
 
-    // 서버 응답이 실패하면(400, 500 등) 에러를 발생시킵니다.
     if (!res.ok) {
         const errorData = await res.json();
-        // 서버가 보낸 에러 메시지를 포함하여 에러를 던집니다.
         throw new Error(`GPT 서버 오류: ${JSON.stringify(errorData)}`);
     }
 
     return res;
 
   } catch (error) {
-    console.error("[getGptResponse 오류]", error);
-    throw error; // 에러를 상위로 전파하여 sendMessage에서 잡을 수 있도록 함
+    console.error("[getGptResponse 오류]", error); //
+    throw error;
   }
 }
+
 
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
