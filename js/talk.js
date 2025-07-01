@@ -188,15 +188,21 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
 // ⭐ 복원된 함수: 현재 사용자에게 맞는 상담 주제 목록을 가져옵니다.
 function getTopicsForCurrentUser() {
     const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
-    if (!counselingTopicsByAge || typeof counselingTopicsByAge !== 'object') {
-        console.error("counseling_topics.js 로드 실패!");
-        return {};
+    // if (!counselingTopicsByAge || typeof counselingTopicsByAge !== 'object') {
+    //     console.error("counseling_topics.js 로드 실패!");
+    //     return {};
+    // }
+
+    if (currentUserType === 'directUser') {
+        return counselingTopicsByAge.directUser?.[ageGroupKey] || counselingTopicsByAge.directUser['11-15세'] || {};
     }
-    if (currentUserType === 'directUser') return counselingTopicsByAge.directUser?.[ageGroupKey] || counselingTopicsByAge.directUser['11-15세'] || {};
-    if (currentUserType === 'caregiver') return counselingTopicsByAge.caregiver || {};
+    if (currentUserType === 'caregiver') {
+        // ⭐⭐⭐ 핵심 수정: caregiver는 'common' 키 아래에 주제 배열이 있습니다. ⭐⭐⭐
+        console.log("➡️ talk.js: caregiver용 주제 로드 시도 (getTopicsForCurrentUser):", counselingTopicsByAge.caregiver.common); // 로그 변경
+        return counselingTopicsByAge.caregiver?.common || {}; // ✅ .common을 추가합니다.
+    }
     return {};
 }
-
 
 // ⭐ 복원된 함수: 세션 헤더(상단 주제 표시줄)를 업데이트합니다.
 function updateSessionHeader() {
