@@ -234,6 +234,9 @@ export async function getJournalsForUser(userId) {
 export async function updateTopicStats(userId, topicName, entryType = "standard") {
     if (!userId || !topicName) return;
     const role = localStorage.getItem('lozee_role');
+    // ✅ 여기 if 문은 이전 논의에 따라 다시 활성화하거나, 의도에 맞게 조정해야 합니다.
+    // 보호자 계정이 자녀 관련 저널을 볼 때 topicStats에 반영하지 않으려면 이대로 두고,
+    // 모든 저널을 반영하려면 이 if 블록을 주석 처리해야 합니다.
     if (role === 'parent' && entryType === 'child') {
         console.log(`[Firebase Utils] 보호자(${userId})의 자녀 관련 저널(${topicName})은 보호자 개인의 topicStats에 반영하지 않습니다.`);
         return;
@@ -243,8 +246,10 @@ export async function updateTopicStats(userId, topicName, entryType = "standard"
         await runTransaction(db, async (transaction) => {
             const topicStatDoc = await transaction.get(topicStatRef);
             if (!topicStatDoc.exists()) {
+                // 문서가 없으면 새로 생성
                 transaction.set(topicStatRef, { count: 1, lastChattedAt: serverTimestamp() });
             } else {
+                // 문서가 있으면 count 증가
                 const newCount = (topicStatDoc.data().count || 0) + 1;
                 transaction.update(topicStatRef, { count: newCount, lastChattedAt: serverTimestamp() });
             }
