@@ -266,6 +266,9 @@
         // counselingTopicsByAge: “대분류 → 연령대별 서브토픽” 구조
         import { counselingTopicsByAge } from './js/counseling_topics.js';
 
+        //주제 예약
+        import { saveReservation } from './js/firebase-utils.js';
+
         // ——————————————————————————————————————————————
         // [헬퍼1] “서브토픽(예: ‘엄마의 행동으로 인한 분노’) → 대분류(예: ‘감정 이야기’)”를 찾아 반환
         function findMainCategoryOfTopic(topicKey, topicsData) {
@@ -605,32 +608,54 @@ if (userType === 'caregiver') {
             }
 
             // “이 주제로 이어 말하기” 버튼 생성
-            const pageHeaderEl = document.querySelector('.page-header');
-            if (pageHeaderEl) {
-                const continueTopicButton = document.createElement('button');
-                continueTopicButton.className = 'action-button';
-                continueTopicButton.style.display = 'block';
-                continueTopicButton.style.margin = '10px auto 25px auto';
-                continueTopicButton.style.fontSize = '1em';
-                continueTopicButton.innerHTML = `"${topicDisplayName}" 주제로 이어 말하기 🗣️`;
-                continueTopicButton.onclick = () => {
-                    localStorage.setItem(
-                        'lozee_talk_init_topic',
-                        JSON.stringify({
-                            type: 'continue_specific_topic',
-                            details: topicKeyFromUrl,
-                            prompt: `'${topicDisplayName}'에 대해 어떤 점이 더 이야기하고 싶으세요?`
-                        })
-                    );
-                    window.location.href = 'talk.html';
-                };
-                pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
-            }
+              const pageHeaderEl = document.querySelector('.page-header');
+        if (pageHeaderEl) {
+            const continueTopicButton = document.createElement('button');
+            // ... (버튼 클래스, 스타일 설정 동일) ...
+            continueTopicButton.innerHTML = `"${topicDisplayName}" 주제로 상담 예약하기 🗓️`; // ✅ 버튼 텍스트 변경
+            continueTopicButton.onclick = async () => { // ✅ onclick 함수를 async로 변경
+                try {
+                    const currentUserId = localStorage.getItem('lozee_userId');
+                    if (!currentUserId) {
+                        alert("사용자 정보가 없어 상담 예약을 진행할 수 없습니다.");
+                        return;
+                    }
+
+                    // ✅ saveReservation 함수 호출 (여기서부터 기존 로직이 바뀝니다)
+                    const reservationId = await saveReservation(currentUserId, {
+                        type: 'topic_specific_counseling',
+                        topic: topicKeyFromUrl,
+                        topicDisplayName: topicDisplayName,
+                        details: `'${topicDisplayName}' 주제에 대해 로지에게 더 이야기하고 싶어요.`,
+                        requestedAt: new Date().toISOString()
+                    });
+
+                    if (reservationId) {
+                        alert(`'${topicDisplayName}' 주제로 상담 요청이 접수되었습니다! 😊\n전문가와 연결될 때까지 잠시만 기다려주세요.`);
+
+                        // ✅ 구글 캘린더 이벤트 생성 링크 열기 (선택 사항)
+                        const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
+                        const params = new URLSearchParams({
+                            text: `LOZEE와 ${topicDisplayName} 주제 상담`,
+                            details: `"${topicDisplayName}" 주제에 대해 LOZEE와 상담을 예약했습니다. 더 자세한 내용은 LOZEE 앱에서 확인하세요.`,
+                            ctz: Intl.DateTimeFormat().resolvedOptions().timeZone
+                        });
+                        window.open(`${baseUrl}?${params.toString()}`, '_blank');
+                    } else {
+                        alert("상담 예약 중 오류가 발생했습니다. 다시 시도해 주세요.");
+                    }
+                } catch (error) {
+                    console.error("상담 예약 처리 중 오류:", error);
+                    alert("상담 예약 중 오류가 발생했습니다. 개발자에게 문의해주세요.");
+                }
+            };
+            pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
+        }
 
             // 상단 통계 → 세션 로드
             await fetchTopicHeaderStats();
             await loadSessionsForTopicPage(1);
-        });
+         });
     </script>
 </body>
 </html>

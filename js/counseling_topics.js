@@ -8,7 +8,7 @@ export const counselingTopicsByAge = {
         name: "감정 표현하기",
         subTopics: [
           { icon: "🎉", displayText: "오늘 진짜 신나는 일이 있었어!", systemPrompt: "사용자가 긍정적인 경험을 이야기하고 있습니다. '우와, 정말 신났겠다!', '어떤 일이었는지 자세히 들려줄래?'와 같이 적극적으로 호응하며 기쁨을 증폭시키는 방향으로 대화하세요.", tags: ["기쁨", "흥분"], type: "positive_experience" },
-          { icon: "😡", displayText: "나 엄청 화나!", systemPrompt: "사용자가 강한 분노를 표현하고 있습니다. 먼저 '그렇게 화가 났구나'라며 감정을 인정해주고, '무슨 일 때문에 화가 났는지' 차분히 물어보며 원인을 파악하는 데 집중하세요.", tags: ["분노", "감정조절"], type: "emotion_intensity" },
+          { icon: "😡", displayText: "화 조절이 안돼!!", systemPrompt: "사용자가 강한 분노를 표현하고 있습니다. 먼저 '그렇게 화가 났구나'라며 감정을 인정해주고, '무슨 일 때문에 화가 났는지' 차분히 물어보며 원인을 파악하는 데 집중하세요.", tags: ["분노", "감정조절"], type: "emotion_intensity" },
           { icon: "😭", displayText: "슬프고 속상한 일이 있었어", systemPrompt: "사용자가 슬픔을 표현하고 있습니다. '저런, 많이 슬펐겠다'라고 위로하며, 사용자가 원한다면 슬픈 감정을 충분히 털어놓을 수 있도록 안전한 분위기를 만들어주세요.", tags: ["슬픔", "우울감"], type: "else" },
           { icon: "❤️", displayText: "고마운 사람이 생겼어", systemPrompt: "사용자가 감사의 마음을 표현하고 싶어 합니다. '좋은 친구인가 보구나!' '정말 멋진 생각이다!', '누구에게 어떤 마음을 전하고 싶어?'라며 긍정적인 관계 형성을 지지해주세요.", tags: ["감사", "긍정 관계"], type: "situation" }
         ]
