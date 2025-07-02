@@ -93,6 +93,9 @@ const loggedInUserId = localStorage.getItem('lozee_userId');
 const userNameToDisplay = localStorage.getItem('lozee_username') || '친구';
 const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
 
+
+
+
 // [수정] 사용자의 나이에 맞는 상담 주제 키를 미리 계산합니다.
 const currentUserAgeGroup = (() => {
     if (targetAge < 11) return '10세미만';
@@ -144,21 +147,22 @@ async function playTTSWithControl(txt) {
   if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
 
   try {
-    // ✅ OpenAI가 지원하는 목소리 이름 중 하나인 'alloy'로 변경 (또는 nova, shimmer 등 다른 이름 사용 가능)
-    const voiceId = localStorage.getItem('lozee_voice') || "shimmer"; 
+    // ✅ localStorage에서 'lozee_voice'를 가져와 playTTSFromText에 전달
+    // 'shimmer'는 OpenAI 음성이므로, Google TTS에서 사용할 음성으로 매핑되도록 변경
+    const voiceId = localStorage.getItem('lozee_voice') || "Leda"; // ✅ 기본 음성을 'Leda'로 설정
+
     if (typeof playTTSFromText === 'function') {
-      await playTTSFromText(txt, voiceId);
+      await playTTSFromText(txt, voiceId); // ✅ voiceId를 파라미터로 전달
     }
   } catch (error) {
-    console.error("TTS 재생 오류:", error); // CORS 메시지는 혼동을 줄 수 있어 제거
+    console.error("TTS 재생 오류:", error);
   }
 }
 
-
-function handleGptReply(replyText) {
-  appendAssistantBubble(replyText);          // 화면에 말풍선 표시
-  playTTSWithControl(replyText);             // ✅ 음성 출력: 제어는 위임
-}
+//function handleGptReply(replyText) {
+ // appendAssistantBubble(replyText);          // 화면에 말풍선 표시
+ // playTTSWithControl(replyText);             // ✅ 음성 출력: 제어는 위임
+//}
 
 
 /**
