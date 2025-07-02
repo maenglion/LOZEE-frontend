@@ -36,11 +36,13 @@ export function stopCurrentTTS() {
 /**
  * 텍스트를 백엔드 TTS API를 통해 음성으로 변환하고 재생합니다.
  * @param {string} text 재생할 텍스트.
- * @param {string} requestedVoice - 요청된 음성 이름 (localStorage에서 올 수도 있음).
+ * @param {string} requestedVoice - ko-KR-Chirp3-HD-Leda
  * @returns {Promise<void>}
  */
-export async function playTTSFromText(text, requestedVoice) {
+
+export async function playTTSFromText(text, requestedVoice = 'ko-KR-Chirp3-HD-Leda') {
     stopCurrentTTS();
+
 
     // Firebase 인증 토큰 가져오기
     const currentUser = auth.currentUser; // firebase-config에서 import한 auth 인스턴스 사용
@@ -78,46 +80,33 @@ export async function playTTSFromText(text, requestedVoice) {
     .replace(/\r/g, ' ')     // 캐리지 리턴 제거
     .replace(/\t/g, ' ');    // 탭 제거
 
-    try {
- const apiHost = 'https://server-production-3e8f.up.railway.app';  // ← 너의 Railway 서버 주소
-
-const response = await fetch(`${apiHost}/api/google-tts`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    text: sanitizedText,
-    voiceName: voiceToUse
-  })
-});
 
 
+          try {
+    // ✅ JSON에서 안전하게 보낼 수 있도록 문자열만 전달 (JSON.stringify 자체가 escape 해줌)
+    const payload = {
+      text, // 이건 순수 문자열이어야 함. 별도 replace() X
+      voiceName
+    };
 
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`TTS API 응답 오류: ${response.status} ${response.statusText}`, errorBody);
-            throw new Error(`TTS API failed with status: ${response.status}. Body: ${errorBody}`);
-        }
+const response = await fetch(TTS_BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-        const audioData = await response.arrayBuffer();
-        const audioBuffer = await context.decodeAudioData(audioData);
-
-        const source = context.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(context.destination);
-        source.start(0);
-
-        currentAudioSource = source; // 현재 재생 중인 소스로 저장
-
-        return new Promise((resolve) => {
-            source.onended = () => {
-                currentAudioSource = null;
-                resolve();
-            };
-        });
-
-    } catch (error) {
-        console.error("TTS playTTSFromText 함수 내 오류:", error);
-        stopCurrentTTS(); // 오류 발생 시 오디오 중지
-        throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`TTS API failed with status: ${response.status}. Body: ${errorText}`);
     }
+
+    const audioData = await response.arrayBuffer();
+    const audioBlob = new Blob([audioData], { type: 'audio/mp3' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    await audio.play();
+
+  } catch (error) {
+    console.error('TTS playTTSFromText 함수 내 오류:', error);
+  }
 }
