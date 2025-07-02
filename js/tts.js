@@ -70,17 +70,17 @@ export async function playTTSFromText(text, requestedVoice) {
 
     const context = getAudioContext();
     // ✅ 여기에서 text를 정제해야 합니다.
-    const sanitizedText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); // 백슬래시와 큰따옴표 이스케이프
+    //const sanitizedText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); // 백슬래시와 큰따옴표 이스케이프
 
     try {
-               const response = await fetch(TTS_BACKEND_URL, { // ✅ URL도 TTS_BACKEND_URL 변수 사용
+           const response = await fetch(TTS_BACKEND_URL, { // ✅ URL도 TTS_BACKEND_URL 변수 사용
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` 
             },
   body: JSON.stringify({
-                text: sanitizedText,   // ✅ 정제된 텍스트 사용
+                text: text, // 'sanitizedText' 대신 원본 'text' 사용
                 voiceName: voiceToUse  // ✅ voiceToUse 변수 사용 (백엔드에서 voiceName으로 받음)
             })
         });
