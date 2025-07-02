@@ -110,6 +110,7 @@ const voc = getKoreanVocativeParticle(userNameToDisplay);
 
 // --- 5. 모든 함수 정의 ---
 
+
 /**
  * 채팅창에 새로운 말풍선을 추가하는 함수
  */
@@ -137,37 +138,22 @@ function updateActionButtonIcon() {
     }
 }
 
-/**
- * 로지의 답변을 음성으로 재생하는 함수 (TTS)
- */
-
-async function playTTSWithControl(text, voice) {
+//** 로지의 답변을 음성으로 재생하는 함수 (TTS)
+ 
+async function playTTSWithControl(text) {
   if (!isTtsMode) return;
 
-  if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
+  stopCurrentTTS();
 
   try {
-    // ✅ localStorage에서 'lozee_voice'를 가져와 playTTSFromText에 전달
-    // 'shimmer'는 OpenAI 음성이므로, Google TTS에서 사용할 음성으로 매핑되도록 변경
-    const voiceId = localStorage.getItem('lozee_voice') || "Leda"; // ✅ 기본 음성을 'Leda'로 설정
+    const voiceId = localStorage.getItem('lozee_voice') || "Leda"; // ✅ 기본 음성
+    await playTTSFromText(text, voiceId); // ✅ TTS 호출
 
-    if (typeof playTTSFromText === 'function') {
-     await playTTSFromText(text, voice); // ✅ 파라미터로 받은 text와 voice를 그대로 전달
-    }
   } catch (error) {
     console.error("TTS 재생 오류:", error);
   }
 }
 
-//function handleGptReply(replyText) {
- // appendAssistantBubble(replyText);          // 화면에 말풍선 표시
- // playTTSWithControl(replyText);             // ✅ 음성 출력: 제어는 위임
-//}
-
-
-/**
- * 여러 선택지를 버튼 형태로 채팅창에 표시하는 함수
- */
 function displayOptionsInChat(optionsArray, onSelectCallback) {
     if (!chatWindow) return;
     const optionsContainer = document.createElement('div');
