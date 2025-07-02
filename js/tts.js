@@ -48,8 +48,6 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
     throw new Error("User not authenticated for TTS.");
   }
 
-  const token = await currentUser.getIdToken();
-
   // 사용자 정의 음성 ID → Google TTS 음성 이름으로 매핑
   const mapVoiceNameToGoogleVoice = (voiceId) => {
     switch (voiceId) {
@@ -62,32 +60,33 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
     }
   };
 
-  const voiceToUse = mapVoiceNameToGoogleVoice(requestedVoice);
-  const context = getAudioContext();
+  try {
+const voiceToUse = mapVoiceNameToGoogleVoice(requestedVoice);
+const token = await auth.currentUser.getIdToken();
 
   console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
+  console.log("✅ TTS payload:", JSON.stringify(payload));
 
   // 텍스트 정제
-  const cleanedText = String(text)
-    .replace(/\n/g, ' ')
-    .replace(/\r/g, ' ')
-    .replace(/\t/g, ' ')
-    .trim();
+    const cleanedText = String(text)
+      .replace(/\n/g, ' ')
+      .replace(/\r/g, ' ')
+      .replace(/\t/g, ' ')
+      .trim(); // ✅ 여기까지만. 따옴표/백슬래시 이스케이프 절대 금지!
 
-  try {
-    const payload = {
-  text: cleanedText,         // ❗ escape 전혀 하지 마!
-  voiceName: voiceToUse
-};
-
-const response = await fetch(TTS_BACKEND_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`
-  },
-  body: JSON.stringify(payload)  // ✅ 여기서만 escape 발생!
-});
+  const payload = {
+      text: cleanedText,
+      voiceName: voiceToUse
+    };
+    
+ const response = await fetch(TTS_BACKEND_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload) // ✅ 여기서만 escape!
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
