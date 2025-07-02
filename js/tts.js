@@ -65,7 +65,7 @@ const voiceToUse = mapVoiceNameToGoogleVoice(requestedVoice);
 const token = await auth.currentUser.getIdToken();
 
   console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
-  console.log("✅ TTS payload:", JSON.stringify(payload));
+ 
 
   // 텍스트 정제
     const cleanedText = String(text)
@@ -98,6 +98,8 @@ const token = await auth.currentUser.getIdToken();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     await audio.play();
+
+     console.log("✅ TTS payload:", JSON.stringify(payload));
 
   } catch (error) {
     console.error('TTS playTTSFromText 함수 내 오류:', error);
