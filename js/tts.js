@@ -69,8 +69,6 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
 
   // 텍스트 정제
   const sanitizedText = String(text)
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
     .replace(/\n/g, ' ')
     .replace(/\r/g, ' ')
     .replace(/\t/g, ' ')
@@ -78,18 +76,18 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
 
   try {
     const payload = {
-      text: sanitizedText,
-      voiceName: voiceToUse
-    };
+  text: cleanedText,         // ❗ escape 전혀 하지 마!
+  voiceName: voiceToUse
+};
 
-    const response = await fetch(TTS_BACKEND_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+const response = await fetch(TTS_BACKEND_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  },
+  body: JSON.stringify(payload)  // ✅ 여기서만 escape 발생!
+});
 
     if (!response.ok) {
       const errorText = await response.text();
