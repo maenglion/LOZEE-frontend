@@ -1,4 +1,5 @@
 // js/tts.js
+import { auth } from './firebase-config.js';
 
 const TTS_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/google-tts'; // Google TTS 엔드포인트
 
