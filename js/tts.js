@@ -68,7 +68,7 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
   console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
 
   // 텍스트 정제
-  const sanitizedText = String(text)
+  const cleanedText = String(text)
     .replace(/\n/g, ' ')
     .replace(/\r/g, ' ')
     .replace(/\t/g, ' ')
