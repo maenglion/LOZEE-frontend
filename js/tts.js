@@ -18,12 +18,6 @@ function getAudioContext() {
     }
     return audioContext;
 }
-/**
- * Stops any currently playing TTS audio.
- */
-/**
- * 현재 재생 중인 TTS 오디오를 중지합니다.
- */
 export function stopCurrentTTS() {
     if (currentAudioSource) {
         try {
@@ -46,7 +40,7 @@ export function stopCurrentTTS() {
  * @returns {Promise<void>}
  */
 export async function playTTSFromText(text, requestedVoice) {
-    stopCurrentTTS(); // 재생 시작 전 현재 오디오 중지
+    stopCurrentTTS();
 
     // Firebase 인증 토큰 가져오기
     const currentUser = auth.currentUser; // firebase-config에서 import한 auth 인스턴스 사용
@@ -74,18 +68,21 @@ export async function playTTSFromText(text, requestedVoice) {
 
     console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
 
-    const context = getAudioContext(); // AudioContext 가져오기
-    const sanitizedText = text.replace(/"/g, '\\"'); // 큰따옴표 이스케이프
-
+    const context = getAudioContext();
+    // ✅ 여기에서 text를 정제해야 합니다.
+    const sanitizedText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); // 백슬래시와 큰따옴표 이스케이프
 
     try {
-        const response = await fetch('/api/google-tts', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+               const response = await fetch(TTS_BACKEND_URL, { // ✅ URL도 TTS_BACKEND_URL 변수 사용
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
   body: JSON.stringify({
-    text: sanitizedText,  // ← 여기!
-    voice: selectedVoice
-         }) // 백엔드에서 'voiceName'으로 받도록 설정
+                text: sanitizedText,   // ✅ 정제된 텍스트 사용
+                voiceName: voiceToUse  // ✅ voiceToUse 변수 사용 (백엔드에서 voiceName으로 받음)
+            })
         });
 
         if (!response.ok) {

@@ -152,7 +152,7 @@ async function playTTSWithControl(txt) {
     const voiceId = localStorage.getItem('lozee_voice') || "Leda"; // ✅ 기본 음성을 'Leda'로 설정
 
     if (typeof playTTSFromText === 'function') {
-      await playTTSFromText(txt, voiceId); // ✅ voiceId를 파라미터로 전달
+     await playTTSFromText(text, 'ko-KR-Chirp3-HD-Leda'); // ✅ voiceId를 파라미터로 전달
     }
   } catch (error) {
     console.error("TTS 재생 오류:", error);
