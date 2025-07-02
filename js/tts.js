@@ -69,9 +69,6 @@ const token = await auth.currentUser.getIdToken();
 
   // 텍스트 정제
     const cleanedText = String(text)
-      .replace(/\n/g, ' ')
-      .replace(/\r/g, ' ')
-      .replace(/\t/g, ' ')
       .trim(); // ✅ 여기까지만. 따옴표/백슬래시 이스케이프 절대 금지!
 
   const payload = {
