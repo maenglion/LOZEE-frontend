@@ -141,7 +141,7 @@ function updateActionButtonIcon() {
  * 로지의 답변을 음성으로 재생하는 함수 (TTS)
  */
 
-async function playTTSWithControl(txt) {
+async function playTTSWithControl(text, voice) {
   if (!isTtsMode) return;
 
   if (typeof stopCurrentTTS === 'function') stopCurrentTTS();
@@ -477,6 +477,7 @@ function showAnalysisNotification() {
 /**
  * ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (최종 수정 버전)
  * @param {string} text - 사용자 또는 시스템이 입력한 메시지 텍스트
+ * @param {string} voice - 사용할 음성 이름. ko-KR-Chirp3-HD-Leda
  * @param {string} inputMethod - 메시지 입력 방식 (e.g., 'user_input', 'topic_selection_init')
  */
 async function sendMessage(text, inputMethod) {
@@ -781,6 +782,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (startButton) { // << 이제 startButton이 무엇인지 알 수 있습니다.
         startButton.onclick = async () => {
             // 오디오 컨텍스트 잠금 해제 (TTS 안정적 재생을 위해)
+            const initialText = "안녕! 나는 너의 마음친구 로지야. 오늘 어떤 이야기를 나누고 싶니?"; // 실제 사용되는 초기 텍스트
+    const initialVoice = localStorage.getItem('selectedVoice') || 'Leda'; // 사용자가 선택한 음성 또는 기본값
+    await playTTSWithControl(initialText, initialVoice); // ✅ 여기에서 text와 voice를 전달
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             if (audioContext.state === 'suspended') {
                 await audioContext.resume();
