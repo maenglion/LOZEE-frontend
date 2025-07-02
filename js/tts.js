@@ -79,7 +79,9 @@ export async function playTTSFromText(text, requestedVoice) {
     .replace(/\t/g, ' ');    // 탭 제거
 
     try {
-  const response = await fetch('/api/google-tts', {
+ const apiHost = 'https://server-production-3e8f.up.railway.app';  // ← 너의 Railway 서버 주소
+
+const response = await fetch(`${apiHost}/api/google-tts`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -87,6 +89,7 @@ export async function playTTSFromText(text, requestedVoice) {
     voiceName: voiceToUse
   })
 });
+
 
 
         if (!response.ok) {
