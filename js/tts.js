@@ -17,19 +17,6 @@ function getAudioContext() {
     }
     return audioContext;
 }
-
-function getAudioContext() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-            console.log('AudioContext resumed successfully by user gesture.');
-        }).catch(e => console.error('Error resuming AudioContext:', e));
-    }
-    return audioContext;
- }
-
 /**
  * Stops any currently playing TTS audio.
  */
