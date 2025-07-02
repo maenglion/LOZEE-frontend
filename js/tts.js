@@ -69,21 +69,25 @@ export async function playTTSFromText(text, requestedVoice) {
     console.log(`TTS 요청 - 텍스트: "${text}", 음성: "${voiceToUse}"`);
 
     const context = getAudioContext();
+    
     // ✅ 여기에서 text를 정제해야 합니다.
-    const sanitizedText = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); // 백슬래시와 큰따옴표 이스케이프
+    const sanitizedText = text
+    .replace(/\\/g, '\\\\')  // 역슬래시 이중 처리
+    .replace(/"/g, '\\"')    // 큰따옴표 이스케이프
+    .replace(/\n/g, ' ')     // 줄바꿈 제거 (음성엔 불필요)
+    .replace(/\r/g, ' ')     // 캐리지 리턴 제거
+    .replace(/\t/g, ' ');    // 탭 제거
 
     try {
-           const response = await fetch(TTS_BACKEND_URL, { // ✅ URL도 TTS_BACKEND_URL 변수 사용
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
+  const response = await fetch('/api/google-tts', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-                text: sanitizedText , 
-                voiceName: voiceToUse  // ✅ voiceToUse 변수 사용 (백엔드에서 voiceName으로 받음)
-            })
-        });
+    text: sanitizedText,
+    voiceName: voiceToUse
+  })
+});
+
 
         if (!response.ok) {
             const errorBody = await response.text();
