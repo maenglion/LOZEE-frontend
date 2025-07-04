@@ -28,7 +28,7 @@ export function stopSTT() {
 }
 
 // 실제 백엔드 STT 엔드포인트
-const STT_BACKEND_URL = 'https://server-production-3e8f.up.railway.app/api/stt'; // Railway 백엔드 주소 확인!
+const STT_BACKEND_URL = 'https://google-tts-new-server-production.up.railway.app/api/stt'; // Railway 백엔드 주소 확인!
 
 /**
  * 오디오 Blob을 Base64 문자열로 변환하는 Helper 함수
