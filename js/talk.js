@@ -744,12 +744,16 @@ function handleMicButtonClick() {
 
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 (최종 수정본) ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
+    if (inputArea) inputArea.style.display = 'flex'; // 입력창 항상 표시
+    if (meterContainer) meterContainer.classList.add('active'); // 음성 레벨 미터 항상 표시
+
     // UI 요소 가져오기
     const startCover = document.getElementById('start-cover');
     const appContainer = document.querySelector('.app-container');
       // [수정] 아래 한 줄을 추가하여 startButton 변수를 선언합니다.
     const startButton = document.getElementById('start-button');
+
 
     // talk.html에만 적용될 스타일 동적 추가
     const style = document.createElement('style');
