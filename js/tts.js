@@ -73,7 +73,7 @@ const token = await auth.currentUser.getIdToken();
 
   const payload = {
       text: cleanedText,
-      voiceName: voiceToUse
+      voice: voiceToUse
     };
     
  const response = await fetch(TTS_BACKEND_URL, {
