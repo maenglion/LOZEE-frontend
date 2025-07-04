@@ -68,16 +68,16 @@ export async function getSTTFromAudio(audioBlob) {
   console.log(`[stt.js] 오디오 Blob 정보 - 크기: ${audioBlob.size}, 타입: ${audioBlob.type}`);
 
   try {
-    const base64Audio = await blobToBase64(audioBlob);
-    console.log("[stt.js] Base64 인코딩 완료, API 호출 시작...");
+    const audioBuffer = await audioBlob.arrayBuffer();
 
-    const response = await fetch(STT_BACKEND_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json', // JSON으로 보낸다고 명시
-      },
-      body: JSON.stringify({ audioContent: base64Audio }), // 백엔드가 기대하는 { "audioContent": "..." } 형식
-    });
+const response = await fetch(STT_BACKEND_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'audio/wav',
+    'Authorization': `Bearer ${token}` // 🔒 Firebase 토큰 필요 시 추가
+  },
+  body: audioBuffer
+});
 
     console.log(`[stt.js] STT API 응답 상태: ${response.status}`);
 
