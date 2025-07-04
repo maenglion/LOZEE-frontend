@@ -91,7 +91,7 @@ const token = await auth.currentUser.getIdToken();
     }
 
     const audioData = await response.arrayBuffer();
-    const audioBlob = new Blob([audioData], { type: 'audio/mp3' });
+    const audioBlob = new Blob([audioData], { type: 'audio/wav' });
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     await audio.play();
