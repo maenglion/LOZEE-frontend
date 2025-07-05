@@ -1,7 +1,7 @@
 // js/tts.js
 import { auth } from './firebase-config.js';
 
-const TTS_BACKEND_URL ='https://google-tts-new-server-production.up.railway.app/api/google-tts'; // Google TTS 엔드포인트
+const TTS_BACKEND_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.app/api/tts'; 
 
 let audioContext = null;
 let currentAudioSource = null;

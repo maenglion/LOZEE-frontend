@@ -1,7 +1,7 @@
 // js/gpt-dialog.js
 
 // 0) GPT 백엔드 URL 정의
-const GPT_API_URL = 'https://google-tts-new-server-production.up.railway.app/api/gpt-chat'; //
+const GPT_API_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.app/api/gpt-chat'; //
 
 // import 구문
 import { neurodiversityInfo } from './neurodiversityData.js';

@@ -17,7 +17,7 @@
 
 
 // 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
-const LOZEE_ANALYSIS_BACKEND_URL = 'https://google-tts-new-server-production.up.railway.app/gpt-analysis';
+const LOZEE_ANALYSIS_BACKEND_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.app/gpt-analysis';
 
 /// --- 1. 분석 조건 및 유틸리티 함수 ---
 
