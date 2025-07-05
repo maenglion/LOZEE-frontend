@@ -160,7 +160,7 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     optionsContainer.className = 'chat-options-container';
     optionsArray.forEach(optionObject => {
         let buttonText = optionObject?.displayText || optionObject;
-        if (optionObject?.icon) buttonText = `${optionObject.icon} ${buttonText}`;
+        if (optionObject?.icon) buttonText = `${optionObject.icon} ${buttonObject.displayText}`; // Changed from optionObject to optionObject.displayText
         const button = document.createElement('button');
         button.className = 'chat-option-btn';
         button.innerHTML = buttonText;
@@ -218,7 +218,7 @@ function updateSessionHeader() {
 /**
  * 신규 주제와 이전 대화 주제를 함께 표시하는 통합 함수 (UI 수정 버전)
  */
-// 기존 renderUnifiedTopics 함수를 찾아서 아래 코드로 교체하세요.
+// 기존 renderUnifiedTopics 함수를 찾아서 아래 코드로 전체를 교체해주세요.
 
 // renderUnifiedTopics 함수를 찾아 아래 코드로 전체를 교체해주세요.
 
@@ -348,9 +348,9 @@ async function endSessionAndSave() {
   appendMessage("대화를 안전하게 마무리하고 있어요. 잠시만 기다려 주세요...", 'assistant_feedback');
   if (currentFirestoreSessionId) await logSessionEnd(currentFirestoreSessionId); // 세션 종료 로그
 
-  // 대화 내용이 충분하지 않으면 저장을 건너뜁니다.
+  // 대화 내용이 충분하지 않으면 저장을 건너킵니다.
   if (chatHistory.length <= 2) {
-    console.log("대화 내용이 부족하여 저장을 건너뜁니다.");
+    console.log("대화 내용이 부족하여 저장을 건너킵니다.");
     return;
   }
 
@@ -387,7 +387,7 @@ async function endSessionAndSave() {
     
     // [2단계] 생성된 최종 요약문으로 의미 기반 키워드를 추출합니다. (신규 단계)
     console.log("의미 기반 키워드 추출 시작...");
-    const semanticKeywords = await extractSemanticKeywords(summaryText);
+    const semanticKeywords = await LOZEE_ANALYSIS.extractSemanticKeywords(summaryText); // LOZEE_ANALYSIS 모듈 사용
     
     // 기존 분석 키워드와 합치거나, 새로운 키워드로 대체할 수 있습니다.
     // 여기서는 새로운 의미 기반 키워드를 최종본으로 사용합니다.
@@ -397,21 +397,21 @@ async function endSessionAndSave() {
     // [3단계] Firestore에 저장할 최종 데이터 객체를 구성합니다.
 const journalDetailsToSave = {
     summary: summaryText,
-    title: finalAnalysis.summaryTitle || finalTopicForJournal,
+    title: finalAnalysis.summaryTitle || selectedSubTopicDetails?.displayText || selectedMain || "대화", // finalTopicForJournal 대신 직접 사용
     detailedAnalysis: finalAnalysis, // 키워드가 업데이트된 최종 분석 결과
     sessionDurationMinutes: (Date.now() - conversationStartTime) / (1000 * 60),
     userCharCountForThisSession: userCharCountInSession
 };
 
 const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
-const journalId = await saveJournalEntry(loggedInUserId, finalTopicForJournal, journalDetailsToSave, {
+const journalId = await saveJournalEntry(loggedInUserId, selectedSubTopicDetails?.displayText || selectedMain || "대화", journalDetailsToSave, { // finalTopicForJournal 대신 직접 사용
     relatedChildId: targetChildId,
     entryType: entryTypeForSave,
     childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
 });
 
     if (journalId) {
-        await updateTopicStats(loggedInUserId, finalTopicForJournal, entryTypeForSave);
+        await updateTopicStats(loggedInUserId, selectedSubTopicDetails?.displayText || selectedMain || "대화", entryTypeForSave); // finalTopicForJournal 대신 직접 사용
         const totalChars = (await fetchPreviousUserCharCount()) + userCharCountInSession;
         await updateUserOverallStats(loggedInUserId, currentUserType, totalChars);
         console.log("모든 데이터가 성공적으로 저장되었습니다. Journal ID:", journalId);
@@ -463,7 +463,6 @@ function showAnalysisNotification() {
 /**
  * ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (최종 수정 버전)
  * @param {string} text - 사용자 또는 시스템이 입력한 메시지 텍스트
- * @param {string} voice - 사용할 음성 이름 (ko-KR-Chirp3-HD-Leda)
  * @param {string} inputMethod - 메시지 입력 방식 (e.g., 'user_input', 'topic_selection_init')
  */
 async function sendMessage(text, inputMethod) {
@@ -782,7 +781,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // --- 모든 실제 초기화 로직은 버튼 클릭 이후에 실행 ---
             try {
-                if (inputArea) inputArea.style.display = 'none';
+                if (inputArea) inputArea.style.display = 'none'; // ⭐ 이 부분이 시작 시 숨깁니다.
 
                 if (!loggedInUserId) {
                     console.error("사용자 정보(userId)가 없습니다. 시작 페이지로 이동합니다.");
