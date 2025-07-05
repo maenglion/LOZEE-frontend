@@ -184,7 +184,7 @@ export async function getGptResponse(userMessage, context = {}) {
 
     const payload = {
         messages: messages, // ✅ 이렇게 구성된 messages 배열을 payload에 넣습니다.
-        model: "gpt-4o", // 또는 사용하는 모델 이름
+        model: "gpt-4-turbo", // 또는 사용하는 모델 이름
         temperature: 0.7,
         max_tokens: 80,
         userId: context.userId,
