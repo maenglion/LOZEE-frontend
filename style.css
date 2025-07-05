@@ -40,13 +40,18 @@ body {
 
 
 #meter-container { 
-    display:flex; 
+    /* 이 부분을 제거하거나, 위에 talk.html의 session-meter-container 스타일과 일치하도록 조정 */
+    /* 현재 talk.html에서 #session-header 안에 넣었으므로, 이 일반 선택자는 제거하는 것이 좋습니다. */
+    /* 만약 전역적으로 사용된다면 이름 변경 또는 선택자 강도를 높여야 합니다. */
+    /* 예를 들어, talk.html에서 #meter-container가 아니라 .volume-meter-wrapper 등으로 변경 후 여기에 스타일 적용 */
+    /* 지금은 talk.html에서 .session-meter-container에 스타일을 주었으므로, 이 부분을 제거합니다. */
+    /* display:flex; 
     align-items:center; 
     justify-content:center; 
     padding:0.8rem 0; 
-    background-color: #ffffff; /* ⭐ 볼륨 미터 배경을 흰색으로 변경 */
+    background-color: #ffffff;
     flex-shrink:0; 
-    border-bottom: 1px solid #e0e0e0; /* ⭐ 구분선 색상 조정 */
+    border-bottom: 1px solid #e0e0e0; */ 
 
 }
 #volume-meter { 
@@ -93,7 +98,7 @@ body {
 #chat-window {
   flex-grow: 1; /* 남은 공간을 모두 차지하도록 */
   overflow-y: auto;
-  padding: 20px;
+  /* padding: 20px; */
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -106,7 +111,7 @@ body {
 }
 @media screen and (max-width: 480px) {
   #chat-window {
-    padding: 12px;
+    /* padding: 12px; */
     border-radius: 0;
     box-shadow: none;
     max-width: 100%;

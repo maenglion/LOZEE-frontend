@@ -8,19 +8,15 @@
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS 변수는 HTML 파일에 직접 정의하지 않고, gnb.css 또는 style.css의 :root에 정의합니다. */
-        /* 여기서는 gnb.css의 :root를 참조하도록 합니다. */
         :root {
             --session-header-height: 28px;
             --input-area-height: 70px;
         }
-        /* app-container 및 body 스타일은 style.css와 common.css에서 관리 */
         .app-container { display: flex; flex-direction: column; height: 100%; background-color: #ffffff; }
         body { padding: 0; }
         
-        /* ⭐ 2. 주제 표시줄 + 음량바 스타일 (이전 인라인 스타일은 style.css로 이동) */
         #session-header {
-            position: relative;
+            position: relative; /* 자식 요소의 absolute 포지셔닝을 위한 기준 */
             width: 100%;
             height: var(--session-header-height);
             background-color: #f0f0f0;
@@ -39,6 +35,26 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* ⭐️ 추가: #session-header 안에 미터 바를 직접 넣을 경우를 위한 스타일 */
+        #session-header .session-meter-container { /* 새 클래스명 사용 */
+            position: absolute;
+            bottom: 0; /* 세션 헤더 하단에 붙이기 */
+            left: 0;
+            width: 100%;
+            height: 5px; /* 미터 바 자체의 높이 */
+            background-color: transparent; /* 배경 투명하게 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        #session-header .session-meter-container #volume-meter {
+            height: 100%; /* 부모 높이에 맞춤 */
+            width: 90%; /* 또는 원하는 너비 */
+            max-width: 250px; /* 최대 너비 제한 */
+        }
+        /* #volume-level은 style.css의 것을 사용 */
     </style>
 </head>
 
@@ -58,34 +74,28 @@
             </div>
         </nav>
         
-        <div id="session-header"><span id="session-header-text">주제 선택 중...</span></div>
+        <div id="session-header">
+            <span id="session-header-text">주제 선택 중...</span>
+            <div class="session-meter-container" id="meter-container">
+                <div id="volume-meter">
+                    <div id="volume-level"></div>
+                </div>
+            </div>
+        </div>
         
         <main id="chat-window">
-            <!-- ✅ 1. 주제 선택 영역 -->
-  <div id="topic-selection-container"></div>
-
-  <!-- ✅ 2. 음성 레벨 미터: 입력창 바로 위로 이동 -->
-  <div id="meter-container">
-    <div id="volume-meter">
-      <div id="volume-level"></div>
-    </div>
-  </div>
-</main>
-    <!-- ✅ 3. 입력창은 맨 아래 -->    
-<div id="chat-input-container">
-  <button id="mic-button">🎤</button>
-
-  <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-
-  <!-- ✅ 정사각형 + 버튼 -->
-  <button id="plus-button">＋</button>
-  <input type="file" id="image-upload" accept="image/*" style="display: none;" />
-
-  <button id="send-button">➤</button>
-</div>
-    
-    <script src="./js/gnb.js" defer></script>
-      
-    <script type="module" src="./js/talk.js"></script> 
+            <div id="topic-selection-container"></div>
+            </main>
+        
+        <div id="chat-input-container">
+            <button id="mic-button">🎤</button>
+            <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
+            <button id="plus-button">＋</button>
+            <input type="file" id="image-upload" accept="image/*" style="display: none;" />
+            <button id="send-button">➤</button>
+        </div>
+        
+        <script src="./js/gnb.js" defer></script>
+        <script type="module" src="./js/talk.js"></script> 
 </body>
 </html>
