@@ -302,6 +302,33 @@ async function fetchPreviousUserCharCount() {
     }
 }
 
+async function sendToGptVision(imageUrl) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4-vision-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "text", text: "이 이미지를 분석해서 감정과 내용을 설명해줘." }
+          ]
+        }
+      ],
+      max_tokens: 1000
+    })
+  });
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "분석 결과 없음";
+}
+
+
+
 async function endSessionAndSave() {
     if (isDataSaved) return;
     isDataSaved = true;
