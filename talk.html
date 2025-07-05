@@ -61,15 +61,18 @@
         <div id="session-header"><span id="session-header-text">주제 선택 중...</span></div>
         
         <main id="chat-window">
-            <div id="topic-selection-container"></div>
-        </main>
-        
-        <!-- ⭐⭐ 음성 레벨 미터 컨테이너를 chat-window 아래, 입력창 위에 배치 ⭐⭐ -->
-        <div id="meter-container">
-            <div id="volume-meter"><div id="volume-level"></div></div>
-        </div>
+            <!-- ✅ 1. 주제 선택 영역 -->
+  <div id="topic-selection-container"></div>
 
-        <div id="chat-input-container">
+  <!-- ✅ 2. 음성 레벨 미터: 입력창 바로 위로 이동 -->
+  <div id="meter-container">
+    <div id="volume-meter">
+      <div id="volume-level"></div>
+    </div>
+  </div>
+</main>
+    <!-- ✅ 3. 입력창은 맨 아래 -->    
+             <div id="chat-input-container">
             <button id="mic-button">🎤</button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
             <button id="send-button">➤</button>
