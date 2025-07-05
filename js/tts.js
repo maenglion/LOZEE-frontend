@@ -1,7 +1,7 @@
 // js/tts.js
 import { auth } from './firebase-config.js';
 
-const TTS_BACKEND_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.app/api/tts'; 
+const TTS_BACKEND_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.app/api/google-tts'; 
 
 let audioContext = null;
 let currentAudioSource = null;
