@@ -1,42 +1,85 @@
-// js/gnb.js
+/* gnb.css */
+:root {
+    --gnb-height: 130px; /* ⭐ 요청하신 높이로 변경 */
+    --primary-color: #6878E9; /* ⭐ 요청하신 색상으로 변경 */
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    const menuToggle = document.getElementById('menu-toggle');
-    const dropdownMenu = document.getElementById('dropdown-menu');
+#gnb {
+    position: relative; /* 자식 요소의 absolute 위치 기준 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 요소들을 양쪽 끝으로 배치 */
+    width: 100%;
+    height: var(--gnb-height); /* ⭐ 변경된 변수 사용 */
+    background-color: var(--primary-color); /* ⭐ 변경된 변수 사용 */
+    color: white;
+    padding: 0 20px; /* ⭐ 패딩 조정 (선택 사항, 필요시 조절) */
+    box-sizing: border-box;
+    flex-shrink: 0; /* app-container의 flex 자식일 때 줄어들지 않도록 */
+}
 
-    // 기존 드롭다운 메뉴 토글 기능
-    if (menuToggle && dropdownMenu) {
-        menuToggle.addEventListener('click', (event) => {
-            event.stopPropagation(); // 이벤트 전파 중단
-            dropdownMenu.classList.toggle('show');
-        });
+#gnb-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    font-size: 2.5em; /* ⭐ 폰트 크기 키움 */
+}
 
-        // 메뉴 바깥을 클릭하면 닫히도록 설정
-        document.addEventListener('click', (event) => {
-            if (!menuToggle.contains(event.target) && !dropdownMenu.contains(event.target)) {
-                dropdownMenu.classList.remove('show');
-            }
-        });
-    }
+#menu-toggle {
+    background: none; border: none; color: white;
+    font-size: 2.8em; /* ⭐ 햄버거 버튼 아이콘 크기 키움 */
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
 
-    // --- ⭐ 추가된 로직 시작: 나이에 따라 분석 링크 동적 변경 ⭐ ---
-    const analysisLink = document.getElementById('gnb-analysis-link');
-    if (analysisLink) {
-        // localStorage에서 사용자 나이와 유형 정보를 가져옵니다.
-        const userAge = parseInt(localStorage.getItem('lozee_userAge'), 10) || 0;
-        const currentUserType = localStorage.getItem('lozee_userType');
+/* GNB 오른쪽 버튼들을 묶는 컨테이너 */
+.gnb-right-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* ⭐ 버튼 사이 간격 조정 (필요시 조절) */
+}
 
-        // 조건: 15세 이상 '당사자(directUser)'일 경우에만 성인 분석 페이지로 링크
-        if (userAge >= 15 && currentUserType === 'directUser') {
-            analysisLink.href = 'analysis_adult.html';
-            // (선택 사항) 링크 텍스트도 변경하여 사용자에게 명확히 알려주기
-            analysisLink.innerHTML = '📊 나의 대화 성찰'; 
-        } else {
-            // 그 외의 경우(15세 미만, 보호자 등)는 기본 분석 페이지로
-            analysisLink.href = 'analysis.html';
-            analysisLink.innerHTML = '📊 우리 이야기 분석';
-        }
-        console.log(`GNB 분석 링크가 '${analysisLink.href}'로 설정되었습니다.`);
-    }
-    // --- ⭐ 추가된 로직 끝 ---
-});
+#gnb #tts-toggle-btn {
+    width: 50px; /* ⭐ 버튼 크기 키움 */
+    height: 50px; /* ⭐ 버튼 크기 키움 */
+    border-radius: 50%;
+    border: 2px solid white; /* ⭐ 테두리 두께 조정 */
+    background-color: white;
+    color: var(--primary-color);
+    font-size: 1.5em; /* ⭐ 폰트 크기 키움 */
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative; /* 취소선 위치 기준 */
+    overflow: hidden;
+}
+
+#gnb #tts-toggle-btn.off {
+    background-color: #f0f0f0;
+    color: #aaa;
+    border-color: #ddd;
+}
+
+#gnb #tts-toggle-btn.off::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 15%; right: 15%;
+    border-top: 2px solid #aaa;
+    transform: rotate(-45deg);
+}
+
+#dropdown-menu {
+    display: none; position: absolute;
+    top: var(--gnb-height); /* ⭐ GNB 높이에 맞춰 드롭다운 위치 조정 */
+    left: 0;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border-radius: 0 0 8px 8px;
+    z-index: 999;
+    min-width: 200px;
+    border: 1px solid #eee;
+}
+#dropdown-menu.show { display: block; }
+#dropdown-menu a { display: block; padding: 12px 18px; color: #333; text-decoration: none; font-size: 1.0em; /* ⭐ 드롭다운 메뉴 폰트 크기 조정 */ }
+#dropdown-menu a:hover { background-color: #f5f5f5; }
