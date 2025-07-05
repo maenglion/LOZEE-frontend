@@ -706,7 +706,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const startButton = document.getElementById('start-button');
 
     
-    document.head.appendChild(style);
     document.body.classList.add('talk-page-body');
     if (appContainer) appContainer.classList.add('talk-page');
 
