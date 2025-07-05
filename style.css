@@ -44,9 +44,20 @@ body {
     font-weight: 700;
 }
 
-.app-container > * {
-    width: 100%;
-    box-sizing: border-box;
+.app-container {
+  width: 100%;
+  max-width: 480px;  /* ✅ 모바일 기준 */
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+/* ✅ PC 화면에서는 가로폭 2배로 확대 (예: 960px) */
+@media screen and (min-width: 768px) {
+  .app-container {
+    max-width: 960px;
+  }
 }
 
 #rosie-appointments {
@@ -152,21 +163,22 @@ body {
 /* ⭐⭐ 채팅 윈도우 (main#chat-window) 스타일 조정 ⭐⭐ */
 #chat-window {
   flex-grow: 1;
-  overflow-y: auto; /* 채팅 내용이 길어질 때 chat-window만 스크롤되도록 */
-  padding: 20px; /* 전체적으로 20px 패딩 */
+  overflow-y: auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   box-sizing: border-box;
-  background: #fff; /* 배경 흰색 */
-  border-radius: 20px; /* app-container와 동일한 20px로 통일 */
-  box-shadow: none; /* chat-window의 box-shadow 제거 */
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: none;
   max-width: 640px;
   margin: 0 auto;
-  margin-top: 0; /* chat-window 상단 마진 완전히 제거 */
-  border-top-left-radius: 0; /* 상단 좌측 모서리 둥글게 하지 않음 (volume-meter-wrapper와 연결) */
-  border-top-right-radius: 0; /* 상단 우측 모서리 둥글게 하지 않음 (volume-meter-wrapper와 연결) */
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
+
 @media screen and (max-width: 480px) {
   #chat-window {
     padding: 12px;
@@ -176,6 +188,15 @@ body {
     margin-top: 0;
   }
 }
+
+@media screen and (min-width: 768px) {
+  #chat-window {
+    max-width: 960px;
+    padding: 40px;
+  }
+}
+
+
 
 #chat-window::-webkit-scrollbar {
   width: 8px;
@@ -321,4 +342,36 @@ body {
 #plus-button:disabled {
     background-color: #95a5a6;
     cursor: not-allowed;
+}
+
+/* ✅ meter-container: 전체 음량바 wrapper */
+#meter-container {
+  margin: 0;
+  padding: 0;
+  height: 6px;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* ✅ volume-meter: 내부 막대 컨테이너 */
+#volume-meter {
+  width: 90%;
+  max-width: 960px;        /* PC에서는 최대 너비 확장 */
+  height: 4px;
+  border-radius: 6px;
+  background-color: #e9ecef;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* ✅ volume-level: 그라데이션 표시 막대 (width 동적으로 변경됨) */
+#volume-level {
+  height: 100%;
+  width: 0%; /* JavaScript로 조절 예정 */
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+  border-radius: 6px;
+  transition: width 0.1s ease-out;
 }
