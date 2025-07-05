@@ -9,42 +9,42 @@
     <link rel="stylesheet" href="style.css">
     <style>
         :root {
-            --session-header-height: 32px; /* ⭐ 주제 선택 중 박스의 높이를 32px로 늘림 (이전 20px) */
+            --session-header-height: 32px; /* 주제 선택 중 박스의 높이 */
             --input-area-height: 70px;
         }
-        .app-container { display: flex; flex-direction: column; height: 100%; background-color: #ffffff; }
+        /* app-container 및 body 스타일은 style.css와 common.css에서 관리 */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            /* background-color: #ffffff; 이 부분은 style.css에서 관리하도록 */
+        }
         body { padding: 0; }
 
-        /* ⭐ 2. 주제 표시줄 스타일 (talk.html에만 정의. 스타일은 style.css에서 통합 관리) ⭐ */
+        /* ⭐ 주제 표시줄 스타일 (talk.html에만 정의. 나머지 스타일은 style.css에서 통합 관리) ⭐ */
         #session-header {
-            position: relative;
+            position: relative; /* 필요할 경우 자식 요소 포지셔닝 기준 */
             width: 100%;
-            height: var(--session-header-height); /* ⭐ 32px로 적용 */
+            height: var(--session-header-height); /* 32px 높이 적용 */
             background-color: #f0f0f0; /* 배경색 유지 */
             color: #555;
-            font-size: 0.9em; /* ⭐ 텍스트 크기 조금 더 키움 (이전 0.7em) */
+            font-size: 0.9em; /* 텍스트 크기 */
             display: flex;
-            align-items: center;
-            padding: 0 15px; /* 좌우 패딩 유지, 상하 패딩은 없음 */
+            align-items: center; /* 세로 중앙 정렬 */
+            padding: 0 15px; /* 좌우 패딩 */
             box-sizing: border-box;
             z-index: 998;
             transition: background-color 0.1s;
-            flex-shrink: 0;
-            line-height: 1.2; /* ⭐ 텍스트 라인 높이 조금 여유롭게 (기존 1) */
-            /* 모든 border-radius와 box-shadow는 style.css에서 관리 */
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            box-shadow: none;
-            margin-bottom: 0;
+            flex-shrink: 0; /* flex 컨테이너에서 크기 줄어들지 않도록 */
+            line-height: 1.2; /* 텍스트 라인 높이 */
+            /* 모든 border-radius와 box-shadow, margin-bottom은 style.css에서 관리 */
         }
         #session-header-text {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
-        /* .session-meter-container는 이제 talk.html에서 제거되므로 이 스타일도 제거 가능 */
-        /* .session-meter-container는 더 이상 사용하지 않습니다. */
+        /* .session-meter-container 스타일은 더 이상 사용하지 않습니다. */
     </style>
 </head>
 
@@ -68,7 +68,7 @@
             <span id="session-header-text">주제 선택 중...</span>
         </div>
 
-        <div id="meter-container" class="standalone-meter-container"> <div id="volume-meter">
+        <div id="meter-container" class="volume-meter-wrapper"> <div id="volume-meter">
                 <div id="volume-level"></div>
             </div>
         </div>
