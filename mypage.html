@@ -6,28 +6,7 @@
     <title id="pageTitle">마이페이지</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
-    <style>
-        .app-container { background-color: #f4f6f8; }
-        .container { max-width: 800px; margin: 20px auto; padding: 20px; box-sizing: border-box; }
-        .profile-photo-section { padding: 20px 0; display: flex; justify-content: center; }
-        .profile-photo-placeholder { width: 120px; height: 120px; border-radius: 50%; background-color: #d0d9ff; display: flex; align-items: center; justify-content: center; font-size: 3em; color: white; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .info-card { background-color: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .info-card h2 { font-size: 1.2em; color: #6e8efb; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .info-item { margin-bottom: 10px; font-size: 1em; display: flex; justify-content: space-between; }
-        .info-item .label { font-weight: bold; color: #555; }
-        .neurodiversity-info ul { list-style: none; padding:0; margin:0; }
-        .neurodiversity-info li { background-color: #e9eaf6; color: #3f51b5; padding: 6px 10px; border-radius: 15px; font-size: 0.9em; display: inline-block; margin: 4px; }
-        .recent-journals-section h2 { text-align: center; }
-        .recent-journal-card-list { display: flex; flex-direction: column; gap: 15px; }
-        .session-card-wide { background-color: #ffffff; border-radius: 10px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-left: 4px solid #5a7edf; cursor: pointer; }
-        .session-card-wide h3 { margin: 0 0 8px 0; }
-        .action-button { display: block; width: fit-content; margin: 20px auto 0 auto; }
-        .emergency-alerts-card { border: 2px solid #e57373; }
-        .emergency-alerts-card h2 { color: #c62828; border-bottom-color: #e57373; }
-        .emergency-alerts-card li { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; }
-        .emergency-alerts-card li .alert-date { font-size: 0.8em; display: block; color: #d32f2f; margin-top: 5px; }
-    </style>
-</head>
+    <link rel="stylesheet" href="css/common.css"> <link rel="stylesheet" href="css/mypage.css"> </head>
 <body>
     <div class="app-container">
         <nav id="gnb">
@@ -43,205 +22,115 @@
             </div>
         </nav>
 
-        <main class="container">
-            <h1 class="page-title">마이페이지</h1>
-
-            <div class="profile-photo-section">
-                <div id="userPhotoPlaceholder" class="profile-photo-placeholder">L</div>
+        <div class="tab-menu-wrapper">
+            <div class="tab-menu">
+                <a href="#user-info-section" class="tab-item active" data-tab="info">내 정보</a>
+                <a href="#rosie-appointments-section" class="tab-item" data-tab="appointments">로지와의 약속<span class="new-dot" style="display: none;"></span></a>
+                <a href="#recent-journals-section" class="tab-item" data-tab="journals">최근 이야기<span class="new-dot" style="display: none;"></span></a>
             </div>
-            
-            <div class="info-card">
-                <h2 id="userNameDisplay">정보 로딩 중...</h2>
-                <div class="info-item"><span class="label">계정:</span> <span id="userEmailDisplay" class="value"></span></div>
-                <div class="info-item"><span class="label" id="ageLabel">만 나이:</span> <span id="userFullAge" class="value"></span></div>
-                <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value"></span></div>
-            </div>
+        </div>
 
-            <div class="info-card neurodiversity-info" id="directUserDiagnosisCard" style="display:none;">
-                <h2>✨ 나의 특성</h2>
-                <ul id="userDiagnosesList"></ul>
-            </div>
+        <main class="mypage-content-area"> <section id="user-info-section" class="content-section active">
+                <h1 class="hidden">내 정보</h1> <div class="profile-photo-section">
+                    <div id="userPhotoPlaceholder" class="profile-photo-placeholder">
+                        <img id="userProfileImage" src="" alt="프로필 사진" style="display: none;">
+                        <span id="userInitialText">L</span>
+                    </div>
+                    <input type="file" id="profileImageUpload" accept="image/*" style="display: none;">
+                    <button id="editProfilePhotoBtn" class="edit-button">사진 변경</button>
+                    </div>
+                <p class="profile-message">나와 세상을 연결한지 <span id="daysSinceJoin">...</span>일 째</p>
 
-            <div class="info-card neurodiversity-info" id="caregiverPersonalNDCard" style="display:none;">
-                <h2>🙋‍♀️ 보호자님 특성</h2>
-                <ul id="caregiverPersonalNeurodiversityList"></ul>
-            </div>
+                <div class="info-card">
+                    <h2 id="userNameDisplay">나의 정보 <button class="edit-button">수정</button></h2>
+                    <div class="info-item"><span class="label">닉네임:</span> <span id="userNicknameDisplay" class="value"></span></div>
+                    <div class="info-item"><span class="label">계정:</span> <span id="userEmailDisplay" class="value"></span></div>
+                    <div class="info-item"><span class="label" id="ageLabel">나이:</span> <span id="userFullAge" class="value"></span></div>
+                    <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value"></span></div>
+                </div>
 
-            <div class="info-card" id="childInfoCard" style="display:none;">
-                <h2>🧸 아이/가족 정보</h2>
-                <p class="info-item"><span class="label">이름:</span> <span id="childNameDisplay" class="value"></span></p>
-                <p class="info-item"><span class="label">만 나이:</span> <span id="childFullAgeDisplay" class="value"></span></p>
-                <p class="info-item"><span class="label">특성:</span></p>
-                <ul id="childDiagnosesList" class="neurodiversity-info" style="text-align: right;"></ul>
-            </div>
+                <div class="info-card" id="userTypeInfoCard">
+                    <h2>가입 구분 <button class="edit-button">수정</button></h2>
+                    <div class="info-item"><span class="label"></span> <span id="userTypeDisplay" class="value"></span></div>
+                </div>
 
-            <section id="rosie-appointments" class="module">
-  <h2 class="module-title">로지와의 약속</h2>
-  <div id="appointments-list">
-    <!-- JS로 reservation 데이터를 불러와 이곳에 렌더링 -->
-    <p class="empty-state">아직 예약된 약속이 없습니다.</p>
-  </div>
-</section>
+                <div class="info-card neurodiversity-info" id="directUserDiagnosisCard" style="display:none;">
+                    <h2>✨ 나의 특성 <button class="edit-button">수정</button></h2>
+                    <ul id="userDiagnosesList"></ul>
+                </div>
 
-              <div class="info-card emergency-alerts-card" id="emergencyAlertsSection" style="display:none;">
-                <h2>🚨 확인이 필요한 이야기</h2>
-                <ul id="emergencyAlertsList"></ul>
-            </div>
-            
-            
-            <div class="info-card recent-journals-section">
-                <h2>💬 최근 이야기</h2>
-                <div id="recentJournalCardList"></div>
-                <button id="goToJournalListBtn" class="action-button">전체 이야기 모음집 가기</button>
-            </div>
+                <div class="info-card neurodiversity-info" id="caregiverPersonalNDCard" style="display:none;">
+                    <h2>🙋‍♀️ 보호자님 특성 <button class="edit-button">수정</button></h2>
+                    <ul id="caregiverPersonalNeurodiversityList"></ul>
+                </div>
 
+                <div class="info-card" id="childInfoCard" style="display:none;">
+                    <h2>🧸 아이/가족 정보 <button class="edit-button">수정</button></h2>
+                    <p class="info-item"><span class="label">이름:</span> <span id="childNameDisplay" class="value"></span></p>
+                    <p class="info-item"><span class="label">나이:</span> <span id="childFullAgeDisplay" class="value"></span></p>
+                    <p class="info-item"><span class="label">특성:</span></p>
+                    <ul id="childDiagnosesList" class="neurodiversity-info" style="text-align: right;"></ul>
+                    <button id="addChildBtn" class="action-button">자녀 추가</button>
+                </div>
+            </section>
+
+            <section id="rosie-appointments-section" class="content-section" style="display: none;">
+                <h1 class="hidden">로지와의 약속</h1> <div class="info-card appointment-category-card">
+                    <h2>스몰 토크 <button class="edit-button">수정</button></h2>
+                    <p class="detail-item"><span class="label">예정일</span> <span id="smallTalkDate">2025.07.01. 오후 03:15</span></p>
+                    <p class="detail-item"><span class="label">진행률</span> <span id="smallTalkProgress">3 / 20</span></p>
+                    <div class="result-box">
+                        <span class="label">성과</span>
+                        <p id="smallTalkResult">상대방에게 너무 많은 정보를 한번에 쏟아내게 되면, 상대는 대화의 흐름을 파악하기 어려워. 우리 조금 더 연습해보자.</p>
+                    </div>
+                    <button class="action-button full-width">회차별 성과 상세 보기</button>
+                </div>
+
+                <div class="info-card appointment-category-card">
+                    <h2>관계 감정 살펴보기 <button class="edit-button">수정</button></h2>
+                    <p class="detail-item"><span class="label">예정일</span> <span id="relationEmotionDate">2025.07.05. 오후 03:15</span></p>
+                    <p class="detail-item"><span class="label">진행률</span> <span id="relationEmotionProgress">5 / 10</span></p>
+                    <div class="result-box">
+                        <span class="label">성과</span>
+                        <p id="relationEmotionResult">지금 너는 엄마의 행동에 대한 패턴이 파악되면 서 엄마를 거부하고 있어. 엄마와 관련된 너의 감정 단어들을 보면 ...</p>
+                    </div>
+                    <button class="action-button full-width">회차별 성과 상세 보기</button>
+                </div>
+
+                <div class="info-card emergency-alerts-card" id="emergencyAlertsSection">
+                    <h2>🚨 확인이 필요한 이야기 <button class="edit-button">수정</button></h2>
+                    <ul id="emergencyAlertsList"></ul>
+                    </div>
+
+                 <div class="info-card cognitive-distortion-card appointment-category-card">
+                    <h2>인지 왜곡 살펴보기 <button class="edit-button">수정</button></h2>
+                    <p class="detail-item"><span class="label">예정일</span> <span id="cognitiveDistortionDate">2025.07.06. 오후 09:30</span></p>
+                    <p class="detail-item"><span class="label">진행률</span> <span id="cognitiveDistortionProgress">0 / 6</span></p>
+                    <div class="result-box">
+                        <span class="label">감지된 패턴</span>
+                        <p class="pattern-item"><span class="pattern-label">과장된 오류</span> "나는 아이를 위해 이토록 노력하는데, 왜 나는 늘 손해를 보며, 사람들은 나를 이해해주지 않지? 결국? 이건 너무 불공평해."</p>
+                        <p class="pattern-item"><span class="pattern-label">흑백논리</span> "그렇게 애를 키웠는데도 안되니 우리 아이의 사회성은 완전히 망가진 거나 다름 없어. 희망이 없어."</p>
+                    </div>
+                    <div class="result-box">
+                         <span class="label">할 일</span>
+                         <p id="cognitiveDistortionTodo">우리는 이 생각들을 다른 각도에서 생각해 보는 연습을 할거야.</p>
+                    </div>
+                    <button class="action-button full-width">학습 · 패턴 보기</button>
+                </div>
+            </section>
+
+            <section id="recent-journals-section" class="content-section" style="display: none;">
+                <h1 class="hidden">최근 이야기</h1> <div class="info-card recent-journals-card">
+                    <h2>💬 최근 이야기</h2>
+                    <div id="recentJournalCardList"></div>
+                    <button id="goToJournalListBtn" class="action-button">전체 이야기 모음집 가기</button>
+                </div>
+            </section>
 
         </main>
     </div>
 
     <script src="./js/gnb.js" defer></script>
-    <script type="module">
-        import { db } from './js/firebase-config.js';
-        import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-
-
-        // --- DOM 요소 ---
-        const pageTitleEl = document.querySelector('title'); const userNameDisplayEl = document.getElementById('userNameDisplay'); const userEmailDisplayEl = document.getElementById('userEmailDisplay'); const userFullAgeEl = document.getElementById('userFullAge'); const lastLoginDateEl = document.getElementById('lastLoginDate'); const directUserDiagnosisCardEl = document.getElementById('directUserDiagnosisCard'); const userDiagnosesListEl = document.getElementById('userDiagnosesList'); const caregiverPersonalNDCardEl = document.getElementById('caregiverPersonalNDCard'); const caregiverPersonalNeurodiversityListEl = document.getElementById('caregiverPersonalNeurodiversityList'); const childInfoCardEl = document.getElementById('childInfoCard'); const childNameDisplayEl = document.getElementById('childNameDisplay'); const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay'); const childDiagnosesListEl = document.getElementById('childDiagnosesList'); const recentJournalCardListEl = document.getElementById('recentJournalCardList'); const goToJournalListBtn = document.getElementById('goToJournalListBtn');
-        const emergencyAlertsSectionEl = document.getElementById('emergencyAlertsSection');
-        const emergencyAlertsListEl = document.getElementById('emergencyAlertsList');
-        const userPhotoPlaceholderEl = document.getElementById('userPhotoPlaceholder');
-        const appointmentsListEl = document.getElementById('appointments-list'); //
-
-        // --- 헬퍼 함수 ---
-        function getNeurodiversityText(code) { const map = { "ASD": "자폐 스펙트럼", "ADHD": "ADHD", "Asperger": "아스퍼거", "Tic": "틱 장애", "LD": "학습 장애", "Else": "기타 어려움", "Unsure": "진단 없음", "NotApplicable": "해당 없음", "self_asd": "본인: ASD 성향", "self_adhd": "본인: ADHD 성향", "spouse_asd": "배우자: ASD 성향", "spouse_adhd": "배우자: ADHD 성향", "unsure_or_none": "해당 없음" }; return map[code] || code; }
-
-        // --- 데이터 로드 및 렌더링 ---
-        async function loadPage() {
-            const loggedInUserId = localStorage.getItem('lozee_userId');
-            if (!loggedInUserId) { userNameDisplayEl.textContent = '로그인이 필요합니다.'; return; }
-
-            const userRef = doc(db, 'users', loggedInUserId);
-            const userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) { userNameDisplayEl.textContent = '사용자 정보를 찾을 수 없습니다.'; return; }
-
-            const userData = userSnap.data();
-            const name = userData.name || '사용자';
-            const userType = userData.userType;
-            
-            pageTitleEl.textContent = `${name}의 마이페이지`;
-            userNameDisplayEl.textContent = name;
-            userEmailDisplayEl.textContent = userData.email || '이메일 정보 없음';
-            userFullAgeEl.textContent = userData.age !== null ? `만 ${userData.age}세` : '정보 없음';
-            lastLoginDateEl.textContent = userData.lastLogin?.toDate().toLocaleString('ko-KR') || '기록 없음';
-            if (userPhotoPlaceholderEl) userPhotoPlaceholderEl.textContent = name.charAt(0).toUpperCase() || '😊';
-            
-            if (userType === 'directUser') {
-                directUserDiagnosisCardEl.style.display = 'block';
-                userDiagnosesListEl.innerHTML = userData.diagnoses?.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('') || '<li>선택된 특성 없음</li>';
-            } else if (userType === 'caregiver') {
-                caregiverPersonalNDCardEl.style.display = 'block';
-                childInfoCardEl.style.display = 'block';
-                const caregiverInfo = userData.caregiverInfo || {};
-                caregiverPersonalNeurodiversityListEl.innerHTML = caregiverInfo.caregiverNeurodiversity?.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('') || '<li>선택된 사항 없음</li>';
-                childNameDisplayEl.textContent = caregiverInfo.childName || '정보 없음';
-                childFullAgeDisplayEl.textContent = caregiverInfo.childAge !== null ? `만 ${caregiverInfo.childAge}세` : '정보 없음';
-                childDiagnosesListEl.innerHTML = caregiverInfo.childDiagnoses?.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('') || '<li>선택된 특성 없음</li>';
-                displayEmergencyAlerts(loggedInUserId, caregiverInfo.childName || '아이');
-            }
-            displayRecentJournals(loggedInUserId, userType);
-        
-
-     // --- 예약 정보 로드 및 렌더링 호출 위치 변경 ---
-            await loadAndRenderReservations(loggedInUserId); // loggedInUserId를 인자로 전달
-        }
-
-        // 예약정보 로드 및 렌더링 함수 (loggedInUserId를 인자로 받도록 수정)
-        async function loadAndRenderReservations(userId) {
-        appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 중입니다...</p>'; // 로딩 메시지 변경
-        try {
-            const q = query(
-                collection(db, 'users', userId, 'reservations'),
-                orderBy('timestamp', 'asc')
-            );
-            const snap = await getDocs(q);
-            
-            if (snap.empty) {
-                appointmentsListEl.innerHTML = '<p class="empty-state">예약이 존재하지 않습니다.</p>'; // 메시지 변경
-            } else {
-                appointmentsListEl.innerHTML = '';
-                snap.docs.forEach(doc => {
-                    const reservation = doc.data();
-                    const date = reservation.date?.toDate ? reservation.date.toDate().toLocaleString('ko-KR', { dateStyle: 'long', timeStyle: 'short' }) : '날짜 미정';
-                    const type = reservation.type || '상담';
-                    const status = reservation.status || '대기 중';
-                    
-                    const p = document.createElement('p');
-                    p.textContent = `• ${date} - ${type} (${status})`;
-                    appointmentsListEl.appendChild(p);
-                });
-            }
-        } catch (error) {
-            console.error("예약 정보를 불러오는 중 오류 발생:", error);
-            // 오류 발생 시에도 사용자에게 친근한 메시지 유지
-            appointmentsListEl.innerHTML = '<p class="empty-state">예약을 불러오는 데 문제가 발생했습니다. 다시 시도해주세요.</p>'; 
-        }
-    }
-
-    async function displayEmergencyAlerts(parentId, childName) {
-        emergencyAlertsSectionEl.style.display = 'block';
-        emergencyAlertsListEl.innerHTML = '<li>알림을 불러오는 중입니다...</li>'; // 로딩 메시지 변경
-        try {
-            const q = query(collection(db, "notifications"), where("parentId", "==", parentId), orderBy("createdAt", "desc"), limit(5));
-            const querySnapshot = await getDocs(q);
-            if (querySnapshot.empty) {
-                emergencyAlertsListEl.innerHTML = '<li><p>응급상황이 발생하지 않았어요. 😊</p></li>'; // 메시지 변경
-            } else {
-                emergencyAlertsListEl.innerHTML = '';
-                querySnapshot.forEach(docSnap => {
-                    const alertData = docSnap.data();
-                    const listItem = document.createElement('li');
-                    const alertDate = alertData.createdAt?.toDate ? alertData.createdAt.toDate().toLocaleString('ko-KR') : '';
-                    listItem.innerHTML = `<strong>[${childName}] ${alertData.message}</strong><span class="alert-date">${alertDate}</span>`;
-                    listItem.onclick = () => { window.location.href = `journal.html?journalId=${alertData.journalId}`; };
-                    emergencyAlertsListEl.appendChild(listItem);
-                });
-            }
-        } catch (error) {
-            console.error("긴급 알림 로드 중 오류:", error);
-            // 오류 발생 시에도 사용자에게 친근한 메시지 유지
-            emergencyAlertsListEl.innerHTML = '<li><p>알림을 불러오는 데 문제가 발생했습니다. 다시 시도해주세요.</p></li>';
-        }
-    }
-
-    async function displayRecentJournals(userId, userType) {
-        recentJournalCardListEl.innerHTML = '<p>최근 이야기 목록을 불러오는 중...</p>';
-        try {
-            let q = query(collection(db, 'journals'), where('userId', '==', userId), orderBy('createdAt', 'desc'), limit(3));
-            const querySnapshot = await getDocs(q);
-            if (querySnapshot.empty) {
-                recentJournalCardListEl.innerHTML = `<p>아직 로지와 나눈 이야기가 없어요.</p>`;
-            } else {
-                recentJournalCardListEl.innerHTML = '';
-                querySnapshot.forEach(docSnap => {
-                    const journal = docSnap.data();
-                    const card = document.createElement('div');
-                    card.className = 'session-card-wide';
-                    card.innerHTML = `<h3>${journal.title || '제목 없는 이야기'}</h3><p>${journal.summary?.substring(0, 100) || ''}...</p>`;
-                    card.onclick = () => { window.location.href = `journal.html?journalId=${docSnap.id}`; };
-                    recentJournalCardListEl.appendChild(card);
-                });
-            }
-        } catch (error) {
-            console.error("최근 저널 로드 중 오류:", error);
-            recentJournalCardListEl.innerHTML = '<p>이야기를 불러오는 데 실패했습니다.</p>';
-        }
-    }
-
-    if(goToJournalListBtn) goToJournalListBtn.onclick = () => { window.location.href = 'journal-list.html'; };
-    
-    document.addEventListener('DOMContentLoaded', loadPage);
-
-    </script>
+    <script type="module" src="./js/mypage.js"></script>
 </body>
 </html>

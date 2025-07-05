@@ -1,0 +1,348 @@
+/* css/mypage.css */
+
+/* 마이페이지 전체 컨테이너 및 섹션 스타일 */
+.mypage-content-area {
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
+    overflow-y: auto; /* 내용이 길어질 때 스크롤 가능 */
+    padding: 20px; /* 기본 패딩 */
+    background-color: #f4f6f8; /* 섹션 배경색 (이미지에서 보인 연한 회색) */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 섹션 간 간격 */
+}
+
+/* 탭 메뉴 Wrapper (스크롤 가능하도록) */
+.tab-menu-wrapper {
+    width: 100%;
+    background-color: #f4f6f8; /* 섹션 배경색과 동일하게 */
+    box-sizing: border-box;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0; /* 줄어들지 않도록 */
+    overflow-x: auto; /* ⭐ 가로 스크롤 가능하도록 */
+    -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+    white-space: nowrap; /* 탭 아이템들이 한 줄에 표시되도록 */
+}
+
+/* 탭 메뉴 실제 컨테이너 */
+.tab-menu {
+    display: flex;
+    justify-content: flex-start; /* 좌측 정렬 (PC에서는 중앙 정렬도 고려) */
+    align-items: center;
+    padding: 0 10px; /* 탭 메뉴 자체의 좌우 패딩 */
+    gap: 15px; /* 탭 아이템 간 간격 */
+    min-width: fit-content; /* 내용이 넘칠 때 스크롤 가능하도록 */
+}
+
+/* 탭 아이템 */
+.tab-item {
+    display: inline-flex; /* NEW 점과 함께 정렬 */
+    align-items: center;
+    padding: 8px 12px; /* 탭 아이템 패딩 */
+    text-decoration: none;
+    color: #888;
+    font-weight: bold;
+    font-size: 1em;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    flex-shrink: 0; /* 탭 아이템이 줄어들지 않도록 */
+}
+.tab-item.active {
+    color: #6e8efb; /* 활성화된 탭 색상 */
+    border-bottom-color: #6e8efb; /* 활성화된 탭 하단 선 색상 */
+}
+.tab-item:hover {
+    color: #375bd1;
+}
+
+/* NEW 점 */
+.new-dot {
+    width: 6px;
+    height: 6px;
+    background-color: orange; /* 주황색 점 */
+    border-radius: 50%;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+/* 컨텐츠 섹션 공통 */
+.content-section {
+    width: 100%; /* 부모 컨테이너에 맞춰 100% */
+    box-sizing: border-box;
+    padding: 0 10px; /* 각 섹션 내부 좌우 패딩 */
+}
+.content-section > h1.hidden {
+    display: none; /* 접근성을 위한 숨김 제목 */
+}
+
+/* 프로필 사진 섹션 */
+.profile-photo-section {
+    padding: 20px 0 10px 0; /* 하단 패딩 줄임 */
+    display: flex;
+    flex-direction: column; /* 세로로 정렬 */
+    align-items: center; /* 가로 중앙 정렬 */
+    position: relative; /* 버튼 배치를 위해 */
+}
+.profile-photo-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #d0d9ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden; /* 이미지 넘침 방지 */
+}
+#userProfileImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 이미지가 잘리지 않고 채워지도록 */
+}
+#userInitialText {
+    /* 이미지 없을 때만 보이므로 기본 스타일은 그대로 유지 */
+}
+.edit-button {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85em;
+    cursor: pointer;
+    margin-top: 10px; /* 사진과 버튼 간 간격 */
+    transition: background-color 0.2s;
+}
+.edit-button:hover {
+    background-color: #d0d0d0;
+}
+/* .deep-insight-button {
+    background-color: #e57373;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+} */
+
+.profile-message {
+    text-align: center;
+    color: #555;
+    font-size: 0.9em;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+.profile-message span {
+    font-weight: bold;
+    color: #375bd1;
+}
+
+/* 정보 카드 공통 스타일 */
+.info-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* 그림자 약하게 */
+    margin-bottom: 20px; /* 카드 하단 간격 */
+}
+.info-card h2 {
+    font-size: 1.1em; /* 제목 크기 줄임 */
+    color: #333; /* 어두운 색으로 변경 */
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between; /* 수정 버튼을 오른쪽에 정렬 */
+    align-items: center;
+}
+.info-item {
+    margin-bottom: 8px; /* 항목 간 간격 줄임 */
+    font-size: 0.95em; /* 글씨 크기 약간 줄임 */
+    display: flex;
+    justify-content: space-between; /* 라벨과 값 좌우 정렬 */
+    align-items: center;
+}
+.info-item .label {
+    font-weight: bold;
+    color: #555;
+}
+.neurodiversity-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex; /* 가로 정렬 */
+    flex-wrap: wrap; /* 넘치면 다음 줄로 */
+    justify-content: flex-end; /* 오른쪽 정렬 */
+    gap: 5px; /* 항목 간 간격 */
+}
+.neurodiversity-info li {
+    background-color: #e9eaf6;
+    color: #3f51b5;
+    padding: 4px 8px; /* 패딩 줄임 */
+    border-radius: 15px;
+    font-size: 0.8em; /* 글씨 크기 줄임 */
+    display: inline-block;
+    margin: 0; /* flex gap 사용으로 마진 제거 */
+}
+
+/* 로지와의 약속 섹션 */
+.appointment-category-card {
+    /* info-card 스타일 상속 */
+}
+.appointment-category-card .detail-item {
+    margin-bottom: 5px; /* 항목 간 간격 줄임 */
+    font-size: 0.9em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #555;
+}
+.appointment-category-card .detail-item .label {
+    font-weight: bold;
+    color: #333;
+}
+.appointment-category-card .result-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+.appointment-category-card .result-box .label {
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 8px;
+}
+.appointment-category-card .result-box p {
+    font-size: 0.95em;
+    color: #555;
+    line-height: 1.4;
+    margin: 0;
+}
+.appointment-category-card .pattern-item {
+    font-size: 0.95em;
+    color: #555;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: #fff9e6; /* 인지 왜곡 배경색 */
+    border: 1px solid #ffe082;
+}
+.appointment-category-card .pattern-item .pattern-label {
+    font-weight: bold;
+    color: #e65100;
+    margin-right: 5px;
+    flex-shrink: 0;
+}
+
+/* 버튼 */
+.action-button {
+    display: block;
+    width: 100%; /* 가로 꽉 채움 */
+    background-color: #6e8efb;
+    color: white;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 15px; /* 위쪽 간격 */
+}
+.action-button:hover {
+    background-color: #5a7edf;
+}
+.action-button.full-width { /* 꽉 찬 너비 버튼 */
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* 긴급 알림 카드 */
+.emergency-alerts-card {
+    border: 2px solid #ffcdd2; /* 테두리 색상 조정 */
+}
+.emergency-alerts-card h2 {
+    color: #c62828;
+    border-bottom-color: #ffcdd2; /* 테두리 색상 조정 */
+}
+.emergency-alerts-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.emergency-alerts-card li {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+.emergency-alerts-card li .alert-date {
+    font-size: 0.8em;
+    display: block;
+    color: #d32f2f;
+    margin-top: 5px;
+}
+
+/* 최근 이야기 섹션 (info-card 스타일 상속) */
+.recent-journals-section {
+    /* info-card 스타일 상속 */
+}
+.recent-journals-section h2 {
+    text-align: left; /* 좌측 정렬 */
+    /* info-card h2 스타일 상속 */
+}
+.recent-journal-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.session-card-wide {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border-left: 4px solid #5a7edf;
+    cursor: pointer;
+}
+.session-card-wide h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1em;
+}
+.session-card-wide p {
+    font-size: 0.9em;
+    color: #555;
+    margin: 0;
+}
+
+
+/* 모바일 환경에서의 마이페이지 컨텐츠 영역 패딩 조정 */
+@media (max-width: 639px) {
+    .mypage-content-area {
+        padding: 15px; /* 모바일에서 좌우 패딩 줄임 */
+        gap: 15px; /* 모바일에서 섹션 간 간격 줄임 */
+    }
+    .content-section {
+        padding: 0; /* 섹션 내부 좌우 패딩 제거 (mypage-content-area 패딩 사용) */
+    }
+    .info-card {
+        padding: 15px; /* 모바일에서 카드 패딩 줄임 */
+    }
+}
