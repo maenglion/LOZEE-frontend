@@ -16,12 +16,12 @@ body {
     max-width: 640px;
     height: 100vh;
     min-height: 100vh;
-    background-color: #ffffff;
-    box-shadow: 0 0 25px rgba(0,0,0,0.15);
-    border-radius: 20px;
+    background-color: #ffffff; /* app-container 배경은 흰색 */
+    box-shadow: 0 0 15px rgba(0,0,0,0.1); /* ⭐ app-container 그림자를 더 약하게 (chat-window와 겹침 방지) */
+    border-radius: 20px; /* app-container 테두리 둥글게 */
     display: flex;
     flex-direction: column;
-    overflow-y: hidden;
+    overflow-y: hidden; /* app-container는 스크롤바를 가지지 않도록 변경. 스크롤은 chat-window에서만 */
 }
 
 @media (max-width: 639px) {
@@ -96,15 +96,16 @@ body {
     }
 }
 
-
+/* ⭐⭐ 음향 바 관련 스타일 (meter-container와 volume-meter) ⭐⭐ */
 #volume-meter {
     width:70%;
     max-width: 280px;
-    height:12px;
+    height: 8px; /* ⭐ 콤팩트한 높이 유지 */
     border:1px solid #ced4da;
     border-radius:6px;
     overflow:hidden;
     background-color: #e9ecef;
+    /* margin-top: 2px; margin-bottom: 2px; 는 .session-meter-container 안의 .volume-meter에 영향 */
 }
 #volume-level {
     height:100%;
@@ -115,27 +116,33 @@ body {
 }
 
 
-
+/* ⭐⭐ 채팅 윈도우 (main#chat-window) 스타일 조정 ⭐⭐ */
 #chat-window {
   flex-grow: 1;
-  overflow-y: auto;
-  padding: 0 20px 20px 20px;
+  overflow-y: auto; /* 채팅 내용이 길어질 때 chat-window만 스크롤되도록 */
+  padding: 20px; /* ⭐ 전체적으로 20px 패딩을 다시 적용. 상단 겹침 문제의 원인이 아님 */
+  /* 이전: padding: 0 20px 20px 20px; */
   display: flex;
   flex-direction: column;
   gap: 1rem;
   box-sizing: border-box;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  border-radius: 12px; /* chat-window의 border-radius 유지 */
+  box-shadow: none; /* ⭐ chat-window의 box-shadow 제거 (app-container와 겹침 방지) */
+  /* app-container가 그림자를 담당하도록 통일 */
   max-width: 640px;
   margin: 0 auto;
+  /* ⭐ app-container의 border-radius와 일치시키기 위해 margin-top을 추가하여 틈을 줍니다. */
+  margin-top: -8px; /* ⭐ app-container의 border-radius (20px)와 chat-window의 border-radius (12px) 차이를 보정 */
+  /* 또는 margin-top: 0; 으로 하고, app-container의 border-radius와 chat-window의 border-radius를 통일하는 것이 더 깔끔합니다. */
 }
 @media screen and (max-width: 480px) {
   #chat-window {
-    padding: 0 12px 12px 12px;
+    padding: 12px; /* 모바일에서는 전체 12px 패딩 */
     border-radius: 0;
     box-shadow: none;
     max-width: 100%;
+    margin-top: 0; /* 모바일에서는 마진 제거 */
   }
 }
 
@@ -154,9 +161,14 @@ body {
 }
 
 #session-header {
-    margin-bottom: 0;
+    /* talk.html의 인라인 스타일과 함께 적용됩니다. */
+    /* height: var(--session-header-height); (24px) */
+    /* padding: 0 15px; */
+    margin-bottom: 0; /* chat-window와의 간격을 없앰 */
+    /* background-color: #f0f0f0; */
 }
 
+/* 피드백 메시지 스타일 */
 .bubble.assistant_feedback {
     align-self: center;
     background-color: #f8f9fa;
@@ -165,20 +177,24 @@ body {
     border: 1px solid #dee2e6;
 }
 
+/* ⭐⭐ 주제 선택 컨테이너 스타일 강화 ⭐⭐ */
 #topic-selection-container {
     background-color: #f0f0f0;
-    padding: 15px;
     border-radius: 12px;
     margin-bottom: 10px;
     color: #333;
-    margin-top: 15px;
+    margin-top: 15px; /* chat-window의 padding-top이 0이므로, 여기서 상단 여백 추가 */
+    
+    padding: 22.5px; /* 15px * 1.5 */
+    font-size: 1.1em; /* 텍스트 크기 기본 10% 증가 */
 }
+
 
 .chat-options-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin: 10px 0;
+    gap: 12px; /* 옵션 버튼 간 간격 12px로 늘림 */
+    margin: 15px 0; /* 상하 마진도 늘림 */
     align-self: flex-start;
     width: 100%;
 }
@@ -188,11 +204,11 @@ body {
     color: #333;
     border: 1px solid #dcdcdc;
     border-radius: 12px;
-    padding: 10px 15px;
+    padding: 15px 20px; /* 버튼 내부 패딩 증가 */
     text-align: left;
     cursor: pointer;
     width: 100%;
-    font-size: 1em;
+    font-size: 1.1em; /* 텍스트 크기 10% 증가 */
     transition: background-color 0.2s;
 }
 
@@ -317,7 +333,7 @@ body {
 
 #send-button:hover,
 #plus-button:hover {
-    background-color: #2980b9;
+    background-color: #4128b1;
 }
 #send-button:disabled,
 #plus-button:disabled {
