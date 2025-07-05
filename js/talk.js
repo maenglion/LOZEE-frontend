@@ -17,8 +17,6 @@ import {
 import { counselingTopicsByAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
-// ✅ (새로 추가) 이미지 업로드 및 GPT Vision API 호출 관련 유틸리티 모듈
-import { uploadImageAndGetUrl, getImageAnalysisFromGptVision } from './gpt-vision-api.js';
 
 
 // --- 2. 상태 변수 선언 ---
