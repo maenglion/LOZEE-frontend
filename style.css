@@ -83,6 +83,8 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+
 #mic-button.disabled {
   opacity: 0.5;
   cursor: default;
@@ -257,7 +259,8 @@ body {
     box-sizing: border-box; /* ⭐ 패딩이 너비에 포함되도록 */
 }
 /* ⭐⭐ #send-button 으로 ID 변경 ⭐⭐ */
-#send-button {
+#send-button,
+#plus-button {
     width: 48px; /* ⭐ 고정 너비 */
     height: 48px; /* ⭐ 고정 높이 */
     border-radius: 50%;

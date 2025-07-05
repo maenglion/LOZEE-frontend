@@ -72,13 +72,17 @@
   </div>
 </main>
     <!-- ✅ 3. 입력창은 맨 아래 -->    
-          <button id="mic-button">🎤</button>
+<div id="chat-input-container">
+  <button id="mic-button">🎤</button>
+
   <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-  <button id="plus-button">＋</button> <!-- ✅ 이미지 업로드 버튼 -->
-  <input type="file" id="image-upload" accept="image/*" style="display:none" />
+
+  <!-- ✅ 정사각형 + 버튼 -->
+  <button id="plus-button">＋</button>
+  <input type="file" id="image-upload" accept="image/*" style="display: none;" />
+
   <button id="send-button">➤</button>
-        </div>
-    </div>
+</div>
     
     <script src="./js/gnb.js" defer></script>
       
