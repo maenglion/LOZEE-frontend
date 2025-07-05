@@ -144,7 +144,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-size: 40px 40px; /* 48x48 버튼 안에 40x40으로 표시 */
+    background-size: 46px 46px; /* 48x48 버튼 안에 40x40으로 표시 */
 }
 
 /* 개별 아이콘 이미지 경로 */
