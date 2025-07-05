@@ -15,42 +15,42 @@
 /* 탭 메뉴 Wrapper (스크롤 가능하도록) */
 .tab-menu-wrapper {
     width: 100%;
-    background-color: #f4f6f8; /* 섹션 배경색과 동일하게 */
+    background-color: #ffffff; /* GNB 배경색과 유사하게 또는 흰색으로 */
     box-sizing: border-box;
-    padding: 10px 0;
+    padding: 0 10px; /* 탭 메뉴 자체의 좌우 패딩 */
     border-bottom: 1px solid #e0e0e0;
-    flex-shrink: 0; /* 줄어들지 않도록 */
-    overflow-x: auto; /* ⭐ 가로 스크롤 가능하도록 */
-    -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+    flex-shrink: 0;
+    overflow-x: auto; /* ⭐ 가로 스크롤 가능하도록 (모바일) */
+    -webkit-overflow-scrolling: touch;
     white-space: nowrap; /* 탭 아이템들이 한 줄에 표시되도록 */
 }
 
 /* 탭 메뉴 실제 컨테이너 */
 .tab-menu {
     display: flex;
-    justify-content: flex-start; /* 좌측 정렬 (PC에서는 중앙 정렬도 고려) */
+    justify-content: flex-start; /* 좌측 정렬 */
     align-items: center;
-    padding: 0 10px; /* 탭 메뉴 자체의 좌우 패딩 */
     gap: 15px; /* 탭 아이템 간 간격 */
     min-width: fit-content; /* 내용이 넘칠 때 스크롤 가능하도록 */
 }
 
 /* 탭 아이템 */
 .tab-item {
-    display: inline-flex; /* NEW 점과 함께 정렬 */
+    display: inline-flex;
     align-items: center;
-    padding: 8px 12px; /* 탭 아이템 패딩 */
+    padding: 12px 0; /* 상하 패딩 조정 */
     text-decoration: none;
     color: #888;
     font-weight: bold;
-    font-size: 1em;
+    font-size: 1.05em; /* 폰트 크기 약간 키움 */
     border-bottom: 3px solid transparent;
     transition: all 0.3s ease;
-    flex-shrink: 0; /* 탭 아이템이 줄어들지 않도록 */
+    flex-shrink: 0;
+    position: relative; /* new-dot 위치 지정을 위해 */
 }
 .tab-item.active {
-    color: #6e8efb; /* 활성화된 탭 색상 */
-    border-bottom-color: #6e8efb; /* 활성화된 탭 하단 선 색상 */
+    color: #6e8efb;
+    border-bottom-color: #6e8efb;
 }
 .tab-item:hover {
     color: #375bd1;
@@ -60,29 +60,37 @@
 .new-dot {
     width: 6px;
     height: 6px;
-    background-color: orange; /* 주황색 점 */
+    background-color: orange;
     border-radius: 50%;
     margin-left: 4px;
-    flex-shrink: 0;
+    position: absolute; /* 탭 텍스트 기준 위치 */
+    top: 6px; /* 탭 아이템 상단에 위치 */
+    right: -10px; /* 탭 아이템 오른쪽 바깥에 위치 */
 }
 
 /* 컨텐츠 섹션 공통 */
 .content-section {
-    width: 100%; /* 부모 컨테이너에 맞춰 100% */
+    width: 100%;
     box-sizing: border-box;
     padding: 0 10px; /* 각 섹션 내부 좌우 패딩 */
+    display: none; /* JS에 의해 active 탭만 display:flex */
+    flex-direction: column; /* 내부 카드들 세로 정렬 */
+    gap: 20px; /* 내부 카드들 간 간격 */
+}
+.content-section.active {
+    display: flex;
 }
 .content-section > h1.hidden {
-    display: none; /* 접근성을 위한 숨김 제목 */
+    display: none;
 }
 
 /* 프로필 사진 섹션 */
 .profile-photo-section {
-    padding: 20px 0 10px 0; /* 하단 패딩 줄임 */
+    padding: 20px 0 10px 0;
     display: flex;
-    flex-direction: column; /* 세로로 정렬 */
-    align-items: center; /* 가로 중앙 정렬 */
-    position: relative; /* 버튼 배치를 위해 */
+    flex-direction: column;
+    align-items: center;
+    position: relative;
 }
 .profile-photo-placeholder {
     width: 120px;
@@ -96,15 +104,24 @@
     color: white;
     font-weight: bold;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    overflow: hidden; /* 이미지 넘침 방지 */
+    overflow: hidden;
+    position: relative; /* 이미지/텍스트 오버레이를 위해 */
 }
 #userProfileImage {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 이미지가 잘리지 않고 채워지도록 */
+    object-fit: cover;
 }
 #userInitialText {
-    /* 이미지 없을 때만 보이므로 기본 스타일은 그대로 유지 */
+    position: absolute; /* 이미지 없을 때 중앙에 보이도록 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; /* 중앙 정렬 위한 flex */
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 .edit-button {
     background-color: #e0e0e0;
@@ -114,22 +131,22 @@
     padding: 6px 12px;
     font-size: 0.85em;
     cursor: pointer;
-    margin-top: 10px; /* 사진과 버튼 간 간격 */
+    margin-top: 10px;
     transition: background-color 0.2s;
 }
 .edit-button:hover {
     background-color: #d0d0d0;
 }
 /* .deep-insight-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
     background-color: #e57373;
     color: white;
     padding: 8px 15px;
     border-radius: 20px;
     font-size: 0.9em;
     font-weight: bold;
-    position: absolute;
-    top: 20px;
-    right: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 } */
 
@@ -150,67 +167,88 @@
     background-color: #ffffff;
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* 그림자 약하게 */
-    margin-bottom: 20px; /* 카드 하단 간격 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 0; /* 섹션 gap으로 간격 조절 */
 }
 .info-card h2 {
-    font-size: 1.1em; /* 제목 크기 줄임 */
-    color: #333; /* 어두운 색으로 변경 */
+    font-size: 1.1em;
+    color: #333;
     margin-top: 0;
     margin-bottom: 15px;
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
     display: flex;
-    justify-content: space-between; /* 수정 버튼을 오른쪽에 정렬 */
+    justify-content: space-between;
     align-items: center;
 }
+.info-card h2 .edit-button { /* 카드 제목 옆 수정 버튼 */
+    font-size: 0.75em; /* 크기 더 줄임 */
+    padding: 4px 8px;
+    margin-top: 0;
+}
+
 .info-item {
-    margin-bottom: 8px; /* 항목 간 간격 줄임 */
-    font-size: 0.95em; /* 글씨 크기 약간 줄임 */
+    margin-bottom: 8px;
+    font-size: 0.95em;
     display: flex;
-    justify-content: space-between; /* 라벨과 값 좌우 정렬 */
+    justify-content: space-between;
     align-items: center;
 }
 .info-item .label {
     font-weight: bold;
     color: #555;
 }
-.neurodiversity-info ul {
+
+/* 서브 정보 섹션 (나의 특성, 보호자님 특성) */
+.sub-info-section {
+    margin-top: 20px; /* 상위 info-card 내에서 간격 */
+}
+.sub-info-section h3 {
+    font-size: 1em; /* 특성 제목 크기 조정 */
+    color: #333;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #eee; /* 점선으로 구분 */
+    padding-bottom: 5px;
+}
+.neurodiversity-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    display: flex; /* 가로 정렬 */
-    flex-wrap: wrap; /* 넘치면 다음 줄로 */
-    justify-content: flex-end; /* 오른쪽 정렬 */
-    gap: 5px; /* 항목 간 간격 */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* 왼쪽 정렬 (이미지에는 오른쪽이었으나 일반적 좌측) */
+    gap: 5px;
 }
-.neurodiversity-info li {
+.neurodiversity-list li {
     background-color: #e9eaf6;
     color: #3f51b5;
-    padding: 4px 8px; /* 패딩 줄임 */
+    padding: 4px 8px;
     border-radius: 15px;
-    font-size: 0.8em; /* 글씨 크기 줄임 */
+    font-size: 0.8em;
     display: inline-block;
-    margin: 0; /* flex gap 사용으로 마진 제거 */
+    margin: 0;
 }
 
-/* 로지와의 약속 섹션 */
-.appointment-category-card {
+/* 로지와의 약속 - 각 훈련 카드 */
+.appointment-training-card {
     /* info-card 스타일 상속 */
 }
-.appointment-category-card .detail-item {
-    margin-bottom: 5px; /* 항목 간 간격 줄임 */
-    font-size: 0.9em;
+.appointment-training-card h2 {
+    color: #6e8efb; /* 훈련 제목 강조 */
+}
+.appointment-training-card .detail-item {
+    margin-bottom: 5px;
+    font-size: 0.95em;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: #555;
 }
-.appointment-category-card .detail-item .label {
+.appointment-training-card .detail-item .label {
     font-weight: bold;
     color: #333;
 }
-.appointment-category-card .result-box {
+.appointment-training-card .result-box {
     background-color: #f8f9fa;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -218,39 +256,64 @@
     margin-top: 15px;
     margin-bottom: 15px;
 }
-.appointment-category-card .result-box .label {
+.appointment-training-card .result-box .label {
     font-weight: bold;
     color: #333;
     display: block;
     margin-bottom: 8px;
 }
-.appointment-category-card .result-box p {
+.appointment-training-card .result-box p.result-text { /* 일반 결과 텍스트 */
     font-size: 0.95em;
     color: #555;
     line-height: 1.4;
     margin: 0;
 }
-.appointment-category-card .pattern-item {
+.appointment-training-card .pattern-item { /* 인지 왜곡 패턴 아이템 */
     font-size: 0.95em;
     color: #555;
     line-height: 1.4;
     margin-bottom: 8px;
     padding: 8px;
     border-radius: 8px;
-    background-color: #fff9e6; /* 인지 왜곡 배경색 */
+    background-color: #fff9e6;
     border: 1px solid #ffe082;
 }
-.appointment-category-card .pattern-item .pattern-label {
+.appointment-training-card .pattern-item .pattern-label {
     font-weight: bold;
     color: #e65100;
     margin-right: 5px;
     flex-shrink: 0;
 }
+.appointment-training-card button.full-width {
+    margin-top: 20px; /* 카드 내 버튼 상단 간격 */
+}
+
+/* 필터 컨트롤 */
+.filter-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+}
+.filter-controls h2 {
+    font-size: 1.1em;
+    margin: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.filter-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 0.95em;
+    background-color: #fff;
+    cursor: pointer;
+}
 
 /* 버튼 */
 .action-button {
     display: block;
-    width: 100%; /* 가로 꽉 채움 */
+    width: 100%;
     background-color: #6e8efb;
     color: white;
     padding: 12px 0;
@@ -260,12 +323,12 @@
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin-top: 15px; /* 위쪽 간격 */
+    margin-top: 15px;
 }
 .action-button:hover {
     background-color: #5a7edf;
 }
-.action-button.full-width { /* 꽉 찬 너비 버튼 */
+.action-button.full-width {
     width: 100%;
     margin-left: 0;
     margin-right: 0;
@@ -273,11 +336,11 @@
 
 /* 긴급 알림 카드 */
 .emergency-alerts-card {
-    border: 2px solid #ffcdd2; /* 테두리 색상 조정 */
+    border: 2px solid #ffcdd2;
 }
 .emergency-alerts-card h2 {
     color: #c62828;
-    border-bottom-color: #ffcdd2; /* 테두리 색상 조정 */
+    border-bottom-color: #ffcdd2;
 }
 .emergency-alerts-card ul {
     list-style: none;
@@ -301,12 +364,11 @@
 }
 
 /* 최근 이야기 섹션 (info-card 스타일 상속) */
-.recent-journals-section {
+.recent-journals-card {
     /* info-card 스타일 상속 */
 }
-.recent-journals-section h2 {
-    text-align: left; /* 좌측 정렬 */
-    /* info-card h2 스타일 상속 */
+.recent-journals-card h2 {
+    text-align: left;
 }
 .recent-journal-card-list {
     display: flex;
@@ -336,13 +398,23 @@
 /* 모바일 환경에서의 마이페이지 컨텐츠 영역 패딩 조정 */
 @media (max-width: 639px) {
     .mypage-content-area {
-        padding: 15px; /* 모바일에서 좌우 패딩 줄임 */
-        gap: 15px; /* 모바일에서 섹션 간 간격 줄임 */
+        padding: 15px;
+        gap: 15px;
     }
     .content-section {
-        padding: 0; /* 섹션 내부 좌우 패딩 제거 (mypage-content-area 패딩 사용) */
+        padding: 0;
     }
     .info-card {
-        padding: 15px; /* 모바일에서 카드 패딩 줄임 */
+        padding: 15px;
+    }
+}
+
+/* PC 화면 (min-width: 640px)에서 탭 메뉴 중앙 정렬 등 조정 */
+@media (min-width: 640px) {
+    .tab-menu-wrapper {
+        padding: 0 20px; /* PC에서 좌우 패딩 늘림 */
+    }
+    .tab-menu {
+        justify-content: center; /* PC에서 탭 메뉴 중앙 정렬 */
     }
 }
