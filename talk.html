@@ -8,13 +8,40 @@
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="style.css">
     <style>
+        /* CSS 변수는 HTML 파일에 직접 정의하지 않고, gnb.css 또는 style.css의 :root에 정의합니다. */
+        /* 여기서는 gnb.css의 :root를 참조하도록 합니다. */
         :root {
-            --primary-color: #6878E9; /* ⭐ 요청하신 색상으로 변경 */
-            --gnb-height: 65px;      /* ⭐ 요청하신 높이로 변경 */
+            /* 이 변수들은 gnb.css에서 정의됩니다. */
+            /* --primary-color: #6878E9; */
+            /* --gnb-height: 65px; */
             --session-header-height: 28px;
             --input-area-height: 70px;
         }
         /* app-container 및 body 스타일은 style.css와 common.css에서 관리 */
+        .app-container { display: flex; flex-direction: column; height: 100%; background-color: #ffffff; }
+        body { padding: 0; }
+        
+        /* ⭐ 2. 주제 표시줄 + 음량바 스타일 (이전 인라인 스타일은 style.css로 이동) */
+        #session-header {
+            position: relative;
+            width: 100%;
+            height: var(--session-header-height);
+            background-color: #f0f0f0;
+            color: #555;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            z-index: 998;
+            transition: background-color 0.1s;
+            flex-shrink: 0;
+        }
+        #session-header-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 
@@ -36,15 +63,15 @@
         
         <div id="session-header"><span id="session-header-text">주제 선택 중...</span></div>
         
-        <!-- ⭐⭐ 음성 레벨 미터 컨테이너 ⭐⭐ -->
-        <div id="meter-container">
-            <div id="volume-meter"><div id="volume-level"></div></div>
-        </div>
-
         <main id="chat-window">
             <div id="topic-selection-container"></div>
         </main>
         
+        <!-- ⭐⭐ 음성 레벨 미터 컨테이너를 chat-window 아래, 입력창 위에 배치 ⭐⭐ -->
+        <div id="meter-container">
+            <div id="volume-meter"><div id="volume-level"></div></div>
+        </div>
+
         <div id="chat-input-container">
             <button id="mic-button">🎤</button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
