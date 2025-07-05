@@ -153,14 +153,14 @@ async function playTTSWithControl(text) {
     console.error("TTS 재생 오류:", error);
   }
 }
-
 function displayOptionsInChat(optionsArray, onSelectCallback) {
     if (!chatWindow) return;
     const optionsContainer = document.createElement('div');
     optionsContainer.className = 'chat-options-container';
     optionsArray.forEach(optionObject => {
         let buttonText = optionObject?.displayText || optionObject;
-        if (optionObject?.icon) buttonText = `${optionObject.icon} ${buttonObject.displayText}`; // Changed from optionObject to optionObject.displayText
+        // ⭐⭐ 이 부분 수정: buttonObject.displayText -> optionObject.displayText ⭐⭐
+        if (optionObject?.icon) buttonText = `${optionObject.icon} ${optionObject.displayText}`; 
         const button = document.createElement('button');
         button.className = 'chat-option-btn';
         button.innerHTML = buttonText;
@@ -174,6 +174,7 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     chatWindow.appendChild(optionsContainer);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
+
 
 // ⭐ 복원된 함수: 현재 사용자에게 맞는 상담 주제 목록을 가져옵니다.
 function getTopicsForCurrentUser() {
