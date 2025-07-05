@@ -13,7 +13,7 @@
     height: var(--gnb-height); /* ⭐ 변경된 변수 사용 */
     background-color: var(--primary-color); /* ⭐ 변경된 변수 사용 */
     color: white;
-    padding: 0 20px; /* ⭐ 패딩 조정 (선택 사항, 필요시 조절) */
+    padding: 0 15px; /* 패딩 조정 */
     box-sizing: border-box;
     flex-shrink: 0; /* app-container의 flex 자식일 때 줄어들지 않도록 */
 }
@@ -23,12 +23,12 @@
     left: 50%;
     transform: translateX(-50%);
     font-weight: bold;
-    font-size: 2.5em; /* ⭐ 폰트 크기 키움 */
+    font-size: 1.8em; /* ⭐ 65px 높이에 맞춰 폰트 크기 조정 */
 }
 
 #menu-toggle {
     background: none; border: none; color: white;
-    font-size: 2.8em; /* ⭐ 햄버거 버튼 아이콘 크기 키움 */
+    font-size: 2.0em; /* ⭐ 65px 높이에 맞춰 햄버거 버튼 아이콘 크기 조정 */
     cursor: pointer;
     padding: 0;
     z-index: 1001;
@@ -38,17 +38,17 @@
 .gnb-right-buttons {
     display: flex;
     align-items: center;
-    gap: 15px; /* ⭐ 버튼 사이 간격 조정 (필요시 조절) */
+    gap: 10px; /* 버튼 사이 간격 */
 }
 
 #gnb #tts-toggle-btn {
-    width: 50px; /* ⭐ 버튼 크기 키움 */
-    height: 50px; /* ⭐ 버튼 크기 키움 */
+    width: 38px; /* 버튼 크기 유지 */
+    height: 38px; /* 버튼 크기 유지 */
     border-radius: 50%;
-    border: 2px solid white; /* ⭐ 테두리 두께 조정 */
+    border: 1.5px solid white;
     background-color: white;
     color: var(--primary-color);
-    font-size: 1.5em; /* ⭐ 폰트 크기 키움 */
+    font-size: 1.2em;
     cursor: pointer;
     transition: all 0.2s;
     position: relative; /* 취소선 위치 기준 */
@@ -81,5 +81,5 @@
     border: 1px solid #eee;
 }
 #dropdown-menu.show { display: block; }
-#dropdown-menu a { display: block; padding: 12px 18px; color: #333; text-decoration: none; font-size: 1.0em; /* ⭐ 드롭다운 메뉴 폰트 크기 조정 */ }
+#dropdown-menu a { display: block; padding: 12px 18px; color: #333; text-decoration: none; font-size: 0.95em; }
 #dropdown-menu a:hover { background-color: #f5f5f5; }

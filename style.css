@@ -14,7 +14,7 @@ body {
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-width: 640px; /* PC 상단 너비 제한 */
+    max-width: 640px; /* 모바일 기본 너비 */
     height: 100vh; /* 모바일에서 100vh 유지 */
     min-height: 100vh; /* PC에서 최소 높이 유지 */
     background-color: #ffffff;
@@ -23,7 +23,7 @@ body {
     overflow-y: auto; /* app-container 자체에 스크롤 가능하도록 */
 }
 
-/* ⭐ PC 버젼에서 위아래 여백 추가 (common.css와 함께 적용될 수 있음) */
+/* ⭐ PC 버젼에서 위아래 여백 및 고정 창 사이즈 설정 ⭐ */
 @media (min-width: 640px) { /* common.css의 max-width: 639px 와 일치하도록 */
     body {
         padding: 50px 0; /* ⭐ PC에서 body에 위아래 여백 50px씩 추가 */
@@ -31,6 +31,7 @@ body {
         justify-content: center; /* ⭐ PC에서 app-container 세로 중앙 정렬 */
     }
     .app-container {
+        max-width: 960px; /* ⭐ PC에서 옆으로 1.5배 넓게 (640px * 1.5) */
         height: auto; /* ⭐ PC에서 높이를 콘텐츠에 맞게 조절 */
         max-height: calc(100vh - 100px); /* ⭐ 화면 높이에서 body 패딩만큼 제외한 최대 높이 */
         border-radius: 20px;
@@ -60,7 +61,8 @@ body {
 }
 #volume-level { 
     height:100%; 
-    background: var(--primary-color); /* ⭐ 볼륨 레벨 색상을 메인 색상으로 변경 */
+    /* ⭐⭐ 요청하신 스펙트럼 느낌의 색상 그라데이션 적용 ⭐⭐ */
+    background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3); 
     width:0%; 
     transition:width 0.08s ease-out; 
     border-radius:4px; 
@@ -74,7 +76,7 @@ body {
   border-radius: 50%;
   background: var(--primary-color); /* ⭐ 메인 색상 적용 */
   color: #fff;
-  font-size: 1.5em; /* ⭐ 아이콘 크기 조정 */
+  font-size: 1.5em; /* 아이콘 크기 조정 */
   cursor: pointer;
   flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
   display: flex; /* 아이콘 중앙 정렬 */
@@ -137,19 +139,27 @@ body {
     border: 1px solid #dee2e6;
 }
 
-/* 추가: sub-topic과 동일한 스타일을 적용하기 위한 버튼 스타일 */
+/* ⭐⭐ 주제 선택 컨테이너 스타일 ⭐⭐ */
+#topic-selection-container {
+    background-color: #f0f0f0; /* ⭐ 입력창과 동일한 연한 회색 배경 */
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px; /* 아래 여백 */
+    color: #333; /* ⭐ 글씨 색상 살짝 어둡게 */
+}
+
 .chat-options-container { 
     display: flex; 
     flex-direction: column; 
     gap: 8px; 
     margin: 10px 0; 
     align-self: flex-start; 
-    width: 80%;
+    width: 100%; /* ⭐ 부모 컨테이너에 맞춰 100% */
 }
 
 .chat-option-btn {
-    background-color: #f1f1f1;
-    color: #333;
+    background-color: #ffffff; /* ⭐ 버튼 배경 흰색 */
+    color: #333; /* ⭐ 글씨 색상 */
     border: 1px solid #dcdcdc;
     border-radius: 12px;
     padding: 10px 15px;
@@ -227,6 +237,13 @@ body {
     gap: 10px; /* ⭐ 버튼 간 간격 */
     height: var(--input-area-height); /* ⭐ 변수 사용 */
     box-sizing: border-box; /* ⭐ 패딩이 너비에 포함되도록 */
+    /* ⭐⭐ 입력창을 위로 올리기 위해 main 태그의 flex-grow를 조정하거나,
+           input-area를 absolute/fixed로 배치하는 방법이 있지만,
+           현재 flex-column 레이아웃에서는 chat-window가 남은 공간을 차지하므로
+           input-area는 자연스럽게 하단에 위치합니다.
+           만약 chat-window가 너무 길어져서 스크롤 문제가 있다면,
+           chat-window의 max-height를 조정해야 합니다.
+    */
 }
 #chat-input {
     flex-grow: 1;

@@ -686,8 +686,6 @@ function setupAudioAnalysis(stream) {
     source.connect(analyser);
     dataArray = new Uint8Array(analyser.frequencyBinCount);
     streamRef = stream;
-    // ⭐⭐ meterContainer.classList.add('active'); 는 setupAudioAnalysis에서만 호출되도록
-    // DOMContentLoaded 초기 호출은 제거합니다.
     if (meterContainer) meterContainer.classList.add('active'); 
     draw();
 }
