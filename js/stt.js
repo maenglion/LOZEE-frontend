@@ -93,7 +93,7 @@ const response = await fetch(STT_BACKEND_URL, {
 
     const data = await response.json();
     console.log("[stt.js] STT API 응답 데이터:", data); // STT API 응답 전체를 보여주는 로그
-const receivedText = data.transcript || ""; // ✅ 정확한 키명으로 수정
+const receivedText = data.transcript || data.text || ""; //✅ 정확한 키명으로 수정
 
     console.log("[stt.js] 반환될 텍스트:", `"${receivedText}"`); // 빈 문자열일 경우 명확히
     return receivedText;
