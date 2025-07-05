@@ -7,7 +7,15 @@
     <link rel="stylesheet" href="gnb.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="style.css">
-    <!-- 인라인 스타일은 최소화하고 style.css에서 관리합니다. -->
+    <style>
+        :root {
+            --primary-color: #6878E9; /* ⭐ 요청하신 색상으로 변경 */
+            --gnb-height: 65px;      /* ⭐ 요청하신 높이로 변경 */
+            --session-header-height: 28px;
+            --input-area-height: 70px;
+        }
+        /* app-container 및 body 스타일은 style.css와 common.css에서 관리 */
+    </style>
 </head>
 
 <body>
@@ -37,11 +45,9 @@
             <div id="topic-selection-container"></div>
         </main>
         
-        <!-- ⭐⭐ 입력창 컨테이너 ID를 chat-input-container로 변경 ⭐⭐ -->
         <div id="chat-input-container">
             <button id="mic-button">🎤</button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-            <!-- ⭐⭐ 전송 버튼 ID를 send-button으로 변경 ⭐⭐ -->
             <button id="send-button">➤</button>
         </div>
     </div>
