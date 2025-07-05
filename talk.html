@@ -124,13 +124,20 @@
         
         <div id="session-header"><span id="session-header-text">주제 선택 중...</span></div>
         
+        <!-- ⭐⭐ 여기에 음성 레벨 미터 컨테이너 추가 ⭐⭐ -->
+        <div id="meter-container">
+            <div id="volume-meter"><div id="volume-level"></div></div>
+        </div>
+
         <main id="chat-window">
-    <div id="topic-selection-container"></div>
-</main>
+            <div id="topic-selection-container"></div>
+        </main>
         
+        <!-- ⭐⭐ 이 div의 ID를 "input-area"에서 "chat-input-container"로 변경 ⭐⭐ -->
         <div id="chat-input-container">
             <button id="mic-button">🎤</button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
+            <!-- ⭐⭐ 이 버튼의 ID를 "send-btn"에서 "send-button"으로 변경 ⭐⭐ -->
             <button id="send-button">➤</button>
         </div>
     </div>
