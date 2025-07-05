@@ -3,32 +3,39 @@
 <head>
     <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE와 대화하기</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="style.css">
     <style>
         :root {
-            --session-header-height: 28px;
+            --session-header-height: 32px; /* ⭐ 주제 선택 중 박스의 높이를 32px로 늘림 (이전 20px) */
             --input-area-height: 70px;
         }
         .app-container { display: flex; flex-direction: column; height: 100%; background-color: #ffffff; }
         body { padding: 0; }
-        
+
+        /* ⭐ 2. 주제 표시줄 스타일 (talk.html에만 정의. 스타일은 style.css에서 통합 관리) ⭐ */
         #session-header {
-            position: relative; /* 자식 요소의 absolute 포지셔닝을 위한 기준 */
+            position: relative;
             width: 100%;
-            height: var(--session-header-height);
-            background-color: #f0f0f0;
+            height: var(--session-header-height); /* ⭐ 32px로 적용 */
+            background-color: #f0f0f0; /* 배경색 유지 */
             color: #555;
-            font-size: 0.85em;
+            font-size: 0.9em; /* ⭐ 텍스트 크기 조금 더 키움 (이전 0.7em) */
             display: flex;
             align-items: center;
-            padding: 0 15px;
+            padding: 0 15px; /* 좌우 패딩 유지, 상하 패딩은 없음 */
             box-sizing: border-box;
             z-index: 998;
             transition: background-color 0.1s;
             flex-shrink: 0;
+            line-height: 1.2; /* ⭐ 텍스트 라인 높이 조금 여유롭게 (기존 1) */
+            /* 모든 border-radius와 box-shadow는 style.css에서 관리 */
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            box-shadow: none;
+            margin-bottom: 0;
         }
         #session-header-text {
             white-space: nowrap;
@@ -36,32 +43,15 @@
             text-overflow: ellipsis;
         }
 
-        /* ⭐️ 추가: #session-header 안에 미터 바를 직접 넣을 경우를 위한 스타일 */
-        .session-meter-container { /* 새 클래스명 사용 */
-            position: absolute;
-            bottom: 0; /* 세션 헤더 하단에 붙이기 */
-            left: 0;
-            width: 100%;
-            height: 4px; /* ⭐ 5px -> 4px로 더욱 줄여봄 */
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-        #session-header .session-meter-container #volume-meter {
-            height: 100%; /* 부모 높이에 맞춤 */
-            width: 90%; /* 또는 원하는 너비 */
-            max-width: 250px; /* 최대 너비 제한 */
-        }
-        /* #volume-level은 style.css의 것을 사용 */
+        /* .session-meter-container는 이제 talk.html에서 제거되므로 이 스타일도 제거 가능 */
+        /* .session-meter-container는 더 이상 사용하지 않습니다. */
     </style>
 </head>
 
 <body>
     <div class="app-container">
         <nav id="gnb">
-            <button id="menu-toggle">☰</button>
+            <button id="menu-toggle"></button>
             <div id="gnb-title">LOZEE</div>
             <div class="gnb-right-buttons">
             </div>
@@ -73,29 +63,29 @@
                 <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
             </div>
         </nav>
-        
+
         <div id="session-header">
             <span id="session-header-text">주제 선택 중...</span>
-            <div class="session-meter-container" id="meter-container">
-                <div id="volume-meter">
-                    <div id="volume-level"></div>
-                </div>
+        </div>
+
+        <div id="meter-container" class="standalone-meter-container"> <div id="volume-meter">
+                <div id="volume-level"></div>
             </div>
         </div>
-        
+
         <main id="chat-window">
             <div id="topic-selection-container"></div>
-            </main>
-        
+        </main>
+
         <div id="chat-input-container">
             <button id="mic-button"></button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
             <button id="plus-button"></button>
             <input type="file" id="image-upload" accept="image/*" style="display: none;" />
-            <button id="send-button">➤</button>
+            <button id="send-button"></button>
         </div>
-        
+
         <script src="./js/gnb.js" defer></script>
-        <script type="module" src="./js/talk.js"></script> 
+        <script type="module" src="./js/talk.js"></script>
 </body>
 </html>
