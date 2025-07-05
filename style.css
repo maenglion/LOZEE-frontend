@@ -79,7 +79,7 @@ body {
   height: 48px;
   border: none;
   border-radius: 50%;
-  background: var(--primary-color); /* ⭐ 메인 색상 적용 */
+  background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button.png?alt=media&token=5ecee5c0-e062-4599-8b08-938e046a57a9'); /* ✅ 여기에 실제 mic-button.png의 URL 붙여넣기 */
   color: #fff;
   font-size: 1.5em; /* 아이콘 크기 조정 */
   cursor: pointer;
@@ -264,13 +264,30 @@ body {
     box-sizing: border-box; /* ⭐ 패딩이 너비에 포함되도록 */
 }
 /* ⭐⭐ #send-button 으로 ID 변경 ⭐⭐ */
-#send-button,
+#send-button{
+    width: 48px; /* ⭐ 고정 너비 */
+    height: 48px; /* ⭐ 고정 높이 */
+    border-radius: 50%;
+    /* padding: 0.75rem 1.25rem; <-- 아이콘 중앙 정렬을 위해 제거 */
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/send-button.png?alt=media&token=f10a6169-3e02-4721-94b5-35dd9ead6b52'); /* ✅ 여기에 실제 plus-button.png의 URL 붙여넣기 */
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5em; /* ⭐ 아이콘 크기 */
+    font-weight: bold;
+    transition: background-color 0.2s;
+    flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
+    display: flex; /* 아이콘 중앙 정렬 */
+    align-items: center;
+    justify-content: center;
+}
+
 #plus-button {
     width: 48px; /* ⭐ 고정 너비 */
     height: 48px; /* ⭐ 고정 높이 */
     border-radius: 50%;
     /* padding: 0.75rem 1.25rem; <-- 아이콘 중앙 정렬을 위해 제거 */
-    background-color: var(--primary-color); /* ⭐ 메인 색상 적용 */
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/plus-button.png?alt=media&token=8ab76317-2425-4b8f-b355-04723acc7f3c'); /* ✅ 여기에 실제 plus-button.png의 URL 붙여넣기 */
     color: white;
     border: none;
     cursor: pointer;

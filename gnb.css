@@ -26,13 +26,39 @@
     font-size: 1.8em; /* ⭐ 65px 높이에 맞춰 폰트 크기 조정 */
 }
 
+/* ⭐ 햄버거 버튼 스타일 (점 세 개 이미지 아이콘 사용) */
 #menu-toggle {
-    background: none; border: none; color: white;
-    font-size: 2.0em; /* ⭐ 65px 높이에 맞춰 햄버거 버튼 아이콘 크기 조정 */
+    width: 48px; /* ✅ 버튼의 클릭 영역 크기 유지 (이전과 동일) */
+    height: 48px; /* ✅ 버튼의 클릭 영역 크기 유지 (이전과 동일) */
+    border: none;
+    background-color: transparent; /* GNB 배경에 맞추기 위해 투명 */
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10');
+    
+    /* ------------------------------------------------------------- */
+    /* ⭐ 아래 부분들을 추가하거나 조정합니다. ⭐ */
+    /* ------------------------------------------------------------- */
+    
+    background-size: 8px 36px; /* ✅ 실제 이미지 크기에 맞춰 배경 이미지 크기 설정 */
+    background-position: center; /* ✅ 이미지 중앙 정렬 (필요시 'left center' 등으로 변경 가능) */
+    background-repeat: no-repeat;
+    
+    color: transparent; /* 텍스트 숨김 */
+    font-size: 0; /* 폰트 크기 0 (이전에 2.0em이 있었는데, 이미지 사용 시 0으로) */
     cursor: pointer;
-    padding: 0;
-    z-index: 1001;
+    z-index: 1001; /* Z-index 유지 */
+
+    /* Flexbox를 사용하여 내부 아이콘을 정렬하고, 버튼 자체도 flex 아이템으로 정렬될 수 있도록 */
+    display: flex;
+    align-items: center; /* 세로 중앙 정렬 */
+    justify-content: center; /* 가로 중앙 정렬 (배경 이미지 위치와 별개) */
+
+    /* ------------------------------------------------------------- */
+    /* ⭐ 좌측 여백 및 정렬 관련 스타일 ⭐ */
+    /* ------------------------------------------------------------- */
+    margin-left: 10px; /* ✅ GNB 좌측에서 10px 여백 추가 (필요에 따라 조절) */
+    /* padding: 0; (기존과 동일) */
 }
+
 
 /* GNB 오른쪽 버튼들을 묶는 컨테이너 */
 .gnb-right-buttons {
