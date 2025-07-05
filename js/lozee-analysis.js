@@ -17,7 +17,8 @@
 
 
 // 통합 분석 모듈: 언어·나이 유추, 시간 추적, 감정 어조, 상황 분석, 문해력 렌더러
-const LOZEE_ANALYSIS_BACKEND_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.app/gpt-analysis';
+// ⭐⭐ 이 URL을 변경합니다 ⭐⭐
+const LOZEE_ANALYSIS_BACKEND_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.app/api/analysis';
 
 /// --- 1. 분석 조건 및 유틸리티 함수 ---
 
@@ -115,7 +116,7 @@ export async function extractSemanticKeywords(journalText) {
   }
 
   try {
-    const response = await fetch(LOZEE_ANALYSIS_BACKEND_URL, {
+    const response = await fetch(LOZEE_ANALYSIS_BACKEND_URL, { // ⭐⭐ URL 변경됨 ⭐⭐
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -238,7 +239,7 @@ export async function inferAgeAndLanguage(conversationText) {
     const payload = {
       conversation: conversationText
     };
-    const response = await fetch(LOZEE_ANALYSIS_BACKEND_URL, { // 이전에 수정한 백엔드 호출 방식
+    const response = await fetch(LOZEE_ANALYSIS_BACKEND_URL, { // ⭐⭐ URL 변경됨 ⭐⭐
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -252,7 +253,8 @@ export async function inferAgeAndLanguage(conversationText) {
       return { error: `API 요청 실패: ${response.status}` };
     }
     return await response.json();
-  } catch (error) {
+  }
+  catch (error) {
     console.error('언어·연령 유추 중 네트워크 또는 기타 오류:', error);
     return { error: `클라이언트 오류: ${error.message}` };
   }
