@@ -33,12 +33,11 @@
     border: none;
     background-color: transparent; /* GNB 배경에 맞추기 위해 투명 */
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10');
-    
-    /* ------------------------------------------------------------- */
+        /* ------------------------------------------------------------- */
     /* ⭐ 아래 부분들을 추가하거나 조정합니다. ⭐ */
     /* ------------------------------------------------------------- */
     
-    background-size: 8px 36px; /* ✅ 실제 이미지 크기에 맞춰 배경 이미지 크기 설정 */
+    background-size: 6x 26px; /* ✅ 실제 이미지 크기에 맞춰 배경 이미지 크기 설정 */
     background-position: center; /* ✅ 이미지 중앙 정렬 (필요시 'left center' 등으로 변경 가능) */
     background-repeat: no-repeat;
     
