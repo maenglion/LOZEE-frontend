@@ -37,17 +37,21 @@ const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000;
 
 // --- 3. UI 요소 가져오기 ---
 const chatWindow = document.getElementById('chat-window');
-const chatInputContainer = document.getElementById('chat-input-container'); // ⭐ 이 줄을 추가
+// ⭐⭐ inputArea -> chatInputContainer 로 변수명 변경 및 ID 일치 ⭐⭐
+const chatInputContainer = document.getElementById('chat-input-container'); 
 const chatInput = document.getElementById('chat-input');
 const actionButton = document.getElementById('action-button');
-const meterContainer = document.getElementById('meter-container');
+const meterContainer = document.getElementById('meter-container'); // 이제 HTML에 있으므로 가져옵니다.
 const meterLevel = document.getElementById('volume-level');
 const sessionHeaderTextEl = document.getElementById('session-header');
 
 
-// 이 변수가 아래 내용과 정확히 일치하는지 확인해주세요.
-const micIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>`;
-
+// ⭐⭐ 새로운 마이크 아이콘 SVG (요청하신 챗봇 스타일) ⭐⭐
+const micIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="9" y="3" width="6" height="12" rx="3" ry="3"/>
+  <line x1="12" y1="15" x2="12" y2="18"/>
+  <line x1="8" y1="18" x2="16" y2="18"/>
+</svg>`;
 
 
 /**
@@ -71,9 +75,11 @@ function startChat(subTopic) {
     if (actionButton) actionButton.disabled = false;
     if (chatInput) chatInput.disabled = false;
     
-    // '자유주제'일 경우 텍스트 입력창을 바로 보여줍니다.
-    if (subTopic && subTopic.type === 'free') {
-        if (inputArea) inputArea.style.display = 'flex';
+    // ⭐⭐ 입력창은 startChat이 호출되면 항상 보이도록 수정 ⭐⭐
+    if (chatInputContainer) chatInputContainer.style.display = 'flex'; 
+
+    // '자유주제'일 경우 텍스트 입력 모드로 전환
+    if (subTopic && subTopic.type === 'free_form') { // ⭐ 'free' -> 'free_form'으로 일관성 유지
         isTtsMode = false; // 텍스트 입력 모드로 전환
         updateActionButtonIcon();
         chatInput.focus();
@@ -153,6 +159,7 @@ async function playTTSWithControl(text) {
     console.error("TTS 재생 오류:", error);
   }
 }
+
 function displayOptionsInChat(optionsArray, onSelectCallback) {
     if (!chatWindow) return;
     const optionsContainer = document.createElement('div');
@@ -174,7 +181,6 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     chatWindow.appendChild(optionsContainer);
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
-
 
 // ⭐ 복원된 함수: 현재 사용자에게 맞는 상담 주제 목록을 가져옵니다.
 function getTopicsForCurrentUser() {
@@ -212,7 +218,7 @@ function updateSessionHeader() {
  * 신규 주제와 이전 대화 주제를 함께 표시하는 통합 함수
  * 규칙 1: 이전 대화까지 합친 주제 제시
  * 규칙 2: 이전 대화 주제 선택 시, 서브 토픽 없이 바로 대화 시작
- * 규칙 3: 신규 주제 선택 시, 서브 토픽 목록 표시
+ * 규칙 3: 신규 주제 선택 시, 세부 주제 목록 표시
  */
 
 
@@ -239,7 +245,8 @@ function renderUnifiedTopics() {
         targetAgeGroups.forEach(ageGroup => {
             if (counselingTopicsByAge[ageGroup]) {
                 // 각 연령대의 모든 메인 주제에 '기타' 옵션을 추가
-                counselingTopicsByAge[ageGroup].forEach(mainTopic => {
+                const mainTopics = Array.isArray(counselingTopicsByAge[ageGroup]) ? counselingTopicsByAge[ageGroup] : Object.values(counselingTopicsByAge[ageGroup]); // 배열이 아닐 경우 Object.values 사용
+                mainTopics.forEach(mainTopic => {
                     // 이미 '기타' 항목이 있는지 확인하여 중복 추가 방지
                     const alreadyExists = mainTopic.subTopics.some(sub => sub.type === 'free_form');
                     if (!alreadyExists) {
@@ -280,10 +287,7 @@ function renderUnifiedTopics() {
         
         button.onclick = () => {
             // 1. 모든 버튼을 비활성화하여 중복 클릭 방지
-            optionsContainer.querySelectorAll('.chat-option-btn').forEach(btn => {
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-            });
+            optionsContainer.querySelectorAll('.chat-option-btn').forEach(btn => btn.disabled = true);
             button.classList.add('selected'); // 선택된 버튼에 표시
 
             // 2. 사용자가 선택한 주제를 채팅창에 표시
@@ -406,9 +410,8 @@ const journalDetailsToSave = {
 
 const entryTypeForSave = (currentUserType === 'caregiver') ? 'child' : 'standard';
 const journalId = await saveJournalEntry(loggedInUserId, selectedSubTopicDetails?.displayText || selectedMain || "대화", journalDetailsToSave, { // finalTopicForJournal 대신 직접 사용
-    relatedChildId: targetChildId,
-    entryType: entryTypeForSave,
-    childName: currentUserType === 'caregiver' ? localStorage.getItem('lozee_childName') : null
+    relatedChildId: (currentUserType === 'caregiver' ? localStorage.getItem('lozee_childId') : null),
+    entryType: (currentUserType === 'caregiver' ? 'child' : 'standard')
 });
 
     if (journalId) {
@@ -460,7 +463,7 @@ function showAnalysisNotification() {
 }
 
 
-// ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (오류 수정 버전)
+// ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (최종 수정 버전)
 /**
  * ⭐ 사용자의 메시지를 GPT 서버로 보내고 응답을 처리하는 함수 (최종 수정 버전)
  * @param {string} text - 사용자 또는 시스템이 입력한 메시지 텍스트
@@ -683,7 +686,9 @@ function setupAudioAnalysis(stream) {
     source.connect(analyser);
     dataArray = new Uint8Array(analyser.frequencyBinCount);
     streamRef = stream;
-    if (meterContainer) meterContainer.classList.add('active');
+    // ⭐⭐ meterContainer.classList.add('active'); 는 setupAudioAnalysis에서만 호출되도록
+    // DOMContentLoaded 초기 호출은 제거합니다.
+    if (meterContainer) meterContainer.classList.add('active'); 
     draw();
 }
 
@@ -745,8 +750,8 @@ function handleMicButtonClick() {
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 (최종 수정본) ---
 document.addEventListener('DOMContentLoaded', async () => {
 
-    if (inputArea) inputArea.style.display = 'flex'; // 입력창 항상 표시
-    if (meterContainer) meterContainer.classList.add('active'); // 음성 레벨 미터 항상 표시
+    // if (inputArea) inputArea.style.display = 'flex'; // ⭐ 이 줄 삭제
+    // if (meterContainer) meterContainer.classList.add('active'); // 이 줄도 setupAudioAnalysis에서만 호출되도록 제거
 
     // UI 요소 가져오기
     const startCover = document.getElementById('start-cover');
@@ -782,7 +787,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // --- 모든 실제 초기화 로직은 버튼 클릭 이후에 실행 ---
             try {
-                if (inputArea) inputArea.style.display = 'none'; // ⭐ 이 부분이 시작 시 숨깁니다.
+                // if (inputArea) inputArea.style.display = 'none'; // ⭐ 이 줄 삭제
 
                 if (!loggedInUserId) {
                     console.error("사용자 정보(userId)가 없습니다. 시작 페이지로 이동합니다.");
