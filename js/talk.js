@@ -705,13 +705,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const appContainer = document.querySelector('.app-container');
     const startButton = document.getElementById('start-button');
 
-    const style = document.createElement('style');
-    style.textContent = `
-        body.talk-page-body { overflow: hidden; }
-        @media (min-width: 641px) {
-            .app-container.talk-page { max-width: 640px; height: 90vh; margin: auto; }
-        }
-    `;
+    
     document.head.appendChild(style);
     document.body.classList.add('talk-page-body');
     if (appContainer) appContainer.classList.add('talk-page');
