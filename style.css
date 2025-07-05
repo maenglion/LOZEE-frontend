@@ -1,104 +1,161 @@
-/* style.css */
-body { 
-    margin:0; 
-    padding:0; 
-    font-family:'KoPub World Dotum', sans-serif; 
-    display:flex; 
-    flex-direction:column; 
-    height:100vh; 
-    background:#2c3e50; /* 어두운 남색 계열 배경 */ 
-    color:#ecf0f1; /* 기본 글자색 밝게 */
+/* style.css (common.css와 기존 style.css가 통합된 파일) */
 
+/* ----------- common.css 내용 시작 ----------- */
+body {
+    background: linear-gradient(135deg, #6078ea, #a777e3);
+    font-family: 'KoPub World Dotum', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 .app-container {
-    display: flex;
-    flex-direction: column;
     width: 100%;
-    max-width: 640px; /* 모바일 기본 너비 */
-    height: 100vh; /* 모바일에서 100vh 유지 */
-    min-height: 100vh; /* PC에서 최소 높이 유지 */
+    max-width: 640px;
+    height: 100vh;
+    min-height: 100vh;
     background-color: #ffffff;
     box-shadow: 0 0 25px rgba(0,0,0,0.15);
     border-radius: 20px;
-    overflow-y: auto; /* app-container 자체에 스크롤 가능하도록 */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
 }
 
-/* ⭐ PC 버젼에서 위아래 여백 및 고정 창 사이즈 설정 ⭐ */
-@media (min-width: 640px) { /* common.css의 max-width: 639px 와 일치하도록 */
+@media (max-width: 639px) {
+    body { padding: 0; align-items: stretch; }
+    .app-container {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}
+
+.page-title {
+    color: #375bd1;
+    text-align: center;
+    font-size: 1.5em;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    font-weight: 700;
+}
+
+.app-container > * {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#rosie-appointments {
+    padding: 16px;
+    border-top: 1px solid #eee;
+}
+#rosie-appointments .module-title {
+    font-size: 1.2em;
+    margin-bottom: 12px;
+    color: #375bd1;
+}
+#appointments-list .appointment-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+}
+#appointments-list .empty-state {
+    color: #999;
+    font-size: 0.9em;
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 639px) {
+    .container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+}
+/* ----------- common.css 내용 끝 ----------- */
+
+/* ----------- 기존 style.css 내용 시작 ----------- */
+
+@media (min-width: 640px) {
     body {
-        padding: 50px 0; /* ⭐ PC에서 body에 위아래 여백 50px씩 추가 */
-        align-items: center; /* ⭐ PC에서 app-container 중앙 정렬 */
-        justify-content: center; /* ⭐ PC에서 app-container 세로 중앙 정렬 */
+        padding: 50px 0;
+        align-items: center;
+        justify-content: center;
     }
     .app-container {
-        max-width: 960px; /* ⭐ PC에서 옆으로 1.5배 넓게 (640px * 1.5) */
-        height: auto; /* ⭐ PC에서 높이를 콘텐츠에 맞게 조절 */
-        max-height: calc(100vh - 100px); /* ⭐ 화면 높이에서 body 패딩만큼 제외한 최대 높이 */
+        max-width: 960px;
+        height: auto;
+        max-height: calc(100vh - 100px);
         border-radius: 20px;
     }
 }
 
 
-#meter-container { 
-    /* 이 부분을 제거하거나, 위에 talk.html의 session-meter-container 스타일과 일치하도록 조정 */
-    /* 현재 talk.html에서 #session-header 안에 넣었으므로, 이 일반 선택자는 제거하는 것이 좋습니다. */
-    /* 만약 전역적으로 사용된다면 이름 변경 또는 선택자 강도를 높여야 합니다. */
-    /* 예를 들어, talk.html에서 #meter-container가 아니라 .volume-meter-wrapper 등으로 변경 후 여기에 스타일 적용 */
-    /* 지금은 talk.html에서 .session-meter-container에 스타일을 주었으므로, 이 부분을 제거합니다. */
-    /* display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    padding:0.8rem 0; 
-    background-color: #ffffff;
-    flex-shrink:0; 
-    border-bottom: 1px solid #e0e0e0; */ 
-
+#volume-meter {
+    width:70%;
+    max-width: 280px;
+    height:12px;
+    border:1px solid #ced4da;
+    border-radius:6px;
+    overflow:hidden;
+    background-color: #e9ecef;
 }
-#volume-meter { 
-    width:70%; 
-    max-width: 280px; 
-    height:12px; 
-    border:1px solid #ced4da; /* ⭐ 테두리 색상 조정 */
-    border-radius:6px; 
-    overflow:hidden; 
-    background-color: #e9ecef; /* ⭐ 볼륨 미터 내부 배경을 더 연한 회색으로 변경 */
-
-}
-#volume-level { 
-    height:100%; 
-    /* ⭐⭐ 요청하신 스펙트럼 느낌의 색상 그라데이션 적용 ⭐⭐ */
-    background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3); 
-    width:0%; 
-    transition:width 0.08s ease-out; 
-    border-radius:4px; 
+#volume-level {
+    height:100%;
+    background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
+    width:0%;
+    transition:width 0.08s ease-out;
+    border-radius:4px;
 }
 
-/* 마이크 버튼 */
+/* 마이크 버튼 (이제 이미지 아이콘 사용) */
 #mic-button {
   width: 48px;
   height: 48px;
   border: none;
   border-radius: 50%;
-  background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button.png?alt=media&token=5ecee5c0-e062-4599-8b08-938e046a57a9'); /* ✅ 여기에 실제 mic-button.png의 URL 붙여넣기 */
-  color: #fff;
-  font-size: 1.5em; /* 아이콘 크기 조정 */
+  background-color: transparent;
+  background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button.png?alt=media&token=5ecee5c0-e062-4599-8b08-938e046a57a9'); /* mic-button.png URL */
+  background-size: 28px 28px;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: transparent; /* 텍스트 숨김 */
+  font-size: 0; /* 폰트 크기 0 */
   cursor: pointer;
-  flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
-  display: flex; /* 아이콘 중앙 정렬 */
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* 텍스트 모드일 때의 스타일 */
+#mic-button.text-mode {
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button-text-mode.png?alt=media&token=6143b866-c19f-41ec-b62e-74a1e4efee6c'); /* ✅ 여기에 'T' 대체 이미지 아이콘 URL */
+    background-size: 28px 28px; /* 아이콘 크기 조정 */
+    background-position: center;
+    background-repeat: no-repeat;
+    color: transparent; /* 텍스트 숨김 */
+    font-size: 0; /* 폰트 크기 0 */
+}
 
 #mic-button.disabled {
   opacity: 0.5;
   cursor: default;
-}    
+}
 
 #chat-window {
-  flex-grow: 1; /* 남은 공간을 모두 차지하도록 */
+  flex-grow: 1;
   overflow-y: auto;
-  /* padding: 20px; */
+  padding: 0 20px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -106,12 +163,12 @@ body {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  max-width: 640px; /* PC에서의 최대 너비 유지 */
-  margin: 0 auto; /* 중앙 정렬 */
+  max-width: 640px;
+  margin: 0 auto;
 }
 @media screen and (max-width: 480px) {
   #chat-window {
-    /* padding: 12px; */
+    padding: 0 12px 12px 12px;
     border-radius: 0;
     box-shadow: none;
     max-width: 100%;
@@ -132,41 +189,39 @@ body {
   background: #aaaaaa;
 }
 
-/* 2. GNB 밑 제목 부분과 토크 버블 간 간격 추가 */
 #session-header {
-    margin-bottom: 12px; /* 헤더 아래쪽 여백 추가 */
+    margin-bottom: 0;
 }
 
-/* 3. 피드백 메시지 스타일 수정 */
 .bubble.assistant_feedback {
-    align-self: center; /* 중앙 정렬 */
-    background-color: #f8f9fa; /* 밝은 회색 배경 */
-    color: #495057; /* 어두운 회색 글씨 */
+    align-self: center;
+    background-color: #f8f9fa;
+    color: #495057;
     font-size: 0.9em;
     border: 1px solid #dee2e6;
 }
 
-/* ⭐⭐ 주제 선택 컨테이너 스타일 ⭐⭐ */
 #topic-selection-container {
-    background-color: #f0f0f0; /* ⭐ 입력창과 동일한 연한 회색 배경 */
+    background-color: #f0f0f0;
     padding: 15px;
     border-radius: 12px;
-    margin-bottom: 10px; /* 아래 여백 */
-    color: #333; /* ⭐ 글씨 색상 살짝 어둡게 */
+    margin-bottom: 10px;
+    color: #333;
+    margin-top: 15px;
 }
 
-.chat-options-container { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 8px; 
-    margin: 10px 0; 
-    align-self: flex-start; 
-    width: 100%; /* ⭐ 부모 컨테이너에 맞춰 100% */
+.chat-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0;
+    align-self: flex-start;
+    width: 100%;
 }
 
 .chat-option-btn {
-    background-color: #ffffff; /* ⭐ 버튼 배경 흰색 */
-    color: #333; /* ⭐ 글씨 색상 */
+    background-color: #ffffff;
+    color: #333;
     border: 1px solid #dcdcdc;
     border-radius: 12px;
     padding: 10px 15px;
@@ -187,46 +242,45 @@ body {
     border-color: var(--primary-color);
 }
 
-.bubble { 
-    max-width:80%; 
-    padding:0.9rem 1.2rem; 
-    border-radius:1.3rem; 
-    line-height:1.65; 
-    white-space:pre-wrap; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15); 
-    word-break: keep-all; 
+.bubble {
+    max-width:80%;
+    padding:0.9rem 1.2rem;
+    border-radius:1.3rem;
+    line-height:1.65;
+    white-space:pre-wrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    word-break: keep-all;
 }
 .bubble.user {
-  background: #bdc3c7;      /* 연한 회색 */
+  background: #bdc3c7;
   color: #2c3e50;
   align-self: flex-end;
   border-bottom-right-radius: 0.4rem;
 }
-/* 챗 버블: assistant 쪽 말풍선 (talk.html 에서는 .bubble.bot 으로 붙음) */
 .bubble.bot {
-  background: var(--primary-color); /* ⭐ 파란색 계열 -> 메인 색상 변수 사용 */
+  background: var(--primary-color);
   color: #ffffff;
   align-self: flex-start;
   border-bottom-left-radius: 0.4rem;
 }
 
-.bubble.interim { 
-    background: #7f8c8d; /* 중간 결과 (더 연한 회색) */
-    color: #ecf0f1; 
+.bubble.interim {
+    background: #7f8c8d;
+    color: #ecf0f1;
     font-style: italic;
-    align-self: flex-end; 
-    border-bottom-right-radius:0.4rem; 
+    align-self: flex-end;
+    border-bottom-right-radius:0.4rem;
 }
 .loading-spinner {
-    display: none; 
+    display: none;
     align-self: center;
-    margin: 15px; 
-    border: 5px solid #7f8c8d; 
-    border-top: 5px solid #3498db; 
+    margin: 15px;
+    border: 5px solid #7f8c8d;
+    border-top: 5px solid #3498db;
     border-radius: 50%;
-    width: 35px; 
-    height: 35px; 
-    animation: spin 0.8s linear infinite; 
+    width: 35px;
+    height: 35px;
+    animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -237,72 +291,79 @@ body {
 #chat-input-container {
     display: flex;
     padding: 0.75rem 1rem;
-    background-color: #f0f0f0; /* ⭐ 입력창 배경을 연한 회색으로 변경 (주제 선택과 유사하게) */
-    border-top: 1px solid #e0e0e0; /* ⭐ 경계선 색상도 조정 */
+    background-color: #f0f0f0;
+    border-top: 1px solid #e0e0e0;
     flex-shrink: 0;
-    align-items: center; /* ⭐ 내부 요소 세로 중앙 정렬 */
-    gap: 10px; /* ⭐ 버튼 간 간격 */
-    height: var(--input-area-height); /* ⭐ 변수 사용 */
-    box-sizing: border-box; /* ⭐ 패딩이 너비에 포함되도록 */
-    /* ⭐⭐ 입력창을 위로 올리기 위해 main 태그의 flex-grow를 조정하거나,
-           input-area를 absolute/fixed로 배치하는 방법이 있지만,
-           현재 flex-column 레이아웃에서는 chat-window가 남은 공간을 차지하므로
-           input-area는 자연스럽게 하단에 위치합니다.
-           만약 chat-window가 너무 길어져서 스크롤 문제가 있다면,
-           chat-window의 max-height를 조정해야 합니다.
-    */
+    align-items: center;
+    gap: 10px;
+    height: var(--input-area-height);
+    box-sizing: border-box;
 }
 #chat-input {
     flex-grow: 1;
     padding: 0.75rem;
-    border: 1px solid #ced4da; /* ⭐ 테두리 색상 조정 */
+    border: 1px solid #ced4da;
     border-radius: 20px;
-    /* margin-right: 0.75rem; <-- gap으로 대체 가능 */
     font-size: 1rem;
-    background-color: #ffffff; /* ⭐ 입력 필드 배경은 흰색으로 */
+    background-color: #ffffff;
     color: #2c3e50;
-    box-sizing: border-box; /* ⭐ 패딩이 너비에 포함되도록 */
+    box-sizing: border-box;
 }
-/* ⭐⭐ #send-button 으로 ID 변경 ⭐⭐ */
-#send-button{
-    width: 48px; /* ⭐ 고정 너비 */
-    height: 48px; /* ⭐ 고정 높이 */
+/* #send-button 과 #plus-button 스타일 통합 및 이미지 적용 */
+#send-button,
+#plus-button {
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    /* padding: 0.75rem 1.25rem; <-- 아이콘 중앙 정렬을 위해 제거 */
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/send-button.png?alt=media&token=f10a6169-3e02-4721-94b5-35dd9ead6b52'); /* ✅ 여기에 실제 plus-button.png의 URL 붙여넣기 */
-    color: white;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: transparent;
+    font-size: 0;
     border: none;
     cursor: pointer;
-    font-size: 1.5em; /* ⭐ 아이콘 크기 */
-    font-weight: bold;
     transition: background-color 0.2s;
-    flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
-    display: flex; /* 아이콘 중앙 정렬 */
+    flex-shrink: 0;
+    display: flex;
     align-items: center;
     justify-content: center;
+}
+#send-button {
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/send-button.png?alt=media&token=f10a6169-3e02-4721-94b5-35dd9ead6b52'); /* send-button.png URL */
+    background-size: 28px 28px;
+}
+#plus-button {
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/plus-button.png?alt=media&token=8ab76317-2425-4b8f-b355-04723acc7f3c'); /* plus-button.png URL */
+    background-size: 28px 28px;
 }
 
-#plus-button {
-    width: 48px; /* ⭐ 고정 너비 */
-    height: 48px; /* ⭐ 고정 높이 */
-    border-radius: 50%;
-    /* padding: 0.75rem 1.25rem; <-- 아이콘 중앙 정렬을 위해 제거 */
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/plus-button.png?alt=media&token=8ab76317-2425-4b8f-b355-04723acc7f3c'); /* ✅ 여기에 실제 plus-button.png의 URL 붙여넣기 */
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 1.5em; /* ⭐ 아이콘 크기 */
-    font-weight: bold;
-    transition: background-color 0.2s;
-    flex-shrink: 0; /* 버튼이 줄어들지 않도록 */
-    display: flex; /* 아이콘 중앙 정렬 */
-    align-items: center;
-    justify-content: center;
-}
-#send-button:hover {
+#send-button:hover,
+#plus-button:hover {
     background-color: #2980b9;
 }
-#send-button:disabled {
+#send-button:disabled,
+#plus-button:disabled {
     background-color: #95a5a6;
     cursor: not-allowed;
 }
+
+/* 햄버거 버튼 스타일 (점 세 개 이미지 아이콘 사용) */
+#menu-toggle {
+    width: 48px;
+    height: 48px;
+    border: none;
+    background-color: transparent;
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10'); /* menu-toggle.png URL */
+    background-size: 28px 28px; /* 아이콘 크기 조정 (8px x 36px 이미지를 28x28에 맞게 조정) */
+    background-position: center;
+    background-repeat: no-repeat;
+    color: transparent;
+    font-size: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    z-index: 1001;
+}
+/* ----------- 기존 style.css 내용 끝 ----------- */
