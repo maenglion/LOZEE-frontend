@@ -49,12 +49,6 @@ const meterContainer = document.getElementById('meter-container');
 const meterLevel = document.getElementById('volume-level');
 const sessionHeaderTextEl = document.getElementById('session-header');
 
-// ⭐⭐ 새로운 마이크 아이콘 SVG (요청하신 챗봇 스타일) ⭐⭐
-const micIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="9" y="3" width="6" height="12" rx="3" ry="3"/>
-  <line x1="12" y1="15" x2="12" y2="18"/>
-  <line x1="8" y1="18" x2="16" y2="18"/>
-</svg>`;
 
 /**
  * 대화 세션을 공식적으로 시작하고 관련 UI를 활성화하며, 첫 메시지를 전송하는 함수
