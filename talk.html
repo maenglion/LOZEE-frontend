@@ -37,13 +37,13 @@
         }
 
         /* ⭐️ 추가: #session-header 안에 미터 바를 직접 넣을 경우를 위한 스타일 */
-        #session-header .session-meter-container { /* 새 클래스명 사용 */
+        .session-meter-container { /* 새 클래스명 사용 */
             position: absolute;
             bottom: 0; /* 세션 헤더 하단에 붙이기 */
             left: 0;
             width: 100%;
-            height: 5px; /* 미터 바 자체의 높이 */
-            background-color: transparent; /* 배경 투명하게 */
+            height: 4px; /* ⭐ 5px -> 4px로 더욱 줄여봄 */
+            background-color: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -88,9 +88,9 @@
             </main>
         
         <div id="chat-input-container">
-            <button id="mic-button">🎤</button>
+            <button id="mic-button"></button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-            <button id="plus-button">＋</button>
+            <button id="plus-button"></button>
             <input type="file" id="image-upload" accept="image/*" style="display: none;" />
             <button id="send-button">➤</button>
         </div>
