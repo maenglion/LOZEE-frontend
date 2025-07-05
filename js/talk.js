@@ -40,10 +40,13 @@ const chatWindow = document.getElementById('chat-window');
 // ⭐⭐ inputArea -> chatInputContainer 로 변수명 변경 및 ID 일치 ⭐⭐
 const chatInputContainer = document.getElementById('chat-input-container'); 
 const chatInput = document.getElementById('chat-input');
+const plusButton = document.getElementById('plus-button');         // ✅ 추가
+const imageUpload = document.getElementById('image-upload');       // ✅ 추가
 const actionButton = document.getElementById('action-button');
 const meterContainer = document.getElementById('meter-container'); // 이제 HTML에 있으므로 가져옵니다.
 const meterLevel = document.getElementById('volume-level');
 const sessionHeaderTextEl = document.getElementById('session-header');
+
 
 
 // ⭐⭐ 새로운 마이크 아이콘 SVG (요청하신 챗봇 스타일) ⭐⭐
@@ -769,6 +772,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.head.appendChild(style);
     document.body.classList.add('talk-page-body');
     if (appContainer) appContainer.classList.add('talk-page');
+
+
+// 이미지 파싱 버튼 
+plusButton.addEventListener('click', () => {
+  imageUpload.click(); // 파일 선택창 띄우기
+});
+
+imageUpload.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const imageUrl = await uploadToGcp(file); // 또는 base64 처리
+  appendMessage("user", "[이미지 분석 중입니다...]");
+  const result = await sendToGptVision(imageUrl);
+  updateLastUserMessage(`[이미지 분석 결과] ${result}`);
+});
+
+function saveMessageToFirestore(role, content, type = "text") {
+  const db = firebase.firestore();
+  const sessionId = localStorage.getItem("sessionId") || "default-session";
+  const userId = localStorage.getItem("userId") || "anonymous";
+
+  db.collection("conversationSessions")
+    .doc(sessionId)
+    .collection("messages")
+    .add({
+      userId,
+      role,
+      content,
+      type,                // 예: "text", "image_result"
+      timestamp: new Date()
+    })
+    .then(() => {
+      console.log("✅ 메시지 저장됨:", role, content);
+    })
+    .catch((error) => {
+      console.error("❌ Firestore 저장 실패:", error);
+    });
+}
 
 
     /// ✅ 시작 버튼에 클릭 이벤트 할당
