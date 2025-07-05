@@ -5,43 +5,39 @@
     <title>LOZEE와 대화하기</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* CSS 변수는 HTML 파일에 직접 정의하지 않고, style.css의 :root에 정의합니다. */
-        /* 여기서는 gnb.css의 :root를 참조하도록 합니다. */
+    <link rel="stylesheet" href="style.css"> <style>
         :root {
-            --session-header-height: 28px; /* ⭐ 텍스트가 들어가면서 깔끔하게 보이도록 적절한 높이 설정 */
+            --session-header-height: 32px;
             --input-area-height: 70px;
         }
-        /* app-container 및 body 스타일은 style.css와 common.css에서 관리 */
-        .app-container { display: flex; flex-direction: column; height: 100%; background-color: #ffffff; }
+        .app-container { display: flex; flex-direction: column; height: 100%; /* background-color는 style.css에서 관리 */ }
         body { padding: 0; }
 
-        /* ⭐ 주제 표시줄 스타일 (talk.html에만 정의. 나머지 스타일은 style.css에서 통합 관리) ⭐ */
         #session-header {
             position: relative;
             width: 100%;
-            height: var(--session-header-height); /* ⭐ 28px 높이 적용 */
-            background-color: #f0f0f0; /* 배경색 유지 */
+            height: var(--session-header-height);
+            background-color: #f0f0f0;
             color: #555;
-            font-size: 0.85em; /* ⭐ 텍스트 크기 */
+            font-size: 0.9em;
             display: flex;
-            align-items: center; /* ⭐ 텍스트를 세로 중앙 정렬 */
-            padding: 0 15px; /* 좌우 패딩만 유지 */
+            align-items: center;
+            padding: 0 15px;
             box-sizing: border-box;
             z-index: 998;
             transition: background-color 0.1s;
-            flex-shrink: 0; /* flex 컨테이너에서 크기 줄어들지 않도록 */
-            line-height: 1; /* ⭐ 텍스트 라인 높이 1로 설정하여 텍스트가 중앙에 오도록 함 */
-            /* 모든 border-radius와 box-shadow, margin-bottom은 style.css에서 관리 */
+            flex-shrink: 0;
+            line-height: 1.2;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            box-shadow: none;
+            margin-bottom: 0;
         }
         #session-header-text {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
-        /* volume-meter-wrapper 스타일은 style.css에서 통합 관리하므로 여기서는 제거 */
     </style>
 </head>
 
@@ -50,8 +46,7 @@
         <nav id="gnb">
             <button id="menu-toggle"></button>
             <div id="gnb-title">LOZEE</div>
-            <div class="gnb-right-buttons">
-            </div>
+            <div style="width: 44px; visibility: hidden;"></div>
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>
@@ -61,16 +56,15 @@
             </div>
         </nav>
 
-<div id="session-header">
-  <span id="session-header-text">주제 선택 중...</span>
-</div>
+        <div id="session-header">
+            <span id="session-header-text">주제 선택 중...</span>
+        </div>
 
-<!-- ✅ 음량바 -->
-<div id="meter-container" class="volume-meter-wrapper">
-  <div id="volume-meter">
-    <div id="volume-level"></div>
-  </div>
-</div>
+        <div id="meter-container" class="volume-meter-wrapper">
+            <div id="volume-meter">
+                <div id="volume-level"></div>
+            </div>
+        </div>
 
         <main id="chat-window">
             <div id="topic-selection-container"></div>
@@ -84,7 +78,7 @@
             <button id="send-button"></button>
         </div>
 
-        <script src="./js/gnb.js" defer></script>
-        <script type="module" src="./js/talk.js"></script>
+    <script src="./js/gnb.js" defer></script>
+    <script type="module" src="./js/talk.js"></script>
 </body>
 </html>
