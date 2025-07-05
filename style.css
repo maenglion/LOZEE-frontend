@@ -347,23 +347,4 @@ body {
     cursor: not-allowed;
 }
 
-/* 햄버거 버튼 스타일 (점 세 개 이미지 아이콘 사용) */
-#menu-toggle {
-    width: 48px;
-    height: 48px;
-    border: none;
-    background-color: transparent;
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10'); /* menu-toggle.png URL */
-    background-size: 28px 28px; /* 아이콘 크기 조정 (8px x 36px 이미지를 28x28에 맞게 조정) */
-    background-position: center;
-    background-repeat: no-repeat;
-    color: transparent;
-    font-size: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 10px;
-    z-index: 1001;
-}
 /* ----------- 기존 style.css 내용 끝 ----------- */
