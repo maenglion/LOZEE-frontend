@@ -8,35 +8,32 @@
     <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="style.css">
     <style>
+        /* CSS 변수는 HTML 파일에 직접 정의하지 않고, style.css의 :root에 정의합니다. */
+        /* 여기서는 gnb.css의 :root를 참조하도록 합니다. */
         :root {
-            --session-header-height: 32px; /* 주제 선택 중 박스의 높이 */
+            --session-header-height: 28px; /* ⭐ 텍스트가 들어가면서 깔끔하게 보이도록 적절한 높이 설정 */
             --input-area-height: 70px;
         }
         /* app-container 및 body 스타일은 style.css와 common.css에서 관리 */
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            /* background-color: #ffffff; 이 부분은 style.css에서 관리하도록 */
-        }
+        .app-container { display: flex; flex-direction: column; height: 100%; background-color: #ffffff; }
         body { padding: 0; }
 
         /* ⭐ 주제 표시줄 스타일 (talk.html에만 정의. 나머지 스타일은 style.css에서 통합 관리) ⭐ */
         #session-header {
-            position: relative; /* 필요할 경우 자식 요소 포지셔닝 기준 */
+            position: relative;
             width: 100%;
-            height: var(--session-header-height); /* 32px 높이 적용 */
+            height: var(--session-header-height); /* ⭐ 28px 높이 적용 */
             background-color: #f0f0f0; /* 배경색 유지 */
             color: #555;
-            font-size: 0.9em; /* 텍스트 크기 */
+            font-size: 0.85em; /* ⭐ 텍스트 크기 */
             display: flex;
-            align-items: center; /* 세로 중앙 정렬 */
-            padding: 0 15px; /* 좌우 패딩 */
+            align-items: center; /* ⭐ 텍스트를 세로 중앙 정렬 */
+            padding: 0 15px; /* 좌우 패딩만 유지 */
             box-sizing: border-box;
             z-index: 998;
             transition: background-color 0.1s;
             flex-shrink: 0; /* flex 컨테이너에서 크기 줄어들지 않도록 */
-            line-height: 1.2; /* 텍스트 라인 높이 */
+            line-height: 1; /* ⭐ 텍스트 라인 높이 1로 설정하여 텍스트가 중앙에 오도록 함 */
             /* 모든 border-radius와 box-shadow, margin-bottom은 style.css에서 관리 */
         }
         #session-header-text {
@@ -44,7 +41,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        /* .session-meter-container 스타일은 더 이상 사용하지 않습니다. */
+
+        /* volume-meter-wrapper 스타일은 style.css에서 통합 관리하므로 여기서는 제거 */
     </style>
 </head>
 
@@ -68,7 +66,8 @@
             <span id="session-header-text">주제 선택 중...</span>
         </div>
 
-        <div id="meter-container" class="volume-meter-wrapper"> <div id="volume-meter">
+        <div id="meter-container" class="volume-meter-wrapper">
+            <div id="volume-meter">
                 <div id="volume-level"></div>
             </div>
         </div>

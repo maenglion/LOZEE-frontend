@@ -99,10 +99,10 @@ body {
     }
 }
 
-/* ⭐⭐ 음향 바 전체 래퍼 스타일 (독립적인 위치와 배경) ⭐⭐ */
-.volume-meter-wrapper { /* ✅ 새로운 클래스 선택자 */
+/* ⭐⭐ 음향 바 전체 래퍼 스타일 (독립적이고 매우 얇게) ⭐⭐ */
+.volume-meter-wrapper { /* ✅ 이전에 standalone-meter-container 였던 것을 변경 */
     width: 100%;
-    height: 15px; /* ⭐ 음향 바 전체 컨테이너의 높이 */
+    height: 5px; /* ⭐ 음향 바 전체 컨테이너의 높이를 5px로 (매우 얇게) */
     background-color: #f0f0f0; /* ⭐ session-header와 동일한 배경색 */
     display: flex;
     align-items: center; /* ⭐ 세로 중앙 정렬 */
@@ -118,12 +118,12 @@ body {
     box-shadow: none; /* 그림자 제거 */
 }
 
-/* ⭐⭐ 음향 바의 실제 막대 스타일 (회색 배경/테두리 제거) ⭐⭐ */
+/* ⭐⭐ 음향 바의 실제 막대 스타일 (테두리 제거, 배경색 투명) ⭐⭐ */
 #volume-meter {
     width:70%;
     max-width: 280px;
-    height: 3px; /* 막대 높이 */
-    border: none; /* ⭐ 테두리 제거 */
+    height: 3px; /* ⭐ 막대 높이 (volume-meter-wrapper 높이에 맞춰 3px로 유지) */
+    border: none; /* ⭐ 테두리 완전히 제거 */
     border-radius:6px;
     overflow:hidden;
     background-color: transparent; /* ⭐ 배경색 완전 투명 */
