@@ -155,36 +155,8 @@ export function getSystemPrompt({
 }
 
 
-// 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
-export async function getGptResponse(userMessage, context = {}) {
-  const token = await waitForIdToken();
-  try {
-    const idToken = await getIdToken();
-    if (!idToken) {
-      throw new Error("Firebase ID 토큰을 가져올 수 없습니다.");
-    }
-
-    // ⭐⭐⭐ 핵심 수정 부분: messages 배열 구성 ⭐⭐⭐
-    let messages = [];
-
-    // 1. systemPrompt가 있다면 messages 배열의 가장 첫 요소로 추가
-    if (context.systemPrompt) {
-        messages.push({ role: 'system', content: context.systemPrompt });
-    }
-
-    // 2. chatHistory를 messages 배열에 추가
-    // context.chatHistory가 빈 배열일 수 있으므로 || [] 사용
-    (context.chatHistory || []).forEach(chatTurn => {
-        messages.push({ role: chatTurn.role, content: chatTurn.content });
-    });
-
-    // 3. 현재 사용자 메시지를 messages 배열의 마지막에 추가
-    messages.push({ role: 'user', content: userMessage });
-    console.log("📦 최종 전송될 payload:", payload); //
-
-   
    // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
-    export async function getGptResponse(userMessage, context = {}) {
+  async function getGptResponse(userMessage, context = {}) {
   const token = await waitForIdToken();
   try {
     const idToken = await getIdToken();
@@ -242,6 +214,10 @@ export async function getGptResponse(userMessage, context = {}) {
     throw error;
   }
 }
+
+// ✅ 글로벌로 등록해서 일반 스크립트에서도 접근 가능
+window.getGptResponse = getGptResponse;
+
 
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
