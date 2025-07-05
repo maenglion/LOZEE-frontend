@@ -43,8 +43,6 @@ const chatInput = document.getElementById('chat-input');
 const plusButton = document.getElementById('plus-button');
 const imageUpload = document.getElementById('image-upload');
 const actionButton = document.getElementById('action-button');
-const meterContainer = document.getElementById('meter-container');
-const meterLevel = document.getElementById('volume-level');
 const sessionHeaderTextEl = document.getElementById('session-header');
 
 
