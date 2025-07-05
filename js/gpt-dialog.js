@@ -182,14 +182,17 @@ export async function getGptResponse(userMessage, context = {}) {
     messages.push({ role: 'user', content: userMessage });
 
 
-    const payload = {
-        messages: messages, // ✅ 이렇게 구성된 messages 배열을 payload에 넣습니다.
-        model: "gpt-4-turbo", // 또는 사용하는 모델 이름
-        temperature: 0.7,
-        max_tokens: 80,
-        userId: context.userId,
-        elapsedTime: context.elapsedTime,
-    };
+  const useVision = context.hasImage || context.imageUrl; // 이미지 첨부 여부에 따라 결정
+
+const payload = {
+  messages: messages,
+  model: useVision ? "gpt-4o" : "gpt-4-turbo", // ✅ 자동 전환
+  temperature: 0.7,
+  max_tokens: 80,
+  userId: context.userId,
+  elapsedTime: context.elapsedTime,
+};
+
 
     console.log("📦 최종 전송될 payload:", payload); //
 
