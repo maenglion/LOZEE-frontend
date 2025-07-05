@@ -180,21 +180,46 @@ export async function getGptResponse(userMessage, context = {}) {
 
     // 3. 현재 사용자 메시지를 messages 배열의 마지막에 추가
     messages.push({ role: 'user', content: userMessage });
-
-
-  const useVision = context.hasImage || context.imageUrl; // 이미지 첨부 여부에 따라 결정
-
-const payload = {
-  messages: messages,
-  model: useVision ? "gpt-4o" : "gpt-4-turbo", // ✅ 자동 전환
-  temperature: 0.7,
-  max_tokens: 80,
-  userId: context.userId,
-  elapsedTime: context.elapsedTime,
-};
-
-
     console.log("📦 최종 전송될 payload:", payload); //
+
+   
+   // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
+    export async function getGptResponse(userMessage, context = {}) {
+  const token = await waitForIdToken();
+  try {
+    const idToken = await getIdToken();
+    if (!idToken) {
+      throw new Error("Firebase ID 토큰을 가져올 수 없습니다.");
+    }
+
+    let messages = [];
+
+    if (context.systemPrompt) {
+        messages.push({ role: 'system', content: context.systemPrompt });
+    }
+
+    (context.chatHistory || []).forEach(chatTurn => {
+        messages.push({ role: chatTurn.role, content: chatTurn.content });
+    });
+
+    messages.push({ role: 'user', content: userMessage });
+
+    // 🔁 자동 모델 전환 로직 추가
+    const useVision = context.hasImage || context.imageUrl;
+    const isChildUnder12 = context.userAge && context.userAge < 12;
+
+    const selectedModel = useVision ? "gpt-4o" : "gpt-4-turbo";
+
+    const payload = {
+      messages: messages,
+      model: selectedModel,
+      temperature: 0.7,
+      max_tokens: isChildUnder12 ? 60 : 80, // 어린이는 답변을 짧게 제한
+      userId: context.userId,
+      elapsedTime: context.elapsedTime,
+    };
+
+    console.log("📦 최종 전송될 payload:", payload);
 
     const res = await fetch(GPT_API_URL, {
       method: 'POST',
@@ -217,7 +242,6 @@ const payload = {
     throw error;
   }
 }
-
 
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
