@@ -17,7 +17,7 @@ import {
     getDocs,
     where
 } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-import { ALL_NOTIFICATION_KEYWORDS, NOTIFICATION_KEYWORDS } from './constants.js';
+import { ALL_NOTIFICATION_KEYWORDS, NOTIFICATION_KEYWORDS } from './constants.js'; // constants.js는 이 파일에 사용됨
 
 /** 텍스트에서 위험 태그를 감지하여 배열로 반환 */
 function detectRiskTags(text, detailedAnalysis = {}) {
@@ -77,10 +77,8 @@ export function waitForIdToken(timeout = 5000) {
   });
 }
 
-
-
 /**
- * [신규 추가 또는 수정]
+ * [기존 함수 유지]
  * 생성된 저널 데이터를 Firestore에 저장(또는 업데이트)하는 함수
  * @param {string} sessionId - 저장할 저널의 고유 세션 ID
  * @param {object} journalData - 저장할 저널 데이터 객체
@@ -97,8 +95,7 @@ export async function saveJournalToFirestore(sessionId, journalData) {
 
     await setDoc(journalRef, {
       ...journalData,
-      // journal.html에서 사용하던 toDate()를 위해 서버 시간을 기록
-      createdAt: serverTimestamp(), 
+      createdAt: serverTimestamp(), // journal.html에서 사용하던 toDate()를 위해 서버 시간을 기록
       updatedAt: serverTimestamp()
     }, { merge: true }); // merge: true 옵션으로 기존 문서를 덮어쓰지 않고 병합
 
@@ -110,10 +107,8 @@ export async function saveJournalToFirestore(sessionId, journalData) {
   }
 }
 
-
-
-
 /**
+ * [기존 함수 유지]
  * Journal을 저장하고, 조건에 따라 notifications 컬렉션에도 알림 생성
  * @returns {Promise<string|null>} 저장된 저널 문서 ID 또는 null
  */
@@ -190,9 +185,9 @@ export async function logSessionEnd(sessionId) {
     if (!db || !sessionId) return;
     try {
         const sessionRef = doc(db, 'sessions', sessionId);
-        await updateDoc(sessionRef, { 
-            endedAt: serverTimestamp(), 
-            status: "ended" 
+        await updateDoc(sessionRef, {
+            endedAt: serverTimestamp(),
+            status: "ended"
         });
         console.log('[Firebase Utils] ✅ 세션 종료 로그 저장 완료, ID:', sessionId);
     } catch (err) {
@@ -202,25 +197,25 @@ export async function logSessionEnd(sessionId) {
 
 
 /**
- * [신규 추가]
+ * [기존 함수 유지]
  * 특정 사용자의 모든 저널 데이터를 시간순으로 정렬하여 가져오는 함수
  * @param {string} userId - Firestore의 사용자 UID
  * @returns {Promise<object[]>} - 저널 데이터 배열
  */
 export async function getJournalsForUser(userId) {
     if (!userId) return [];
-    
+
     try {
         const journalsRef = collection(db, 'journals');
-        const q = query(journalsRef, where('userId', '==', userId), orderBy('createdAt', 'asc'));
-        
+        const q = query(journalsRef, where('userId', '==', userId), orderBy('createdAt', 'asc')); // asc -> desc로 변경하는게 최근 순
+
         const querySnapshot = await getDocs(q);
-        
+
         const journals = [];
         querySnapshot.forEach((doc) => {
             journals.push({ id: doc.id, ...doc.data() });
         });
-        
+
         return journals;
 
     } catch (error) {
@@ -234,7 +229,6 @@ export async function getJournalsForUser(userId) {
 export async function updateTopicStats(userId, topicName, entryType = "standard") {
     if (!userId || !topicName) return;
     const role = localStorage.getItem('lozee_role');
-    // ✅ 여기 if 문은 이전 논의에 따라 다시 활성화하거나, 의도에 맞게 조정해야 합니다.
     // 보호자 계정이 자녀 관련 저널을 볼 때 topicStats에 반영하지 않으려면 이대로 두고,
     // 모든 저널을 반영하려면 이 if 블록을 주석 처리해야 합니다.
     if (role === 'parent' && entryType === 'child') {
@@ -265,9 +259,9 @@ export async function updateUserOverallStats(userId, userType, totalUserCharsToS
     if (!userId) return;
     try {
         const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, { 
+        await updateDoc(userRef, {
             totalUserCharCount: totalUserCharsToSave,
-            lastLogin: serverTimestamp() 
+            lastLogin: serverTimestamp()
         });
         console.log(`[Firebase Utils] ✅ 사용자(${userId}) 전체 통계 업데이트 완료.`);
     } catch (error) {
@@ -320,7 +314,7 @@ export function detectSensitiveRisk(text) {
         '학폭', '학교폭력', '괴롭힘', '따돌림', '왕따', '맞았다', '때렸다', // 학폭 관련
         '위험해', '죽을래', '죽여', '끝내버리자' // 기타 위험 표현
     ];
-    
+
     for (const keyword of sensitiveKeywords) {
         if (lowerText.includes(keyword)) {
             console.warn(`[민감/위험 감지] 키워드: "${keyword}"`);
@@ -331,7 +325,7 @@ export function detectSensitiveRisk(text) {
     // 만약 기존의 detectRiskTags 함수가 더 일반적인 위험 태그를 감지한다면,
     // 필요에 따라 detectRiskTags의 결과도 여기에 포함시킬 수 있습니다.
     // (단, detectRiskTags가 이 파일 내에서 선언되었거나 import 되어야 합니다.)
-    // const riskTags = detectRiskTags(text); 
+    // const riskTags = detectRiskTags(text);
     // if (riskTags.length > 0) {
     //     // detectRiskTags가 감지한 내용도 민감하다고 판단한다면
     //     // console.warn(`[민감/위험 감지] Risk Tags: ${riskTags.join(', ')}`);
@@ -341,7 +335,7 @@ export function detectSensitiveRisk(text) {
     return false; // 위험 내용 없음
 }
 
-// 사용자 분석 정보 불러오기 
+// 사용자 분석 정보 불러오기
 async function loadAnalysisDataFromFirestore(userId) {
   const q = query(
     collection(db, "journals"),
