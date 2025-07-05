@@ -21,7 +21,7 @@ body {
     border-radius: 20px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 @media (max-width: 639px) {
@@ -81,9 +81,6 @@ body {
         padding: 0 15px;
     }
 }
-/* ----------- common.css 내용 끝 ----------- */
-
-/* ----------- 기존 style.css 내용 시작 ----------- */
 
 @media (min-width: 640px) {
     body {
@@ -117,40 +114,7 @@ body {
     border-radius:4px;
 }
 
-/* 마이크 버튼 (이제 이미지 아이콘 사용) */
-#mic-button {
-  width: 48px;
-  height: 48px;
-  border: none;
-  border-radius: 50%;
-  background-color: transparent;
-  background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button.png?alt=media&token=5ecee5c0-e062-4599-8b08-938e046a57a9'); /* mic-button.png URL */
-  background-size: 28px 28px;
-  background-position: center;
-  background-repeat: no-repeat;
-  color: transparent; /* 텍스트 숨김 */
-  font-size: 0; /* 폰트 크기 0 */
-  cursor: pointer;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
-/* 텍스트 모드일 때의 스타일 */
-#mic-button.text-mode {
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button-text-mode.png?alt=media&token=6143b866-c19f-41ec-b62e-74a1e4efee6c'); /* ✅ 여기에 'T' 대체 이미지 아이콘 URL */
-    background-size: 28px 28px; /* 아이콘 크기 조정 */
-    background-position: center;
-    background-repeat: no-repeat;
-    color: transparent; /* 텍스트 숨김 */
-    font-size: 0; /* 폰트 크기 0 */
-}
-
-#mic-button.disabled {
-  opacity: 0.5;
-  cursor: default;
-}
 
 #chat-window {
   flex-grow: 1;
@@ -310,31 +274,45 @@ body {
     box-sizing: border-box;
 }
 /* #send-button 과 #plus-button 스타일 통합 및 이미지 적용 */
+#mic-button,
+#mic-button.text-mode,
 #send-button,
 #plus-button {
     width: 48px;
     height: 48px;
-    border-radius: 50%;
-    background-color: transparent;
+    border: none;
+    border-radius: 50%; /* 모든 버튼 원형 유지 */
+    background-color: transparent; /* 배경 투명 */
     background-position: center;
     background-repeat: no-repeat;
-    color: transparent;
-    font-size: 0;
-    border: none;
+    color: transparent; /* 텍스트 숨김 */
+    font-size: 0; /* 폰트 크기 0 */
     cursor: pointer;
-    transition: background-color 0.2s;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    /* ⭐⭐ 아이콘 찌그러짐 방지 및 크기 조정 ⭐⭐ */
+    background-size: 44px 44px; /* ✅ 48x48 버튼 안에 40x40으로 표시 (원하시는 꽉 찬 느낌) */
+}
+/* 개별 아이콘 이미지 경로 */
+#mic-button {
+  background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button.png?alt=media&token=5ecee5c0-e062-4599-8b08-938e046a57a9');
+}
+#mic-button.text-mode {
+    background-image: url('YOUR_FIREBASE_STORAGE_TEXT_MODE_ICON_URL'); /* 'T' 대체 이미지 아이콘 URL */
 }
 #send-button {
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/send-button.png?alt=media&token=f10a6169-3e02-4721-94b5-35dd9ead6b52'); /* send-button.png URL */
-    background-size: 28px 28px;
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/send-button.png?alt=media&token=f10a6169-3e02-4721-94b5-35dd9ead6b52');
 }
 #plus-button {
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/plus-button.png?alt=media&token=8ab76317-2425-4b8f-b355-04723acc7f3c'); /* plus-button.png URL */
-    background-size: 28px 28px;
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/plus-button.png?alt=media&token=8ab76317-2425-4b8f-b355-04723acc7f3c');
+}
+
+
+#mic-button.disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 #send-button:hover,
