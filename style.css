@@ -96,16 +96,34 @@ body {
     }
 }
 
-/* ⭐⭐ 음향 바 관련 스타일 (meter-container와 volume-meter) ⭐⭐ */
+/* ⭐⭐ 음향 바 자체 컨테이너 스타일 (이제 독립적이고 콤팩트하게) ⭐⭐ */
+.standalone-meter-container { /* ✅ 새로운 클래스 선택자 */
+    width: 100%;
+    height: 15px; /* ⭐ 음향 바 컨테이너의 전체 높이 */
+    background-color: #f0f0f0; /* ⭐ session-header와 동일한 배경색으로 통일 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    margin-top: 0; /* session-header와 바로 붙도록 마진 제거 */
+    margin-bottom: 0; /* chat-window와 바로 붙도록 마진 제거 */
+    border-top-left-radius: 0; /* 상단 모서리 둥글게 하지 않음 (session-header와 연결) */
+    border-top-right-radius: 0; /* 상단 모서리 둥글게 하지 않음 (session-header와 연결) */
+    border-bottom-left-radius: 0; /* 하단 모서리 둥글게 하지 않음 (chat-window와 연결) */
+    border-bottom-right-radius: 0; /* 하단 모서리 둥글게 하지 않음 (chat-window와 연결) */
+    box-shadow: none; /* 그림자 제거 */
+}
+
+/* ⭐⭐ 음향 바의 실제 막대 스타일 (테두리와 배경색 조정) ⭐⭐ */
 #volume-meter {
     width:70%;
     max-width: 280px;
-    height: 8px; /* ⭐ 콤팩트한 높이 유지 */
-    border:1px solid #ced4da;
+    height: 3px; /* ⭐ 막대 높이 */
+    border:1px solid #ced4da; /* 테두리 유지 */
     border-radius:6px;
     overflow:hidden;
-    background-color: #e9ecef;
-    /* margin-top: 2px; margin-bottom: 2px; 는 .session-meter-container 안의 .volume-meter에 영향 */
+    background-color: transparent; /* ⭐ 투명으로 변경하여 불필요한 회색 배경 제거 */
 }
 #volume-level {
     height:100%;
