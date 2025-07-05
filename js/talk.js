@@ -792,6 +792,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
     }
 
+
+    // 페이지 로딩이 끝났을 때 GPT 주제를 불러오는 초기화 코드
+window.addEventListener('DOMContentLoaded', () => {
+  console.log("🟢 DOMContentLoaded: renderUnifiedTopics 실행");
+  renderUnifiedTopics(); // ✅ 주제 버튼을 렌더링하는 함수
+});
+
+
     /// ✅ 시작 버튼에 클릭 이벤트 할당
     if (startButton) {
         startButton.onclick = async () => {
