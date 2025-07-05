@@ -1,136 +1,119 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title id="pageTitle">마이페이지</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="css/common.css"> <link rel="stylesheet" href="css/mypage.css"> </head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>마이페이지 - LOZEE</title>
+  <link rel="stylesheet" href="./css/mypage.css" />
+</head>
 <body>
-    <div class="app-container">
-        <nav id="gnb">
-            <button id="menu-toggle">☰</button>
-            <div id="gnb-title">LOZEE</div>
-            <div style="width: 44px; visibility: hidden;"></div>
-            <div id="dropdown-menu">
-                <a href="mypage.html">🎨 내 정보 보기</a>
-                <a href="index.html">✨ 새로운 이야기 시작!</a>
-                <a id="gnb-analysis-link" href="analysis.html">📊 우리 이야기 분석</a>
-                <a href="journal-list.html">📖 이야기 모음집</a>
-                <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
-            </div>
-        </nav>
-
-        <div class="tab-menu-wrapper">
-            <div class="tab-menu">
-                <a href="#user-info-section" class="tab-item active" data-tab="info">내 정보</a>
-                <a href="#rosie-appointments-section" class="tab-item" data-tab="appointments">로지와의 약속<span class="new-dot" style="display: none;"></span></a>
-                <a href="#recent-journals-section" class="tab-item" data-tab="journals">최근 이야기<span class="new-dot" style="display: none;"></span></a>
-            </div>
-        </div>
-
-        <main class="mypage-content-area"> <section id="user-info-section" class="content-section active">
-                <h1 class="hidden">내 정보</h1> <div class="profile-photo-section">
-                    <div id="userPhotoPlaceholder" class="profile-photo-placeholder">
-                        <img id="userProfileImage" src="" alt="프로필 사진" style="display: none;">
-                        <span id="userInitialText">L</span>
-                    </div>
-                    <input type="file" id="profileImageUpload" accept="image/*" style="display: none;">
-                    <button id="editProfilePhotoBtn" class="edit-button">사진 변경</button>
-                    </div>
-                <p class="profile-message">나와 세상을 연결한지 <span id="daysSinceJoin">...</span>일 째</p>
-
-                <div class="info-card">
-                    <h2 id="userNameDisplay">나의 정보 <button class="edit-button">수정</button></h2>
-                    <div class="info-item"><span class="label">닉네임:</span> <span id="userNicknameDisplay" class="value"></span></div>
-                    <div class="info-item"><span class="label">계정:</span> <span id="userEmailDisplay" class="value"></span></div>
-                    <div class="info-item"><span class="label" id="ageLabel">나이:</span> <span id="userFullAge" class="value"></span></div>
-                    <div class="info-item"><span class="label">마지막 접속:</span> <span id="lastLoginDate" class="value"></span></div>
-                </div>
-
-                <div class="info-card" id="userTypeInfoCard">
-                    <h2>가입 구분 <button class="edit-button">수정</button></h2>
-                    <div class="info-item"><span class="label"></span> <span id="userTypeDisplay" class="value"></span></div>
-                </div>
-
-                <div class="info-card neurodiversity-info" id="directUserDiagnosisCard" style="display:none;">
-                    <h2>✨ 나의 특성 <button class="edit-button">수정</button></h2>
-                    <ul id="userDiagnosesList"></ul>
-                </div>
-
-                <div class="info-card neurodiversity-info" id="caregiverPersonalNDCard" style="display:none;">
-                    <h2>🙋‍♀️ 보호자님 특성 <button class="edit-button">수정</button></h2>
-                    <ul id="caregiverPersonalNeurodiversityList"></ul>
-                </div>
-
-                <div class="info-card" id="childInfoCard" style="display:none;">
-                    <h2>🧸 아이/가족 정보 <button class="edit-button">수정</button></h2>
-                    <p class="info-item"><span class="label">이름:</span> <span id="childNameDisplay" class="value"></span></p>
-                    <p class="info-item"><span class="label">나이:</span> <span id="childFullAgeDisplay" class="value"></span></p>
-                    <p class="info-item"><span class="label">특성:</span></p>
-                    <ul id="childDiagnosesList" class="neurodiversity-info" style="text-align: right;"></ul>
-                    <button id="addChildBtn" class="action-button">자녀 추가</button>
-                </div>
-            </section>
-
-            <section id="rosie-appointments-section" class="content-section" style="display: none;">
-                <h1 class="hidden">로지와의 약속</h1> <div class="info-card appointment-category-card">
-                    <h2>스몰 토크 <button class="edit-button">수정</button></h2>
-                    <p class="detail-item"><span class="label">예정일</span> <span id="smallTalkDate">2025.07.01. 오후 03:15</span></p>
-                    <p class="detail-item"><span class="label">진행률</span> <span id="smallTalkProgress">3 / 20</span></p>
-                    <div class="result-box">
-                        <span class="label">성과</span>
-                        <p id="smallTalkResult">상대방에게 너무 많은 정보를 한번에 쏟아내게 되면, 상대는 대화의 흐름을 파악하기 어려워. 우리 조금 더 연습해보자.</p>
-                    </div>
-                    <button class="action-button full-width">회차별 성과 상세 보기</button>
-                </div>
-
-                <div class="info-card appointment-category-card">
-                    <h2>관계 감정 살펴보기 <button class="edit-button">수정</button></h2>
-                    <p class="detail-item"><span class="label">예정일</span> <span id="relationEmotionDate">2025.07.05. 오후 03:15</span></p>
-                    <p class="detail-item"><span class="label">진행률</span> <span id="relationEmotionProgress">5 / 10</span></p>
-                    <div class="result-box">
-                        <span class="label">성과</span>
-                        <p id="relationEmotionResult">지금 너는 엄마의 행동에 대한 패턴이 파악되면 서 엄마를 거부하고 있어. 엄마와 관련된 너의 감정 단어들을 보면 ...</p>
-                    </div>
-                    <button class="action-button full-width">회차별 성과 상세 보기</button>
-                </div>
-
-                <div class="info-card emergency-alerts-card" id="emergencyAlertsSection">
-                    <h2>🚨 확인이 필요한 이야기 <button class="edit-button">수정</button></h2>
-                    <ul id="emergencyAlertsList"></ul>
-                    </div>
-
-                 <div class="info-card cognitive-distortion-card appointment-category-card">
-                    <h2>인지 왜곡 살펴보기 <button class="edit-button">수정</button></h2>
-                    <p class="detail-item"><span class="label">예정일</span> <span id="cognitiveDistortionDate">2025.07.06. 오후 09:30</span></p>
-                    <p class="detail-item"><span class="label">진행률</span> <span id="cognitiveDistortionProgress">0 / 6</span></p>
-                    <div class="result-box">
-                        <span class="label">감지된 패턴</span>
-                        <p class="pattern-item"><span class="pattern-label">과장된 오류</span> "나는 아이를 위해 이토록 노력하는데, 왜 나는 늘 손해를 보며, 사람들은 나를 이해해주지 않지? 결국? 이건 너무 불공평해."</p>
-                        <p class="pattern-item"><span class="pattern-label">흑백논리</span> "그렇게 애를 키웠는데도 안되니 우리 아이의 사회성은 완전히 망가진 거나 다름 없어. 희망이 없어."</p>
-                    </div>
-                    <div class="result-box">
-                         <span class="label">할 일</span>
-                         <p id="cognitiveDistortionTodo">우리는 이 생각들을 다른 각도에서 생각해 보는 연습을 할거야.</p>
-                    </div>
-                    <button class="action-button full-width">학습 · 패턴 보기</button>
-                </div>
-            </section>
-
-            <section id="recent-journals-section" class="content-section" style="display: none;">
-                <h1 class="hidden">최근 이야기</h1> <div class="info-card recent-journals-card">
-                    <h2>💬 최근 이야기</h2>
-                    <div id="recentJournalCardList"></div>
-                    <button id="goToJournalListBtn" class="action-button">전체 이야기 모음집 가기</button>
-                </div>
-            </section>
-
-        </main>
+  <!-- GNB -->
+  <nav class="tab-menu-wrapper">
+    <div class="tab-menu">
+      <a href="#profile-section" class="tab-item active">내 정보</a>
+      <a href="#appointments-section" class="tab-item">로지와의 약속</a>
+      <a href="#recent-journals-section" class="tab-item">최근 이야기</a>
+      <a href="#emergency-alerts-section" class="tab-item">위험 알림</a>
     </div>
+  </nav>
 
-    <script src="./js/gnb.js" defer></script>
-    <script type="module" src="./js/mypage.js"></script>
+  <main class="mypage-content-area">
+    <!-- 1. 내 정보 -->
+    <section id="profile-section" class="content-section">
+      <div class="profile-photo-section">
+        <div class="profile-photo-placeholder">
+          <img id="userProfileImage" src="" alt="프로필 이미지" />
+          <span id="userInitialText">L</span>
+        </div>
+        <button class="edit-button">사진 변경</button>
+      </div>
+
+      <div class="info-card">
+        <h2>나의 정보</h2>
+        <div class="info-item"><span class="label">닉네임</span><span>로지</span></div>
+        <div class="info-item"><span class="label">계정</span><span>lozee@lozee.com</span></div>
+        <div class="info-item"><span class="label">나이</span><span>9세</span></div>
+        <div class="info-item"><span class="label">마지막 접속</span><span>2025.07.06</span></div>
+      </div>
+
+      <div class="info-card">
+        <h2>가입 구분 & 나의 특성</h2>
+        <div class="info-item"><span class="label">가입 구분</span><span>보호자</span></div>
+        <div class="info-item neurodiversity-info">
+          <span class="label">특성</span>
+          <ul>
+            <li>ADHD</li>
+            <li>감각 예민</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h2>자녀 정보</h2>
+        <div class="info-item"><span class="label">닉네임</span><span>민후</span></div>
+        <div class="info-item"><span class="label">계정</span><span>minhoo@lozee.com</span></div>
+        <div class="info-item"><span class="label">나이</span><span>9세</span></div>
+        <div class="info-item"><span class="label">마지막 접속</span><span>2025.07.05</span></div>
+        <div class="info-item neurodiversity-info">
+          <span class="label">특성</span>
+          <ul>
+            <li>ASD 경향</li>
+          </ul>
+        </div>
+        <button class="action-button">자녀 추가</button>
+      </div>
+    </section>
+
+    <!-- 2. 로지와의 약속 -->
+    <section id="appointments-section" class="content-section" style="display:none;">
+      <div class="sort-controls">
+        <label for="sortSelect">정렬 기준:</label>
+        <select id="sortSelect">
+          <option value="date">일정순</option>
+          <option value="priority">중요도순</option>
+        </select>
+      </div>
+
+      <div class="info-card appointment-category-card">
+        <h2>스몰토크</h2>
+        <p class="detail-item"><span class="label">예정일</span><span>2025.07.10</span></p>
+        <p class="detail-item"><span class="label">진행률</span><span>3 / 6</span></p>
+        <div class="result-box">
+          <span class="label">성과</span>
+          <p>자연스럽게 일상 이야기를 시작하게 되었어요.</p>
+        </div>
+        <button class="action-button full-width">회차별 성과 상세 보기</button>
+      </div>
+
+      <!-- 추가 카드들도 여기에 반복적으로 삽입 가능 -->
+    </section>
+
+    <!-- 3. 최근 이야기 -->
+    <section id="recent-journals-section" class="content-section" style="display:none;">
+      <div class="info-card recent-journals-section">
+        <h2>최근 이야기</h2>
+        <div class="recent-journal-card-list">
+          <div class="session-card-wide">
+            <h3>“친구랑 싸워서 속상했어”</h3>
+            <p>2025.07.04 오후 4:30</p>
+          </div>
+          <!-- 최근 10개 카드 반복 영역 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 위험 알림 -->
+    <section id="emergency-alerts-section" class="content-section" style="display:none;">
+      <div class="info-card emergency-alerts-card">
+        <h2>위험 알림</h2>
+        <ul>
+          <li>최근 감정 단어에 '죽고 싶어'가 포함되었습니다. <span class="alert-date">2025.07.05</span></li>
+          <!-- 추가 알림 반복 -->
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="mypage.js"></script>
 </body>
 </html>
