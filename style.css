@@ -99,41 +99,31 @@ body {
     }
 }
 
-/* ⭐⭐ 음향 바 전체 래퍼 스타일 (독립적이고 매우 얇게) ⭐⭐ */
-.volume-meter-wrapper { /* ✅ 이전에 standalone-meter-container 였던 것을 변경 */
-    width: 100%;
-    height: 5px; /* ⭐ 음향 바 전체 컨테이너의 높이를 5px로 (매우 얇게) */
-    background-color: #f0f0f0; /* ⭐ session-header와 동일한 배경색 */
-    display: flex;
-    align-items: center; /* ⭐ 세로 중앙 정렬 */
-    justify-content: center; /* ⭐ 가로 중앙 정렬 */
-    padding: 0;
-    flex-shrink: 0;
-    margin-top: 0; /* session-header와 바로 붙도록 */
-    margin-bottom: 0; /* chat-window와 바로 붙도록 */
-    border-top-left-radius: 0; /* 상단 모서리 둥글게 하지 않음 (session-header와 연결) */
-    border-top-right-radius: 0; /* 상단 모서리 둥글게 하지 않음 (session-header와 연결) */
-    border-bottom-left-radius: 0; /* 하단 모서리 둥글게 하지 않음 (chat-window와 연결) */
-    border-bottom-right-radius: 0; /* 하단 모서리 둥글게 하지 않음 (chat-window와 연결) */
-    box-shadow: none; /* 그림자 제거 */
+#session-header {
+  margin-bottom: 0;
 }
 
-/* ⭐⭐ 음향 바의 실제 막대 스타일 (테두리 제거, 배경색 투명) ⭐⭐ */
-#volume-meter {
-    width:70%;
-    max-width: 280px;
-    height: 3px; /* ⭐ 막대 높이 (volume-meter-wrapper 높이에 맞춰 3px로 유지) */
-    border: none; /* ⭐ 테두리 완전히 제거 */
-    border-radius:6px;
-    overflow:hidden;
-    background-color: transparent; /* ⭐ 배경색 완전 투명 */
+.volume-meter-wrapper {
+  margin-top: 0;
+  height: 5px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: #f0f0f0;
 }
+
+#volume-meter {
+  width: 90%;
+  height: 4px;
+  border-radius: 5px;
+  background-color: transparent;
+}
+
 #volume-level {
-    height:100%;
-    background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
-    width:0%;
-    transition:width 0.08s ease-out;
-    border-radius:4px;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+  border-radius: 5px;
 }
 
 /* ⭐⭐ 아이콘 버튼 공통 스타일 및 개별 이미지 적용 ⭐⭐ */
@@ -229,17 +219,6 @@ body {
   background: #aaaaaa;
 }
 
-#session-header {
-    /* talk.html의 인라인 스타일과 함께 적용됩니다. */
-    /* height: var(--session-header-height); (32px) */
-    /* font-size: 0.9em; */
-    /* line-height: 1.2; */
-    /* background-color: #f0f0f0; */
-    margin-bottom: 0; /* volume-meter-wrapper와 바로 붙도록 마진 제거 */
-    border-bottom-left-radius: 0; /* 하단 좌측 모서리 둥글게 하지 않음 (volume-meter-wrapper와 연결) */
-    border-bottom-right-radius: 0; /* 하단 우측 모서리 둥글게 하지 않음 (volume-meter-wrapper와 연결) */
-    box-shadow: none; /* 그림자 제거 */
-}
 
 /* 피드백 메시지 스타일 */
 .bubble.assistant_feedback {
