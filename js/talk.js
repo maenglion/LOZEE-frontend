@@ -37,7 +37,7 @@ const SESSION_TIMEOUT_DURATION = 5 * 60 * 1000;
 
 // --- 3. UI 요소 가져오기 ---
 const chatWindow = document.getElementById('chat-window');
-const inputArea = document.getElementById('input-area');
+const chatInputContainer = document.getElementById('chat-input-container'); // ⭐ 이 줄을 추가
 const chatInput = document.getElementById('chat-input');
 const actionButton = document.getElementById('action-button');
 const meterContainer = document.getElementById('meter-container');

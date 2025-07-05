@@ -80,10 +80,12 @@
         .bubble.user { background: var(--primary-color); color: white; align-self: flex-end; }
         .bubble.assistant { background: #F5E7A1; color: #333; align-self: flex-start; }
         
-        #input-area {
+        /* JS에서 display를 제어할 것이므로 여기서는 display: none;을 제거합니다. */
+        /* JS에서 inputArea.style.display = 'flex' 로 제어 */
+        #input-area { /* <-- 이 부분의 ID를 #chat-input-container 로 변경 예정 */
             height: var(--input-area-height);
             padding: 0 15px;
-            display: none; /* JS로 flex 처리 */
+            /* display: none;  <-- 이 줄은 HTML에서 삭제하거나 주석 처리 */
             align-items: center;
             gap: 10px;
             background: #f8f9fa;
@@ -91,7 +93,11 @@
             flex-shrink: 0;
         }
         #chat-input { flex: 1; height: 48px; padding: 0 16px; border: 1px solid #ced4da; border-radius: 24px; font-size: 1em; }
-        #mic-button, #send-btn { width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5em; flex-shrink: 0; background: var(--primary-color); color: white; }
+        /* mic-button은 CSS에 별도 규칙 없음. talk.js에서 처리 */
+        /* send-btn은 CSS에 #send-button 규칙 있음 */
+        #mic-button, #send-btn { /* <-- #send-btn 을 #send-button 으로 변경 예정 */
+            width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5em; flex-shrink: 0; background: var(--primary-color); color: white;
+        }
         #mic-button.recording { animation: pulse-red 1.5s infinite; background-color: #e74c3c; }
         @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
         
@@ -122,14 +128,10 @@
     <div id="topic-selection-container"></div>
 </main>
         
-        <div id="start-cover">
-            <button id="start-button">로지와 대화 시작하기</button>
-        </div>
-
-        <div id="input-area">
+        <div id="chat-input-container">
             <button id="mic-button">🎤</button>
             <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-            <button id="send-btn">➤</button>
+            <button id="send-button">➤</button>
         </div>
     </div>
     
