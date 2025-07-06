@@ -169,14 +169,14 @@
     justify-content: space-between;
     align-items: center;
 }
-/* ⭐ 카드 제목 옆 수정 버튼 스타일 ⭐ */
+/* 카드 제목 옆 수정 버튼 스타일 */
 .info-card h2 .edit-button {
     background-color: transparent;
     border: none;
-    width: 40px; /* ⭐ 버튼 크기 40x40으로 고정 */
+    width: 40px; /* 버튼 크기 40x40으로 고정 */
     height: 40px;
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/modify_button.png?alt=media&token=7f986b71-cfe6-44ba-bc7e-40191849bbf2'); /* 수정 버튼 이미지 URL */
-    background-size: 40px 40px; /* ⭐ 아이콘 크기 40x40으로 조정 */
+    background-size: 40px 40px; /* 아이콘 크기 40x40으로 조정 */
     background-position: center;
     background-repeat: no-repeat;
     font-size: 0;
@@ -301,20 +301,20 @@
     border-bottom: none;
     padding-bottom: 0;
 }
-/* ⭐ 필터 버튼 (select) 스타일 ⭐ */
+/* 필터 버튼 (select) 스타일 */
 .filter-select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/fillter-button.png?alt=media&token=5fc61fba-1b2a-44f0-a81c-e95f6e407a4e'); /* 필터 버튼 이미지 URL */
-    background-size: 46px 38px; /* ⭐ 아이콘 크기 46x38로 조정 (사용자 요청) */
+    background-size: 46px 38px; /* 아이콘 크기 46x38로 조정 */
     background-position: right 12px center;
     background-repeat: no-repeat;
     background-color: #ffffff;
     color: #333;
     border: 1px solid #ccc;
     border-radius: 8px;
-    padding: 8px 60px 8px 12px; /* ⭐ 아이콘 공간 확보를 위해 오른쪽 패딩 넉넉하게 추가 (12px + 46px = 58px 정도 필요) */
+    padding: 8px 60px 8px 12px; /* 아이콘 공간 확보를 위해 오른쪽 패딩 넉넉하게 추가 */
     font-size: 0.95em;
     cursor: pointer;
     outline: none;
@@ -421,7 +421,7 @@
     .info-card {
         padding: 15px;
     }
-    .tab-menu { /* 모바일에서 탭 메뉴 좌측 정렬 */
+    .tab-menu {
         justify-content: flex-start;
     }
 }
@@ -435,8 +435,49 @@
         justify-content: center; /* PC에서 탭 메뉴 중앙 정렬 */
     }
     .mypage-content-area {
-        max-width: 800px; /* PC에서 컨텐츠 영역의 최대 너비 */
-        margin: 0 auto; /* PC에서 중앙 정렬 */
+        max-width: 800px;
+        margin: 0 auto;
         padding: 20px;
+    }
+    /* ⭐⭐ PC 환경 폰트 사이즈 조정 (2단계씩 키우기) ⭐⭐ */
+    /* 탭 메뉴 폰트 크기 */
+    .tab-item {
+        font-size: 1.2em; /* 1.05em에서 1.2em으로 */
+    }
+    /* 카드 제목 폰트 크기 */
+    .info-card h2 {
+        font-size: 1.3em; /* 1.1em에서 1.3em으로 */
+    }
+    .info-card h2 .edit-button {
+        width: 44px; /* 버튼 크기 키우기에 맞춰 아이콘 크기도 약간 키울 수 있음 */
+        height: 44px;
+        background-size: 40px 40px; /* 아이콘 크기는 40x40 유지 또는 약간 키움 */
+    }
+    /* 정보 항목 폰트 크기 */
+    .info-item, .detail-item {
+        font-size: 1.1em; /* 0.95em에서 1.1em으로 */
+    }
+    /* neurodiversity-list li (특성 태그) 폰트 크기 */
+    .neurodiversity-list li {
+        font-size: 0.95em; /* 0.8em에서 0.95em으로 */
+    }
+    /* 결과 박스 텍스트 */
+    .result-box p.result-text, .appointment-training-card .pattern-item {
+        font-size: 1.05em; /* 0.95em에서 1.05em으로 */
+    }
+    /* 최근 이야기 카드 제목 및 내용 */
+    .session-card-wide h3 {
+        font-size: 1.1em; /* 1em에서 1.1em으로 */
+    }
+    .session-card-wide p {
+        font-size: 1em; /* 0.9em에서 1em으로 */
+    }
+    /* 필터 버튼 폰트 크기 */
+    .filter-select {
+        font-size: 1.1em; /* 0.95em에서 1.1em으로 */
+    }
+    /* 액션 버튼 폰트 크기 */
+    .action-button {
+        font-size: 1.2em; /* 1.1em에서 1.2em으로 */
     }
 }
