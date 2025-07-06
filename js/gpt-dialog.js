@@ -192,8 +192,6 @@ async function getGptResponse(text, context) { // 인자를 text와 context로 �
   }
 }
 
-export { getInitialGreeting, getGptResponse, getKoreanVocativeParticle };
-
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
     const voc = getKoreanVocativeParticle(userName);
