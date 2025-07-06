@@ -65,10 +65,6 @@ body {
     #gnb-title {
         font-size: 1.8em; /* LOZEE 타이틀 폰트 크기 증가 */
     }
-    #menu-toggle {
-        width: 56px; /* 버튼 크기 키움 (48px -> 56px) */
-        height: 56px;
-        background-size: 32px 32px; /* 아이콘 크기 키움 */
     }
     .tab-item { /* GNB 하단 탭 메뉴 폰트 크기 */
         font-size: 1.3em; /* 1.05em -> 1.3em (2단계 증가) */
