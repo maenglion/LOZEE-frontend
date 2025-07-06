@@ -156,7 +156,7 @@ export function getSystemPrompt({
 
 
    // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
-  async function getGptResponse(userMessage, context = {}) {
+  export async function getGptResponse(userMessage, context = {}) {
   const token = await waitForIdToken();
   try {
     const idToken = await getIdToken();
@@ -214,10 +214,6 @@ export function getSystemPrompt({
     throw error;
   }
 }
-
-// ✅ 글로벌로 등록해서 일반 스크립트에서도 접근 가능
-window.getGptResponse = getGptResponse;
-
 
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
