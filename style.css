@@ -22,7 +22,7 @@ body {
 
 .app-container {
     width: 100%;
-    max-width: 640px; /* PC 기본 너비를 640px로 유지 */
+    max-width: 640px; /* ⭐ PC 기본 너비를 640px로 유지 (모바일에도 적용되는 기본값) */
     height: 100vh;
     min-height: 100vh;
     background-color: #ffffff;
@@ -45,7 +45,7 @@ body {
     }
 }
 
-@media (min-width: 640px) { /* PC 화면 */
+@media (min-width: 640px) { /* PC 화면 (GNB.css와 동일한 기준) */
     body {
         padding: 50px 0;
         align-items: center;
@@ -53,7 +53,7 @@ body {
         font-size: 1.1em; /* 기본 폰트 사이즈 1단계 키움 */
     }
     .app-container {
-        max-width: 960px; /* PC에서 app-container 최대 너비 960px로 (넓게) */
+        max-width: 960px; /* ⭐ PC에서 app-container 최대 너비 960px로 (넓게) */
         height: auto;
         max-height: calc(100vh - 100px);
         border-radius: 20px;
@@ -61,22 +61,9 @@ body {
 
     /* ⭐⭐⭐ PC 화면에서 요소 크기 3단계씩 더 커지도록 조정 ⭐⭐⭐ */
 
-    /* GNB 관련 */
-    #gnb-title {
-        font-size: 1.8em; /* LOZEE 타이틀 폰트 크기 증가 */
-    }
-    }
-    .tab-item { /* GNB 하단 탭 메뉴 폰트 크기 */
-        font-size: 1.3em; /* 1.05em -> 1.3em (2단계 증가) */
-        padding: 15px 0; /* 패딩 증가 */
-    }
-    .tab-menu {
-        gap: 35px; /* 탭 간격 더 늘림 (25px -> 35px) */
-    }
-
     /* 버블 (말풍선) 크기 및 텍스트 조정 */
     .bubble {
-        max-width: 70%; /* PC에서 말풍선 최대 너비를 70%로 늘림 */
+        max-width: 60%; /* PC에서 말풍선 최대 너비를 60%로 늘림 */
         padding: 1.4rem 2rem; /* 패딩을 더 늘림 */
         font-size: 1.2em; /* 텍스트 크기를 더 늘림 (1.1em -> 1.2em) */
         line-height: 1.8; /* 라인 높이를 더 여유롭게 */
@@ -129,7 +116,6 @@ body {
         background-size: 48px 48px; /* 아이콘 이미지 크기 키움 (40px -> 48px) */
     }
 }
-/* ----------- PC 화면 (min-width: 640px) 스타일 끝 ----------- */
 
 /* ----------- 페이지별 스타일 ----------- */
 
@@ -298,10 +284,9 @@ body {
   }
 }
 /* PC 큰 화면 최적화 (768px 이상) */
-/* 이 미디어 쿼리는 app-container의 max-width가 960px로 설정된 후 적용되어야 합니다. */
 @media screen and (min-width: 768px) {
     #chat-window {
-        padding: 40px; /* PC 큰 화면에서 패딩 늘림 */
+        padding: 40px;
     }
 }
 
