@@ -26,15 +26,15 @@
     font-size: 1.8em;
 }
 
-/* ⭐ 햄버거 버튼 스타일 (점 세 개 이미지 아이콘 사용) */
+/* ⭐ 햄버거 버튼 (점 세 개 아이콘) 스타일 재조정 ⭐ */
 #menu-toggle {
-    width: 48px;
-    height: 48px;
+    width: 20px; /* ⭐ 원본 가로 8px에 맞춰 적절한 클릭 영역 너비 */
+    height: 48px; /* ⭐ GNB 높이 65px에 맞춰 적절한 클릭 영역 높이 */
     border: none;
     background-color: transparent;
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10'); /* 이미지 URL */
-    background-size: contain; /* ⭐ 아이콘 비율 유지하며 최대한 크게 */
-    background-position: center;
+    background-size: 8px 36px; /* ⭐ 아이콘 원본 크기 (또는 약간 크게, 비율 유지) */
+    background-position: center; /* ⭐ 중앙 정렬 */
     background-repeat: no-repeat;
     color: transparent;
     font-size: 0;
@@ -43,11 +43,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 10px;
+    margin-left: 10px; /* GNB 좌측 여백 */
 }
 
 
-/* GNB 오른쪽 버튼들을 묶는 컨테이너 */
 .gnb-right-buttons {
     display: flex;
     align-items: center;
@@ -115,31 +114,31 @@
     }
 
     #menu-toggle {
-        width: 64px; /* 햄버거 버튼 크기 증가 */
-        height: 64px;
-        background-size: 38px 38px; /* 아이콘 이미지 크기 증가 (원본 비율 유지) */
-        margin-left: 20px; /* 좌측 여백 증가 */
+        width: 28px; /* ⭐ PC에서 햄버거 버튼 너비 증가 (20px -> 28px) */
+        height: 64px; /* ⭐ PC에서 햄버거 버튼 높이 증가 (48px -> 64px) */
+        background-size: 8px 36px; /* ⭐ PC에서 아이콘 이미지 크기 (8x36 -> 10x48 비율 유지) */
+        margin-left: 20px;
     }
 
     .gnb-right-buttons {
-        gap: 15px; /* 오른쪽 버튼 사이 간격 증가 */
+        gap: 15px;
     }
 
     #gnb #tts-toggle-btn {
-        width: 48px; /* TTS 토글 버튼 크기 증가 */
+        width: 48px;
         height: 48px;
-        font-size: 1.5em; /* 폰트 크기 증가 */
+        font-size: 1.5em;
     }
     #gnb #tts-toggle-btn.off::after {
-        border-top: 3px solid #aaa; /* 취소선 굵기 증가 */
+        border-top: 3px solid #aaa;
     }
 
     #dropdown-menu {
-        top: var(--gnb-height); /* 변경된 GNB 높이에 맞춰 드롭다운 위치 조정 */
-        min-width: 250px; /* 드롭다운 메뉴 최소 너비 증가 */
+        top: var(--gnb-height);
+        min-width: 250px;
     }
     #dropdown-menu a {
-        padding: 15px 22px; /* 드롭다운 메뉴 항목 패딩 증가 */
-        font-size: 1.1em; /* 드롭다운 메뉴 항목 폰트 크기 증가 */
+        padding: 15px 22px;
+        font-size: 1.1em;
     }
 }
