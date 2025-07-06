@@ -5,17 +5,17 @@
 }
 
 #gnb {
-    position: relative; /* 자식 요소의 absolute 위치 기준 */
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between; /* 요소들을 양쪽 끝으로 배치 */
+    justify-content: space-between;
     width: 100%;
     height: var(--gnb-height); /* ⭐ 변경된 변수 사용 */
     background-color: var(--primary-color); /* ⭐ 변경된 변수 사용 */
     color: white;
     padding: 0 15px; /* 패딩 조정 */
     box-sizing: border-box;
-    flex-shrink: 0; /* app-container의 flex 자식일 때 줄어들지 않도록 */
+    flex-shrink: 0;
 }
 
 #gnb-title {
@@ -28,34 +28,22 @@
 
 /* ⭐ 햄버거 버튼 스타일 (점 세 개 이미지 아이콘 사용) */
 #menu-toggle {
-    width: 48px; /* ✅ 버튼의 클릭 영역 크기 유지 (이전과 동일) */
-    height: 48px; /* ✅ 버튼의 클릭 영역 크기 유지 (이전과 동일) */
+    width: 48px; /* 버튼의 클릭 영역 크기 유지 */
+    height: 48px; /* 버튼의 클릭 영역 크기 유지 */
     border: none;
-    background-color: transparent; /* GNB 배경에 맞추기 위해 투명 */
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10');
-        /* ------------------------------------------------------------- */
-    /* ⭐ 아래 부분들을 추가하거나 조정합니다. ⭐ */
-    /* ------------------------------------------------------------- */
-    
-    background-size: 6x 26px; /* ✅ 실제 이미지 크기에 맞춰 배경 이미지 크기 설정 */
-    background-position: center; /* ✅ 이미지 중앙 정렬 (필요시 'left center' 등으로 변경 가능) */
+    background-color: transparent;
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10'); /* 이미지 URL */
+    background-size: 28px 28px; /* ⭐ 이미지 크기 (8x36 원본이지만, 28x28 정사각형 안에 contain되어 보임) */
+    background-position: center;
     background-repeat: no-repeat;
-    
     color: transparent; /* 텍스트 숨김 */
-    font-size: 0; /* 폰트 크기 0 (이전에 2.0em이 있었는데, 이미지 사용 시 0으로) */
+    font-size: 0; /* 폰트 크기 0 */
     cursor: pointer;
-    z-index: 1001; /* Z-index 유지 */
-
-    /* Flexbox를 사용하여 내부 아이콘을 정렬하고, 버튼 자체도 flex 아이템으로 정렬될 수 있도록 */
+    z-index: 1001;
     display: flex;
-    align-items: center; /* 세로 중앙 정렬 */
-    justify-content: center; /* 가로 중앙 정렬 (배경 이미지 위치와 별개) */
-
-    /* ------------------------------------------------------------- */
-    /* ⭐ 좌측 여백 및 정렬 관련 스타일 ⭐ */
-    /* ------------------------------------------------------------- */
-    margin-left: 10px; /* ✅ GNB 좌측에서 10px 여백 추가 (필요에 따라 조절) */
-    /* padding: 0; (기존과 동일) */
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px; /* GNB 좌측 여백 */
 }
 
 
@@ -67,8 +55,8 @@
 }
 
 #gnb #tts-toggle-btn {
-    width: 38px; /* 버튼 크기 유지 */
-    height: 38px; /* 버튼 크기 유지 */
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: 1.5px solid white;
     background-color: white;
@@ -76,7 +64,7 @@
     font-size: 1.2em;
     cursor: pointer;
     transition: all 0.2s;
-    position: relative; /* 취소선 위치 기준 */
+    position: relative;
     overflow: hidden;
 }
 
@@ -95,7 +83,8 @@
 }
 
 #dropdown-menu {
-    display: none; position: absolute;
+    display: none;
+    position: absolute;
     top: var(--gnb-height); /* ⭐ GNB 높이에 맞춰 드롭다운 위치 조정 */
     left: 0;
     background-color: white;
@@ -108,3 +97,49 @@
 #dropdown-menu.show { display: block; }
 #dropdown-menu a { display: block; padding: 12px 18px; color: #333; text-decoration: none; font-size: 0.95em; }
 #dropdown-menu a:hover { background-color: #f5f5f5; }
+
+
+/* ⭐⭐⭐ PC 환경 (min-width: 640px)에서 GNB 요소 크기 3단계씩 커지도록 조정 ⭐⭐⭐ */
+@media (min-width: 640px) {
+    :root {
+        --gnb-height: 80px; /* ⭐ GNB 높이 증가 (65px -> 80px) */
+    }
+
+    #gnb {
+        height: var(--gnb-height); /* 새로운 높이 적용 */
+        padding: 0 25px; /* 좌우 패딩 증가 */
+    }
+
+    #gnb-title {
+        font-size: 2.5em; /* ⭐ LOZEE 타이틀 폰트 크기 더 증가 (1.8em -> 2.5em) */
+    }
+
+    #menu-toggle {
+        width: 64px; /* ⭐ 햄버거 버튼 크기 증가 (48px -> 64px) */
+        height: 64px;
+        background-size: 38px 38px; /* ⭐ 아이콘 이미지 크기 증가 (28px -> 38px) */
+        margin-left: 20px; /* 좌측 여백 더 증가 */
+    }
+
+    .gnb-right-buttons {
+        gap: 15px; /* 오른쪽 버튼 사이 간격 증가 */
+    }
+
+    #gnb #tts-toggle-btn {
+        width: 48px; /* ⭐ TTS 토글 버튼 크기 증가 (38px -> 48px) */
+        height: 48px;
+        font-size: 1.5em; /* 폰트 크기 증가 */
+    }
+    #gnb #tts-toggle-btn.off::after {
+        border-top: 3px solid #aaa; /* 취소선 굵기 증가 */
+    }
+
+    #dropdown-menu {
+        top: var(--gnb-height); /* ⭐ 변경된 GNB 높이에 맞춰 드롭다운 위치 조정 */
+        min-width: 250px; /* 드롭다운 메뉴 최소 너비 증가 */
+    }
+    #dropdown-menu a {
+        padding: 15px 22px; /* 드롭다운 메뉴 항목 패딩 증가 */
+        font-size: 1.1em; /* 드롭다운 메뉴 항목 폰트 크기 증가 */
+    }
+}
