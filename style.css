@@ -252,8 +252,8 @@ body {
 }
 
 .bubble.user {
-  background: #bdc3c7; /* ⭐ 사용자 말풍선 배경 (연한 회색) */
-  color: #2c3e50; /* 글씨색 */
+  background: #e0f7a2; /* ⭐ 사용자 말풍선 배경 (연한 회색) */
+  color: #050c13; /* 글씨색 */
   /* align-self는 .bubble 컨테이너에서 처리 */
   border-bottom-right-radius: 0.4rem;
 }
@@ -273,11 +273,11 @@ body {
 }
 #chat-window .bubble.user {
     justify-content: flex-end; /* ⭐ 우측 정렬 */
-    max-width: 100%; /* ⭐ 버블 컨테이너는 100% 폭 사용 */
+    max-width: 90%; /* ⭐ 버블 컨테이너는 100% 폭 사용 */
 }
 #chat-window .bubble.bot {
     justify-content: flex-start; /* ⭐ 좌측 정렬 */
-    max-width: 100%; /* ⭐ 버블 컨테이너는 100% 폭 사용 */
+    max-width: 90%; /* ⭐ 버블 컨테이너는 100% 폭 사용 */
 }
 /* 실제 말풍선 콘텐츠는 이 안에서 max-width를 가집니다. */
 .bubble.user { max-width: 80%; /* 사용자 말풍선 콘텐츠 최대 너비 */ }
