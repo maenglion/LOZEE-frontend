@@ -240,5 +240,5 @@ export {
   getKoreanVocativeParticle,
   getKoreanSubjectParticle,
   getKoreanNamingParticle,
-  preferenceTopics
+
 };
