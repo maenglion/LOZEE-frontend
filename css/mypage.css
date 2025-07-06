@@ -309,7 +309,7 @@
     -moz-appearance: none;
     appearance: none;
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/fillter-button.png?alt=media&token=5fc61fba-1b2a-44f0-a81c-e95f6e407a4e'); /* 필터 버튼 이미지 URL */
-    background-size: 60%; /* 아이콘 크기 46x38로 조정 */
+    background-size: 23x19; /* 아이콘 크기 46x38로 조정 */
     background-position: right 12px center;
     background-repeat: no-repeat;
     background-color: #ffffff;
