@@ -104,6 +104,13 @@ body {
     }
 }
 
+@media screen and (min-width: 768px) {
+  .bubble {
+    max-width: 100%;
+    font-size: 1.2rem;  /* ✅ 글자 크기도 함께 키움 */
+  }
+}
+
 /* ⭐⭐ GNB 상단 헤더 스타일 ⭐⭐ */
 #session-header {
     width: 100%;
@@ -333,7 +340,7 @@ body {
 
 /* ⭐⭐ 말풍선 색상 복원 및 스타일 재확인 ⭐⭐ */
 .bubble {
-    max-width:80%;
+    max-width:100%;
     padding:0.9rem 1.2rem;
     border-radius:1.3rem;
     line-height:1.65;
@@ -343,8 +350,8 @@ body {
     /* transition: all 0.2s ease-in-out; /* 부드러운 전환 효과 추가 */
 }
 .bubble.user {
-  background: #c1dd75; /* ⭐ 사용자 말풍선 배경 (회색) */
-  color: #2c3e50; /* 글씨색 */
+  background: #dcf598; /* ⭐ 사용자 말풍선 배경 (회색) */
+  color: #0b131d; /* 글씨색 */
   align-self: flex-end;
   border-bottom-right-radius: 0.4rem;
 }
@@ -354,6 +361,7 @@ body {
   align-self: flex-start;
   border-bottom-left-radius: 0.4rem;
 }
+
 
 .bubble.interim {
     background: #7f8c8d;
