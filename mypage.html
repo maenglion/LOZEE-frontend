@@ -6,7 +6,7 @@
     <title id="pageTitle">마이페이지</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="css/mypage.css">
+    <link rel="stylesheet" href="css/base.css"> <link rel="stylesheet" href="css/mypage.css">
 </head>
 <body>
     <div class="app-container">
@@ -34,7 +34,8 @@
 
         <main class="mypage-content-area">
             <section id="info-section" class="content-section active">
-                <h1 class="hidden">내 정보</h1> <div class="profile-photo-section">
+                <h1 class="hidden">내 정보</h1>
+                <div class="profile-photo-section">
                     <div id="userPhotoPlaceholder" class="profile-photo-placeholder">
                         <img id="userProfileImage" src="" alt="프로필 사진" style="display: none;">
                         <span id="userInitialText">L</span>
@@ -81,7 +82,7 @@
                     <h2>필터</h2>
                     <select id="appointmentFilter" class="filter-select">
                         <option value="scheduled">일정순</option>
-                        <option value="importance">중요도순</option>
+                        <option value="importance">중요도순 (회차 많이 잡힌 순)</option>
                     </select>
                 </div>
                 
