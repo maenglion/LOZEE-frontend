@@ -1,39 +1,39 @@
 // js/gpt-vision-api.js
 
+// Firebase Storage SDK 모듈 import
+import { storage } from './firebase-config.js'; // firebase-config.js에서 storage 객체를 import
+import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
+
 /**
- * 파일을 GCP 또는 기타 스토리지에 업로드하고 공개 URL을 반환합니다.
- * 실제 구현에서는 Firebase Storage 또는 다른 클라우드 스토리지 서비스를 사용할 수 있습니다.
- * 이 함수는 예시를 위한 플레이스홀더입니다.
+ * 파일을 Firebase Storage에 업로드하고 공개 URL을 반환합니다.
  * @param {File} file - 업로드할 이미지 파일 객체
  * @returns {Promise<string>} 업로드된 이미지의 공개 URL
  */
 export async function uploadImageAndGetUrl(file) {
-    // ⭐ 실제 백엔드 업로드 로직으로 교체해야 합니다. ⭐
-    // 예시: Firebase Storage를 사용하는 경우
-    // const storageRef = firebase.storage().ref();
-    // const fileRef = storageRef.child(`images/${file.name}`);
-    // await fileRef.put(file);
-    // return await fileRef.getDownloadURL();
+    if (!storage) {
+        console.error("Firebase Storage가 초기화되지 않았습니다.");
+        throw new Error("이미지 업로드 서비스를 사용할 수 없습니다.");
+    }
 
-    // 임시: base64 인코딩으로 Data URL 반환 (소규모 테스트용, 실제 프로덕션에는 비효율적)
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            resolve(reader.result); // Data URL (base64)
-        };
-        reader.readAsDataURL(file);
-    });
+    const userId = localStorage.getItem('lozee_userId') || 'anonymous';
+    // Firebase Storage에 저장될 경로를 정의합니다. (예: images/userId/timestamp_filename.png)
+    const storageRef = ref(storage, `images/${userId}/${Date.now()}_${file.name}`);
 
-    // 또는, 클라우드 함수 등으로 파일을 보내고 URL을 받는 방식
-    // const formData = new FormData();
-    // formData.append("file", file);
-    // const response = await fetch("YOUR_GCP_CLOUD_FUNCTION_UPLOAD_URL", {
-    //     method: "POST",
-    //     body: formData
-    // });
-    // if (!response.ok) throw new Error("Image upload failed.");
-    // const data = await response.json();
-    // return data.imageUrl; // 클라우드 함수가 반환하는 이미지 URL
+    try {
+        // 파일을 Firebase Storage에 업로드합니다.
+        const uploadResult = await uploadBytes(storageRef, file);
+        console.log("Firebase Storage 업로드 완료:", uploadResult);
+
+        // 업로드된 파일의 공개 다운로드 URL을 가져옵니다.
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+        console.log("Firebase Storage 다운로드 URL:", downloadURL);
+
+        return downloadURL; // 공개 URL 반환
+
+    } catch (error) {
+        console.error("Firebase Storage 이미지 업로드 중 오류:", error);
+        throw new Error("이미지 업로드 중 문제가 발생했습니다: " + error.message);
+    }
 }
 
 /**
@@ -42,14 +42,13 @@ export async function uploadImageAndGetUrl(file) {
  * @returns {Promise<string>} 이미지 분석 결과 텍스트
  */
 export async function getImageAnalysisFromGptVision(imageUrl) {
-    // ⭐ 실제 GPT Vision API 호출 로직으로 교체해야 합니다. ⭐
-    // 이 부분은 서버 측에서 호출하는 것이 보안상 더 안전합니다.
-    // 직접 클라이언트에서 API 키를 노출하지 않도록 주의하세요.
+    // ⭐ 이 부분은 백엔드 API 엔드포인트로 변경해야 합니다.
+    // GPT Vision API 키는 클라이언트 측에 직접 노출되지 않도록 서버 측에서 호출하는 것이 필수입니다.
 
-    // 예시: 백엔드 API (Google Cloud Function, AWS Lambda 등)를 통해 GPT Vision 호출
     try {
         // 이 URL은 예시입니다. 실제 백엔드 API 엔드포인트로 변경하세요.
-        const response = await fetch("YOUR_BACKEND_GPT_VISION_API_ENDPOINT", { 
+        // 이 엔드포인트는 imageUrl을 받아서 GPT Vision API를 호출하고, 그 결과를 반환하는 역할을 해야 합니다.
+        const response = await fetch("YOUR_BACKEND_GPT_VISION_API_ENDPOINT", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -63,7 +62,7 @@ export async function getImageAnalysisFromGptVision(imageUrl) {
         }
 
         const data = await response.json();
-        // GPT Vision 응답에서 텍스트 설명을 추출하는 로직은 API 응답 구조에 따라 달라집니다.
+        // GPT Vision 응답 구조에 따라 description 필드가 다를 수 있습니다.
         return data.description || "이미지 내용을 분석할 수 없습니다.";
 
     } catch (error) {
