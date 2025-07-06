@@ -502,8 +502,15 @@ async function sendMessage(text, inputMethod, isCharCountExempt = false) { // �
         console.log("✅ GPT 요청 text:", text);
         console.log("✅ GPT 요청 context:", context);
 
-        const res = await getGptResponse(text, context);
+       const res = await getGptResponse(text, context);
 
+if (!res.ok) {
+    throw new Error(`GPT API 응답 오류: ${res.status}`);
+}
+
+       const gptResponse = await res.json();
+        const rawResponseText = gptResponse.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
+        
         chatWindow.querySelector('.thinking')?.remove();
 
         if (!res.ok) {
@@ -513,8 +520,7 @@ async function sendMessage(text, inputMethod, isCharCountExempt = false) { // �
         // ✅ isCharCountExempt 플래그를 사용하여 chatHistory에 추가 시 구분
         chatHistory.push({ role: 'user', content: text, isCharCountExempt: isCharCountExempt });
 
-        const gptResponse = await res.json();
-        const rawResponseText = gptResponse.text || "미안하지만, 지금은 답변을 드리기 어렵네.";
+ 
 
         let cleanText = rawResponseText;
         let jsonString = null;
