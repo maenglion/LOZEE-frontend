@@ -1,7 +1,7 @@
 // js/firebase-utils.js
 import { db } from './firebase-config.js';
 import { auth as firebaseAuth } from './firebase-config.js';
-import { onAuthStateChanged, getAuth } from "[https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js](https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js)";
+import { onAuthStateChanged, getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import {
     collection,
     addDoc,
@@ -16,8 +16,8 @@ import {
     limit,
     getDocs,
     where
-} from '[https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js](https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js)';
-import { ALL_NOTIFICATION_KEYWORDS, NOTIFICATION_KEYWORDS } from './constants.js';
+} from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
+import { ALL_NOTIFICATION_KEYWORDS, NOTIFICATION_KEYWORDS } from './constants.js'; // constants.js는 이 파일에 사용됨
 
 /** 텍스트에서 위험 태그를 감지하여 배열로 반환 */
 function detectRiskTags(text, detailedAnalysis = {}) {
@@ -252,8 +252,7 @@ export function detectSensitiveRisk(text) {
     return false;
 }
 
-// 사용자 분석 정보 불러오기
-export async function loadAnalysisDataFromFirestore(userId) { // export 추가
+export async function loadAnalysisDataFromFirestore(userId) {
   const q = query(
     collection(db, "journals"),
     where("userId", "==", userId)
@@ -426,7 +425,7 @@ export async function updateProfilePhotoURL(userId, photoURL) {
         console.log(`[Firebase Utils] ✅ 사용자(${userId}) 프로필 사진 URL 업데이트 완료.`);
     } catch (error) {
         console.error(`[Firebase Utils] ❌ 사용자(${userId}) 프로필 사진 URL 업데이트 중 오류:`, error);
-        throw error; // 에러 전파
+        throw error;
     }
 }
 
