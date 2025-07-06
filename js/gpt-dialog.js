@@ -182,15 +182,6 @@ export function getSystemPrompt({
 
     const selectedModel = useVision ? "gpt-4o" : "gpt-4-turbo";
 
-    const payload = {
-      messages: messages,
-      model: selectedModel,
-      temperature: 0.7,
-      max_tokens: isChildUnder12 ? 60 : 80, // 어린이는 답변을 짧게 제한
-      userId: context.userId,
-      elapsedTime: context.elapsedTime,
-    };
-
     console.log("📦 최종 전송될 payload:", payload);
 
     const res = await fetch(GPT_API_URL, {
