@@ -157,7 +157,7 @@ export function getSystemPrompt({
 
    // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
   // ⭐⭐ getGptResponse 함수 수정: payload 정의 추가 ⭐⭐
-async function getGptResponse(text, context) { // 인자를 text와 context로 받음
+export async function getGptResponse(text, context) { // 인자를 text와 context로 받음
   // 🚫 필수 데이터 누락 방지 패턴 (추가)
   if (!text || !context) {
     console.warn("🚫 필수 데이터 누락 – GPT 요청을 중단합니다.");
