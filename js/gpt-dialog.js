@@ -218,14 +218,10 @@ export function detectSensitiveRisk(text) {
 }
 
 export {
-  getGptResponse,
+getGptResponse,
   getSystemPrompt,
   getExitPrompt,
   getInitialGreeting,
   detectIntent,
-  detectSensitiveRisk,
-  getKoreanVocativeParticle,
-  getKoreanSubjectParticle,
-  getKoreanNamingParticle,
-
+  detectSensitiveRisk
 };
