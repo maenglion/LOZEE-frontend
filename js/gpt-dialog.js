@@ -170,7 +170,7 @@ async function getGptResponse(text, context) { // 인자를 text와 context로 �
   };
 
   try {
-    const response = await fetch('https://your-api.com/gpt', { // ⭐⭐ 여기에 실제 백엔드 API 엔드포인트 URL 입력 ⭐⭐
+    const response = await fetch('https://lozee-backend-838397276113.asia-northeast3.run.app/api/gpt-chat', { // ⭐⭐ 여기에 실제 백엔드 API 엔드포인트 URL 입력 ⭐⭐
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -229,3 +229,4 @@ export function detectSensitiveRisk(text) {
 
     return riskLevel; // "safe" | "suicide" | "sexual"
 }
+
