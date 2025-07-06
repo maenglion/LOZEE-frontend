@@ -2,7 +2,7 @@
 
 /* .analysis-content-area는 base.css에서 기본 패딩/gap 등 설정 */
 .analysis-content-area {
-    /* base.css의 .app-container 및 .mypage-content-area에서 상속 */
+    /* base.css의 .app-container에서 상속되므로 배경색은 app-container의 흰색 */
     /* 필요시 analysis 페이지에 특화된 추가 패딩/마진/색상 */
     background-color: #f4f6f8; /* 마이페이지와 동일하게 섹션 배경색 */
 }
@@ -43,8 +43,8 @@
     flex-shrink: 0;
     position: relative;
     cursor: pointer;
-    background-color: transparent; /* 버튼 기본 배경 제거 */
-    border-radius: 0; /* 둥근 모서리 제거 */
+    background-color: transparent;
+    border-radius: 0;
 }
 .tab-item.active {
     color: #6e8efb;
@@ -120,7 +120,7 @@
 }
 
 
-/* ⭐⭐ PC 환경 (min-width: 640px)에서 폰트/요소 크기 조정 ⭐⭐ */
+/* ⭐⭐ PC 화면 (min-width: 640px)에서 폰트/요소 크기 조정 ⭐⭐ */
 @media (min-width: 640px) {
     .tab-menu-wrapper {
         padding: 0 20px;
@@ -134,8 +134,9 @@
     }
     .analysis-content-area {
         max-width: 800px; /* PC에서 컨텐츠 영역의 최대 너비 */
-        margin: 0 auto; /* PC에서 중앙 정렬 */
-        padding: 20px;
+        margin: 0 auto;
+        padding: 25px; /* PC에서 패딩 증가 */
+        gap: 25px; /* 섹션 간 간격 증가 */
     }
     .section {
         padding: 35px; /* PC에서 섹션 패딩 증가 */
