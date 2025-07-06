@@ -28,7 +28,7 @@ const editProfilePhotoBtnEl = document.getElementById('editProfilePhotoBtn');
 const daysSinceJoinEl = document.getElementById('daysSinceJoin');
 
 const userNameDisplayEl = document.getElementById('userNameDisplay');
-const userNicknameDisplayEl = document.getElementById('userNicknameDisplay');
+const userNicknameDisplayEl = document.getElementById('userNicknameDisplay'); // ⭐ 이 요소가 mypage.html에 있어야 합니다.
 const userEmailDisplayEl = document.getElementById('userEmailDisplay');
 const userFullAgeEl = document.getElementById('userFullAge');
 const lastLoginDateEl = document.getElementById('lastLoginDate');
@@ -46,18 +46,17 @@ const childFullAgeDisplayEl = document.getElementById('childFullAgeDisplay');
 const childDiagnosesListEl = document.getElementById('childDiagnosesList');
 const addChildBtnEl = document.getElementById('addChildBtn');
 
-const appointmentsListContainerEl = document.getElementById('appointmentsListContainer'); // 로지와의 약속 카드들이 들어갈 컨테이너
-const noAppointmentsMessageEl = document.getElementById('noAppointmentsMessage'); // 로지와의 약속 없을 때 메시지
-const appointmentFilterSelectEl = document.getElementById('appointmentFilter'); // 약속 필터
+const appointmentsListContainerEl = document.getElementById('appointmentsListContainer');
+const noAppointmentsMessageEl = document.getElementById('noAppointmentsMessage');
+const appointmentFilterSelectEl = document.getElementById('appointmentFilter');
 
-const emergencyAlertsSectionEl = document.getElementById('emergencyAlertsSection');
 const emergencyAlertsListEl = document.getElementById('emergencyAlertsList');
+const emergencyAlertsSectionEl = document.getElementById('alerts-section');
 
 const recentJournalCardListEl = document.getElementById('recentJournalCardList');
 const goToJournalListBtnEl = document.getElementById('goToJournalListBtn');
 
-// ⭐ 모든 수정 버튼 ⭐
-const allEditButtons = document.querySelectorAll('.info-card .edit-button');
+const allCardEditButtons = document.querySelectorAll('.info-card h2 .edit-button');
 
 
 // --- 헬퍼 함수 ---
