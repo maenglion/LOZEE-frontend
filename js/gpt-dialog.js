@@ -156,55 +156,43 @@ export function getSystemPrompt({
 
 
    // 7) GPT 응답 요청 함수 (Payload 구조 수정 버전)
-  export async function getGptResponse(userMessage, context = {}) {
-  const token = await waitForIdToken();
+  // ⭐⭐ getGptResponse 함수 수정: payload 정의 추가 ⭐⭐
+async function getGptResponse(text, context) { // 인자를 text와 context로 받음
+  // 🚫 필수 데이터 누락 방지 패턴 (추가)
+  if (!text || !context) {
+    console.warn("🚫 필수 데이터 누락 – GPT 요청을 중단합니다.");
+    return null; // GPT 응답 없이 null 반환
+  }
+
+  const payload = { // ⭐ payload 객체 명확하게 정의 ⭐
+    text: text,
+    context: context,
+  };
+
   try {
-    const idToken = await getIdToken();
-    if (!idToken) {
-      throw new Error("Firebase ID 토큰을 가져올 수 없습니다.");
-    }
-
-    let messages = [];
-
-    if (context.systemPrompt) {
-        messages.push({ role: 'system', content: context.systemPrompt });
-    }
-
-    (context.chatHistory || []).forEach(chatTurn => {
-        messages.push({ role: chatTurn.role, content: chatTurn.content });
-    });
-
-    messages.push({ role: 'user', content: userMessage });
-
-    // 🔁 자동 모델 전환 로직 추가
-    const useVision = context.hasImage || context.imageUrl;
-    const isChildUnder12 = context.userAge && context.userAge < 12;
-
-    const selectedModel = useVision ? "gpt-4o" : "gpt-4-turbo";
-
-    console.log("📦 최종 전송될 payload:", payload);
-
-    const res = await fetch(GPT_API_URL, {
+    const response = await fetch('https://your-api.com/gpt', { // ⭐⭐ 여기에 실제 백엔드 API 엔드포인트 URL 입력 ⭐⭐
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload) // 정의된 payload 사용
     });
 
-    if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(`GPT 서버 오류: ${JSON.stringify(errorData)}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GPT API 응답 오류: ${response.status} - ${errorText}`);
     }
 
-    return res;
+    const data = await response.json();
+    return data; // GPT API의 전체 응답 데이터 반환 (text 속성 포함)
 
   } catch (error) {
     console.error("[getGptResponse 오류]", error);
-    throw error;
+    throw error; // 오류를 상위로 전파
   }
 }
+
+export { getInitialGreeting, getGptResponse, getKoreanVocativeParticle };
 
 // 8) 대화 종료 메시지
 export function getExitPrompt(userName = '친구') {
