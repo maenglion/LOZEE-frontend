@@ -90,8 +90,13 @@ const currentUserAgeGroup = (() => {
 })();
 
 const currentUserType = (localStorage.getItem('lozee_role') === 'parent') ? 'caregiver' : 'directUser';
+// ⭐ 새로운 변수: 사용자가 직접 이용자 특성도 가지고 있는지 확인
+const isDirectUser = localStorage.getItem('lozee_isDirectUser') === 'true'; // 예시: localStorage에 이런 플래그가 저장된다고 가정
+// localStorage.setItem('lozee_isDirectUser', true/false); 와 같이 로그인 시 저장 필요
+
 const targetChildId = (currentUserType === 'caregiver') ? localStorage.getItem('lozee_childId') : null;
 const voc = getKoreanVocativeParticle(userNameToDisplay);
+
 
 // --- 5. 모든 함수 정의 ---
 
@@ -178,16 +183,33 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+
+// ⭐⭐ getTopicsForCurrentUser 함수 수정: caregiver + directUser 동시 지원 ⭐⭐
 function getTopicsForCurrentUser() {
     const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
-    if (currentUserType === 'directUser') {
-        return counselingTopicsByAge.directUser?.[ageGroupKey] || counselingTopicsByAge.directUser['11-15세'] || {};
+    let topics = {};
+
+    // 1. 직접 이용자(directUser) 주제 가져오기
+    if (currentUserType === 'directUser' || isDirectUser) { // 'isDirectUser' 플래그도 확인
+        const directUserTopics = counselingTopicsByAge.directUser?.[ageGroupKey] || counselingTopicsByAge.directUser['16-29세'] || {};
+        // 객체의 경우 Object.values로 배열 변환
+        Object.values(directUserTopics).forEach(mainTopic => {
+            topics[mainTopic.name] = mainTopic; // 메인 주제 이름을 키로 하는 객체로 변환
+        });
     }
+
+    // 2. 보호자(caregiver) 주제 가져오기
     if (currentUserType === 'caregiver') {
-        console.log("➡️ talk.js: caregiver용 주제 로드 시도 (getTopicsForCurrentUser):", counselingTopicsByAge.caregiver.common);
-        return counselingTopicsByAge.caregiver?.common || {};
+        const caregiverTopics = counselingTopicsByAge.caregiver?.common || {};
+        Object.values(caregiverTopics).forEach(mainTopic => {
+            // 직접 이용자 주제와 보호자 주제가 중복될 경우, 병합하거나 보호자 주제를 우선할 수 있습니다.
+            // 여기서는 단순 병합 (기존 키가 있으면 덮어씀, 없으면 추가)
+            topics[mainTopic.name] = mainTopic;
+        });
     }
-    return {};
+    
+    // 최종적으로 합쳐진 주제들을 배열로 반환
+    return Object.values(topics);
 }
 
 function updateSessionHeader() {
