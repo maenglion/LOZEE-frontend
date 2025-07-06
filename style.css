@@ -362,7 +362,7 @@ body {
     word-break: keep-all;
 }
 .bubble.user {
-  background: #bdc3c7; /* ⭐ 사용자 말풍선 배경 (회색) */
+  background: #f3cb5d; /* ⭐ 사용자 말풍선 배경 (회색) */
   color: #2c3e50; /* 글씨색 */
   align-self: flex-end; /* 우측 정렬 */
   border-bottom-right-radius: 0.4rem;
