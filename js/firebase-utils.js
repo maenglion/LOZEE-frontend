@@ -1,7 +1,7 @@
 // js/firebase-utils.js
 import { db } from './firebase-config.js';
 import { auth as firebaseAuth } from './firebase-config.js';
-import { onAuthStateChanged, getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { onAuthStateChanged, getAuth, sendEmailVerification, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 import {
     collection,
     addDoc,
@@ -339,7 +339,14 @@ export async function getDashboardAppointmentsData(userId) {
         console.error("getDashboardAppointmentsData: 사용자 ID가 필요합니다.");
         return [];
     }
-    const trainingTypes = ['smallTalk', 'relationEmotion', 'cognitiveDistortion', 'angerManagement', 'selfUnderstanding']; // 예시 훈련 유형 ID
+    // ⭐ 마이페이지 이미지에 보이는 훈련 항목들을 기준으로 ID 정의
+    const trainingTypes = [
+        'smallTalk',            // 스몰 토크
+        'relationEmotion',      // 관계 감정 살펴보기
+        'cognitiveDistortion',  // 인지 왜곡 살펴보기
+        // 'angerManagement',   // 분노 조절 (필요시 추가)
+        // 'selfUnderstanding'  // 자기 이해 (필요시 추가)
+    ];
 
     const appointmentsData = [];
     try {
@@ -348,9 +355,44 @@ export async function getDashboardAppointmentsData(userId) {
             const trainingSnap = await getDoc(trainingDocRef);
             if (trainingSnap.exists()) {
                 appointmentsData.push({ id: trainingSnap.id, ...trainingSnap.data() });
+            } else {
+                // 문서가 없으면 기본 더미 데이터 생성 또는 빈 값으로 처리
+                // 마이페이지 이미지를 채우기 위한 더미 데이터 예시 (실제 구현 시 Firestore에서 관리)
+                let dummyData = {
+                    id: type,
+                    displayText: "", // 마이페이지에 표시될 이름
+                    scheduledDate: serverTimestamp(), // 임시 날짜
+                    currentProgress: 0,
+                    totalExpectedProgress: 0,
+                    outcome: "아직 진행된 내용이 없습니다.",
+                    isNew: false // NEW 점 기본 false
+                };
+                if (type === 'smallTalk') {
+                    dummyData.displayText = "스몰 토크";
+                    dummyData.scheduledDate = new Date("2025-07-01T15:15:00Z");
+                    dummyData.currentProgress = 3;
+                    dummyData.totalExpectedProgress = 20;
+                    dummyData.outcome = "상대방에게 너무 많은 정보를 한번에 쏟아내게 되면, 상대는 대화의 흐름을 파악하기 어려워. 우리 조금 더 연습해보자.";
+                } else if (type === 'relationEmotion') {
+                    dummyData.displayText = "관계 감정 살펴보기";
+                    dummyData.scheduledDate = new Date("2025-07-05T15:15:00Z");
+                    dummyData.currentProgress = 5;
+                    dummyData.totalExpectedProgress = 10;
+                    dummyData.outcome = "지금 너는 엄마의 행동에 대한 패턴이 파악되면 서 엄마를 거부하고 있어. 엄마와 관련된 너의 감정 단어들을 보면 ...";
+                } else if (type === 'cognitiveDistortion') {
+                    dummyData.displayText = "인지 왜곡 살펴보기";
+                    dummyData.scheduledDate = new Date("2025-07-06T09:30:00Z");
+                    dummyData.currentProgress = 0;
+                    dummyData.totalExpectedProgress = 6;
+                    dummyData.patternsDetected = [
+                        { label: "과장된 오류", text: `"나는 아이를 위해 이토록 노력하는데, 왜 나는 늘 손해를 보며, 사람들은 나를 이해해주지 않지? 결국? 이건 너무 불공평해."` },
+                        { label: "흑백논리", text: `"그렇게 애를 키웠는데도 안되니 우리 아이의 사회성은 완전히 망가진 거나 다름 없어. 희망이 없어."` }
+                    ];
+                    dummyData.todo = "우리는 이 생각들을 다른 각도에서 생각해 보는 연습을 할거야.";
+                }
+                appointmentsData.push(dummyData); // 더미 데이터 추가
             }
         }
-        // 중요도순 정렬 등을 위해 추가 쿼리가 필요하면 여기에 구현 (ex: orderBy('importance', 'desc'))
         return appointmentsData;
     } catch (error) {
         console.error("getDashboardAppointmentsData: 훈련 데이터 로드 중 오류:", error);
@@ -443,5 +485,60 @@ export async function updateUserInfo(userId, dataToUpdate) {
     } catch (error) {
         console.error(`[Firebase Utils] ❌ 사용자(${userId}) 정보 업데이트 중 오류:`, error);
         throw error;
+    }
+}
+
+/**
+ * [신규] 사용자에게 이메일 인증 메일을 보내는 함수
+ * @param {firebase.User} user - 현재 로그인된 Firebase User 객체
+ * @returns {Promise<void>}
+ */
+export async function sendVerificationEmail(user) {
+    if (!user) {
+        console.error("sendVerificationEmail: 사용자 객체가 없습니다.");
+        throw new Error("사용자 객체가 없어 인증 메일을 보낼 수 없습니다.");
+    }
+    try {
+        await sendEmailVerification(user);
+        console.log("✅ 인증 메일이 성공적으로 전송되었습니다.");
+    } catch (error) {
+        console.error("❌ 인증 메일 전송 중 오류:", error);
+        throw error; // 오류 전파
+    }
+}
+
+/**
+ * [신규] 이메일과 비밀번호로 로그인 시도 후, 인증 여부 확인 및 메일 전송
+ * 이 함수는 로그인 페이지의 signInWithEmailAndPassword를 대체할 수 있습니다.
+ * @param {string} email - 사용자 이메일
+ * @param {string} password - 사용자 비밀번호
+ * @returns {Promise<firebase.User|null>} - 로그인 성공 시 User 객체, 실패 시 null
+ */
+export async function handleSignInWithEmailAndPassword(email, password) {
+    try {
+        const userCredential = await signInWithEmailAndPassword(firebaseAuth, email, password);
+        const user = userCredential.user;
+
+        if (!user.emailVerified) {
+            console.warn("이메일이 인증되지 않았습니다. 인증 메일을 재전송합니다.");
+            await sendVerificationEmail(user);
+            alert("📩 이메일 인증이 필요합니다. 인증 메일을 다시 보냈어요. 메일함을 확인해 주세요.");
+            return null; // 인증되지 않은 상태로 간주
+        } else {
+            console.log("✅ 로그인 성공 및 이메일 인증 완료:", user.email);
+            return user;
+        }
+    } catch (error) {
+        let errorMessage = "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
+        if (error.code === 'auth/wrong-password') {
+            errorMessage = "비밀번호가 일치하지 않습니다.";
+        } else if (error.code === 'auth/user-not-found') {
+            errorMessage = "등록되지 않은 이메일 주소입니다.";
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = "유효하지 않은 이메일 주소 형식입니다.";
+        }
+        console.error("❌ 로그인 실패:", error.code, error.message);
+        alert(errorMessage);
+        throw error; // 오류 전파
     }
 }

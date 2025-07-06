@@ -1,7 +1,8 @@
 // firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js"; // ✅ 정확한 모듈 경로
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js"; // ⭐ Storage SDK import
 
 // 실제 LOZEE 프로젝트 설정값으로 교체한 firebaseConfig
 const firebaseConfig = {
@@ -17,9 +18,7 @@ const firebaseConfig = {
 // Firebase 앱 초기화
 const app = initializeApp(firebaseConfig);
 
-// Firestore 및 Auth 인스턴스 내보내기
+// Firestore, Auth, Storage 인스턴스 내보내기
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-
-// firebaseConfig 객체 자체를 default export 할 필요는 일반적으로 없습니다.
-// export default firebaseConfig; // 이 라인 제거 또는 주석 처리
+export const storage = getStorage(app); // ⭐ Storage 서비스 초기화 및 export
