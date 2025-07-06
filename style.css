@@ -343,7 +343,7 @@ body {
     /* transition: all 0.2s ease-in-out; /* 부드러운 전환 효과 추가 */
 }
 .bubble.user {
-  background: #bdc3c7; /* ⭐ 사용자 말풍선 배경 (회색) */
+  background: #c1dd75; /* ⭐ 사용자 말풍선 배경 (회색) */
   color: #2c3e50; /* 글씨색 */
   align-self: flex-end;
   border-bottom-right-radius: 0.4rem;
