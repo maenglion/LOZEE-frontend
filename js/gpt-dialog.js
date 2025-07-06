@@ -217,11 +217,4 @@ export function detectSensitiveRisk(text) {
     return riskLevel; // "safe" | "suicide" | "sexual"
 }
 
-export {
-getGptResponse,
-  getSystemPrompt,
-  getExitPrompt,
-  getInitialGreeting,
-  detectIntent,
-  detectSensitiveRisk
-};
+
