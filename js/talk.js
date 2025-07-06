@@ -17,7 +17,6 @@ import {
 import { counselingTopicsByAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
-import { uploadImageAndGetUrl, getImageAnalysisFromGptVision } from './gpt-vision-api.js';
 
 
 // --- 2. 상태 변수 선언 ---
@@ -43,10 +42,7 @@ const chatInputContainer = document.getElementById('chat-input-container');
 const chatInput = document.getElementById('chat-input');
 const plusButton = document.getElementById('plus-button');
 const imageUpload = document.getElementById('image-upload');
-const micButton = document.getElementById('mic-button');
-const sendButton = document.getElementById('send-button');
-const meterContainer = document.getElementById('meter-container');
-const meterLevel = document.getElementById('volume-level');
+const actionButton = document.getElementById('action-button');
 const sessionHeaderTextEl = document.getElementById('session-header');
 
 
@@ -64,8 +60,9 @@ function startChat(subTopic) {
     selectedSubTopicDetails = subTopic;
     updateSessionHeader();
 
-    if (micButton) micButton.disabled = false;
-    if (sendButton) sendButton.disabled = false;
+    const actionButton = document.getElementById('action-button');
+    const chatInput = document.getElementById('chat-input');
+    if (actionButton) actionButton.disabled = false;
     if (chatInput) chatInput.disabled = false;
 
     if (chatInputContainer) chatInputContainer.style.display = 'flex';
@@ -83,25 +80,35 @@ function startChat(subTopic) {
 // --- 4. 사용자 정보 ---
 const loggedInUserId = localStorage.getItem('lozee_userId');
 const userNameToDisplay = localStorage.getItem('lozee_username') || '친구';
-const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10); // ⭐ 사용자의 나이 기준
+const targetAge = parseInt(localStorage.getItem('lozee_userAge') || "0", 10);
+
+const currentUserAgeGroup = (() => {
+    if (targetAge < 11) return '10세미만';
+    if (targetAge <= 15) return '11-15세';
+    if (targetAge <= 29) return '16-29세';
+    return '30-55세';
+})();
 
 const currentUserType = (localStorage.getItem('lozee_role') === 'parent') ? 'caregiver' : 'directUser';
-// ⭐ isDirectUser 플래그: 사용자가 본인 특성도 가지고 있는지
-const isDirectUser = localStorage.getItem('lozee_isDirectUser') === 'true'; 
+// ⭐ 새로운 변수: 사용자가 직접 이용자 특성도 가지고 있는지 확인
+const isDirectUser = localStorage.getItem('lozee_isDirectUser') === 'true'; // 예시: localStorage에 이런 플래그가 저장된다고 가정
+// localStorage.setItem('lozee_isDirectUser', true/false); 와 같이 로그인 시 저장 필요
 
-// const targetChildId = (currentUserType === 'caregiver') ? localStorage.getItem('lozee_childId') : null; // ✅ 아이 정보 기준 삭제
+const targetChildId = (currentUserType === 'caregiver') ? localStorage.getItem('lozee_childId') : null;
 const voc = getKoreanVocativeParticle(userNameToDisplay);
+
 
 // --- 5. 모든 함수 정의 ---
 
 /**
  * 채팅창에 새로운 말풍선을 추가하는 함수
  */
-function appendMessage(text, role, options = {}) {
+function appendMessage(text, role, options = {}) { // ✅ options 인자 추가
     if (!chatWindow) return;
     const bubble = document.createElement('div');
     bubble.className = `bubble ${role}`;
     bubble.textContent = text;
+    // ✅ 이미지 분석 결과 메시지에는 특정 클래스를 추가하여 글자수 계산에서 제외 가능하도록
     if (options.isImageAnalysisResult) {
         bubble.classList.add('image-analysis-result');
     }
@@ -120,6 +127,7 @@ function updateLastUserMessageBubble(newText) {
         lastUserBubble.textContent = newText;
         chatWindow.scrollTop = chatWindow.scrollHeight;
     } else {
+        // 만약 사용자 버블이 없다면 새로 추가 (예: 초기 이미지 업로드 시)
         appendMessage(newText, 'user', { isImageAnalysisResult: true });
     }
 }
@@ -129,11 +137,13 @@ function updateLastUserMessageBubble(newText) {
  * 액션 버튼의 아이콘을 TTS 모드에 따라 업데이트하는 함수
  */
 function updateActionButtonIcon() {
-    if (!micButton) return;
+    if (!actionButton) return;
     if (isTtsMode) {
-        micButton.classList.remove('text-mode');
+        actionButton.innerHTML = micIconSVG;
     } else {
-        micButton.classList.add('text-mode');
+        actionButton.innerHTML = 'T';
+        actionButton.style.fontSize = '20px';
+        actionButton.style.fontWeight = 'bold';
     }
 }
 
@@ -173,44 +183,29 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// ⭐⭐ getTopicsForCurrentUser 함수 로직 변경: 사용자 나이와 특성(directUser/caregiver)만 기준 ⭐⭐
+
+// ⭐⭐ getTopicsForCurrentUser 함수 수정: caregiver + directUser 동시 지원 ⭐⭐
 function getTopicsForCurrentUser() {
-    const userAgeGroupKey = (() => { // 사용자의 나이 그룹을 기준으로 키 생성
-        if (targetAge < 11) return '10세미만';
-        if (targetAge <= 15) return '11-15세';
-        if (targetAge <= 29) return '16-29세';
-        return '30-55세';
-    })();
+    const ageGroupKey = targetAge < 11 ? '10세미만' : (targetAge <= 15 ? '11-15세' : (targetAge <= 29 ? '16-29세' : '30-55세'));
+    let topics = {};
 
-    let topics = {}; // 메인 주제 이름(name)을 키로 사용하는 객체 (중복 제거 및 병합용)
-
-    // 1. 사용자가 직접 이용자(directUser)이거나, isDirectUser 플래그가 true인 경우
-    if (currentUserType === 'directUser' || isDirectUser) {
-        const directUserTopicsArray = counselingTopicsByAge.directUser?.[userAgeGroupKey];
-        if (directUserTopicsArray && Array.isArray(directUserTopicsArray)) {
-            directUserTopicsArray.forEach(mainTopic => {
-                topics[mainTopic.name] = mainTopic; // 메인 주제 이름을 키로 저장
-            });
-        } else {
-             console.warn(`directUser의 ${userAgeGroupKey} 주제를 찾을 수 없습니다. 기본값 '16-29세' 사용.`);
-             const defaultTopics = counselingTopicsByAge.directUser?.['16-29세'];
-             if(defaultTopics && Array.isArray(defaultTopics)) {
-                 defaultTopics.forEach(mainTopic => {
-                     topics[mainTopic.name] = mainTopic;
-                 });
-             }
-        }
+    // 1. 직접 이용자(directUser) 주제 가져오기
+    if (currentUserType === 'directUser' || isDirectUser) { // 'isDirectUser' 플래그도 확인
+        const directUserTopics = counselingTopicsByAge.directUser?.[ageGroupKey] || counselingTopicsByAge.directUser['16-29세'] || {};
+        // 객체의 경우 Object.values로 배열 변환
+        Object.values(directUserTopics).forEach(mainTopic => {
+            topics[mainTopic.name] = mainTopic; // 메인 주제 이름을 키로 하는 객체로 변환
+        });
     }
 
-    // 2. 사용자가 보호자(caregiver)인 경우 (common 주제 가져옴)
+    // 2. 보호자(caregiver) 주제 가져오기
     if (currentUserType === 'caregiver') {
-        const caregiverTopicsArray = counselingTopicsByAge.caregiver?.common;
-        if (caregiverTopicsArray && Array.isArray(caregiverTopicsArray)) {
-            caregiverTopicsArray.forEach(mainTopic => {
-                // 직접 이용자 주제와 보호자 주제가 중복될 경우, 보호자 주제가 덮어씀 (필요에 따라 로직 변경 가능)
-                topics[mainTopic.name] = mainTopic;
-            });
-        }
+        const caregiverTopics = counselingTopicsByAge.caregiver?.common || {};
+        Object.values(caregiverTopics).forEach(mainTopic => {
+            // 직접 이용자 주제와 보호자 주제가 중복될 경우, 병합하거나 보호자 주제를 우선할 수 있습니다.
+            // 여기서는 단순 병합 (기존 키가 있으면 덮어씀, 없으면 추가)
+            topics[mainTopic.name] = mainTopic;
+        });
     }
     
     // 최종적으로 합쳐진 주제들을 배열로 반환
@@ -236,37 +231,34 @@ function renderUnifiedTopics() {
             tags: ["자유주제", "기타"],
             type: "free_form"
         };
-        // counselingTopicsByAge 객체의 모든 ageGroup 및 common 내부에 free_form 옵션을 추가 (중복 방지)
-        Object.keys(counselingTopicsByAge).forEach(userTypeKey => {
-            const userTypeData = counselingTopicsByAge[userTypeKey];
-            Object.keys(userTypeData).forEach(ageGroupKey => {
-                const mainTopics = userTypeData[ageGroupKey];
-                if (Array.isArray(mainTopics)) { // mainTopics가 배열인지 확인
-                    mainTopics.forEach(mainTopic => {
-                        const alreadyExists = mainTopic.subTopics.some(sub => sub.type === 'free_form');
-                        if (!alreadyExists) {
-                            mainTopic.subTopics.push(freeTopicOption);
-                        }
-                    });
-                }
-            });
+        const targetAgeGroups = ['청소년', '청년', '중장년', '노년'];
+        targetAgeGroups.forEach(ageGroup => {
+            if (counselingTopicsByAge[ageGroup]) {
+                const mainTopics = Array.isArray(counselingTopicsByAge[ageGroup]) ? counselingTopicsByAge[ageGroup] : Object.values(counselingTopicsByAge[ageGroup]);
+                mainTopics.forEach(mainTopic => {
+                    const alreadyExists = mainTopic.subTopics.some(sub => sub.type === 'free_form');
+                    if (!alreadyExists) {
+                        mainTopic.subTopics.push(freeTopicOption);
+                    }
+                });
+            }
         });
     };
 
-    addFreeTopicOption(); // 자유 주제 옵션 추가 호출
+    addFreeTopicOption();
 
     const container = document.getElementById('topic-selection-container');
     if (!container) return;
     container.innerHTML = '';
 
-    const topicsData = getTopicsForCurrentUser(); // 수정된 함수 호출
+    const topicsForUserType = counselingTopicsByAge[currentUserType];
+    if (!topicsForUserType) return;
 
-    if (!topicsData || topicsData.length === 0) {
-        appendMessage('선택할 수 있는 주제가 없습니다. 자유롭게 이야기해주세요.', 'assistant');
-        // 여기서 바로 자유 대화 시작 모드로 전환할 수도 있습니다.
-        // 예를 들어: startChat({ displayText: '자유 대화', tags: ['자유주제'], type: 'free_form' });
-        return;
-    }
+    const topicsData = (currentUserType === 'caregiver')
+        ? topicsForUserType['common']
+        : (topicsForUserType[currentUserAgeGroup] || topicsForUserType['16-29세']);
+
+    if (!topicsData) return;
 
     const optionsContainer = document.createElement('div');
     optionsContainer.className = 'chat-options-container';
@@ -283,7 +275,7 @@ function renderUnifiedTopics() {
             selectedMain = mainTopic.name;
             appendMessage(`${mainTopic.name}`, 'user');
 
-            container.innerHTML = ''; // 기존 주제 선택 버튼들 제거
+            container.innerHTML = '';
 
             if (mainTopic.subTopics && mainTopic.subTopics.length > 0) {
                 appendMessage('더 자세한 이야기를 들려줄래?', 'assistant');
@@ -302,17 +294,13 @@ function renderUnifiedTopics() {
     container.appendChild(optionsContainer);
 }
 
-function showSubTopics() { // 이 함수는 renderUnifiedTopics에서 호출되지 않음. 사용되지 않으면 제거 가능.
-    // getTopicsForCurrentUser()는 이제 배열을 반환하므로, selectedMain을 키로 직접 접근할 수 없습니다.
-    // 이 함수의 로직이 사용되지 않는다면 제거하거나, selectedMain을 이용해 topicsData 배열에서 해당 주제를 찾아야 합니다.
-    const topicsData = getTopicsForCurrentUser();
-    const selectedMainTopic = topicsData.find(topic => topic.name === selectedMain);
-
-    if (!selectedMainTopic || !selectedMainTopic.subTopics || selectedMainTopic.subTopics.length === 0) {
+function showSubTopics() {
+    const subtopicOptions = getTopicsForCurrentUser()[selectedMain] || [];
+    if (subtopicOptions.length === 0) {
         startChat(`'${selectedMain}'에 대해 자유롭게 이야기해줘.`, 'topic_selection_init', { displayText: selectedMain });
     } else {
         appendMessage('조금 더 구체적으로 이야기해 줄래?', 'assistant');
-        displayOptionsInChat(selectedMainTopic.subTopics, (selectedSubtopicText, fullOptionObject) => {
+        displayOptionsInChat(subtopicOptions, (selectedSubtopicText, fullOptionObject) => {
             selectedSubTopicDetails = fullOptionObject;
             updateSessionHeader();
             startChat(selectedSubtopicText, 'topic_selection_init', fullOptionObject);
@@ -332,6 +320,33 @@ async function fetchPreviousUserCharCount() {
     }
 }
 
+async function sendToGptVision(imageUrl) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4-vision-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: imageUrl } },
+            { type: "text", text: "이 이미지를 분석해서 감정과 내용을 설명해줘." }
+          ]
+        }
+      ],
+      max_tokens: 1000
+    })
+  });
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "분석 결과 없음";
+}
+
+
+
 async function endSessionAndSave() {
     if (isDataSaved) return;
     isDataSaved = true;
@@ -340,7 +355,7 @@ async function endSessionAndSave() {
     if (currentFirestoreSessionId) await logSessionEnd(currentFirestoreSessionId);
 
     if (chatHistory.length <= 2) {
-        console.log("대화 내용이 부족하여 저장을 건너뜥니다.");
+        console.log("대화 내용이 부족하여 저장을 건너뜁니다.");
         return;
     }
 
@@ -439,7 +454,8 @@ function showAnalysisNotification() {
  * @param {string} inputMethod - 메시지 입력 방식 (e.g., 'user_input', 'topic_selection_init', 'image_analysis')
  * @param {boolean} isCharCountExempt - 이 메시지의 텍스트가 글자수 계산에서 제외되는지 여부 (기본값: false)
  */
-async function sendMessage(text, inputMethod, isCharCountExempt = false) {
+async function sendMessage(text, inputMethod, isCharCountExempt = false) { // ✅ isCharCountExempt 인자 추가
+
     if (!text || String(text).trim() === '') {
         console.warn("빈 텍스트로 sendMessage 호출됨");
         return;
@@ -453,22 +469,23 @@ async function sendMessage(text, inputMethod, isCharCountExempt = false) {
 
     if (isProcessing) return;
     isProcessing = true;
-    if (micButton) micButton.disabled = false; // ✅ micButton
-    if (sendButton) sendButton.disabled = false; // ✅ sendButton
+    if (actionButton) actionButton.disabled = true;
     resetSessionTimeout();
 
     if (inputMethod !== 'topic_selection_init') {
+        // 이미지 분석 결과는 다른 스타일로 표시하거나, 기존 메시지를 업데이트할 수 있습니다.
         if (inputMethod === 'image_analysis') {
+            // 이미지 분석 결과는 chatHistory에 추가만 하고, UI에는 '분석 중...' 메시지 이후에 업데이트되도록 함
+            // appendMessage 로직에서 isImageAnalysisResult 플래그를 사용하여 스타일링할 수 있습니다.
+            // 여기서는 사용자에게 바로 보이지 않는 'thinking' 버블 대신 '분석 중' 버블을 사용
             appendMessage('이미지 분석 결과를 처리 중입니다...', 'assistant thinking');
         } else {
             appendMessage(text, 'user');
         }
-    } else { // topic_selection_init 일 때, LOZEE가 보낸 메시지를 봇 말풍선으로 추가
-        appendMessage(text, 'assistant');
     }
 
-
     if (chatInput) chatInput.value = '';
+    // 이미지 분석 중 메시지는 위에서 처리했으므로, 일반 메시지 처리 시에만 표시
     if (inputMethod !== 'image_analysis') {
         appendMessage('...', 'assistant thinking');
     }
@@ -493,6 +510,7 @@ async function sendMessage(text, inputMethod, isCharCountExempt = false) {
             throw new Error(`GPT API 응답 오류: ${res.status}`);
         }
 
+        // ✅ isCharCountExempt 플래그를 사용하여 chatHistory에 추가 시 구분
         chatHistory.push({ role: 'user', content: text, isCharCountExempt: isCharCountExempt });
 
         const gptResponse = await res.json();
@@ -541,6 +559,7 @@ async function sendMessage(text, inputMethod, isCharCountExempt = false) {
 
         chatHistory.push({ role: 'assistant', content: cleanText });
 
+        // ✅ userCharCountInSession 계산 시 isCharCountExempt 메시지 제외
         userCharCountInSession = chatHistory
             .filter(m => m.role === 'user' && !m.isCharCountExempt)
             .reduce((sum, m) => sum + (m.content ? m.content.length : 0), 0);
@@ -607,8 +626,7 @@ async function sendMessage(text, inputMethod, isCharCountExempt = false) {
 
     } finally {
         isProcessing = false;
-        if (micButton) micButton.disabled = false;
-        if (sendButton) sendButton.disabled = false;
+        if (actionButton) actionButton.disabled = false;
     }
 }
 
@@ -624,8 +642,8 @@ if (SpeechRecognitionAPI) {
     recog.continuous = true;
     recog.interimResults = true;
     recog.lang = 'ko-KR';
-    recog.onstart = () => { isRec = true; if (micButton) micButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
-    recog.onend = () => { isRec = false; if (micButton) micButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
+    recog.onstart = () => { isRec = true; if (actionButton) actionButton.classList.add('recording'); micButtonCurrentlyProcessing = false; };
+    recog.onend = () => { isRec = false; if (actionButton) actionButton.classList.remove('recording'); stopAudio(); micButtonCurrentlyProcessing = false; };
     recog.onresult = event => {
         let final_transcript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) { if (event.results[i].isFinal) final_transcript += event.results[i][0].transcript; }
@@ -655,7 +673,7 @@ function draw() {
     let avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
     let norm = Math.min(100, Math.max(0, (avg / 140) * 100));
     if (meterLevel) meterLevel.style.width = norm + '%';
-    if (sessionHeaderTextEl)
+    if (sessionHeaderTextEl) // sessionHeaderEl -> sessionHeaderTextEl 변수명 수정
         sessionHeaderTextEl.style.backgroundColor = `hsl(228,50%,${90 - (norm / 5)}%)`;
 }
 
@@ -665,7 +683,7 @@ function stopAudio() {
     if (streamRef) streamRef.getTracks().forEach(track => track.stop());
     if (audioContext && audioContext.state !== 'closed') audioContext.close();
     if (meterContainer) meterContainer.classList.remove('active');
-    if (sessionHeaderTextEl) {
+    if (sessionHeaderTextEl) { // sessionHeaderEl -> sessionHeaderTextEl 변수명 수정
         sessionHeaderTextEl.style.transition = 'background-color 0.3s';
         sessionHeaderTextEl.style.backgroundColor = '';
     }
@@ -709,35 +727,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     const appContainer = document.querySelector('.app-container');
     const startButton = document.getElementById('start-button');
 
-    const style = document.createElement('style');
-    style.textContent = `
-        body.talk-page-body { overflow: hidden; }
-        @media (min-width: 641px) {
-            .app-container.talk-page { max-width: 640px; height: 90vh; margin: auto; }
-        }
-    `;
-    document.head.appendChild(style);
+    
     document.body.classList.add('talk-page-body');
     if (appContainer) appContainer.classList.add('talk-page');
 
 
+    // ✅ 이미지 파싱 버튼 이벤트 리스너 수정
     plusButton.addEventListener('click', () => {
-        imageUpload.click();
+        imageUpload.click(); // 파일 선택창 띄우기
     });
 
     imageUpload.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // "이미지 분석 중입니다..." 메시지 바로 표시 (사용자 피드백)
         appendMessage("이미지 분석 중입니다...", 'assistant_feedback');
 
         try {
+            // 1. 이미지 업로드 및 URL 획득 (gpt-vision-api.js 에서 처리)
             const imageUrl = await uploadImageAndGetUrl(file);
             console.log("Uploaded image URL:", imageUrl);
 
+            // 2. GPT Vision API 호출 (gpt-vision-api.js 에서 처리)
             const analysisResultText = await getImageAnalysisFromGptVision(imageUrl);
             console.log("GPT Vision Analysis Result:", analysisResultText);
 
+            // 3. 채팅창에 분석 결과 업데이트 및 GPT 응답 요청
+            // '이미지 분석 중...' 메시지를 찾아서 업데이트
             const thinkingBubble = chatWindow.querySelector('.bubble.assistant_feedback:last-child');
             if (thinkingBubble && thinkingBubble.textContent === "이미지 분석 중입니다...") {
                 thinkingBubble.textContent = `🖼️ 이미지 분석이 완료되었어요. 내용을 바탕으로 대화를 시작할게요: ${analysisResultText}`;
@@ -748,7 +765,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             chatWindow.scrollTop = chatWindow.scrollHeight;
 
-            sendMessage(analysisResultText, 'image_analysis', true);
+
+            // chatHistory에 이미지 분석 결과를 추가하고, GPT에게 응답 요청 (글자수 계산 제외)
+            // GPT에게는 이 메시지가 마치 사용자 입력처럼 보이지만, 실제 글자수 계산에서는 제외
+            sendMessage(analysisResultText, 'image_analysis', true); // ✅ isCharCountExempt = true
 
         } catch (error) {
             console.error("이미지 업로드 또는 분석 중 오류 발생:", error);
@@ -762,9 +782,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    function saveMessageToFirestore(role, content, type = "text", isCharCountExempt = false) {
+    // ✅ Firestore 저장 함수 (여기서는 직접 호출하지 않고 sendMessage 내부에서 관리)
+    function saveMessageToFirestore(role, content, type = "text", isCharCountExempt = false) { // ✅ isCharCountExempt 인자 추가
         const db = firebase.firestore();
-        const sessionId = localStorage.getItem("sessionId") || currentFirestoreSessionId || "default-session";
+        const sessionId = localStorage.getItem("sessionId") || currentFirestoreSessionId || "default-session"; // 현재 세션 ID 사용
         const userId = localStorage.getItem("lozee_userId") || "anonymous";
 
         db.collection("conversationSessions")
@@ -775,7 +796,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 role,
                 content,
                 type,
-                isCharCountExempt,
+                isCharCountExempt, // ✅ 글자수 계산 제외 여부 저장
                 timestamp: new Date()
             })
             .then(() => {
@@ -785,6 +806,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error("❌ Firestore 저장 실패:", error);
             });
     }
+
+
+    // 페이지 로딩이 끝났을 때 GPT 주제를 불러오는 초기화 코드
+window.addEventListener('DOMContentLoaded', () => {
+  console.log("🟢 DOMContentLoaded: renderUnifiedTopics 실행");
+  renderUnifiedTopics(); // ✅ 주제 버튼을 렌더링하는 함수
+});
+
 
     /// ✅ 시작 버튼에 클릭 이벤트 할당
     if (startButton) {
@@ -804,24 +833,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 updateActionButtonIcon();
-                if (micButton) micButton.addEventListener('click', handleMicButtonClick);
-                if (sendButton) {
-                    sendButton.addEventListener('click', () => {
-                        if (chatInput.value.trim() !== '') {
-                            sendMessage(chatInput.value.trim(), 'text');
-                        }
-                    });
-                }
-
+                if (actionButton) actionButton.addEventListener('click', handleMicButtonClick);
                 if (chatInput) {
                     chatInput.addEventListener('keydown', e => {
                         if (e.key === 'Enter' && !e.isComposing) {
                             e.preventDefault();
-                            if (!isTtsMode && chatInput.value.trim() !== '') {
-                                sendMessage(chatInput.value.trim(), 'text');
-                            } else if (isTtsMode) {
-                                handleMicButtonClick();
-                            }
+                            handleMicButtonClick();
                         }
                     });
                     chatInput.addEventListener('input', () => {
@@ -840,10 +857,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const greetingText = getInitialGreeting(userNameToDisplay + voc, false);
                 const voiceForGreeting = localStorage.getItem('lozee_voice') || 'Leda';
 
-                sendMessage(greetingText, 'topic_selection_init'); // inputMethod를 'topic_selection_init'으로 전달
+                appendMessage(greetingText, 'assistant');
                 await playTTSWithControl(greetingText, voiceForGreeting);
 
-                renderUnifiedTopics(); // ⭐ 다시 활성화
+                renderUnifiedTopics();
 
                 window.addEventListener('beforeunload', () => { if (chatHistory.length > 2 && !isDataSaved) endSessionAndSave(); });
 

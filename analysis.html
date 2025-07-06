@@ -5,11 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE와 함께하는 마음 탐험!</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="css/base.css"> <link rel="stylesheet" href="css/analysis.css"> <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    </head>
+    <link rel="stylesheet" href="gnb.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        /* CSS 코드는 그대로 유지 */
+        .tab-navigation { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 25px; }
+        .tab-btn { padding: 10px 15px; cursor: pointer; border: none; background-color: transparent; font-size: 1.05em; color: #888; }
+        .tab-btn.active { color: #6e8efb; font-weight: 700; border-bottom: 2px solid #6e8efb; margin-bottom: -2px;}
+        .tab-btn:disabled { color: #ccc; cursor: not-allowed; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .section { background: #fff; padding: 25px; margin-top: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .badge { display:inline-block; margin:4px; padding:8px 12px; background:#e8eaf6; color: #3f51b5; border-radius:16px; font-size:0.9em; }
+    </style>
+</head>
 <body>
    <div class="app-container">
+        </nav>    
     <nav id="gnb">
             <button id="menu-toggle">☰</button>
             <div id="gnb-title">LOZEE</div>
@@ -24,18 +36,16 @@
             </div>
         </nav>
 
-        <div class="tab-menu-wrapper">
-            <div class="tab-menu">
-                <button class="tab-item active" data-tab="basic">기본 분석</button>
-                <button class="tab-item" data-tab="cumulative">누적 분석 (5회+)</button>
-                <button class="tab-item" data-tab="deep">심층 분석 (10회+)</button>
-            </div>
-        </div>
-
-        <main class="analysis-content-area">
+        <main class="container">
             <h1> LOZEE의 데이터 해석</h1>
             
-            <div id="basic-analysis-content" class="tab-content active">
+ <div class="tab-navigation">
+                <button class="tab-btn" data-tab="basic" disabled>기본 분석</button>
+                <button class="tab-btn" data-tab="cumulative" disabled>누적 분석 (5회+)</button>
+                <button class="tab-btn" data-tab="deep" disabled>심층 분석 (10회+)</button>
+            </div>
+
+            <div id="basic-analysis-content" class="tab-content">
                 <div class="section" id="languageAgeSection" style="display:none;">
                      <h2>🗣️ 내 말솜씨 나이는 몇 살일까?</h2>
                      <p>로지와 나눈 대화를 통해 너의 표현력이 몇 살 친구와 비슷한지 알려줄게!</p>
@@ -59,7 +69,6 @@
     
     <script src="./js/gnb.js" defer></script>
     <script type="module" src="./js/firebase-utils.js"></script>
-    <script type="module" src="./js/lozee-analysis.js"></script>
-    <script type="module" src="./js/analysis-main.js"></script>
+    <script type="module" src="./js/lozee-analysis.js"></script> <script type="module" src="./js/analysis-main.js"></script>
 </body>
 </html>

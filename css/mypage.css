@@ -4,52 +4,49 @@
 .mypage-content-area {
     flex-grow: 1; /* 남은 공간을 모두 차지 */
     overflow-y: auto; /* 내용이 길어질 때 스크롤 가능 */
-    padding: 15px; /* ⭐ 모바일 기본 패딩 */
-    background-color: transparent; /* ⭐ app-container의 흰색 배경이 비치도록 투명 */
+    padding: 20px; /* 기본 패딩 */
+    background-color: #f4f6f8; /* 섹션 배경색 (이미지에서 보인 연한 회색) */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* ⭐ 모바일 섹션 간 간격 */
+    gap: 20px; /* 섹션 간 간격 */
 }
 
-/* ⭐ 탭 메뉴 Wrapper (gnb 아래에 위치) ⭐ */
+/* 탭 메뉴 Wrapper (스크롤 가능하도록) */
 .tab-menu-wrapper {
     width: 100%;
-    background-color: #ffffff;
+    background-color: #ffffff; /* GNB 배경색과 유사하게 또는 흰색으로 */
     box-sizing: border-box;
-    padding: 0 10px;
+    padding: 0 10px; /* 탭 메뉴 자체의 좌우 패딩 */
     border-bottom: 1px solid #e0e0e0;
     flex-shrink: 0;
-    overflow-x: auto;
+    overflow-x: auto; /* ⭐ 가로 스크롤 가능하도록 (모바일) */
     -webkit-overflow-scrolling: touch;
-    white-space: nowrap;
+    white-space: nowrap; /* 탭 아이템들이 한 줄에 표시되도록 */
 }
 
 /* 탭 메뉴 실제 컨테이너 */
 .tab-menu {
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-start; /* 좌측 정렬 */
     align-items: center;
-    gap: 25px; /* 탭 아이템 간 간격 */
-    min-width: fit-content;
+    gap: 15px; /* 탭 아이템 간 간격 */
+    min-width: fit-content; /* 내용이 넘칠 때 스크롤 가능하도록 */
 }
 
 /* 탭 아이템 */
 .tab-item {
     display: inline-flex;
     align-items: center;
-    padding: 12px 0;
+    padding: 12px 0; /* 상하 패딩 조정 */
     text-decoration: none;
     color: #888;
     font-weight: bold;
-    font-size: 1.05em; /* 폰트 크기 */
+    font-size: 1.05em; /* 폰트 크기 약간 키움 */
     border-bottom: 3px solid transparent;
     transition: all 0.3s ease;
     flex-shrink: 0;
-    position: relative;
-    cursor: pointer;
-    background-color: transparent;
-    border-radius: 0;
+    position: relative; /* new-dot 위치 지정을 위해 */
 }
 .tab-item.active {
     color: #6e8efb;
@@ -66,19 +63,19 @@
     background-color: orange;
     border-radius: 50%;
     margin-left: 4px;
-    position: absolute;
-    top: 6px;
-    right: -10px;
+    position: absolute; /* 탭 텍스트 기준 위치 */
+    top: 6px; /* 탭 아이템 상단에 위치 */
+    right: -10px; /* 탭 아이템 오른쪽 바깥에 위치 */
 }
 
 /* 컨텐츠 섹션 공통 */
 .content-section {
     width: 100%;
     box-sizing: border-box;
-    padding: 0; /* mypage-content-area 패딩을 사용하므로 0 */
-    display: none;
-    flex-direction: column;
-    gap: 15px; /* 컨텐츠 섹션 내 카드 간 간격 */
+    padding: 0 10px; /* 각 섹션 내부 좌우 패딩 */
+    display: none; /* JS에 의해 active 탭만 display:flex */
+    flex-direction: column; /* 내부 카드들 세로 정렬 */
+    gap: 20px; /* 내부 카드들 간 간격 */
 }
 .content-section.active {
     display: flex;
@@ -108,7 +105,7 @@
     font-weight: bold;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     overflow: hidden;
-    position: relative;
+    position: relative; /* 이미지/텍스트 오버레이를 위해 */
 }
 #userProfileImage {
     width: 100%;
@@ -116,17 +113,17 @@
     object-fit: cover;
 }
 #userInitialText {
-    position: absolute;
+    position: absolute; /* 이미지 없을 때 중앙에 보이도록 */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    display: flex;
+    display: flex; /* 중앙 정렬 위한 flex */
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
 }
-#editProfilePhotoBtn {
+.edit-button {
     background-color: #e0e0e0;
     color: #333;
     border: none;
@@ -137,9 +134,21 @@
     margin-top: 10px;
     transition: background-color 0.2s;
 }
-#editProfilePhotoBtn:hover {
+.edit-button:hover {
     background-color: #d0d0d0;
 }
+/* .deep-insight-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: #e57373;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+} */
 
 .profile-message {
     text-align: center;
@@ -156,13 +165,13 @@
 /* 정보 카드 공통 스타일 */
 .info-card {
     background-color: #ffffff;
-    padding: 20px; /* 카드 내부 패딩 */
+    padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     margin-bottom: 0; /* 섹션 gap으로 간격 조절 */
 }
 .info-card h2 {
-    font-size: 1.1em; /* 카드 제목 폰트 크기 */
+    font-size: 1.1em;
     color: #333;
     margin-top: 0;
     margin-bottom: 15px;
@@ -172,28 +181,15 @@
     justify-content: space-between;
     align-items: center;
 }
-/* 카드 제목 옆 수정 버튼 스타일 */
-.info-card h2 .edit-button {
-    background-color: transparent;
-    border: none;
-    width: 40px;
-    height: 40px;
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/modify_button.png?alt=media&token=7f986b71-cfe6-44ba-bc7e-40191849bbf2');
-    background-size: 32px 32px;
-    background-position: center;
-    background-repeat: no-repeat;
-    font-size: 0;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: opacity 0.2s;
-}
-.info-card h2 .edit-button:hover {
-    opacity: 0.8;
+.info-card h2 .edit-button { /* 카드 제목 옆 수정 버튼 */
+    font-size: 0.75em; /* 크기 더 줄임 */
+    padding: 4px 8px;
+    margin-top: 0;
 }
 
 .info-item {
     margin-bottom: 8px;
-    font-size: 0.95em; /* 정보 항목 폰트 크기 */
+    font-size: 0.95em;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -203,14 +199,15 @@
     color: #555;
 }
 
+/* 서브 정보 섹션 (나의 특성, 보호자님 특성) */
 .sub-info-section {
-    margin-top: 20px;
+    margin-top: 20px; /* 상위 info-card 내에서 간격 */
 }
 .sub-info-section h3 {
-    font-size: 1em; /* 서브 제목 폰트 크기 */
+    font-size: 1em; /* 특성 제목 크기 조정 */
     color: #333;
     margin-bottom: 10px;
-    border-bottom: 1px dashed #eee;
+    border-bottom: 1px dashed #eee; /* 점선으로 구분 */
     padding-bottom: 5px;
 }
 .neurodiversity-list {
@@ -219,7 +216,7 @@
     margin: 0;
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: flex-start; /* 왼쪽 정렬 (이미지에는 오른쪽이었으나 일반적 좌측) */
     gap: 5px;
 }
 .neurodiversity-list li {
@@ -227,7 +224,7 @@
     color: #3f51b5;
     padding: 4px 8px;
     border-radius: 15px;
-    font-size: 0.8em; /* 특성 태그 폰트 크기 */
+    font-size: 0.8em;
     display: inline-block;
     margin: 0;
 }
@@ -237,11 +234,11 @@
     /* info-card 스타일 상속 */
 }
 .appointment-training-card h2 {
-    color: #6e8efb;
+    color: #6e8efb; /* 훈련 제목 강조 */
 }
 .appointment-training-card .detail-item {
     margin-bottom: 5px;
-    font-size: 0.95em; /* 상세 항목 폰트 크기 */
+    font-size: 0.95em;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -265,14 +262,14 @@
     display: block;
     margin-bottom: 8px;
 }
-.appointment-training-card .result-box p.result-text {
-    font-size: 0.95em; /* 결과 텍스트 폰트 크기 */
+.appointment-training-card .result-box p.result-text { /* 일반 결과 텍스트 */
+    font-size: 0.95em;
     color: #555;
     line-height: 1.4;
     margin: 0;
 }
-.appointment-training-card .pattern-item {
-    font-size: 0.95em; /* 패턴 항목 폰트 크기 */
+.appointment-training-card .pattern-item { /* 인지 왜곡 패턴 아이템 */
+    font-size: 0.95em;
     color: #555;
     line-height: 1.4;
     margin-bottom: 8px;
@@ -288,10 +285,10 @@
     flex-shrink: 0;
 }
 .appointment-training-card button.full-width {
-    margin-top: 20px;
+    margin-top: 20px; /* 카드 내 버튼 상단 간격 */
 }
 
-/* 필터 컨트롤 섹션 */
+/* 필터 컨트롤 */
 .filter-controls {
     display: flex;
     justify-content: space-between;
@@ -299,33 +296,18 @@
     padding: 15px 20px;
 }
 .filter-controls h2 {
-    font-size: 1.1em; /* 필터 제목 폰트 크기 */
+    font-size: 1.1em;
     margin: 0;
     border-bottom: none;
     padding-bottom: 0;
 }
-/* 필터 버튼 (select) 스타일 */
 .filter-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/fillter-button.png?alt=media&token=5fc61fba-1b2a-44f0-a81c-e95f6e407a4e'); /* 필터 버튼 이미지 URL */
-    background-size: 23px 19px;
-    background-position: right 12px center;
-    background-repeat: no-repeat;
-    background-color: #ffffff;
-    color: #333;
-    border: 1px solid #ccc;
+    padding: 8px 12px;
     border-radius: 8px;
-    padding: 8px 60px 8px 12px;
-    font-size: 0.95em; /* 필터 select 폰트 크기 */
+    border: 1px solid #ccc;
+    font-size: 0.95em;
+    background-color: #fff;
     cursor: pointer;
-    outline: none;
-    width: auto;
-    min-width: 120px;
-}
-.filter-select:hover {
-    border-color: #6e8efb;
 }
 
 /* 버튼 */
@@ -337,7 +319,7 @@
     padding: 12px 0;
     border: none;
     border-radius: 8px;
-    font-size: 1.1em; /* 액션 버튼 폰트 크기 */
+    font-size: 1.1em;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
@@ -404,77 +386,35 @@
 .session-card-wide h3 {
     margin: 0 0 8px 0;
     color: #333;
-    font-size: 1em; /* 최근 이야기 카드 제목 폰트 크기 */
+    font-size: 1em;
 }
 .session-card-wide p {
-    font-size: 0.9em; /* 최근 이야기 카드 내용 폰트 크기 */
+    font-size: 0.9em;
     color: #555;
     margin: 0;
 }
 
-/* ⭐⭐⭐ PC 화면 (min-width: 640px)에서의 마이페이지 요소 크기 3단계씩 키우기 ⭐⭐⭐ */
-@media (min-width: 640px) {
+
+/* 모바일 환경에서의 마이페이지 컨텐츠 영역 패딩 조정 */
+@media (max-width: 639px) {
     .mypage-content-area {
-        max-width: 800px; /* PC에서 컨텐츠 영역의 최대 너비 */
-        margin: 0 auto;
-        padding: 25px; /* PC에서 패딩 증가 */
-        gap: 25px; /* 섹션 간 간격 증가 */
+        padding: 15px;
+        gap: 15px;
     }
     .content-section {
-        gap: 20px; /* 컨텐츠 섹션 내 카드 간 간격 증가 */
+        padding: 0;
     }
     .info-card {
-        padding: 30px; /* 카드 내부 패딩 증가 */
+        padding: 15px;
     }
-    .info-card h2 {
-        font-size: 1.5em; /* 카드 제목 폰트 크기 증가 */
-        margin-bottom: 20px;
+}
+
+/* PC 화면 (min-width: 640px)에서 탭 메뉴 중앙 정렬 등 조정 */
+@media (min-width: 640px) {
+    .tab-menu-wrapper {
+        padding: 0 20px; /* PC에서 좌우 패딩 늘림 */
     }
-    .info-card h2 .edit-button {
-        width: 50px; /* 수정 버튼 크기 증가 */
-        height: 50px;
-        background-size: 48px 48px; /* 아이콘 크기 증가 */
-    }
-    .info-item {
-        font-size: 1.1em; /* 정보 항목 폰트 크기 증가 */
-        margin-bottom: 12px;
-    }
-    .sub-info-section h3 {
-        font-size: 1.2em; /* 서브 제목 폰트 크기 증가 */
-    }
-    .neurodiversity-list li {
-        font-size: 0.95em; /* 특성 태그 폰트 크기 증가 */
-        padding: 6px 10px;
-    }
-    .appointment-training-card .detail-item {
-        font-size: 1.1em; /* 상세 항목 폰트 크기 증가 */
-    }
-    .appointment-training-card .result-box {
-        padding: 18px; /* 결과 박스 패딩 증가 */
-    }
-    .appointment-training-card .result-box p.result-text,
-    .appointment-training-card .pattern-item {
-        font-size: 1.05em; /* 결과 텍스트/패턴 폰트 크기 증가 */
-    }
-    .filter-controls h2 {
-        font-size: 1.3em; /* 필터 제목 폰트 크기 증가 */
-    }
-    .filter-select {
-        padding: 10px 70px 10px 15px; /* 필터 select 패딩 증가 */
-        font-size: 1.1em; /* 필터 select 폰트 크기 증가 */
-        background-size: 50px 42px; /* 필터 아이콘 크기 증가 */
-    }
-    .action-button {
-        padding: 15px 0; /* 액션 버튼 패딩 증가 */
-        font-size: 1.2em; /* 액션 버튼 폰트 크기 증가 */
-    }
-    .recent-journals-card h2 {
-        font-size: 1.3em; /* 최근 이야기 제목 폰트 크기 증가 */
-    }
-    .session-card-wide h3 {
-        font-size: 1.2em; /* 최근 이야기 카드 제목 폰트 크기 증가 */
-    }
-    .session-card-wide p {
-        font-size: 1.1em; /* 최근 이야기 카드 내용 폰트 크기 증가 */
+    .tab-menu {
+        justify-content: center; /* PC에서 탭 메뉴 중앙 정렬 */
     }
 }

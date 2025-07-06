@@ -4,15 +4,103 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title id="pageSessionTitle">로지와의 이야기 상세보기 - LOZEE</title>
-    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/> 
     <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="css/base.css"> <link rel="stylesheet" href="css/journal.css"> </head>
+    <style>
+        :root {
+            --primary-color: #6e8efb;
+            --background-color: #f4f6f8;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+        }
+        body {
+            margin: 0;
+            font-family: 'KoPub World Dotum', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            box-sizing: border-box; 
+        }
+        .page-header { 
+            text-align: center; 
+            margin-bottom: 25px; 
+        }
+        .session-main-title { 
+            color: var(--primary-color); 
+            font-size: 1.8em; 
+            font-weight: 700; 
+            margin-top: 0; 
+            margin-bottom: 8px;
+        }
+        .session-date-display { 
+            font-size: 0.95em; 
+            color: #555; 
+            margin-bottom: 20px; 
+        }
+        .session-summary-section {
+            background-color: var(--card-bg);
+            padding: 25px;
+            margin-bottom: 25px; 
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .session-summary-section h2 { 
+            color: var(--primary-color);
+            font-size: 1.5em;
+            margin-top: 0;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .session-summary-content {
+            white-space: pre-wrap; 
+            line-height: 1.7;
+            font-size: 1em;
+            color: #444;
+        }
+        #tagCloud {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed #cccccc;
+            border-radius: 8px;
+            min-height: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            justify-content: start;
+        }
+        .badge {
+            display: inline-block;
+            margin: 4px;
+            padding: 8px 12px;
+            background: #e8eaf6;
+            color: #3f51b5;
+            border-radius: 16px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        @media (max-width: 768px) {
+            .session-main-title { font-size: 1.6em; }
+            .session-summary-section { padding: 20px; }
+        }
+        @media (max-width: 480px) {
+            .session-main-title { font-size: 1.4em; }
+            .session-summary-section { padding: 15px; }
+        }
+    </style>
+</head>
 <body>
   <div class="app-container">
         <nav id="gnb">
             <button id="menu-toggle">☰</button>
             <div id="gnb-title">LOZEE</div>
-            <div style="width: 44px;"></div>
+            <div style="width: 44px;"></div> 
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>
@@ -22,11 +110,15 @@
             </div>
         </nav>
 
-    <main class="container journal-detail-content-area"> <div class="page-header">
+    <main class="container">
+        <div class="page-header">
+            <!-- 1) 제목: journal.js에서 dynamic하게 채워줌 -->
             <h1 id="journalPageTitle" class="session-main-title">로지와의 소중한 이야기</h1>
+            <!-- 2) 날짜: journal.js에서 dynamic하게 채워줌 -->
             <p id="sessionDateDisplay" class="session-date-display">대화 날짜: 불러오는 중...</p>
         </div>
 
+        <!-- 3) 요약 섹션: journal.js에서 dynamic하게 채워줌 -->
         <div class="session-summary-section">
             <h2>✨ 오늘의 요약 ✨</h2>
             <p id="sessionSummaryContent" class="session-summary-content">
@@ -34,35 +126,26 @@
             </p>
         </div>
 
-        <div class="section keywords-section"> <h2>🔖 키워드</h2>
+        <!-- 4) 태그 클라우드(키워드): journal.js에서 renderKeywordCloud로 채워줌 -->
+        <div>
+            <h2 style="color: var(--primary-color); font-size: 1.2em; margin: 0 0 10px 0;">
+                🔖 키워드
+            </h2>
             <div id="tagCloud"></div>
         </div>
-
-        <div id="detailedAnalysisSection" class="section detailed-analysis-section" style="display:none;">
-            <h2>✨ 상세 분석 ✨</h2>
-            <div id="detailedAnalysisContent">
-                </div>
-        </div>
-
-        <div class="navigation-buttons">
-             <button id="backToListBtn" class="action-button">이야기 모음집으로 돌아가기</button>
-             <button id="viewAnalysisBtn" class="action-button">이 날의 분석 자세히 보기</button>
-        </div>
-
     </main>
 
-    <script src="./js/gnb.js" defer></script>
+    <script src="./js/gnb.js" defer></script> 
+    <!-- keywordCloud.js를 import 해서 tagCloud에 키워드 뱃지를 렌더링 -->
     <script type="module">
         import { db } from './js/firebase-config.js';
         import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-        import { renderKeywordCloud } from './js/keywordCloud.js'; // renderKeywordCloud import
+        import { renderKeywordCloud } from './js/keywordCloud.js';
         import { counselingTopicsByAge } from './js/counseling_topics.js';
 
         // URL 쿼리 파라미터로부터 journalId 가져오기
         const urlParams = new URLSearchParams(window.location.search);
         const journalId = urlParams.get("journalId") || "";
-
-        const loggedInUserId = localStorage.getItem('lozee_userId'); // 로그인 사용자 ID 가져오기
 
         // DOM 요소들
         const pageTabTitleEl       = document.querySelector('title');
@@ -70,10 +153,6 @@
         const sessionDateDisplayEl = document.getElementById('sessionDateDisplay');
         const sessionSummaryEl     = document.getElementById('sessionSummaryContent');
         const tagCloudEl           = document.getElementById('tagCloud');
-        const detailedAnalysisSectionEl = document.getElementById('detailedAnalysisSection'); // 상세 분석 섹션
-        const detailedAnalysisContentEl = document.getElementById('detailedAnalysisContent'); // 상세 분석 내용
-        const backToListBtnEl      = document.getElementById('backToListBtn');
-        const viewAnalysisBtnEl    = document.getElementById('viewAnalysisBtn');
 
         // 깊이: “대분류 → 서브토픽” 매핑
         function findMainCategoryOfTopic(topicKey, topicsData) {
@@ -82,12 +161,11 @@
                 for (const ageGroup in ageGroups) {
                     const mainTopicCategories = ageGroups[ageGroup];
                     for (const mainTopicName in mainTopicCategories) {
-                        const mainTopicObject = mainTopicCategories[mainTopicName];
-                        if (mainTopicObject.subTopics && Array.isArray(mainTopicObject.subTopics)) {
-                            for (const subTopic of mainTopicObject.subTopics) {
-                                if (subTopic.displayText === topicKey) {
-                                    return mainTopicObject.name;
-                                }
+                        const subTopicsArray = mainTopicCategories[mainTopicName];
+                        if (!Array.isArray(subTopicsArray)) continue;
+                        for (const subTopic of subTopicsArray) {
+                            if (subTopic.displayText === topicKey) {
+                                return mainTopicName;
                             }
                         }
                     }
@@ -98,8 +176,8 @@
 
         async function loadJournalDetail() {
             if (!journalId) {
-                if (journalPageTitleEl) journalPageTitleEl.innerText = "잘못된 접근: journalId가 없습니다.";
-                if (sessionDateDisplayEl) sessionDateDisplayEl.innerText = "";
+                journalPageTitleEl.innerText = "잘못된 접근: journalId가 없습니다.";
+                sessionDateDisplayEl.innerText = "";
                 return;
             }
 
@@ -107,115 +185,72 @@
                 const journalRef = doc(db, "journals", journalId);
                 const journalSnap = await getDoc(journalRef);
                 if (!journalSnap.exists()) {
-                    if (journalPageTitleEl) journalPageTitleEl.innerText = "해당 저널을 찾을 수 없습니다.";
-                    if (sessionDateDisplayEl) sessionDateDisplayEl.innerText = "";
+                    journalPageTitleEl.innerText = "해당 저널을 찾을 수 없습니다.";
+                    sessionDateDisplayEl.innerText = "";
                     return;
                 }
 
                 const data = journalSnap.data();
-
-                // 보안 검사: 현재 로그인한 사용자가 이 저널의 소유자(userId) 또는 관련자(relatedChildId)인지 확인
-                const journalOwnerUid = data.userId || data.ownerId;
-                const journalRelatedChildUid = data.relatedChildId;
-                const currentUserRole = localStorage.getItem('lozee_role');
-                const isViewingChildJournal = (currentUserRole === 'caregiver' && loggedInUserId === data.ownerId && journalRelatedChildUid && journalRelatedChildUid === localStorage.getItem('lozee_childId_being_viewed_by_parent'));
-
-                if (loggedInUserId !== journalOwnerUid && !isViewingChildJournal) {
-                    if (journalPageTitleEl) journalPageTitleEl.innerText = "이 저널을 볼 권한이 없습니다.";
-                    if (sessionDateDisplayEl) sessionDateDisplayEl.innerText = "";
-                    if (sessionSummaryEl) sessionSummaryEl.innerText = "";
-                    if (tagCloudEl) tagCloudEl.innerHTML = '';
-                    if (detailedAnalysisSectionEl) detailedAnalysisSectionEl.style.display = 'none';
-                    if (backToListBtnEl) backToListBtnEl.style.display = 'none';
-                    if (viewAnalysisBtnEl) viewAnalysisBtnEl.style.display = 'none';
-                    return;
-                }
-
+//보안 검사: 현재 로그인한 사용자가 이 저널의 소유자(userId) 또는 관련자(relatedChildId)인지 확인 (선택 사항)
+const journalOwnerUid = data.userId || data.ownerId; // ⭐ journals 문서의 userId 필드가 UID여야 함
+const journalRelatedChildUid = data.relatedChildId;
+const currentUserRole = localStorage.getItem('lozee_role');
+if (loggedInUserId !== journalOwnerUid && !(currentUserRole === 'parent' && loggedInUserId === data.ownerId && journalRelatedChildUid === localStorage.getItem('lozee_childId_being_viewed_by_parent'))) {
+journalPageTitleEl.innerText = "이 저널을 볼 권한이 없습니다.";
+//     // ... (화면 내용 지우기) ...
+  return;
+ }
 
                 // ─────────────────────────────────────────────────────────────────
                 // 1) 제목(title) 렌더링
+                //    - data.title이 있으면 그대로 사용
+                //    - 없으면: “대분류 – GPT 요약 첫 문장” 꼴로 생성
                 let titleText = "";
                 if (data.title && data.title.trim()) {
                     titleText = data.title;
                 } else {
-                    const mainCategory = findMainCategoryOfTopic(data.topic || "", counselingTopicsByAge) || "주제";
-                    const gptSummary = data.summary ? data.summary.split('\n')[0] : "요약 내용이 없습니다.";
+                    // 대분류 찾기
+                    const mainCategory = findMainCategoryOfTopic(
+                        data.topic || "", 
+                        counselingTopicsByAge
+                    ) || "주제";
+                    // GPT 요약 첫 문장
+                    const gptSummary = data.summary 
+                        ? data.summary.split('\n')[0] 
+                        : "요약 내용이 없습니다.";
                     titleText = `${mainCategory} – ${gptSummary}`;
                 }
-                if (pageTabTitleEl) pageTabTitleEl.innerText = `${titleText} – LOZEE`;
-                if (journalPageTitleEl) journalPageTitleEl.innerText = titleText;
+                document.title = `${titleText} – LOZEE`; // 탭 제목
+                journalPageTitleEl.innerText = titleText;
 
                 // 2) 날짜 렌더링
                 if (data.createdAt?.toDate) {
-                    if (sessionDateDisplayEl) sessionDateDisplayEl.innerText = `대화 날짜: ${
+                    sessionDateDisplayEl.innerText = `대화 날짜: ${
                         data.createdAt.toDate().toLocaleDateString('ko-KR', {
                             year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
                         })
                     }`;
                 } else {
-                    if (sessionDateDisplayEl) sessionDateDisplayEl.innerText = "대화 날짜: 정보 없음";
+                    sessionDateDisplayEl.innerText = "대화 날짜: 정보 없음";
                 }
 
                 // 3) 요약(summary) 렌더링
-                if (sessionSummaryEl) sessionSummaryEl.innerText = data.summary || "요약된 내용이 없습니다.";
+                sessionSummaryEl.innerText = data.summary || "요약된 내용이 없습니다.";
 
                 // 4) 키워드(tags) 렌더링
-                const keywords = (data.detailedAnalysis && data.detailedAnalysis.keywords)
-                    ? data.detailedAnalysis.keywords
+                //    - 상세 분석(detailedAnalysis) 안에 keywords가 들어있다면 그것을 사용
+                const keywords = (data.detailedAnalysis && data.detailedAnalysis.keywords) 
+                    ? data.detailedAnalysis.keywords 
                     : [];
-                if (tagCloudEl) renderKeywordCloud(keywords, tagCloudEl); // renderKeywordCloud에 tagCloudEl 전달
-
-                // 5) 상세 분석 (detailedAnalysis) 섹션 렌더링
-                if (data.detailedAnalysis && detailedAnalysisContentEl && detailedAnalysisSectionEl) {
-                    const da = data.detailedAnalysis;
-                    let daHtml = '';
-
-                    if (da.overallSentiment) {
-                        daHtml += `<h3>전반적인 감정: <span style="color:${da.overallSentiment === 'positive' ? 'green' : da.overallSentiment === 'negative' ? 'red' : 'gray'};">${da.overallSentiment}</span></h3>`;
-                    }
-                    if (da.situationAnalysis) {
-                        daHtml += `<h4>상황 분석</h4><p>${da.situationAnalysis}</p>`;
-                    }
-                    if (da.moodChanges) {
-                        daHtml += `<h4>기분 변화</h4><p>${da.moodChanges}</p>`;
-                    }
-                    if (da.cognitiveDistortions && da.cognitiveDistortions.length > 0) {
-                        daHtml += `<h4>인지 왜곡 패턴</h4><ul>`;
-                        da.cognitiveDistortions.forEach(cd => {
-                            daHtml += `<li><strong>${cd.type || '알 수 없음'}:</strong> ${cd.example || '예시 없음'}</li>`;
-                        });
-                        daHtml += `</ul>`;
-                    }
-                    if (da.summaryTitle) { // 추가적인 GPT 요약 제목 등
-                         daHtml += `<h4>GPT 요약 제목</h4><p>${da.summaryTitle}</p>`;
-                    }
-                    
-                    if (daHtml) {
-                        detailedAnalysisContentEl.innerHTML = daHtml;
-                        detailedAnalysisSectionEl.style.display = 'block';
-                    }
-                }
+                renderKeywordCloud(keywords);
 
             } catch (error) {
                 console.error("저널 로드 중 오류:", error);
-                if (journalPageTitleEl) journalPageTitleEl.innerText = "오류가 발생했습니다.";
-                if (sessionDateDisplayEl) sessionDateDisplayEl.innerText = "";
-                if (sessionSummaryEl) sessionSummaryEl.innerText = "";
-                if (tagCloudEl) tagCloudEl.innerHTML = `<p style="color: #666;">키워드를 불러오는 데 실패했습니다.</p>`;
-                if (detailedAnalysisSectionEl) detailedAnalysisSectionEl.style.display = 'none';
+                journalPageTitleEl.innerText = "오류가 발생했습니다.";
+                sessionDateDisplayEl.innerText = "";
+                sessionSummaryEl.innerText = "";
+                tagCloudEl.innerHTML = `<p style="color: #666;">키워드를 불러오는 데 실패했습니다.</p>`;
             }
-        }
-
-        // 버튼 이벤트 리스너
-        if (backToListBtnEl) {
-            backToListBtnEl.onclick = () => {
-                window.location.href = `journal-list.html?topic=${encodeURIComponent(urlParams.get('topic') || '')}`;
-            };
-        }
-        if (viewAnalysisBtnEl) {
-            viewAnalysisBtnEl.onclick = () => {
-                window.location.href = `analysis.html?journalId=${journalId}`;
-            };
         }
 
         document.addEventListener("DOMContentLoaded", () => {
