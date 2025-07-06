@@ -4,78 +4,19 @@
     <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE와 대화하기</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="gnb.css"> <style>
-        /* 모든 CSS는 이 <style> 태그 안에 직접 들어갑니다. */
-
-        /* ----------- 기본 및 공통 스타일 (base.css 역할) ----------- */
+    <link rel="stylesheet" href="gnb.css">
+    <link rel="stylesheet" href="style.css"> <style>
         :root {
-            --primary-color: #6078ea; /* LOZEE 메인 색상 */
-            --secondary-color: #a777e3; /* LOZEE 보조 색상 */
-            --background-color: #f0f0f0; /* 일반적인 배경색 */
-            --session-header-height: 32px; /* 주제 선택 중 박스의 높이 */
+            --session-header-height: 32px;
             --input-area-height: 70px;
         }
+        .app-container { display: flex; flex-direction: column; height: 100%; /* background-color는 style.css에서 관리 */ }
+        body { padding: 0; }
 
-        body {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            font-family: 'KoPub World Dotum', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 640px; /* 모바일 기준 너비 (PC에서의 최소/기본값) */
-            height: 100vh;
-            min-height: 100vh;
-            background-color: #ffffff; /* 흰색 배경 */
-            box-shadow: 0 0 15px rgba(0,0,0,0.1); /* 그림자 */
-            border-radius: 20px; /* 둥근 모서리 */
-            display: flex;
-            flex-direction: column; /* 세로 배열 */
-            overflow-y: hidden; /* app-container는 스크롤바를 가지지 않도록 강제 */
-            margin: 0 auto; /* 중앙 정렬 */
-        }
-
-        /* ⭐ 모바일 화면 (max-width: 639px) ⭐ */
-        @media (max-width: 639px) {
-            body { padding: 0; align-items: stretch; }
-            .app-container {
-                width: 100%;
-                max-width: 100%; /* 모바일에서는 100% 너비 */
-                height: 100vh;
-                max-height: 100vh;
-                border-radius: 0; /* 모바일에서 둥근 모서리 제거 */
-            }
-        }
-
-        /* ⭐ PC 화면 (min-width: 640px) - 모든 PC 페이지의 레이아웃 기준 ⭐ */
-        @media (min-width: 640px) {
-            body {
-                padding: 50px 0;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.2em; /* ⭐ PC 기본 폰트 사이즈: 마이페이지 기준 2단계 커진 1.2em */
-            }
-            .app-container {
-                max-width: 800px; /* ⭐ PC에서 app-container 최대 너비 800px로 통일 */
-                height: auto; /* 높이 자동 조절 */
-                max-height: calc(100vh - 100px); /* 화면 높이에서 body 패딩만큼 제외 */
-                border-radius: 20px;
-            }
-        }
-        /* ----------- 기본 및 공통 스타일 끝 ----------- */
-
-        /* ----------- talk.html 전용 스타일 (과거 style.css 내용) ----------- */
-
-        /* ⭐⭐ GNB 상단 헤더 스타일 ⭐⭐ */
         #session-header {
+            position: relative;
             width: 100%;
-            height: var(--session-header-height); /* 32px 높이 적용 */
+            height: var(--session-header-height);
             background-color: #f0f0f0;
             color: #555;
             font-size: 0.9em;
@@ -87,374 +28,57 @@
             transition: background-color 0.1s;
             flex-shrink: 0;
             line-height: 1.2;
-            margin-bottom: 0;
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             box-shadow: none;
+            margin-bottom: 0;
         }
         #session-header-text {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
-
-        /* ⭐⭐ 음향 바 전체 래퍼 스타일 (volume-meter-wrapper) ⭐⭐ */
-        #meter-container.volume-meter-wrapper {
-            width: 100%;
-            height: 5px; /* 음향 바 전체 컨테이너의 높이 */
-            background-color: #f0f0f0; /* session-header와 동일한 배경색 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            flex-shrink: 0;
-            margin-top: 0;
-            margin-bottom: 0;
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            box-shadow: none;
-        }
-
-        /* ⭐⭐ 음향 바의 실제 막대 스타일 (회색 배경/테두리 제거) ⭐⭐ */
-        #volume-meter {
-            width:70%;
-            max-width: 280px;
-            height: 3px; /* 막대 높이 */
-            border: none;
-            border-radius:6px;
-            overflow:hidden;
-            background-color: transparent;
-        }
-        #volume-level {
-            height:100%;
-            background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
-            width:0%;
-            transition:width 0.08s ease-out;
-            border-radius:4px;
-        }
-
-        /* ⭐⭐ 아이콘 버튼 공통 스타일 및 개별 이미지 적용 (크기 조정) ⭐⭐ */
-        #mic-button,
-        #send-button,
-        #plus-button {
-            width: 48px;
-            height: 48px;
-            border: none;
-            border-radius: 50%;
-            background-color: transparent; /* 투명 배경 */
-            background-position: center;
-            background-repeat: no-repeat;
-            color: transparent;
-            font-size: 0;
-            cursor: pointer;
-            flex-shrink: 0;
-            display: flex; /* 내부 아이콘 정렬용 */
-            align-items: center;
-            justify-content: center;
-            background-size: 40px 40px; /* 48x48 버튼 안에 40x40으로 표시 */
-        }
-
-        /* 개별 아이콘 이미지 경로 */
-        #mic-button {
-          background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button.png?alt=media&token=5ecee5c0-e062-4599-8b08-938e046a57a9');
-        }
-        #mic-button.text-mode {
-            background-image: url('YOUR_FIREBASE_STORAGE_TEXT_MODE_ICON_URL'); /* 'T' 대체 이미지 아이콘 URL */
-        }
-        #send-button {
-            background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/send-button.png?alt=media&token=f10a6169-3e02-4721-94b5-35dd9ead6b52');
-        }
-        #plus-button {
-            background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/plus-button.png?alt=media&token=8ab76317-2425-4b8f-b355-04723acc7f3c');
-        }
-
-
-        #mic-button.disabled {
-          opacity: 0.5;
-          cursor: default;
-        }
-
-        #send-button:hover,
-        #plus-button:hover {
-            background-color: #2980b9;
-        }
-        #send-button:disabled,
-        #plus-button:disabled {
-            background-color: #95a5a5;
-            cursor: not-allowed;
-        }
-
-        /* ⭐⭐ 채팅 윈도우 (main#chat-window) 스타일 조정 ⭐⭐ */
-        #chat-window {
-          flex-grow: 1; /* 남은 공간 모두 차지 */
-          overflow-y: auto; /* 채팅 내용이 길어질 때 chat-window만 스크롤되도록 */
-          padding: 20px; /* ⭐ 전체적으로 20px 패딩 유지 */
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          box-sizing: border-box;
-          background: #fff; /* 배경 흰색 */
-          border-radius: 20px; /* app-container와 동일한 20px로 통일 */
-          box-shadow: none; /* chat-window의 box-shadow 제거 */
-          max-width: 100%; /* 부모 app-container의 max-width에 맞춰 100% */
-          margin: 0;
-          margin-top: 0;
-          border-top-left-radius: 0;
-          border-top-right-radius: 0;
-        }
-        @media screen and (max-width: 480px) { /* 모바일 최적화 (480px 이하) */
-          #chat-window {
-            padding: 12px;
-            border-radius: 0;
-            box-shadow: none;
-            max-width: 100%;
-            margin-top: 0;
-          }
-        }
-        @media (min-width: 640px) { /* PC 화면 (640px 이상) */
-            #chat-window {
-                padding: 40px; /* PC 큰 화면에서 패딩 늘림 */
-            }
-            /* ⭐⭐ PC 화면에서 폰트/요소 크기 조정 (base.css의 body font-size와 일관) ⭐⭐ */
-            #session-header {
-                height: 40px; /* 주제 선택 헤더 높이 더 늘림 */
-                font-size: 1.1em; /* 텍스트 크기 더 늘림 */
-                padding: 0 20px;
-            }
-            #meter-container.volume-meter-wrapper {
-                height: 8px; /* 음향 바 래퍼 높이 늘림 */
-            }
-            #volume-meter {
-                height: 5px; /* 실제 음향 바 막대 높이 늘림 */
-            }
-            #topic-selection-container {
-                padding: 30px; /* 패딩 더 늘림 */
-                max-width: 500px; /* 최대 너비 더 늘림 */
-                font-size: 1.2em; /* 텍스트 크기 늘림 */
-            }
-            .chat-options-container {
-                gap: 15px; /* 옵션 버튼 간 간격 더 늘림 */
-                max-width: 380px; /* 옵션 버튼 컨테이너 최대 너비 더 늘림 */
-            }
-            .chat-option-btn {
-                padding: 18px 25px; /* 버튼 패딩 더 늘림 */
-                font-size: 1.2em; /* 텍스트 크기 늘림 */
-            }
-            #chat-input-container {
-                height: 80px; /* 입력창 컨테이너 높이 늘림 */
-                padding: 1rem 1.2rem;
-                gap: 12px;
-            }
-            #chat-input {
-                padding: 1rem;
-                font-size: 1.15rem;
-            }
-            #mic-button, #send-button, #plus-button {
-                width: 56px; /* 버튼 크기 키움 */
-                height: 56px;
-                background-size: 48px 48px; /* 아이콘 이미지 크기 키움 */
-            }
-            /* ⭐⭐ 말풍선 (bubble) PC 스타일 조정 (사용자님 분석 기반) ⭐⭐ */
-            .bubble {
-                max-width: 80%; /* ⭐ PC에서도 말풍선 너비는 chat-window의 80% 유지 */
-                padding: 1.4rem 2rem;
-                font-size: 1.2em;
-                line-height: 1.8;
-                border-radius: 1.5rem;
-                /* ⭐ 정렬은 .bubble.user와 .bubble.bot에서 직접 align-self로 처리 */
-            }
-            .bubble.user, .bubble.bot {
-                font-size: 1.2em;
-            }
-        }
-
-        #chat-window::-webkit-scrollbar {
-          width: 8px;
-        }
-        #chat-window::-webkit-scrollbar-track {
-          background: var(--background-color);
-        }
-        #chat-window::-webkit-scrollbar-thumb {
-          background: #cccccc;
-          border-radius: 4px;
-        }
-        #chat-window::-webkit-scrollbar-thumb:hover {
-          background: #aaaaaa;
-        }
-
-        /* 피드백 메시지 스타일 */
-        .bubble.assistant_feedback {
-            align-self: center;
-            background-color: #f8f9fa;
-            color: #495057;
-            font-size: 0.9em;
-            border: 1px solid #dee2e6;
-        }
-
-        /* 주제 선택 컨테이너 스타일 */
-        #topic-selection-container {
-            background-color: #ffffff;
-            border-radius: 12px;
-            margin-bottom: 0;
-            color: #333;
-            margin-top: 0;
-            
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 1rem;
-
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            border: none;
-            box-shadow: none;
-
-            max-width: 100%; /* 모바일에서는 부모 (chat-window) 100% */
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .chat-options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin: 15px auto;
-            align-self: center;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .chat-option-btn {
-            background-color: #ffffff;
-            color: #333;
-            border: 1px solid #dcdcdc;
-            border-radius: 12px;
-            padding: 15px 20px;
-            text-align: left;
-            cursor: pointer;
-            width: 100%;
-            font-size: 1.1em;
-            transition: background-color 0.2s;
-        }
-
-        .chat-option-btn:hover {
-            background-color: #e0e0e0;
-        }
-
-        .chat-option-btn.selected {
-            background-color: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        /* ⭐⭐ 말풍선 색상 및 스타일 (정렬 문제 해결) ⭐⭐ */
-        .bubble {
-            /* max-width:80%; -> 이전에 지시했지만, 이제 정렬은 flexbox로 담당. */
-            /* 여기서는 실제 말풍선 콘텐츠의 max-width를 둡니다. */
-            padding:0.9rem 1.2rem;
-            border-radius:1.3rem;
-            line-height:1.65;
-            white-space:pre-wrap;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-            word-break: keep-all;
-        }
-        .bubble.user {
-          background: #c1dd75; /* 사용자 말풍선 배경 (회색) */
-          color: #2c3e50; /* 글씨색 */
-          /* align-self: flex-end; -> 이제 .bubble 컨테이너가 정렬을 담당 */
-          border-bottom-right-radius: 0.4rem;
-        }
-        .bubble.bot {
-          background: var(--primary-color); /* 봇 말풍선 배경 (메인 색상) */
-          color: #ffffff; /* 글씨색 */
-          /* align-self: flex-start; -> 이제 .bubble 컨테이너가 정렬을 담당 */
-          border-bottom-left-radius: 0.4rem;
-        }
-        /* ⭐⭐ .bubble 컨테이너에 flexbox 정렬 추가 ⭐⭐ */
-        #chat-window .bubble { /* 더 높은 명시도로 .bubble에 정렬 적용 */
-            display: flex; /* 자식 콘텐츠를 위한 flexbox */
-            margin-bottom: 1rem; /* 버블 간 간격 (chat-window의 gap과 별개로) */
-            /* align-self 제거하고 justify-content로 버블 자체의 위치 조정 */
-        }
-        #chat-window .bubble.user {
-            justify-content: flex-end; /* ⭐ 우측 정렬 */
-            max-width: 100%; /* ⭐ 버블 컨테이너는 100% 폭 사용 */
-        }
-        #chat-window .bubble.bot {
-            justify-content: flex-start; /* ⭐ 좌측 정렬 */
-            max-width: 100%; /* ⭐ 버블 컨테이너는 100% 폭 사용 */
-        }
-        /* 실제 말풍선 콘텐츠는 이 안에서 max-width를 가집니다. */
-        /* appendMessage 함수가 텍스트를 바로 .bubble에 넣으므로,
-           .bubble 자체의 padding과 background를 유지하고 max-width를 조정.
-           여기서는 .bubble의 max-width를 80%로 유지하고 .bubble.user/.bot이 100% 너비로 정렬되도록 함.
-           이렇게 하면 .bubble이 좌우 정렬되면서도 실제 텍스트 박스는 80%를 유지.
-        */
-        .bubble.user { max-width: 80%; /* 사용자 말풍선 콘텐츠 최대 너비 */ }
-        .bubble.bot { max-width: 80%; /* 봇 말풍선 콘텐츠 최대 너비 */ }
-
-        .bubble.interim {
-            background: #7f8c8d;
-            color: #ecf0f1;
-            font-style: italic;
-            align-self: flex-end;
-            border-bottom-right-radius:0.4rem;
-        }
-        .loading-spinner {
-            display: none;
-            align-self: center;
-            margin: 15px;
-            border: 5px solid #7f8c8d;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* 채팅 입력 영역 스타일 */
-        #chat-input-container {
-            display: flex;
-            padding: 0.75rem 1rem;
-            background-color: #f0f0f0;
-            border-top: 1px solid #e0e0e0;
-            flex-shrink: 0;
-            align-items: center;
-            gap: 10px;
-            height: var(--input-area-height);
-            box-sizing: border-box;
-        }
-        #chat-input {
-            flex-grow: 1;
-            padding: 0.75rem;
-            border: 1px solid #ced4da;
-            border-radius: 20px;
-            font-size: 1rem;
-            background-color: #ffffff;
-            color: #2c3e50;
-            box-sizing: border-box;
-        }
-
-        #send-button:hover,
-        #plus-button:hover {
-            background-color: #2980b9;
-        }
-        #send-button:disabled,
-        #plus-button:disabled {
-            background-color: #95a5a5;
-            cursor: not-allowed;
-        }
     </style>
 </head>
+
 <body>
-    </body>
+    <div class="app-container">
+        <nav id="gnb">
+            <button id="menu-toggle"></button>
+            <div id="gnb-title">LOZEE</div>
+            <div style="width: 44px; visibility: hidden;"></div>
+            <div id="dropdown-menu">
+                <a href="mypage.html">🎨 내 정보 보기</a>
+                <a href="index.html">✨ 새로운 이야기 시작!</a>
+                <a id="gnb-analysis-link" href="analysis.html">📊 우리 이야기 분석</a>
+                <a href="journal-list.html">📖 이야기 모음집</a>
+                <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
+            </div>
+        </nav>
+
+        <div id="session-header">
+            <span id="session-header-text">주제 선택 중...</span>
+        </div>
+
+        <div id="meter-container" class="volume-meter-wrapper">
+            <div id="volume-meter">
+                <div id="volume-level"></div>
+            </div>
+        </div>
+
+        <main id="chat-window">
+            <div id="topic-selection-container"></div>
+        </main>
+
+        <div id="chat-input-container">
+            <button id="mic-button"></button>
+            <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
+            <button id="plus-button"></button>
+            <input type="file" id="image-upload" accept="image/*" style="display: none;" />
+            <button id="send-button"></button>
+        </div>
+
+    <script src="./js/gnb.js" defer></script>
+    <script type="module" src="./js/talk.js"></script>
+</body>
 </html>
