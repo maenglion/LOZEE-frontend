@@ -4,115 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE와 함께하는 마음 탐험!</title>
-  <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="style.css"> <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <style>
-        /* CSS 변수는 common.css 또는 gnb.css에 정의된 것을 사용 */
-        
-        /* ⭐⭐ 마이페이지 탭 디자인과 일치시키기 위한 스타일 ⭐⭐ */
-        /* tab-menu-wrapper */
-        .tab-menu-wrapper {
-            width: 100%;
-            background-color: #ffffff; /* GNB 배경색과 유사하게 또는 흰색으로 */
-            box-sizing: border-box;
-            padding: 0 10px; /* 탭 메뉴 자체의 좌우 패딩 */
-            border-bottom: 1px solid #e0e0e0;
-            flex-shrink: 0;
-            overflow-x: auto; /* 가로 스크롤 가능하도록 (모바일) */
-            -webkit-overflow-scrolling: touch;
-            white-space: nowrap; /* 탭 아이템들이 한 줄에 표시되도록 */
-        }
-
-        /* tab-menu */
-        .tab-menu {
-            display: flex;
-            justify-content: flex-start; /* 좌측 정렬 */
-            align-items: center;
-            gap: 25px; /* ⭐ 탭 아이템 간 간격 25px로 (mypage.css와 동일) */
-            min-width: fit-content;
-        }
-
-        /* tab-item */
-        .tab-item { /* 기존 .tab-btn 대신 .tab-item 사용 */
-            display: inline-flex;
-            align-items: center;
-            padding: 12px 0; /* 상하 패딩 조정 */
-            text-decoration: none;
-            color: #888;
-            font-weight: bold;
-            font-size: 1.05em; /* 폰트 크기 약간 키움 */
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-            flex-shrink: 0;
-            position: relative; /* new-dot 위치 지정을 위해 */
-            cursor: pointer; /* 클릭 가능하도록 커서 */
-            background-color: transparent; /* 버튼 기본 배경 제거 */
-            border-radius: 0; /* 둥근 모서리 제거 */
-        }
-        .tab-item.active {
-            color: #6e8efb; /* 활성화된 탭 색상 */
-            border-bottom-color: #6e8efb; /* 활성화된 탭 하단 선 색상 */
-        }
-        .tab-item:hover:not(:disabled) { /* 비활성화 상태에서는 호버 효과 없음 */
-            color: #375bd1;
-        }
-        .tab-item:disabled { /* ⭐ 비활성화 탭 스타일 ⭐ */
-            color: #ccc;
-            cursor: not-allowed;
-            border-bottom-color: transparent; /* 비활성화시 하단 선 제거 */
-            opacity: 0.7; /* 약간 투명하게 */
-        }
-        
-        /* .new-dot은 mypage.css에 있지만, analysis 페이지에서는 사용되지 않으므로 필요 없음 */
-
-        /* ⭐⭐ PC 환경에서의 탭 메뉴 조정 (mypage.css와 일치) ⭐⭐ */
-        @media (min-width: 640px) {
-            .tab-menu-wrapper {
-                padding: 0 20px; /* PC에서 좌우 패딩 늘림 */
-            }
-            .tab-menu {
-                justify-content: center; /* PC에서 탭 메뉴 중앙 정렬 */
-            }
-            /* ⭐ PC 폰트 사이즈 조정 (mypage.css와 일치) ⭐ */
-            .tab-item {
-                font-size: 1.2em; /* 폰트 크기 증가 */
-                padding: 15px 0; /* 패딩 증가 */
-            }
-        }
-
-        /* 기존 .section 스타일은 그대로 유지 또는 필요시 조정 */
-        .section { background: #fff; padding: 25px; margin-top: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .section h2 { font-size: 1.5em; color: #333; margin-bottom: 15px; } /* 섹션 제목 크기 조정 */
-        .badge { display:inline-block; margin:4px; padding:8px 12px; background:#e8eaf6; color: #3f51b5; border-radius:16px; font-size:0.9em; }
-
-        /* main.container 대신 .analysis-content-area 사용 (mypage.css와 유사) */
-        .analysis-content-area {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 20px; /* 기본 패딩 */
-            background-color: #f4f6f8; /* 섹션 배경색 (mypage와 동일) */
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 20px; /* 섹션 간 간격 */
-        }
-        @media (max-width: 639px) {
-            .analysis-content-area {
-                padding: 15px;
-                gap: 15px;
-            }
-        }
-        @media (min-width: 640px) {
-            .analysis-content-area {
-                max-width: 800px; /* PC에서 컨텐츠 영역의 최대 너비 */
-                margin: 0 auto; /* PC에서 중앙 정렬 */
-                padding: 20px;
-            }
-        }
-
-    </style>
-</head>
+    <link rel="stylesheet" href="css/common.css"> <link rel="stylesheet" href="css/analysis.css"> <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    </head>
 <body>
    <div class="app-container">
     <nav id="gnb">
@@ -131,12 +26,17 @@
 
         <div class="tab-menu-wrapper">
             <div class="tab-menu">
-                <button class="tab-item active" data-tab="basic">기본 분석</button> <button class="tab-item" data-tab="cumulative">누적 분석 (5회+)</button> <button class="tab-item" data-tab="deep">심층 분석 (10회+)</button> </div>
+                <button class="tab-item active" data-tab="basic">기본 분석</button>
+                <button class="tab-item" data-tab="cumulative">누적 분석 (5회+)</button>
+                <button class="tab-item" data-tab="deep">심층 분석 (10회+)</button>
+            </div>
         </div>
 
-        <main class="analysis-content-area"> <h1> LOZEE의 데이터 해석</h1>
+        <main class="analysis-content-area">
+            <h1> LOZEE의 데이터 해석</h1>
             
-            <div id="basic-analysis-content" class="tab-content active"> <div class="section" id="languageAgeSection" style="display:none;">
+            <div id="basic-analysis-content" class="tab-content active">
+                <div class="section" id="languageAgeSection" style="display:none;">
                      <h2>🗣️ 내 말솜씨 나이는 몇 살일까?</h2>
                      <p>로지와 나눈 대화를 통해 너의 표현력이 몇 살 친구와 비슷한지 알려줄게!</p>
                 </div>

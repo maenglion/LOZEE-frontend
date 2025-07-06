@@ -1,53 +1,19 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LOZEE와 대화하기</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
-    <link rel="stylesheet" href="style.css"> <style>
-        :root {
-            --session-header-height: 32px; /* 주제 선택 중 박스의 높이 */
-            --input-area-height: 70px;
-        }
-        .app-container { display: flex; flex-direction: column; height: 100%; /* background-color는 style.css에서 관리 */ }
-        body { padding: 0; }
-
-        #session-header {
-            position: relative;
-            width: 100%;
-            height: var(--session-header-height);
-            background-color: #f0f0f0;
-            color: #555;
-            font-size: 0.9em;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            box-sizing: border-box;
-            z-index: 998;
-            transition: background-color 0.1s;
-            flex-shrink: 0;
-            line-height: 1.2;
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
-            box-shadow: none;
-            margin-bottom: 0;
-        }
-        #session-header-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    </style>
-</head>
+    <link rel="stylesheet" href="css/common.css"> <link rel="stylesheet" href="style.css"> </head>
 
 <body>
     <div class="app-container">
         <nav id="gnb">
             <button id="menu-toggle"></button>
             <div id="gnb-title">LOZEE</div>
-            <div style="width: 44px; visibility: hidden;"></div>
+            <div class="gnb-right-buttons">
+            </div>
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>

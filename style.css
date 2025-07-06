@@ -1,172 +1,22 @@
-/* style.css (모든 common.css, style.css 내용 통합 및 최적화) */
+/* style.css (talk.html 전용 스타일) */
 
-/* ----------- 기본 및 공통 스타일 ----------- */
 :root {
-    --primary-color: #6078ea; /* LOZEE 메인 색상 (그라데이션 시작점) */
-    --secondary-color: #a777e3; /* LOZEE 보조 색상 (그라데이션 끝점) */
-    --background-color: #f0f0f0; /* 일반적인 배경색 */
-    --session-header-height: 32px; /* 주제 선택 중 박스의 높이 */
+    --primary-color: #6078ea;
+    --secondary-color: #a777e3;
+    --background-color: #f0f0f0;
+    --session-header-height: 32px; /* talk.html 인라인에서 옮김 */
     --input-area-height: 70px;
 }
 
-body {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    font-family: 'KoPub World Dotum', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-}
+/* app-container, body 기본 스타일은 common.css에서 관리 */
 
-.app-container {
-    width: 100%;
-    max-width: 640px; /* ⭐ PC 기본 너비를 640px로 유지 (모바일에도 적용되는 기본값) */
-    height: 100vh;
-    min-height: 100vh;
-    background-color: #ffffff;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: hidden; /* app-container는 스크롤바를 가지지 않도록 */
-    margin: 0 auto; /* app-container 중앙 정렬 */
-}
-
-@media (max-width: 639px) { /* 모바일 화면 */
-    body { padding: 0; align-items: stretch; }
-    .app-container {
-        width: 100%;
-        max-width: 100%; /* 모바일에서는 100% 너비 */
-        height: 100vh;
-        max-height: 100vh;
-        border-radius: 0;
-    }
-}
-
-@media (min-width: 640px) { /* PC 화면 (GNB.css와 동일한 기준) */
-    body {
-        padding: 50px 0;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1em; /* 기본 폰트 사이즈 1단계 키움 */
-    }
-    .app-container {
-        max-width: 960px; /* ⭐ PC에서 app-container 최대 너비 960px로 (넓게) */
-        height: auto;
-        max-height: calc(100vh - 100px);
-        border-radius: 20px;
-    }
-
-    /* ⭐⭐⭐ PC 화면에서 요소 크기 3단계씩 더 커지도록 조정 ⭐⭐⭐ */
-
-    /* 버블 (말풍선) 크기 및 텍스트 조정 */
-    .bubble {
-        max-width: 60%; /* PC에서 말풍선 최대 너비를 60%로 늘림 */
-        padding: 1.4rem 2rem; /* 패딩을 더 늘림 */
-        font-size: 1.2em; /* 텍스트 크기를 더 늘림 (1.1em -> 1.2em) */
-        line-height: 1.8; /* 라인 높이를 더 여유롭게 */
-        border-radius: 1.5rem; /* 모서리 둥글기 증가 */
-    }
-    .bubble.user, .bubble.bot {
-        font-size: 1.2em; /* 사용자/봇 버블 텍스트 크기 일관되게 적용 */
-    }
-
-    /* 주제 선택 컨테이너 및 버튼 (talk.html) */
-    #session-header {
-        height: 40px; /* 주제 선택 헤더 높이 더 늘림 (32px -> 40px) */
-        font-size: 1.1em; /* 텍스트 크기 더 늘림 (0.9em -> 1.1em) */
-        padding: 0 20px; /* 좌우 패딩 늘림 */
-    }
-    #meter-container.volume-meter-wrapper {
-        height: 8px; /* 음향 바 래퍼 높이 늘림 (5px -> 8px) */
-    }
-    #volume-meter {
-        height: 5px; /* 실제 음향 바 막대 높이 늘림 (3px -> 5px) */
-    }
-
-    #topic-selection-container {
-        padding: 30px; /* 패딩 더 늘림 (20px -> 30px) */
-        max-width: 500px; /* 최대 너비 더 늘림 (400px -> 500px) */
-        font-size: 1.2em; /* 텍스트 크기 늘림 (1.1em -> 1.2em) */
-    }
-    .chat-options-container {
-        gap: 15px; /* 옵션 버튼 간 간격 더 늘림 (12px -> 15px) */
-        max-width: 380px; /* 옵션 버튼 컨테이너 최대 너비 더 늘림 (300px -> 380px) */
-    }
-    .chat-option-btn {
-        padding: 18px 25px; /* 버튼 패딩 더 늘림 */
-        font-size: 1.2em; /* 텍스트 크기 늘림 (1.1em -> 1.2em) */
-    }
-
-    /* 입력창 및 버튼 */
-    #chat-input-container {
-        height: 80px; /* 입력창 컨테이너 높이 늘림 (70px -> 80px) */
-        padding: 1rem 1.2rem; /* 패딩 늘림 */
-        gap: 12px; /* 버튼 간 간격 늘림 */
-    }
-    #chat-input {
-        padding: 1rem; /* 입력 필드 패딩 늘림 */
-        font-size: 1.15rem; /* 입력 필드 폰트 크기 늘림 */
-    }
-    #mic-button, #send-button, #plus-button {
-        width: 56px; /* 버튼 크기 키움 (48px -> 56px) */
-        height: 56px;
-        background-size: 48px 48px; /* 아이콘 이미지 크기 키움 (40px -> 48px) */
-    }
-}
-
-/* ----------- 페이지별 스타일 ----------- */
-
-.page-title {
-    color: #375bd1;
-    text-align: center;
-    font-size: 1.5em;
-    margin-top: 20px;
-    margin-bottom: 30px;
-    font-weight: 700;
-}
-
-#rosie-appointments {
-    padding: 16px;
-    border-top: 1px solid #eee;
-}
-#rosie-appointments .module-title {
-    font-size: 1.2em;
-    margin-bottom: 12px;
-    color: #375bd1;
-}
-#appointments-list .appointment-item {
-    padding: 8px 0;
-    border-bottom: 1px solid #ddd;
-}
-#appointments-list .empty-state {
-    color: #999;
-    font-size: 0.9em;
-}
-
-.container { /* talk.html에 이 클래스가 직접 사용되는 요소가 없으므로 큰 영향 없음 */
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 0 20px;
-    box-sizing: border-box;
-}
-
-@media (max-width: 639px) {
-    .container {
-        max-width: 100%;
-        margin: 0 auto;
-        padding: 0 15px;
-    }
-}
-
-/* GNB 상단 헤더 스타일 */
+/* ⭐⭐ GNB 상단 헤더 스타일 ⭐⭐ */
 #session-header {
     width: 100%;
-    /* height, font-size, line-height 등은 talk.html 인라인 스타일 및 PC 미디어 쿼리에서 정의됨 */
+    height: var(--session-header-height); /* 32px 높이 적용 */
     background-color: #f0f0f0;
     color: #555;
+    font-size: 0.9em;
     display: flex;
     align-items: center;
     padding: 0 15px;
@@ -174,6 +24,7 @@ body {
     z-index: 998;
     transition: background-color 0.1s;
     flex-shrink: 0;
+    line-height: 1.2;
     margin-bottom: 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
@@ -186,11 +37,11 @@ body {
 }
 
 
-/* 음향 바 전체 래퍼 스타일 (volume-meter-wrapper) */
+/* ⭐⭐ 음향 바 전체 래퍼 스타일 (volume-meter-wrapper) ⭐⭐ */
 #meter-container.volume-meter-wrapper {
     width: 100%;
     height: 5px; /* 음향 바 전체 컨테이너의 높이 */
-    background-color: #f0f0f0;
+    background-color: #f0f0f0; /* session-header와 동일한 배경색 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -205,7 +56,7 @@ body {
     box-shadow: none;
 }
 
-/* 음향 바의 실제 막대 스타일 (회색 배경/테두리 제거) */
+/* ⭐⭐ 음향 바의 실제 막대 스타일 (회색 배경/테두리 제거) ⭐⭐ */
 #volume-meter {
     width:70%;
     max-width: 280px;
@@ -223,8 +74,26 @@ body {
     border-radius:4px;
 }
 
-/* 아이콘 버튼 공통 스타일 및 개별 이미지 적용 */
-/* #mic-button, #send-button, #plus-button 스타일은 PC 미디어 쿼리 내에서 조정 */
+/* ⭐⭐ 아이콘 버튼 공통 스타일 및 개별 이미지 적용 ⭐⭐ */
+#mic-button,
+#send-button,
+#plus-button {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: transparent;
+    font-size: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: 40px 40px; /* 48x48 버튼 안에 40x40으로 표시 */
+}
 
 /* 개별 아이콘 이미지 경로 */
 #mic-button {
@@ -266,9 +135,9 @@ body {
   gap: 1rem;
   box-sizing: border-box;
   background: #fff;
-  border-radius: 20px;
-  box-shadow: none;
-  max-width: 100%;
+  border-radius: 20px; /* app-container와 동일한 20px로 통일 */
+  box-shadow: none; /* chat-window의 box-shadow 제거 */
+  max-width: 100%; /* 부모 app-container의 max-width에 맞춰 100% */
   margin: 0;
   margin-top: 0;
   border-top-left-radius: 0;
@@ -283,12 +152,13 @@ body {
     margin-top: 0;
   }
 }
-/* PC 큰 화면 최적화 (768px 이상) */
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 640px) { /* PC 화면 (640px 이상) */
     #chat-window {
-        padding: 40px;
+        padding: 40px; /* PC 큰 화면에서 패딩 늘림 */
     }
+    /* #topic-selection-container, .chat-option-btn 등도 이 미디어 쿼리 안에서 PC 크기 조정 */
 }
+
 
 #chat-window::-webkit-scrollbar {
   width: 8px;
@@ -333,7 +203,7 @@ body {
     border: none;
     box-shadow: none;
 
-    max-width: 400px;
+    max-width: 100%; /* 모바일에서는 부모 (chat-window) 100% */
     margin-left: auto;
     margin-right: auto;
 }

@@ -1,52 +1,54 @@
 /* css/mypage.css */
 
 /* 마이페이지 전체 컨테이너 및 섹션 스타일 */
+/* common.css 내용과 겹치지 않도록 이곳은 mypage에 특화된 스타일만 */
 .mypage-content-area {
-    flex-grow: 1; /* 남은 공간을 모두 차지 */
-    overflow-y: auto; /* 내용이 길어질 때 스크롤 가능 */
-    padding: 20px; /* 기본 패딩 */
-    background-color: #f4f6f8; /* 섹션 배경색 (이미지에서 보인 연한 회색) */
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: #f4f6f8;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* 섹션 간 간격 */
+    gap: 20px;
 }
 
-/* 탭 메뉴 Wrapper (스크롤 가능하도록) */
+/* ⭐ 탭 메뉴 Wrapper (스크롤 가능하도록) ⭐ */
 .tab-menu-wrapper {
     width: 100%;
-    background-color: #ffffff; /* GNB 배경색과 유사하게 또는 흰색으로 */
+    background-color: #ffffff;
     box-sizing: border-box;
-    padding: 0 10px; /* 탭 메뉴 자체의 좌우 패딩 */
+    padding: 0 10px;
     border-bottom: 1px solid #e0e0e0;
     flex-shrink: 0;
-    overflow-x: auto; /* ⭐ 가로 스크롤 가능하도록 (모바일) */
-    -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
-    white-space: nowrap; /* 탭 아이템들이 한 줄에 표시되도록 */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
 }
 
 /* 탭 메뉴 실제 컨테이너 */
 .tab-menu {
     display: flex;
-    justify-content: flex-start; /* 좌측 정렬 */
+    justify-content: flex-start;
     align-items: center;
-    gap: 25px; /* ⭐ 탭 아이템 간 간격 15px -> 25px로 늘림 */
-    min-width: fit-content; /* 내용이 넘칠 때 스크롤 가능하도록 */
+    gap: 25px; /* 탭 아이템 간 간격 25px로 */
+    min-width: fit-content;
 }
 
 /* 탭 아이템 */
 .tab-item {
     display: inline-flex;
     align-items: center;
-    padding: 12px 0; /* 상하 패딩 조정 */
+    padding: 12px 0;
     text-decoration: none;
     color: #888;
     font-weight: bold;
-    font-size: 1.05em; /* 폰트 크기 약간 키움 */
+    font-size: 1.05em;
     border-bottom: 3px solid transparent;
     transition: all 0.3s ease;
     flex-shrink: 0;
-    position: relative; /* new-dot 위치 지정을 위해 */
+    position: relative;
+    cursor: pointer;
 }
 .tab-item.active {
     color: #6e8efb;
@@ -72,10 +74,10 @@
 .content-section {
     width: 100%;
     box-sizing: border-box;
-    padding: 0 10px; /* 각 섹션 내부 좌우 패딩 */
-    display: none; /* JS에 의해 active 탭만 display:flex */
-    flex-direction: column; /* 내부 카드들 세로 정렬 */
-    gap: 20px; /* 내부 카드들 간 간격 */
+    padding: 0 10px;
+    display: none;
+    flex-direction: column;
+    gap: 20px;
 }
 .content-section.active {
     display: flex;
@@ -432,52 +434,53 @@
         padding: 0 20px;
     }
     .tab-menu {
-        justify-content: center; /* PC에서 탭 메뉴 중앙 정렬 */
+        justify-content: center;
     }
     .mypage-content-area {
         max-width: 800px;
         margin: 0 auto;
         padding: 20px;
     }
-    /* ⭐⭐ PC 환경 폰트 사이즈 조정 (2단계씩 키우기) ⭐⭐ */
+    /* PC 환경 폰트 사이즈 조정 (2단계씩 키우기) */
     /* 탭 메뉴 폰트 크기 */
     .tab-item {
-        font-size: 1.2em; /* 1.05em에서 1.2em으로 */
+        font-size: 1.2em;
+        padding: 15px 0;
     }
     /* 카드 제목 폰트 크기 */
     .info-card h2 {
-        font-size: 1.3em; /* 1.1em에서 1.3em으로 */
+        font-size: 1.3em;
     }
     .info-card h2 .edit-button {
-        width: 44px; /* 버튼 크기 키우기에 맞춰 아이콘 크기도 약간 키울 수 있음 */
+        width: 44px;
         height: 44px;
-        background-size: 40px 40px; /* 아이콘 크기는 40x40 유지 또는 약간 키움 */
+        background-size: 40px 40px;
     }
     /* 정보 항목 폰트 크기 */
     .info-item, .detail-item {
-        font-size: 1.1em; /* 0.95em에서 1.1em으로 */
+        font-size: 1.1em;
     }
     /* neurodiversity-list li (특성 태그) 폰트 크기 */
     .neurodiversity-list li {
-        font-size: 0.95em; /* 0.8em에서 0.95em으로 */
+        font-size: 0.95em;
     }
     /* 결과 박스 텍스트 */
     .result-box p.result-text, .appointment-training-card .pattern-item {
-        font-size: 1.05em; /* 0.95em에서 1.05em으로 */
+        font-size: 1.05em;
     }
     /* 최근 이야기 카드 제목 및 내용 */
     .session-card-wide h3 {
-        font-size: 1.1em; /* 1em에서 1.1em으로 */
+        font-size: 1.1em;
     }
     .session-card-wide p {
-        font-size: 1em; /* 0.9em에서 1em으로 */
+        font-size: 1em;
     }
     /* 필터 버튼 폰트 크기 */
     .filter-select {
-        font-size: 1.1em; /* 0.95em에서 1.1em으로 */
+        font-size: 1.1em;
     }
     /* 액션 버튼 폰트 크기 */
     .action-button {
-        font-size: 1.2em; /* 1.1em에서 1.2em으로 */
+        font-size: 1.2em;
     }
 }
