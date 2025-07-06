@@ -179,7 +179,7 @@
     width: 40px;
     height: 40px;
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/modify_button.png?alt=media&token=7f986b71-cfe6-44ba-bc7e-40191849bbf2');
-    background-size: 40px 40px;
+    background-size: 32px 32px;
     background-position: center;
     background-repeat: no-repeat;
     font-size: 0;
@@ -310,7 +310,7 @@
     -moz-appearance: none;
     appearance: none;
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/fillter-button.png?alt=media&token=5fc61fba-1b2a-44f0-a81c-e95f6e407a4e'); /* 필터 버튼 이미지 URL */
-    background-size: 46px 38px;
+    background-size: 23px 19px;
     background-position: right 12px center;
     background-repeat: no-repeat;
     background-color: #ffffff;

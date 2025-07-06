@@ -6,244 +6,13 @@
     <title id="pageTopicTitle">주제별 이야기 회차 목록 – LOZEE</title>
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="gnb.css">
-    <style>
-        /* journal-list2.html 고유 스타일 */
-        :root {
-            --primary-color: #6e8efb;
-            --secondary-color: #5a7edf;
-            --background-color: #f4f6f8; 
-            --text-color: #333333;
-            --card-bg: #ffffff;
-            --light-blue-bg: #eef2f7;
-            --action-button-bg: #6078ea;
-        }
-        body {
-            margin: 0;
-            font-family: 'KoPub World Dotum', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .page-header {
-            text-align: center;
-            margin-bottom: 15px;
-            padding: 20px;
-            background-color: var(--card-bg, #ffffff);
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        }
-        .topic-display-title {
-            color: var(--primary-color);
-            font-size: 1.8em;
-            font-weight: 700;
-            margin-top: 0;
-            margin-bottom: 8px;
-        }
-        .topic-stats-info {
-            font-size: 0.95em;
-            color: #555;
-            margin-bottom: 0;
-        }
-        .topic-stats-info span {
-            margin: 0 10px;
-            display: inline-block;
-        }
-        .continue-topic-button-container {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        .session-card-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .session-card-wide {
-            background-color: var(--card-bg);
-            border-radius: 10px;
-            padding: 15px 20px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            border-left: 4px solid var(--secondary-color);
-            display: flex;
-            flex-direction: column;
-        }
-        .session-card-wide:hover {
-            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
-        }
-        .session-card-wide .session-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-            border-bottom: none;
-            padding-bottom: 5px;
-        }
-        .session-card-wide .session-date {
-            font-size: 0.85em;
-            color: #777;
-            font-weight: normal;
-        }
-        .session-card-wide h3 {
-            font-size: 1.15em;
-            color: var(--text-color);
-            margin-top: 0;
-            margin-bottom: 8px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-        .session-card-wide .session-summary {
-            font-size: 0.9em;
-            color: #555;
-            margin-bottom: 10px;
-            white-space: normal;
-            word-break: keep-all;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-height: calc(0.9em * 1.5 * 3);
-            padding-left: 0;
-            border-left: none;
-            cursor: pointer;
-     overflow: hidden; /* ✅ 추가: overflow도 함께 정의 */
-    text-overflow: ellipsis; /* ✅ 추가: 말줄임표도 함께 정의 */
-    line-clamp: 3; /* ✅ 이 줄을 추가합니다. */
-    box-orient: vertical; /* ✅ 표준 box-orient도 추가 (flexbox와 함께 사용 시) */
-
-
-        }
-        .session-card-wide .session-summary.expanded {
-            -webkit-line-clamp: unset;
-            max-height: none;
-              overflow: hidden; /* ✅ 추가: overflow도 함께 정의 */
-    text-overflow: ellipsis; /* ✅ 추가: 말줄임표도 함께 정의 */
-    line-clamp: 3; /* ✅ 이 줄을 추가합니다. */
-    box-orient: vertical; /* ✅ 표준 box-orient도 추가 (flexbox와 함께 사용 시) */
-
-
-        }
-        .session-card-wide .more-summary-btn {
-            font-size: 0.85em;
-            color: var(--primary-color);
-            cursor: pointer;
-            text-decoration: underline;
-            display: block;
-            margin-top: 5px;
-            text-align: right;
-        }
-        .session-card-wide .session-analysis-summary {
-            background-color: transparent;
-            padding: 8px 0 0 0;
-            border-radius: 0;
-            font-size: 0.85em;
-            margin-top: 8px;
-            border: none;
-        }
-        .session-card-wide .session-analysis-summary h4 {
-            font-size: 0.9em;
-            color: var(--secondary-color);
-            margin-bottom: 3px;
-            font-weight: bold;
-        }
-        .session-card-wide .session-analysis-summary p {
-            margin: 0;
-            line-height: 1.4;
-            color: #666;
-        }
-        .session-card-wide .analysis-view-button {
-            align-self: flex-end;
-            margin-top: 10px;
-            padding: 6px 12px;
-            font-size: 0.85em;
-            background-color: var(--action-button-bg);
-            color: white;
-            border: none;
-            border-radius: 18px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            cursor: pointer;
-        }
-        .session-card-wide .analysis-view-button:hover {
-            background-color: var(--secondary-color);
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            font-size: 1em;
-            margin-top: 30px;
-            padding-bottom: 20px;
-        }
-        .pagination button {
-            text-decoration: none;
-            color: var(--primary-color);
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: background-color 0.2s, color 0.2s;
-            background-color: transparent;
-            border: 1px solid var(--primary-color);
-            cursor: pointer;
-        }
-        .pagination button:hover {
-            background-color: var(--secondary-color);
-            color: white;
-        }
-        .pagination button.current {
-            color: var(--text-color);
-            background-color: #e0e0e0;
-            border-color: #e0e0e0;
-        }
-        .pagination button:disabled {
-            background-color: #eee;
-            color: #aaa;
-            border-color: #ddd;
-            cursor: default;
-        }
-        .no-data-message {
-            text-align: center;
-            padding: 30px;
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            color: #777;
-            font-size: 1.1em;
-        }
-        .no-data-message h2 {
-            color: var(--primary-color);
-            font-size: 1.3em;
-            margin-bottom: 10px;
-        }
-        .action-button {
-            display: inline-block;
-            margin-top: 15px;
-            background-color: var(--action-button-bg);
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        .action-button:hover {
-            background-color: var(--secondary-color);
-        }
-    </style>
-</head>
+    <link rel="stylesheet" href="css/base.css"> <link rel="stylesheet" href="css/journal-list2.css"> </head>
 <body>
  <div class="app-container">
         <nav id="gnb">
             <button id="menu-toggle">☰</button>
             <div id="gnb-title">LOZEE</div>
-            <div style="width: 44px;"></div> 
+            <div style="width: 44px;"></div>
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>
@@ -253,15 +22,13 @@
             </div>
         </nav>
 
-    <main class="container" id="mainContainer">
-        <div class="page-header">
+    <main class="container journal-list-detail-content-area" id="mainContainer"> <div class="page-header">
             <h1 id="topicTitleDisplay" class="topic-display-title">주제 불러오는 중...</h1>
             <div class="topic-stats-info">
-                <span id="totalSessionCount">총 0회</span> | 
+                <span id="totalSessionCount">총 0회</span> |
                 <span id="lastSessionDate">마지막 대화: 정보 없음</span>
             </div>
         </div>
-        <!-- “이 주제로 이어 말하기” 버튼은 스크립트 내에서 삽입됩니다 -->
         <div class="session-card-list" id="sessionCardList"></div>
         <div class="pagination" id="paginationControls"></div>
     </main>
@@ -270,7 +37,7 @@
     <script type="module">
         import { db } from './js/firebase-config.js';
         import {
-            collection, query, where, getDocs, orderBy, limit,
+            collection, query, where, getDocs, orderBy, doc, getDoc, limit,
             getCountFromServer, startAfter
         } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
@@ -288,11 +55,12 @@
                 for (const ageGroup in ageGroups) {
                     const mainTopicCategories = ageGroups[ageGroup];
                     for (const mainTopicName in mainTopicCategories) {
-                        const subTopicsArray = mainTopicCategories[mainTopicName];
-                        if (!Array.isArray(subTopicsArray)) continue;
-                        for (const subTopic of subTopicsArray) {
-                            if (subTopic.displayText === topicKey) {
-                                return mainTopicName;
+                        const mainTopicObject = mainTopicCategories[mainTopicName]; // 실제 메인 주제 객체
+                        if (mainTopicObject.subTopics && Array.isArray(mainTopicObject.subTopics)) {
+                            for (const subTopic of mainTopicObject.subTopics) {
+                                if (subTopic.displayText === topicKey) {
+                                    return mainTopicObject.name; // 메인 주제의 name 반환
+                                }
                             }
                         }
                     }
@@ -304,16 +72,17 @@
         // ——————————————————————————————————————————————
         // [헬퍼2] “토픽의 displayText”를 다시 돌려주는 함수 (현재는 topicKey 그대로 반환)
         function getDisplayNameOfTopic(topicKey, topicsData) {
-            for (const userType in topicsData) {
+             for (const userType in topicsData) {
                 const ageGroups = topicsData[userType];
                 for (const ageGroup in ageGroups) {
                     const mainTopicCategories = ageGroups[ageGroup];
                     for (const mainTopicName in mainTopicCategories) {
-                        const subTopicsArray = mainTopicCategories[mainTopicName];
-                        if (!Array.isArray(subTopicsArray)) continue;
-                        for (const subTopic of subTopicsArray) {
-                            if (subTopic.displayText === topicKey) {
-                                return subTopic.displayText;
+                        const mainTopicObject = mainTopicCategories[mainTopicName];
+                        if (mainTopicObject.subTopics && Array.isArray(mainTopicObject.subTopics)) {
+                            for (const subTopic of mainTopicObject.subTopics) {
+                                if (subTopic.displayText === topicKey) {
+                                    return subTopic.displayText;
+                                }
                             }
                         }
                     }
@@ -332,13 +101,12 @@
         const urlParams          = new URLSearchParams(window.location.search);
         const topicKeyFromUrl    = decodeURIComponent(urlParams.get('topic') || '');
         const userId = localStorage.getItem('lozee_userId');
-const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가져오기
+        const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가져오기
 
         const ITEMS_PER_PAGE         = 5;
         let lastVisibleDocForPaging  = null;
         let currentPageNum           = 1;
         let totalJournalDocsForTopic = 0;
-     
 
 
         // “화면용 토픽 이름” (현재는 displayText 그대로 사용)
@@ -368,7 +136,7 @@ const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가
             // 3) 대분류(메인토픽) 찾기 (예: “감정 이야기”)
             const mainCategory = findMainCategoryOfTopic(topicKeyFromUrl, counselingTopicsByAge) || '주제';
 
-            // 4) 최종 카드 제목: 
+            // 4) 최종 카드 제목:
             //    (1) sessionData.title이 있으면 “로그 기반 제목”을 우선 사용하고,
             //    (2) 없으면 “대분류 – GPT 요약 첫 문장”으로 표시
             const sessionTitle = sessionData.title && sessionData.title.trim()
@@ -532,10 +300,25 @@ const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가
                     where('userId', '==', userId),
                     where('topic', '==', topicKeyFromUrl),
                     orderBy('createdAt', 'desc'),
+                    startAfter(lastDoc || null), // lastDoc이 null이면 쿼리 시작점에서 시작
                     limit(ITEMS_PER_PAGE)
                 );
+                const snapshot = await getDocs(q);
 
+                if (snapshot.empty && page === 1) {
+                    sessionCardListEl.innerHTML =
+                        '<p class="no-data-message">아직 이 주제에 대한 이야기가 없어요. 로지와 대화를 시작해보세요! 😊</p>';
+                    if (paginationControlsEl) paginationControlsEl.style.display = 'none';
+                    return;
+                }
 
+                snapshot.forEach(doc => {
+                    sessionCardListEl.appendChild(createSessionCard(doc.data()));
+                });
+
+                // 다음 페이지를 위한 마지막 문서 저장
+                lastVisibleDocForPaging = snapshot.docs[snapshot.docs.length - 1];
+                updatePaginationUI(currentPageNum);
 
             } catch (error) {
                 console.error(`'${topicKeyFromUrl}' 주제 로드 중 오류:`, error);
@@ -549,6 +332,7 @@ const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가
         // “이전 이야기 더 보기” 버튼 생성/제어
         function updatePaginationUI(loadedPageNum) {
             if (!paginationControlsEl) return;
+            // 총 문서 수가 현재까지 로드된 문서 수보다 적으면 더보기 버튼 숨김
             if (totalJournalDocsForTopic <= loadedPageNum * ITEMS_PER_PAGE) {
                 paginationControlsEl.style.display = 'none';
                 return;
@@ -559,7 +343,7 @@ const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가
             if (!loadMoreBtn) {
                 loadMoreBtn = document.createElement('button');
                 loadMoreBtn.id = 'loadMoreBtn';
-                loadMoreBtn.className = 'action-button';
+                loadMoreBtn.className = 'action-button'; // mypage action-button과 동일 스타일
                 paginationControlsEl.innerHTML = '';
                 paginationControlsEl.appendChild(loadMoreBtn);
             }
@@ -576,62 +360,48 @@ const userType = localStorage.getItem('lozee_userType'); // 사용자 유형 가
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('Journal Topic Detail Page (journal-list2.html): DOMContentLoaded');
 
-            if (!userId || !topicKeyFromUrl) {
-                if (topicTitleDisplayEl) {
-                    topicTitleDisplayEl.textContent = '주제 정보를 불러올 수 없습니다.';
-                }
-                if (sessionCardListEl) {
-                    sessionCardListEl.innerHTML =
-                        '<p class="no-data-message">선택된 주제가 없거나 사용자 정보를 찾을 수 없어요. 이전 페이지로 돌아가 다시 시도해 주세요.</p>';
-                }
+            if (!userId) { // 로그인 여부 확인
+                if (topicTitleDisplayEl) topicTitleDisplayEl.textContent = '로그인이 필요합니다.';
+                if (sessionCardListEl) sessionCardListEl.innerHTML = '<p class="no-data-message">로그인 후 이야기 기록을 확인할 수 있습니다.</p>';
+                if (paginationControlsEl) paginationControlsEl.style.display = 'none';
+                return;
+            }
+            if (!topicKeyFromUrl) { // URL 파라미터로 주제가 넘어오지 않은 경우
+                if (topicTitleDisplayEl) topicTitleDisplayEl.textContent = '주제 정보를 불러올 수 없습니다.';
+                if (sessionCardListEl) sessionCardListEl.innerHTML = '<p class="no-data-message">선택된 주제가 없거나 사용자 정보를 찾을 수 없어요. 이전 페이지로 돌아가 다시 시도해 주세요.</p>';
                 if (paginationControlsEl) paginationControlsEl.style.display = 'none';
                 return;
             }
 
-            // “이 주제로 이어 말하기” 버튼 생성
-              const pageHeaderEl = document.querySelector('.page-header');
-        if (pageHeaderEl) {
-            const continueTopicButton = document.createElement('button');
-            // ... (버튼 클래스, 스타일 설정 동일) ...
-            continueTopicButton.innerHTML = `"${topicDisplayName}" 주제로 상담 예약하기 🗓️`; // ✅ 버튼 텍스트 변경
-            continueTopicButton.onclick = async () => { // ✅ onclick 함수를 async로 변경
-                try {
-                    const currentUserId = localStorage.getItem('lozee_userId');
-                    if (!currentUserId) {
-                        alert("사용자 정보가 없어 상담 예약을 진행할 수 없습니다.");
-                        return;
+            // “이 주제로 이어 말하기” 버튼 생성 (페이지 헤더 아래 삽입)
+            const pageHeaderEl = document.querySelector('.page-header');
+            if (pageHeaderEl) {
+                const continueTopicButton = document.createElement('button');
+                continueTopicButton.className = 'action-button continue-topic-button'; // ✅ 클래스 추가
+                continueTopicButton.innerHTML = `"${topicDisplayName}" 주제로 대화 시작하기 🗣️`; // ✅ 버튼 텍스트
+                continueTopicButton.onclick = async () => {
+                    try {
+                        const currentUserId = localStorage.getItem('lozee_userId');
+                        if (!currentUserId) {
+                            alert("사용자 정보가 없어 대화를 진행할 수 없습니다.");
+                            return;
+                        }
+                        // ⭐ talk.html 페이지로 이동하며 주제 정보 전달
+                        window.location.href = `talk.html?topic=${encodeURIComponent(topicKeyFromUrl)}`;
+                    } catch (error) {
+                        console.error("대화 시작 처리 중 오류:", error);
+                        alert("대화 시작 중 오류가 발생했습니다. 개발자에게 문의해주세요.");
                     }
-
-                    // ✅ saveReservation 함수 호출 (여기서부터 기존 로직이 바뀝니다)
-                    const reservationId = await saveReservation(currentUserId, {
-                        type: 'topic_specific_counseling',
-                        topic: topicKeyFromUrl,
-                        topicDisplayName: topicDisplayName,
-                        details: `'${topicDisplayName}' 주제에 대해 로지에게 더 이야기하고 싶어요.`,
-                        requestedAt: new Date().toISOString()
-                    });
-
-                    if (reservationId) {
-                        alert(`'${topicDisplayName}' 주제로 상담 요청이 접수되었습니다! 😊\n전문가와 연결될 때까지 잠시만 기다려주세요.`);
-
-                        // ✅ 구글 캘린더 이벤트 생성 링크 열기 (선택 사항)
-                        const baseUrl = 'https://calendar.google.com/calendar/r/eventedit';
-                        const params = new URLSearchParams({
-                            text: `LOZEE와 ${topicDisplayName} 주제 상담`,
-                            details: `"${topicDisplayName}" 주제에 대해 LOZEE와 상담을 예약했습니다. 더 자세한 내용은 LOZEE 앱에서 확인하세요.`,
-                            ctz: Intl.DateTimeFormat().resolvedOptions().timeZone
-                        });
-                        window.open(`${baseUrl}?${params.toString()}`, '_blank');
-                    } else {
-                        alert("상담 예약 중 오류가 발생했습니다. 다시 시도해 주세요.");
-                    }
-                } catch (error) {
-                    console.error("상담 예약 처리 중 오류:", error);
-                    alert("상담 예약 중 오류가 발생했습니다. 개발자에게 문의해주세요.");
-                }
-            };
-            pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton);
-        }
+                };
+                // 기존 '이 주제로 상담 예약하기' 로직 대신 '대화 시작하기'로 변경
+                // pageHeaderEl.insertAdjacentElement('afterend', continueTopicButton); // 이 위치는 페이지네이션과 겹칠 수 있음
+                // 페이지 헤더 아래 새로운 div에 버튼 삽입 (새로운 HTML 구조)
+                const continueButtonContainer = document.createElement('div');
+                continueButtonContainer.className = 'continue-topic-button-container'; // ✅ 새로운 컨테이너
+                continueButtonContainer.appendChild(continueTopicButton);
+                // page-header 뒤에 삽입
+                pageHeaderEl.parentNode.insertBefore(continueButtonContainer, pageHeaderEl.nextSibling);
+            }
 
             // 상단 통계 → 세션 로드
             await fetchTopicHeaderStats();
