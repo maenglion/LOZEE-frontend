@@ -37,7 +37,7 @@
     /* ⭐ 아래 부분들을 추가하거나 조정합니다. ⭐ */
     /* ------------------------------------------------------------- */
     
-    background-size: 6x 26px; /* ✅ 실제 이미지 크기에 맞춰 배경 이미지 크기 설정 */
+    background-size: 6px 26px; /* ✅ 실제 이미지 크기에 맞춰 배경 이미지 크기 설정 */
     background-position: center; /* ✅ 이미지 중앙 정렬 (필요시 'left center' 등으로 변경 가능) */
     background-repeat: no-repeat;
     
