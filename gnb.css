@@ -33,7 +33,6 @@
     border: none;
     background-color: transparent;
     background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/menu-toggle.png?alt=media&token=4b734b81-d003-4378-83f1-f3c492a46f10'); /* 이미지 URL */
-    background-size: 28px 28px; /* ⭐ 이미지 크기 (8x36 원본이지만, 28x28 정사각형 안에 contain되어 보임) */
     background-position: center;
     background-repeat: no-repeat;
     color: transparent; /* 텍스트 숨김 */
