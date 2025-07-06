@@ -21,7 +21,7 @@
     border-bottom: 1px solid #e0e0e0;
     flex-shrink: 0;
     overflow-x: auto; /* ⭐ 가로 스크롤 가능하도록 (모바일) */
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
     white-space: nowrap; /* 탭 아이템들이 한 줄에 표시되도록 */
 }
 
@@ -30,7 +30,7 @@
     display: flex;
     justify-content: flex-start; /* 좌측 정렬 */
     align-items: center;
-    gap: 15px; /* 탭 아이템 간 간격 */
+    gap: 25px; /* ⭐ 탭 아이템 간 간격 15px -> 25px로 늘림 */
     min-width: fit-content; /* 내용이 넘칠 때 스크롤 가능하도록 */
 }
 
@@ -63,9 +63,9 @@
     background-color: orange;
     border-radius: 50%;
     margin-left: 4px;
-    position: absolute; /* 탭 텍스트 기준 위치 */
-    top: 6px; /* 탭 아이템 상단에 위치 */
-    right: -10px; /* 탭 아이템 오른쪽 바깥에 위치 */
+    position: absolute;
+    top: 6px;
+    right: -10px;
 }
 
 /* 컨텐츠 섹션 공통 */
@@ -105,7 +105,7 @@
     font-weight: bold;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     overflow: hidden;
-    position: relative; /* 이미지/텍스트 오버레이를 위해 */
+    position: relative;
 }
 #userProfileImage {
     width: 100%;
@@ -113,17 +113,17 @@
     object-fit: cover;
 }
 #userInitialText {
-    position: absolute; /* 이미지 없을 때 중앙에 보이도록 */
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    display: flex; /* 중앙 정렬 위한 flex */
+    display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
 }
-.edit-button {
+#editProfilePhotoBtn {
     background-color: #e0e0e0;
     color: #333;
     border: none;
@@ -134,21 +134,9 @@
     margin-top: 10px;
     transition: background-color 0.2s;
 }
-.edit-button:hover {
+#editProfilePhotoBtn:hover {
     background-color: #d0d0d0;
 }
-/* .deep-insight-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background-color: #e57373;
-    color: white;
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 0.9em;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-} */
 
 .profile-message {
     text-align: center;
@@ -168,7 +156,7 @@
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    margin-bottom: 0; /* 섹션 gap으로 간격 조절 */
+    margin-bottom: 0;
 }
 .info-card h2 {
     font-size: 1.1em;
@@ -181,10 +169,23 @@
     justify-content: space-between;
     align-items: center;
 }
-.info-card h2 .edit-button { /* 카드 제목 옆 수정 버튼 */
-    font-size: 0.75em; /* 크기 더 줄임 */
-    padding: 4px 8px;
-    margin-top: 0;
+/* ⭐ 카드 제목 옆 수정 버튼 스타일 ⭐ */
+.info-card h2 .edit-button {
+    background-color: transparent;
+    border: none;
+    width: 40px; /* ⭐ 버튼 크기 40x40으로 고정 */
+    height: 40px;
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/modify_button.png?alt=media&token=7f986b71-cfe6-44ba-bc7e-40191849bbf2'); /* 수정 버튼 이미지 URL */
+    background-size: 40px 40px; /* ⭐ 아이콘 크기 40x40으로 조정 */
+    background-position: center;
+    background-repeat: no-repeat;
+    font-size: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+}
+.info-card h2 .edit-button:hover {
+    opacity: 0.8;
 }
 
 .info-item {
@@ -199,15 +200,14 @@
     color: #555;
 }
 
-/* 서브 정보 섹션 (나의 특성, 보호자님 특성) */
 .sub-info-section {
-    margin-top: 20px; /* 상위 info-card 내에서 간격 */
+    margin-top: 20px;
 }
 .sub-info-section h3 {
-    font-size: 1em; /* 특성 제목 크기 조정 */
+    font-size: 1em;
     color: #333;
     margin-bottom: 10px;
-    border-bottom: 1px dashed #eee; /* 점선으로 구분 */
+    border-bottom: 1px dashed #eee;
     padding-bottom: 5px;
 }
 .neurodiversity-list {
@@ -216,7 +216,7 @@
     margin: 0;
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start; /* 왼쪽 정렬 (이미지에는 오른쪽이었으나 일반적 좌측) */
+    justify-content: flex-start;
     gap: 5px;
 }
 .neurodiversity-list li {
@@ -234,7 +234,7 @@
     /* info-card 스타일 상속 */
 }
 .appointment-training-card h2 {
-    color: #6e8efb; /* 훈련 제목 강조 */
+    color: #6e8efb;
 }
 .appointment-training-card .detail-item {
     margin-bottom: 5px;
@@ -262,13 +262,13 @@
     display: block;
     margin-bottom: 8px;
 }
-.appointment-training-card .result-box p.result-text { /* 일반 결과 텍스트 */
+.appointment-training-card .result-box p.result-text {
     font-size: 0.95em;
     color: #555;
     line-height: 1.4;
     margin: 0;
 }
-.appointment-training-card .pattern-item { /* 인지 왜곡 패턴 아이템 */
+.appointment-training-card .pattern-item {
     font-size: 0.95em;
     color: #555;
     line-height: 1.4;
@@ -285,10 +285,10 @@
     flex-shrink: 0;
 }
 .appointment-training-card button.full-width {
-    margin-top: 20px; /* 카드 내 버튼 상단 간격 */
+    margin-top: 20px;
 }
 
-/* 필터 컨트롤 */
+/* 필터 컨트롤 섹션 */
 .filter-controls {
     display: flex;
     justify-content: space-between;
@@ -301,13 +301,28 @@
     border-bottom: none;
     padding-bottom: 0;
 }
+/* ⭐ 필터 버튼 (select) 스타일 ⭐ */
 .filter-select {
-    padding: 8px 12px;
-    border-radius: 8px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/fillter-button.png?alt=media&token=5fc61fba-1b2a-44f0-a81c-e95f6e407a4e'); /* 필터 버튼 이미지 URL */
+    background-size: 46px 38px; /* ⭐ 아이콘 크기 46x38로 조정 (사용자 요청) */
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-color: #ffffff;
+    color: #333;
     border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 60px 8px 12px; /* ⭐ 아이콘 공간 확보를 위해 오른쪽 패딩 넉넉하게 추가 (12px + 46px = 58px 정도 필요) */
     font-size: 0.95em;
-    background-color: #fff;
     cursor: pointer;
+    outline: none;
+    width: auto;
+    min-width: 120px;
+}
+.filter-select:hover {
+    border-color: #6e8efb;
 }
 
 /* 버튼 */
@@ -394,7 +409,6 @@
     margin: 0;
 }
 
-
 /* 모바일 환경에서의 마이페이지 컨텐츠 영역 패딩 조정 */
 @media (max-width: 639px) {
     .mypage-content-area {
@@ -407,14 +421,22 @@
     .info-card {
         padding: 15px;
     }
+    .tab-menu { /* 모바일에서 탭 메뉴 좌측 정렬 */
+        justify-content: flex-start;
+    }
 }
 
 /* PC 화면 (min-width: 640px)에서 탭 메뉴 중앙 정렬 등 조정 */
 @media (min-width: 640px) {
     .tab-menu-wrapper {
-        padding: 0 20px; /* PC에서 좌우 패딩 늘림 */
+        padding: 0 20px;
     }
     .tab-menu {
         justify-content: center; /* PC에서 탭 메뉴 중앙 정렬 */
+    }
+    .mypage-content-area {
+        max-width: 800px; /* PC에서 컨텐츠 영역의 최대 너비 */
+        margin: 0 auto; /* PC에서 중앙 정렬 */
+        padding: 20px;
     }
 }
