@@ -717,6 +717,24 @@ function handleMicButtonClick() {
     }
 }
 
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  Object.assign(toast.style, {
+    position: 'fixed',
+    bottom: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: 'rgba(0,0,0,0.75)',
+    color: '#fff',
+    padding: '12px 18px',
+    borderRadius: '8px',
+    zIndex: '9999',
+    fontSize: '14px',
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
 
 // --- 7. 페이지 로드 후 초기화 및 이벤트 바인딩 (최종 수정본) ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -737,71 +755,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (appContainer) appContainer.classList.add('talk-page');
 
 
-    plusButton.addEventListener('click', () => {
-        imageUpload.click();
-    });
+plusButton.replaceWith(plusButton.cloneNode(true)); // 기존 이벤트 제거
+const newPlus = document.getElementById('plus-button');
+newPlus.addEventListener('click', e => {
+  e.preventDefault();
+  showToast('🚧 해당 기능은 곧 제공될 예정입니다!');
+});
 
-    imageUpload.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
 
-        appendMessage("이미지 분석 중입니다...", 'assistant_feedback');
+imageUpload.replaceWith(imageUpload.cloneNode(true));
+const newUpload = document.getElementById('image-upload');
+newUpload.addEventListener('change', e => {
+  e.preventDefault();
+  showToast('🚧 이미지 분석 기능은 곧 추가됩니다.');
+});
 
-        try {
-            const imageUrl = await uploadImageAndGetUrl(file);
-            console.log("Uploaded image URL:", imageUrl);
-
-            const analysisResultText = await getImageAnalysisFromGptVision(imageUrl);
-            console.log("GPT Vision Analysis Result:", analysisResultText);
-
-            const thinkingBubble = chatWindow.querySelector('.bubble.assistant_feedback:last-child');
-            if (thinkingBubble && thinkingBubble.textContent === "이미지 분석 중입니다...") {
-                thinkingBubble.textContent = `🖼️ 이미지 분석이 완료되었어요. 내용을 바탕으로 대화를 시작할게요: ${analysisResultText}`;
-                thinkingBubble.classList.remove('assistant_feedback');
-                thinkingBubble.classList.add('assistant');
-            } else {
-                appendMessage(`🖼️ 이미지 분석이 완료되었어요. 내용을 바탕으로 대화를 시작할게요: ${analysisResultText}`, 'assistant');
-            }
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
-            sendMessage(analysisResultText, 'image_analysis', true);
-
-        } catch (error) {
-            console.error("이미지 업로드 또는 분석 중 오류 발생:", error);
-            const thinkingBubble = chatWindow.querySelector('.bubble.assistant_feedback:last-child');
-            if (thinkingBubble && thinkingBubble.textContent === "이미지 분석 중입니다...") {
-                thinkingBubble.textContent = "이미지 분석에 실패했어요. 다시 시도해 주세요. 😢";
-            } else {
-                appendMessage("이미지 분석에 실패했어요. 다시 시도해 주세요. 😢", 'assistant_feedback');
-            }
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        }
-    });
-
-    function saveMessageToFirestore(role, content, type = "text", isCharCountExempt = false) {
-        const db = firebase.firestore();
-        const sessionId = localStorage.getItem("sessionId") || currentFirestoreSessionId || "default-session";
-        const userId = localStorage.getItem("lozee_userId") || "anonymous";
-
-        db.collection("conversationSessions")
-            .doc(sessionId)
-            .collection("messages")
-            .add({
-                userId,
-                role,
-                content,
-                type,
-                isCharCountExempt,
-                timestamp: new Date()
-            })
-            .then(() => {
-                console.log("✅ 메시지 저장됨:", role, content);
-            })
-            .catch((error) => {
-                console.error("❌ Firestore 저장 실패:", error);
-            });
-    }
-
+    
     /// ✅ 시작 버튼에 클릭 이벤트 할당
     if (startButton) {
         startButton.onclick = async () => {
