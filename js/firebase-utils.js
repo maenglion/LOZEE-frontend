@@ -434,25 +434,19 @@ export async function getRecentJournals(userId, limitCount = 10) { // 기본값 
  * @param {number} limitCount - 가져올 알림의 최대 개수
  * @returns {Promise<object[]>} 알림 데이터 배열
  */
-export async function getEmergencyAlerts(parentId, limitCount = 5) { // 기본값 5로 설정
-    if (!parentId) return [];
-    try {
-        const q = query(
-            collection(db, "notifications"),
-            where("parentId", "==", parentId),
-            orderBy("createdAt", "desc"),
-            limit(limitCount)
-        );
-        const querySnapshot = await getDocs(q);
-        const alerts = [];
-        querySnapshot.forEach(docSnap => {
-            alerts.push({ id: docSnap.id, ...docSnap.data() });
-        });
-        return alerts;
-    } catch (error) {
-        console.error("getEmergencyAlerts: 긴급 알림 로드 중 오류:", error);
-        return [];
-    }
+export async function getEmergencyAlerts(userId) {
+  try {
+    const q = query(
+      collection(db, 'notifications'),
+      where('parentId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("getEmergencyAlerts: 긴급 알림 로드 중 오류:", error);
+    return []; // ❗ 에러가 나도 빈 배열 반환
+  }
 }
 
 // ** 마이페이지에서 프로필 사진 URL 업데이트 **
