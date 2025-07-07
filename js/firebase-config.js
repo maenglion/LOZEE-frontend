@@ -16,10 +16,7 @@ const firebaseConfig = {
 };
 
 // Firebase 앱 초기화
-const app = initializeApp(firebaseConfig);
-export { app, db, auth, storage };
-
-// Firestore, Auth, Storage 인스턴스 내보내기
+export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const storage = getStorage(app); // ⭐ Storage 서비스 초기화 및 export
+export const storage = getStorage(app);
