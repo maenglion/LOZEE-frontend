@@ -194,32 +194,26 @@ function getTopicsForCurrentUser() {
 
     let topics = {};
 
-    if (currentUserType === 'directUser' || isDirectUser) {
+    // 🔹 directUser 토픽 (나이에 맞는 것)
+    if (isDirectUser) {
         const directUserTopicsArray = counselingTopicsByAge.directUser?.[userAgeGroupKey];
-        if (directUserTopicsArray && Array.isArray(directUserTopicsArray)) {
+        if (Array.isArray(directUserTopicsArray)) {
             directUserTopicsArray.forEach(mainTopic => {
                 topics[mainTopic.name] = mainTopic;
             });
-        } else {
-             console.warn(`directUser의 ${userAgeGroupKey} 주제를 찾을 수 없습니다. 기본값 '16-29세' 사용.`);
-             const defaultTopics = counselingTopicsByAge.directUser?.['16-29세'];
-             if(defaultTopics && Array.isArray(defaultTopics)) {
-                 defaultTopics.forEach(mainTopic => {
-                     topics[mainTopic.name] = mainTopic;
-                 });
-             }
         }
     }
 
+    // 🔹 caregiver 공통 토픽
     if (currentUserType === 'caregiver') {
         const caregiverTopicsArray = counselingTopicsByAge.caregiver?.common;
-        if (caregiverTopicsArray && Array.isArray(caregiverTopicsArray)) {
+        if (Array.isArray(caregiverTopicsArray)) {
             caregiverTopicsArray.forEach(mainTopic => {
                 topics[mainTopic.name] = mainTopic;
             });
         }
     }
-    
+
     return Object.values(topics);
 }
 
