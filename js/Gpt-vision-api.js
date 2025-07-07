@@ -1,39 +1,37 @@
 // js/gpt-vision-api.js
 
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+import { app } from './firebase-config.js'; // Firebase 앱 초기화
+
 /**
- * 이미지를 업로드하고, Cloudflare나 이미지 저장 서버로부터 URL을 반환하는 함수
- * (이 버전은 Firebase Storage를 사용하는 방식이 아님)
+ * Firebase Storage에 이미지를 업로드하고 다운로드 URL을 반환하는 함수
+ * @param {File} file - 사용자가 선택한 이미지 파일
+ * @returns {Promise<string>} - 업로드된 이미지의 URL
  */
 export async function uploadImageAndGetUrl(file) {
-    const formData = new FormData();
-    formData.append('image', file);
+    const storage = getStorage(app);
+    const fileName = `vision-uploads/${Date.now()}-${file.name}`;
+    const storageRef = ref(storage, fileName);
 
-    // TODO: 실제 이미지 업로드 서버로 바꿔야 함 (현재는 임시 사용)
-    const uploadEndpoint = 'https://api.imgbb.com/1/upload';
-    const apiKey = 'YOUR_IMGBB_API_KEY'; // 🔐 반드시 환경변수나 서버에 숨겨야 함
-
-    const res = await fetch(`${uploadEndpoint}?key=${apiKey}`, {
-        method: 'POST',
-        body: formData
-    });
-
-    if (!res.ok) {
-        throw new Error("이미지 업로드 실패");
+    try {
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        return url;
+    } catch (error) {
+        console.error('🔥 이미지 업로드 실패:', error);
+        throw new Error('이미지를 업로드하지 못했습니다.');
     }
-
-    const data = await res.json();
-    return data.data.url;
 }
 
 /**
- * GPT에게 이미지 설명을 요청하는 함수 (Vision 모델 호출)
- * @param {string} imageUrl - 설명을 요청할 이미지의 URL
+ * GPT Vision 프록시 API를 호출하여 이미지 분석 결과를 받는 함수
+ * @param {string} imageUrl - Firebase Storage에서 받은 이미지 URL
  * @returns {string} GPT가 생성한 설명 텍스트
  */
 export async function getImageAnalysisFromGptVision(imageUrl) {
     const prompt = `이 이미지에 대해 설명해줘: ${imageUrl}`;
 
-    const response = await fetch('https://lozee-backend-838397276113.asia-northeast3.run.app/api/gpt-vision', {
+    const response = await fetch('/api/gpt-vision', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
