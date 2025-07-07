@@ -18,8 +18,6 @@ import {
 import { counselingTopicsByAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
-import { uploadImageAndGetUrl, getImageAnalysisFromGptVision } from './gpt-vision-api.js';
-
 // ⭐ Firebase Auth 모듈도 import하여 currentUser 객체 접근
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
 const firebaseAuth = getAuth(); // Firebase Auth 인스턴스
@@ -53,6 +51,30 @@ const sendButton = document.getElementById('send-button');
 const meterContainer = document.getElementById('meter-container');
 const meterLevel = document.getElementById('volume-level');
 const sessionHeaderTextEl = document.getElementById('session-header');
+
+
+// ✅ 1. 로컬스토리지에서 사용자 정보 확인
+const userRole = localStorage.getItem("userRole");
+const userAge = parseInt(localStorage.getItem("userAge"), 10);
+
+console.log("📟 사용자 역할:", userRole);
+console.log("📟 사용자 나이:", userAge);
+
+// ✅ 2. 역할+나이로 주제 추출
+const topics = getTopicsByRoleAndAge(userRole, userAge);
+console.log("🌟 렌더링 대상 통신", topics);
+
+// ✅ 3. 주제 없을 경우 fallback 안내
+if (!topics || topics.length === 0) {
+  console.warn("🚫 주제 없음: 역할/나이 조건에 맞는 주제가 없습니다.");
+  const container = document.getElementById("topics-container");
+  if (container) {
+    container.innerHTML = `<p style="color: gray; text-align: center; margin-top: 2rem;">현재 선택 가능한 주제가 없습니다.<br>마이페이지에서 역할과 나이를 확인해 주세요.</p>`;
+  }
+} else {
+  renderTopics(topics);
+}
+
 
 
 /**
@@ -182,6 +204,30 @@ function displayOptionsInChat(optionsArray, onSelectCallback) {
     });
     chatWindow.appendChild(optionsContainer);
     chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+
+function renderTopics(topicsToUse) {
+  const container = document.getElementById('topics-container');
+  if (!container) return;
+
+  container.innerHTML = ''; // 기존 초기화
+  topicsToUse.forEach(category => {
+    const title = document.createElement('h3');
+    title.textContent = category.name;
+    container.appendChild(title);
+
+    category.subTopics.forEach(sub => {
+      const button = document.createElement('button');
+      button.classList.add('topic-button');
+      button.textContent = sub.displayText;
+      button.onclick = () => {
+        // 이 부분에 GPT 호출 로직 넣어도 됨
+        console.log("선택된 프롬프트:", sub.systemPrompt);
+      };
+      container.appendChild(button);
+    });
+  });
 }
 
 function getTopicsForCurrentUser() {
@@ -706,6 +752,7 @@ function handleMicButtonClick() {
     } else {
         isTtsMode = true;
         updateActionButtonIcon();
+        
         appendMessage("음성 모드가 다시 켜졌어요. 이제 로지의 답변을 음성으로 들을 수 있습니다.", "assistant_feedback");
         micButtonCurrentlyProcessing = false;
     }
