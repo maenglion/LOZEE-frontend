@@ -504,4 +504,37 @@ document.addEventListener('DOMContentLoaded', () => {
             // 모든 DOM 요소 초기화 및 숨기기 로직 추가
         }
     });
+
+
+  // 🔻 여기에 toast 처리 코드 추가
+  const plusBtn = document.getElementById('plus-button');
+  if (plusBtn) {
+    plusBtn.addEventListener('click', () => {
+      showToast('🚧 해당 기능은 곧 제공될 예정입니다!');
+    });
+  }
+});
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.background = 'rgba(0, 0, 0, 0.75)';
+  toast.style.color = 'white';
+  toast.style.padding = '12px 18px';
+  toast.style.borderRadius = '10px';
+  toast.style.zIndex = '9999';
+  toast.style.fontSize = '14px';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+document.querySelectorAll('[data-disabled-soon]').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    showToast('🚧 곧 구현될 예정입니다. 조금만 기다려주세요!');
+  });
 });
