@@ -15,7 +15,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start; ;
-    min-height: 100vh;
+    min-height: 100%;
     margin: 0;
     padding: 0;
     overflow: auto; /* ⭐ body에 overflow: hidden을 강제하여 전체 페이지 스크롤 제거 */
@@ -25,13 +25,13 @@ body {
     width: 100%;
     max-width: 640px; /* 모바일 기준 너비 (PC에서의 최소/기본값) */
     height: auto;
-    min-height: 100vh;
+    min-height: 90vh;
     background-color: #ffffff; /* 흰색 배경 */
     box-shadow: 0 0 15px rgba(0,0,0,0.1); /* 그림자 */
     border-radius: 20px; /* 둥근 모서리 */
     display: flex;
     flex-direction: column; /* 세로 배열 */
-    overflow-y: auto; /* ⭐ app-container도 스크롤바를 가지지 않도록 강제 */
+    overflow-y: hidden; /* ⭐ app-container도 스크롤바를 가지지 않도록 강제 */
     margin: 0 auto; /* 중앙 정렬 */
 }
 
