@@ -16,6 +16,7 @@ import {
     // getIdToken // ⭐ 여기서 직접 getIdToken 가져오기
 } from './firebase-utils.js';
 import { counselingTopicsByAge } from './counseling_topics.js';
+import { getTopicsByRoleAndAge } from './counseling_topics.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
 // ⭐ Firebase Auth 모듈도 import하여 currentUser 객체 접근
@@ -54,14 +55,35 @@ const sessionHeaderTextEl = document.getElementById('session-header');
 
 
 // ✅ 1. 로컬스토리지에서 사용자 정보 확인
-const userRole = localStorage.getItem("userRole");
-const userAge = parseInt(localStorage.getItem("userAge"), 10);
+const userType = localStorage.getItem("userType");
+const userAge = parseInt(localStorage.getItem("age"), 10);
 
-console.log("📟 사용자 역할:", userRole);
+console.log("📟 사용자 역할:", userType);
 console.log("📟 사용자 나이:", userAge);
 
 // ✅ 2. 역할+나이로 주제 추출
-const topics = getTopicsByRoleAndAge(userRole, userAge);
+// ✅ 사용자 역할과 나이를 기반으로 주제 필터링하는 함수 추가
+export function getTopicsByRolesAndAge(userRoles, age) {
+  const matchedTopics = [];
+
+  for (const ageGroupKey in counselingTopicsByAge) {
+    const group = counselingTopicsByAge[ageGroupKey];
+    const minAge = group.minAge || 0;
+    const maxAge = group.maxAge || 150;
+
+    if (age >= minAge && age <= maxAge) {
+      for (const role of userRoles) {
+        const topics = group.topics[role];
+        if (topics && Array.isArray(topics)) {
+          matchedTopics.push(...topics);
+        }
+      }
+    }
+  }
+
+  return matchedTopics;
+}
+
 console.log("🌟 렌더링 대상 통신", topics);
 
 // ✅ 3. 주제 없을 경우 fallback 안내
