@@ -1,8 +1,10 @@
 // mypage.js
 
-import { auth, db } from './firebase-config.js'; // auth, db 유지
+import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-// import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js'; // 이 파일에서 직접 doc, getDoc 사용하지 않으므로 제거 가능
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js'; // Firestore SDK 필요
+import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js'; // Storage SDK 필요
+import { storage } from './firebase-config.js'; // storage 객체 가져오기
 import {
     getUserProfileData,
     getChildProfileData,
@@ -11,7 +13,7 @@ import {
     getEmergencyAlerts,
     updateProfilePhotoURL,
     // updateUserInfo // 필요시 주석 해제하여 사용
-} from './firebase-utils.js'; // getIdToken, waitForIdToken 제거
+} from './firebase-utils.js';
 
 // DOM 요소들은 그대로 유지
 const pageTitleEl = document.querySelector('title');
@@ -82,10 +84,7 @@ function calculateDaysSinceJoin(joinDate) {
     return diffDays;
 }
 
-// 이미지 압축 및 업로드 함수 (Firebase Storage 필요, mypage.js에 직접 정의)
-import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js';
-import { storage } from './firebase-config.js'; // storage 객체 가져오기
-
+// 이미지 압축 및 업로드 함수
 async function compressAndUploadImage(file, userId) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -93,7 +92,7 @@ async function compressAndUploadImage(file, userId) {
             const img = new Image();
             img.src = event.target.result;
             img.onload = () => {
-                const CANVAS_SIZE = 120; // 프로필 사진 표시 영역에 맞춤
+                const CANVAS_SIZE = 120;
                 let width = img.width;
                 let height = img.height;
 
@@ -131,7 +130,6 @@ async function compressAndUploadImage(file, userId) {
 
 // --- 데이터 로드 및 렌더링 ---
 async function loadPage() {
-    // onAuthStateChanged에서 currentUser가 설정된 후 loadPage가 호출되므로, userId는 여기서 가져와도 됨
     const loggedInUserId = currentUser.uid;
 
     const userData = await getUserProfileData(loggedInUserId);
@@ -150,16 +148,14 @@ async function loadPage() {
     const caregiverInfo = userData.caregiverInfo || {};
     const joinDate = userData.joinDate;
 
-    // localStorage에 isDirectUser 플래그 저장 (talk.js에서 사용)
     localStorage.setItem('lozee_isDirectUser', (userType === 'directUser' || (userType === 'caregiver' && diagnoses.length > 0)).toString());
+
 
     if (pageTitleEl) pageTitleEl.textContent = `${nickname}의 마이페이지`;
     
-    // ⭐ mypage.html의 user-name h2 옆 수정 버튼에 대한 처리
     // user-name h2의 innerHTML을 직접 바꾸지 않고, 텍스트만 업데이트
-    if (document.getElementById('user-name')) { // mypage.html의 h2 id="user-name"
+    if (document.getElementById('user-name')) {
         document.getElementById('user-name').textContent = '나의 정보';
-        // '수정' 버튼은 HTML에 직접 추가했으므로 JavaScript에서 다시 추가할 필요 없음
     }
 
     if (userNicknameDisplayEl) userNicknameDisplayEl.textContent = nickname;
@@ -167,7 +163,7 @@ async function loadPage() {
     if (userFullAgeEl) userFullAgeEl.textContent = userData.age !== null ? `만 ${userData.age}세` : '정보 없음';
     if (lastLoginDateEl) lastLoginDateEl.textContent = userData.lastLogin?.toDate().toLocaleString('ko-KR') || '기록 없음';
 
-    // ⭐ connection-days 업데이트 ⭐
+    // connection-days 업데이트
     if (daysSinceJoinEl && currentUser && currentUser.metadata && currentUser.metadata.creationTime) {
         const creationDate = new Date(currentUser.metadata.creationTime);
         const today = new Date();
@@ -194,7 +190,6 @@ async function loadPage() {
     if (userTypeInfoCardEl && userTypeDisplayEl) {
         userTypeInfoCardEl.style.display = 'block';
         userTypeDisplayEl.textContent = userType === 'directUser' ? '당사자' : '보호자';
-        // '수정' 버튼은 HTML에 직접 추가했으므로 JS에서 다시 추가할 필요 없음
     }
 
     if (directUserDiagnosisCardEl && userDiagnosesListEl) {
@@ -219,29 +214,27 @@ async function loadPage() {
             childDiagnosesListEl.innerHTML = caregiverInfo.childDiagnoses?.map(d => `<li>${getNeurodiversityText(d)}</li>`).join('') || '<li>선택된 특성 없음</li>';
         }
         
-        if (emergencyAlertsSectionEl) emergencyAlertsSectionEl.style.display = 'flex'; // 보호자면 위험 알림 섹션 표시
-        await displayEmergencyAlerts(loggedInUserId); // 보호자일 때 위험 알림 로드
+        if (emergencyAlertsSectionEl) emergencyAlertsSectionEl.style.display = 'flex';
+        await displayEmergencyAlerts(loggedInUserId);
     } else {
         if (caregiverPersonalNDCardEl) caregiverPersonalNDCardEl.style.display = 'none';
         if (childInfoCardEl) childInfoCardEl.style.display = 'none';
-        if (emergencyAlertsSectionEl) emergencyAlertsSectionEl.style.display = 'none'; // 보호자 아니면 위험 알림 섹션 숨김
+        if (emergencyAlertsSectionEl) emergencyAlertsSectionEl.style.display = 'none';
     }
 
     await renderAppointmentsData(loggedInUserId, 'scheduled');
     await displayRecentJournals(loggedInUserId);
 
-
     const initialTab = localStorage.getItem('mypage_active_tab') || 'info';
     activateTab(initialTab);
 
-    // 모든 수정 버튼에 이벤트 리스너 다시 연결 (loadPage 후에 DOM에 버튼이 있어야 함)
     attachEditButtonListeners();
 }
 
 // ⭐ 모든 .info-card h2 옆 수정 버튼에 대한 클릭 이벤트 리스너 연결 함수 ⭐
 function attachEditButtonListeners() {
     document.querySelectorAll('.info-card h2 .edit-button').forEach(button => {
-        button.removeEventListener('click', handleEditButtonClick); // 중복 방지
+        button.removeEventListener('click', handleEditButtonClick);
         button.addEventListener('click', handleEditButtonClick);
     });
 }
@@ -250,17 +243,16 @@ function handleEditButtonClick(e) {
     const editTarget = e.currentTarget.dataset.editTarget;
     if (editTarget) {
         alert(`"${editTarget}" 정보 수정 팝업 (미구현)`);
-        // 여기에 실제 정보 수정 팝업을 띄우는 로직 구현
     }
 }
 
 
 // ⭐ 탭 메뉴 활성화 함수 ⭐
 function activateTab(tabId) {
-    document.querySelectorAll('.tab-item').forEach(item => { // .tab-button -> .tab-item
+    document.querySelectorAll('.tab-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelectorAll('.tab-content').forEach(content => {
+    document.querySelectorAll('.content-section').forEach(content => { // ⭐ .tab-content -> .content-section
         content.style.display = 'none';
     });
 
@@ -269,7 +261,7 @@ function activateTab(tabId) {
 
     if (activeTabItem && activeSection) {
         activeTabItem.classList.add('active');
-        activeSection.style.display = 'flex'; // 섹션은 flex 컨테이너
+        activeSection.style.display = 'flex';
         localStorage.setItem('mypage_active_tab', tabId);
     }
 }
@@ -448,8 +440,11 @@ if (editProfilePhotoBtnEl && profileImageUploadEl) {
 
             const photoURL = await compressAndUploadImage(file, loggedInUserId);
             
-            await updateProfilePhotoURL(loggedInUserId, photoURL);
+            await db.collection('users').doc(loggedInUserId).update({ // updateProfilePhotoURL 대신 직접 Firestore 접근
+                profilePhotoURL: photoURL
+            });
 
+            // UI 업데이트
             if (userProfileImageEl) userProfileImageEl.src = photoURL;
             if (userProfileImageEl) userProfileImageEl.style.display = 'block';
             if (userInitialTextEl) userInitialTextEl.style.display = 'none';
@@ -472,7 +467,7 @@ if (editProfilePhotoBtnEl && profileImageUploadEl) {
 if (appointmentFilterSelectEl) {
     appointmentFilterSelectEl.addEventListener('change', (e) => {
         const filterType = e.target.value;
-        renderAppointmentsData(currentUser.uid, filterType); // currentUser.uid 사용
+        renderAppointmentsData(currentUser.uid, filterType);
     });
 }
 

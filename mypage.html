@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마이페이지 - LOZEE</title>
-    <link rel="stylesheet" href="gnb.css"> <link rel="stylesheet" href="css/base.css"> <link rel="stylesheet" href="css/mypage.css"> <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@300;400;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title id="pageTitle">마이페이지</title>
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="gnb.css">
+    <link rel="stylesheet" href="css/mypage.css">
 </head>
 <body>
     <div class="app-container">
         <nav id="gnb">
-            <button id="menu-toggle"></button> <div id="gnb-title">LOZEE</div>
-            <div class="gnb-right-buttons">
-                </div>
+            <button id="menu-toggle">☰</button>
+            <div id="gnb-title">LOZEE</div>
+            <div style="width: 44px; visibility: hidden;"></div>
             <div id="dropdown-menu">
                 <a href="mypage.html">🎨 내 정보 보기</a>
                 <a href="index.html">✨ 새로운 이야기 시작!</a>
@@ -31,8 +33,7 @@
         </div>
 
         <main class="mypage-content-area">
-            <section id="info-section" class="content-section active">
-                <h1 class="hidden">내 정보</h1>
+            <section id="info-section" class="content-section active"> <h1 class="hidden">내 정보</h1>
                 <div class="profile-photo-section">
                     <div id="userPhotoPlaceholder" class="profile-photo-placeholder">
                         <img id="userProfileImage" src="" alt="프로필 사진" style="display: none;">
@@ -41,7 +42,8 @@
                     <input type="file" id="profileImageUpload" accept="image/*" style="display: none;">
                     <button id="editProfilePhotoBtn" class="edit-button">사진 변경</button>
                 </div>
-                <p class="profile-message">나와 세상을 연결한지 <span id="daysSinceJoin" class="main-color-text">...</span>일 째</p> 
+                <p class="profile-message">나와 세상을 연결한지 <span id="daysSinceJoin" class="main-color-text">...</span>일 째</p>
+
                 <div class="info-card">
                     <h2>나의 정보 <button class="edit-button" data-edit-target="userInfo"></button></h2>
                     <div class="info-item"><span class="label">닉네임:</span> <span id="userNicknameDisplay" class="value"></span></div>
@@ -73,33 +75,21 @@
                 </div>
             </section>
 
-            <section id="appointments-section" class="content-section" style="display: none;">
-                <h1 class="hidden">로지와의 약속</h1>
+            <section id="appointments-section" class="content-section" style="display: none;"> <h1 class="hidden">로지와의 약속</h1>
                 <div class="filter-controls info-card">
                     <h2>필터</h2>
                     <select id="appointmentFilter" class="filter-select">
                         <option value="scheduled">일정순</option>
-                        <option value="importance">중요도순 (회차 많이 잡힌 순)</option>
+                        <option value="importance">중요도순</option>
                     </select>
                 </div>
                 
                 <div id="appointmentsListContainer">
-                    <div class="info-card appointment-training-card">
-                        <h2>스몰 토크</h2>
-                        <p class="detail-item"><span class="label">예정일</span> <span class="value">2025.07.01. 오후 03:15</span></p>
-                        <p class="detail-item"><span class="label">진행률</span> <span class="value">3 / 20</span></p>
-                        <div class="result-box">
-                            <span class="label">성과</span>
-                            <p class="result-text">상대방에게 너무 많은 정보를 한번에 쏟아내게 되면, 상대는 대화의 흐름을 파악하기 어려워. 우리 조금 더 연습해보자.</p>
-                        </div>
-                        <button class="action-button full-width view-details-button" data-type="small-talk">회차별 성과 상세 보기</button>
                     </div>
-                </div>
                 <p id="noAppointmentsMessage" class="empty-state" style="display: none;">예약된 훈련이 없습니다.</p>
             </section>
 
-            <section id="journals-section" class="content-section" style="display: none;">
-                <h1 class="hidden">최근 이야기</h1>
+            <section id="journals-section" class="content-section" style="display: none;"> <h1 class="hidden">최근 이야기</h1>
                 <div class="info-card recent-journals-card">
                     <h2>💬 최근 이야기</h2>
                     <div id="recentJournalCardList"></div>
@@ -107,8 +97,7 @@
                 </div>
             </section>
 
-            <section id="alerts-section" class="content-section" style="display: none;">
-                <h1 class="hidden">위험 알림</h1>
+            <section id="alerts-section" class="content-section" style="display: none;"> <h1 class="hidden">위험 알림</h1>
                 <div class="info-card emergency-alerts-card">
                     <h2>🚨 확인이 필요한 이야기</h2>
                     <ul id="emergencyAlertsList"></ul>
@@ -118,9 +107,7 @@
         </main>
     </div>
 
-    <script src="js/firebase-config.js" type="module"></script>
-    <script src="js/firebase-utils.js" type="module"></script>
-    <script src="js/mypage.js" type="module"></script>
-    <script src="js/gnb.js" type="module"></script>
+    <script src="./js/gnb.js" defer></script>
+    <script type="module" src="./js/mypage.js"></script>
 </body>
 </html>
