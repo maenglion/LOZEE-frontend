@@ -22,25 +22,26 @@
 /* 탭 메뉴 Wrapper (스크롤 가능하도록) */
 .tab-menu-wrapper {
     width: 100%;
-    background-color: #ffffff; /* GNB 배경색과 유사하게 또는 흰색으로 */
+    max-width: 900px;         /* ✅ Talk처럼 고정폭 설정 */
+    margin: 0 auto;           /* ✅ 중앙 정렬 */
+    background-color: #ffffff;
     box-sizing: border-box;
-    padding: 0 10px; /* 탭 메뉴 자체의 좌우 패딩 */
+    padding: 0 10px;
     border-bottom: 1px solid #e0e0e0;
     flex-shrink: 0;
-    overflow-x: auto; /* ⭐ 가로 스크롤 가능하도록 (모바일) */
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    white-space: nowrap; /* 탭 아이템들이 한 줄에 표시되도록 */
+    white-space: nowrap;
 }
 
 /* 탭 메뉴 실제 컨테이너 */
 .tab-menu {
     display: flex;
-    justify-content: flex-start; /* 좌측 정렬 */
+    justify-content: center;     /* ✅ 중앙 정렬 */
     align-items: center;
-    gap: 25px; /* 탭 아이템 간 간격 */
-    min-width: fit-content; /* 내용이 넘칠 때 스크롤 가능하도록 */
+    gap: 25px;
+    min-width: fit-content;
 }
-
 /* 탭 아이템 */
 .tab-item {
   display: inline-flex;

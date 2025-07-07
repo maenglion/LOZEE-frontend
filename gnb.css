@@ -26,6 +26,15 @@
     font-size: 1.8em; /* ⭐ 65px 높이에 맞춰 폰트 크기 조정 */
 }
 
+/* ✅ 고정폭 중앙 컨테이너 추가 */
+#gnb .gnb-inner-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 900px;
+}
+
 /* ⭐ 햄버거 버튼 스타일 (점 세 개 이미지 아이콘 사용) */
 #menu-toggle {
     width: 48px; /* ✅ 버튼의 클릭 영역 크기 유지 (이전과 동일) */
@@ -65,6 +74,18 @@
     align-items: center;
     gap: 10px; /* 버튼 사이 간격 */
 }
+
+@media (max-width: 600px) {
+  #gnb-title {
+    font-size: 1.3em;
+  }
+  #tts-toggle-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1em;
+  }
+}
+
 
 #gnb #tts-toggle-btn {
     width: 38px; /* 버튼 크기 유지 */
