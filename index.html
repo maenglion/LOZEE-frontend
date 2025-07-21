@@ -246,7 +246,7 @@
     const loginBtn = document.getElementById('loginBtn');
     const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
     const linkToSignUpFromLogin = document.getElementById('linkToSignUpFromLogin');
-    const linkToLoginFromSignUp = document = document.getElementById('linkToLoginFromSignUp');
+    const linkToLoginFromSignUp = document.getElementById('linkToLoginFromSignUp');
     const resetEmailInput = document.getElementById('resetEmail');
     const resetErrorEl = document.getElementById('resetError');
     const resetSuccessEl = document.getElementById('resetSuccess');
@@ -504,7 +504,7 @@ function setLocalStorageAndRedirect(profileData, userAgeForTalkContext, childDat
         else if (user) { if(verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = email; showStep('emailVerification'); }
     };
 
-   if(checkVerificationBtn) checkVerificationBtn.onclick = async () => {
+     if(checkVerificationBtn) checkVerificationBtn.onclick = async () => {
         const currentUser = firebaseAuth.currentUser;
         if (!currentUser) { if(verificationErrorEl) verificationErrorEl.textContent = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요."; showStep('login'); return; }
         checkVerificationBtn.disabled = true; checkVerificationBtn.textContent = "확인 중...";
