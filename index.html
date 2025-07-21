@@ -286,7 +286,7 @@
 
             // ✅ 메시지 변경: 사용자가 등록되어 있지 않아도 이 메시지가 뜰 수 있음을 암시
             if(resetSuccessEl) {
-                resetSuccessEl.textContent = "비밀번호 재설정 이메일을 보냈습니다. 이메일함을 확인해주세요. (등록된 계정이 없는 경우 메일이 발송되지 않을 수 있습니다.)";
+                resetSuccessEl.textContent = "비밀번호 재설정 이메일을 보냈습니다. 등록된 계정이 없는 경우 메일이 발송되지 않을 수 있습니다.";
             }
             console.log("비밀번호 재설정 이메일 전송 요청 완료 (Firebase는 사용자 존재 여부 숨김)");
         } catch (error) {
@@ -321,29 +321,69 @@
                 else if (user) { if(verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = email; showStep('emailVerification'); }
             };
 
-            if(checkVerificationBtn) checkVerificationBtn.onclick = async () => {
-                const currentUser = firebaseAuth.currentUser;
-                if (!currentUser) { if(verificationErrorEl) verificationErrorEl.textContent = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요."; showStep('login'); return; }
-                checkVerificationBtn.disabled = true; checkVerificationBtn.textContent = "확인 중...";
-                await currentUser.reload();
-                checkVerificationBtn.disabled = false; checkVerificationBtn.textContent = "이메일 인증 완료";
-                if (currentUser.emailVerified) {
-                    console.log("이메일 인증 완료!");
-                    currentUserId = currentUser.uid; localStorage.setItem('lozee_userId', currentUserId);
-                    if(verificationErrorEl) verificationErrorEl.textContent = '';
-                    if (selectedUserType === 'caregiver') {
-                        if(diagnosisTitleEl) diagnosisTitleEl.textContent = "아이(또는 가족)의 어떤 점에 대해 이야기 나누고 싶으세요?";
-                        if(diagnosisInfoEl) diagnosisInfoEl.textContent = "해당하는 어려움을 모두 선택해주세요. (중복 선택 가능)";
-                        showStep('caregiverNd'); 
-                    } else {
-                        if(diagnosisTitleEl) diagnosisTitleEl.textContent = "현재 어떤 어려움을 느끼고 있나요?";
-                        if(diagnosisInfoEl) diagnosisInfoEl.textContent = "해당하는 항목을 모두 선택해주세요. (중복 선택 가능)";
-                        showStep('diagnosisType');
-                    }
-                } else {
-                    if(verificationErrorEl) verificationErrorEl.textContent = "아직 이메일 인증이 완료되지 않았습니다. 메일함의 인증 링크를 클릭해주세요.";
-                }
+     if(checkVerificationBtn) checkVerificationBtn.onclick = async () => {
+        const currentUser = firebaseAuth.currentUser;
+        if (!currentUser) { if(verificationErrorEl) verificationErrorEl.textContent = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요."; showStep('login'); return; }
+        checkVerificationBtn.disabled = true; checkVerificationBtn.textContent = "확인 중...";
+        await currentUser.reload();
+        checkVerificationBtn.disabled = false; checkVerificationBtn.textContent = "이메일 인증 완료";
+        if (currentUser.emailVerified) {
+            console.log("이메일 인증 완료!");
+            currentUserId = currentUser.uid; localStorage.setItem('lozee_userId', currentUserId);
+            if(verificationErrorEl) verificationErrorEl.textContent = '';
+            
+            // ⭐⭐⭐ 이곳에서 최종 profileData를 구성하고 saveUserProfile을 호출합니다. ⭐⭐⭐
+            let profileData = {
+                name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName,
+                email: currentUser.email, // Firebase Auth의 이메일 사용
+                birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate,
+                age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge,
+                agreements: {
+                    terms: tempAgreedTerms,
+                    privacy: tempAgreedPrivacy,
+                    marketing: tempAgreedMarketing,
+                    agreedAt: serverTimestamp()
+                },
+                createdAt: serverTimestamp(),
+                lastUpdate: serverTimestamp(),
+                // ✅ userType을 배열로 변경:
+                userType: selectedUserType === 'caregiver' ? ['caregiver', 'directUser'] : [selectedUserType], // ⭐ 이 부분을 수정합니다.
+                role: selectedUserType === 'caregiver' ? 'parent' : 'self', // 기존 로직 유지
             };
+
+            // caregiverInfo 또는 diagnoses 추가 (기존 로직 유지)
+            let ageForTalkContext;
+            let childDataForRedirect = null; // setLocalStorageAndRedirect에 전달할 자녀 정보
+
+            if (selectedUserType === 'caregiver') {
+                profileData.caregiverInfo = {
+                    caregiverNeurodiversity: tempSelectedCaregiverNd, // 보호자 본인의 신경다양성 정보
+                    childName: tempChildName,
+                    childBirthDate: tempChildBirthDate,
+                    childAge: tempChildAge,
+                    childDiagnoses: tempSelectedDiagnoses // 자녀의 진단명
+                };
+                profileData.diagnoses = []; // caregiver일 때는 본인 diagnoses는 비워둡니다.
+                ageForTalkContext = tempChildAge; // 대화 컨텍스트 나이는 자녀 나이 사용
+                childDataForRedirect = profileData.caregiverInfo;
+            } else { // directUser
+                profileData.diagnoses = tempSelectedDiagnoses; // 본인의 진단명
+                ageForTalkContext = profileData.age; // 대화 컨텍스트 나이는 본인 나이 사용
+            }
+
+            const saveSuccess = await saveUserProfile(currentUserId, profileData); //
+
+            if (saveSuccess) {
+                // setLocalStorageAndRedirect에 프로필 데이터, 대화 컨텍스트 나이, 자녀 정보 전달
+                setLocalStorageAndRedirect(profileData, ageForTalkContext, childDataForRedirect); //
+            } else {
+                if(verificationErrorEl) verificationErrorEl.textContent = "프로필 저장에 실패했습니다. 다시 시도해주세요.";
+            }
+
+        } else {
+            if(verificationErrorEl) verificationErrorEl.textContent = "아직 이메일 인증이 완료되지 않았습니다. 메일함의 인증 링크를 클릭해주세요.";
+        }
+    };
             if(resendVerificationBtn) resendVerificationBtn.onclick = async () => { if (firebaseAuth.currentUser) { try { await sendEmailVerification(firebaseAuth.currentUser); alert("인증 메일을 다시 보냈습니다."); } catch (error) { alert("인증 메일 재발송에 실패했습니다: " + error.message); } } else { alert("사용자 정보를 찾을 수 없습니다. 로그인 단계로 이동합니다."); showStep('login'); } };
             
             caregiverNdOptionBtns.forEach(button => { button.onclick = () => { const ndType = button.dataset.nd; if (ndType === 'unsure_or_none') { if (button.classList.contains('selected')) { button.classList.remove('selected'); tempSelectedCaregiverNd = []; } else { caregiverNdOptionBtns.forEach(btn => btn.classList.remove('selected')); button.classList.add('selected'); tempSelectedCaregiverNd = [ndType]; } } else { document.querySelector('.caregiver-nd-btn[data-nd="unsure_or_none"]')?.classList.remove('selected'); tempSelectedCaregiverNd = tempSelectedCaregiverNd.filter(d => d !== 'unsure_or_none'); button.classList.toggle('selected'); if (tempSelectedCaregiverNd.includes(ndType)) { tempSelectedCaregiverNd = tempSelectedCaregiverNd.filter(d => d !== ndType); } else { tempSelectedCaregiverNd.push(ndType); } } if(caregiverNdError) caregiverNdError.textContent = ''; }; });
