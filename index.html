@@ -392,7 +392,55 @@
             if(submitDiagnosisBtn) submitDiagnosisBtn.onclick = () => { if (tempSelectedDiagnoses.length === 0) { if(diagnosisError) diagnosisError.textContent = "하나 이상 선택해주세요."; return; } if(diagnosisError) diagnosisError.textContent = ''; if (selectedUserType === 'caregiver') { populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 18, 70); } else { populateBirthSelects(birthSelfYear, birthSelfMonth, birthSelfDay, 3, 90); } showStep('nameBirthSelf'); };
             if(submitNameBirthSelfBtn) submitNameBirthSelfBtn.onclick = () => { const name = nameSelfInput.value.trim(); const y = birthSelfYear.value, m = birthSelfMonth.value, d = birthSelfDay.value; if (!name) { if(nameSelfError) nameSelfError.textContent = '이름(또는 별명)을 입력해주세요.'; return; } if(nameSelfError) nameSelfError.textContent = ''; if (!y || !m || !d) { if(birthSelfError) birthSelfError.textContent = '생년월일을 모두 선택해주세요.'; return; } if(birthSelfError) birthSelfError.textContent = ''; const age = calculateAge(y, m, d); if (age === null) { if(birthSelfError) birthSelfError.textContent = '유효한 생년월일을 입력해주세요.'; return; } const birthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; if (selectedUserType === 'caregiver') { tempCaregiverSelfName = name; tempCaregiverSelfBirthDate = birthDate; tempCaregiverSelfAge = age; if(nameChildInput) nameChildInput.value = ''; populateBirthSelects(birthChildYear, birthChildMonth, birthChildDay, 0, 18); showStep('nameBirthChild'); } else { tempDirectUserName = name; tempDirectUserBirthDate = birthDate; tempDirectUserAge = age; showStep('finalStart'); } };
             if(submitNameBirthChildBtn) submitNameBirthChildBtn.onclick = () => { const name = nameChildInput.value.trim(); const y = birthChildYear.value, m = birthChildMonth.value, d = birthChildDay.value; if (!name) { if(nameChildError) nameChildError.textContent = '아이(또는 가족)의 이름을 입력해주세요.'; return; } if(nameChildError) nameChildError.textContent = ''; if (!y || !m || !d) { if(birthChildError) birthChildError.textContent = '아이(또는 가족)의 생년월일을 모두 선택해주세요.'; return; } if(birthChildError) birthChildError.textContent = ''; const age = calculateAge(y,m,d); if (age === null) { if(birthChildError) birthChildError.textContent = '유효한 생년월일을 입력해주세요.'; return; } tempChildName = name; tempChildBirthDate = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; tempChildAge = age; showStep('finalStart'); };
-            if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => { if (!currentUserId) { alert("사용자 인증 정보가 없습니다."); return; } let profileData = { role: selectedUserType === 'caregiver' ? 'parent' : 'child', userType: selectedUserType, name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName, birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate, age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge, agreements: { terms: tempAgreedTerms, privacy: tempAgreedPrivacy, marketing: tempAgreedMarketing, agreedAt: serverTimestamp() } }; let userNameForTalk = profileData.name; let ageForTalkContext = profileData.age; if (selectedUserType === 'caregiver') { profileData.caregiverInfo = { caregiverNeurodiversity: tempSelectedCaregiverNd, childName: tempChildName, childBirthDate: tempChildBirthDate, childAge: tempChildAge, childDiagnoses: tempSelectedDiagnoses }; profileData.diagnoses = []; ageForTalkContext = tempChildAge; } else { profileData.diagnoses = tempSelectedDiagnoses; } const saveSuccess = await saveUserProfile(currentUserId, profileData); if (saveSuccess) { setLocalStorageAndRedirect(profileData, ageForTalkContext, profileData.caregiverInfo); } };
+            if(startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
+        if (!currentUserId) { alert("사용자 인증 정보가 없습니다."); return; }
+        
+        let profileData = {
+            // ✅ 필드값들이 임시 변수(temp...)에서 올바르게 가져오도록 수정
+            name: selectedUserType === 'caregiver' ? tempCaregiverSelfName : tempDirectUserName,
+            email: firebaseAuth.currentUser?.email, // 이메일은 currentUser에서 가져오는 것이 가장 정확
+            birthDate: selectedUserType === 'caregiver' ? tempCaregiverSelfBirthDate : tempDirectUserBirthDate,
+            age: selectedUserType === 'caregiver' ? tempCaregiverSelfAge : tempDirectUserAge,
+            agreements: {
+                terms: tempAgreedTerms,
+                privacy: tempAgreedPrivacy,
+                marketing: tempAgreedMarketing,
+                agreedAt: serverTimestamp()
+            },
+            createdAt: serverTimestamp(), // 새로 생성 시에만 적용되도록 saveUserProfile에서 관리하는게 좋음
+            lastUpdate: serverTimestamp(),
+            userType: selectedUserType === 'caregiver' ? ['caregiver', 'directUser'] : [selectedUserType],
+            role: selectedUserType === 'caregiver' ? 'parent' : 'self',
+        };
+
+        let ageForTalkContext;
+        let childDataForRedirect = null; 
+
+        if (selectedUserType === 'caregiver') {
+            profileData.caregiverInfo = {
+                caregiverNeurodiversity: tempSelectedCaregiverNd,
+                childName: tempChildName,
+                childBirthDate: tempChildBirthDate,
+                childAge: tempChildAge,
+                childDiagnoses: tempSelectedDiagnoses
+            };
+            profileData.diagnoses = []; // 보호자 본인의 diagnoses는 비워둡니다.
+            ageForTalkContext = tempChildAge; 
+            childDataForRedirect = profileData.caregiverInfo;
+        } else { // directUser
+            profileData.diagnoses = tempSelectedDiagnoses;
+            ageForTalkContext = profileData.age;
+        }
+
+        // ✅ saveUserProfile 함수 호출
+        const saveSuccess = await saveUserProfile(currentUserId, profileData);
+
+        if (saveSuccess) {
+            setLocalStorageAndRedirect(profileData, ageForTalkContext, childDataForRedirect);
+        } else {
+            alert("프로필 저장에 실패했습니다. 다시 시도해주세요.");
+        }
+    };
 
             // --- 페이지 로드 시 Firebase Auth 상태 감지 ---
             listenAuthState(
