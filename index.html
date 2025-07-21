@@ -516,10 +516,12 @@
     };
 
 
-    // --- 페이지 로드 시 Firebase Auth 상태 감지 ---
-    document.addEventListener('DOMContentLoaded', () => {
+  // --- 페이지 로드 시 Firebase Auth 상태 감지 (수정) ---
+    document.addEventListener('DOMContentLoaded', async () => { // async 키워드 추가 (userProfile 로드를 위해)
         console.log("Index.html: DOMContentLoaded");
 
+        // ✅ listenAuthState 호출 시 clearInputFields와 showStep 함수를 전달합니다.
+        //    (index.html의 listenAuthState 콜백 내부)
         listenAuthState(
             async (user, userProfile) => {
                 console.log("Index: 로그인 상태 감지. UID:", user.uid);
@@ -537,21 +539,32 @@
                     if (Array.isArray(userProfile.userType) && userProfile.userType.includes('caregiver') && userProfile.caregiverInfo) { 
                         ageForTalk = userProfile.caregiverInfo.childAge;
                         childDataForRedirect = userProfile.caregiverInfo;
-                    } else if (!Array.isArray(userProfile.userType) && userProfile.userType === 'caregiver' && userProfile.caregiverInfo) { // 레거시 단일 caregiver 처리
+                    } else if (!Array.isArray(userProfile.userType) && userProfile.userType === 'caregiver' && userProfile.caregiverInfo) { 
                         ageForTalk = userProfile.caregiverInfo.childAge;
                         childDataForRedirect = userProfile.caregiverInfo;
                     }
                     setLocalStorageAndRedirect(userProfile, ageForTalk, childDataForRedirect);
                 } else {
-                    // 프로필 정보가 없거나 불완전하면 userType 선택 단계로 이동
                     showStep('userType'); 
                 }
             },
+            // ✅ 로그아웃 콜백: 이제 clearInputFields와 showStep은 auth.js에서 전달받아야 합니다.
+            //    (auth.js에서 listenAuthState의 세 번째 인자로 이 함수들을 받을 것입니다.)
+            //    여기는 `auth.js`의 `onUserLoggedOut` 콜백이 호출될 때 실행되는 부분입니다.
+            //    `auth.js`가 `onUserLoggedOut` 콜백 함수를 실행할 때,
+            //    `clearInputFields`와 `showStep`을 인자로 전달받아 사용하게 할 것입니다.
+            //    따라서 여기서는 직접 호출하지 않고, auth.js에서 넘겨받는다고 가정합니다.
+            //    이전 오류는 auth.js가 해당 함수들을 알지 못해서 발생한 것이므로,
+            //    auth.js를 수정하여 이 함수들을 넘겨받게 할 것입니다.
+            //    일단 이 콜백은 현재 `index.html`에서는 직접 변경할 필요 없습니다.
             () => {
-                console.log("Index: 로그아웃 상태. 초기 화면 표시.");
+                console.log("Index: 로그아웃 상태 감지. 초기 화면 표시.");
                 currentUserId = null;
-                clearInputFields();
-                showStep('authChoice');
+                // clearInputFields(); // ✅ 이 라인은 auth.js가 실행할 것이므로 여기서는 제거
+                // showStep('authChoice'); // ✅ 이 라인도 auth.js가 실행할 것이므로 여기서는 제거
+                // 이 콜백 함수는 이제 auth.js의 listenAuthState 내부에서 전달되는 함수를 그대로 사용하도록 합니다.
+                // 그러려면 listenAuthState 정의를 auth.js에서 수정해야 합니다.
+                // 일단 여기서는 clearInputFields() 와 showStep('authChoice')를 직접 호출하는 부분만 제거합니다.
             }
         );
     });

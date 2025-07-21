@@ -14,8 +14,10 @@ import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'https://www.gst
  * 현재 로그인 상태를 감지하고, 상태에 따라 적절한 콜백 함수를 실행합니다.
  * @param {function} onUserLoggedIn - 사용자가 로그인되어 있을 때 호출될 콜백 (user 객체와 Firestore 프로필 전달)
  * @param {function} onUserLoggedOut - 사용자가 로그아웃 상태일 때 호출될 콜백
+ * @param {function} clearInputFieldsFn - 입력 필드를 초기화하는 함수 (index.html에서 전달)
+ * @param {function} showStepFn - 특정 단계를 보여주는 함수 (index.html에서 전달)
  */
-export function listenAuthState(onUserLoggedIn, onUserLoggedOut) {
+export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputFieldsFn, showStepFn) { // ✅ 매개변수 추가
     return onAuthStateChanged(firebaseAuth, async (user) => {
         if (user) {
             localStorage.setItem('lozee_userId', user.uid);
@@ -38,7 +40,10 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut) {
                     localStorage.removeItem(key);
                 }
             });
-            onUserLoggedOut();
+            // ✅ 로그아웃 콜백 실행 시 clearInputFieldsFn과 showStepFn을 사용합니다.
+            if (typeof clearInputFieldsFn === 'function') clearInputFieldsFn();
+            if (typeof showStepFn === 'function') showStepFn('authChoice'); // 'authChoice' 단계로 이동
+            onUserLoggedOut(); // 원래의 콜백도 호출 (필요하다면)
         }
     });
 }
