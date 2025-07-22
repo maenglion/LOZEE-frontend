@@ -215,7 +215,7 @@
 
     <script type="module">
         // Firebase 설정 모듈 가져오기
-        import { db, auth as firebaseAuth } from './js/firebase-config.js?t=20250721';
+        import { db, auth as firebaseAuth } from './js/firebase-config.js';
 
         // 인증 관련 함수 가져오기
         import {
@@ -225,7 +225,7 @@
             resetPassword,
             saveUserProfile,
             sendEmailVerification
-        } from './js/auth.js?t=20250721';
+        } from './js/auth.js';
 
         // Firestore 모듈 가져오기
         import { collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
