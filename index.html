@@ -712,61 +712,51 @@
 
         // 이벤트 핸들러: 이메일 인증 확인
         if (checkVerificationBtn) checkVerificationBtn.onclick = async () => {
-            console.log("[checkVerificationBtn] 이메일 인증 확인");
-            const currentUser = firebaseAuth.currentUser;
-            if (!currentUser) { 
-                console.log("[checkVerificationBtn] 현재 사용자 없음, 로그인 페이지로 이동");
-                if (verificationErrorEl) verificationErrorEl.textContent = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요."; 
-                showStep('login'); 
-                return; 
-            }
-            checkVerificationBtn.disabled = true;
-            checkVerificationBtn.textContent = "확인 중...";
-            await currentUser.reload();
-            checkVerificationBtn.disabled = false;
-            checkVerificationBtn.textContent = "이메일 인증 완료";
-            if (currentUser.emailVerified) {
-                console.log("[checkVerificationBtn] 이메일 인증 완료, 사용자 ID:", currentUser.uid);
-                currentUserId = currentUser.uid; 
-                localStorage.setItem('lozee_userId', currentUserId);
-                if (verificationErrorEl) verificationErrorEl.textContent = '';
-                
-                const userDoc = await getDoc(doc(db, 'users', currentUserId));
-                if (userDoc.exists() && userDoc.data().userType) { 
-                    const userProfile = userDoc.data();
-                    let ageForTalk = userProfile.age;
-                    let childDataForRedirect = null;
-                    let isCaregiverNeurodiverse = false;
+        console.log("[checkVerificationBtn] 이메일 인증 확인");
+        const currentUser = firebaseAuth.currentUser;
+        if (!currentUser) {
+            console.log("[checkVerificationBtn] 현재 사용자 없음, 로그인 페이지로 이동");
+            if (verificationErrorEl) verificationErrorEl.textContent = "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.";
+            showStep('login');
+            return;
+        }
+        checkVerificationBtn.disabled = true;
+        checkVerificationBtn.textContent = "확인 중...";
+        await currentUser.reload();
+        checkVerificationBtn.disabled = false;
+        checkVerificationBtn.textContent = "이메일 인증 완료";
+        if (currentUser.emailVerified) {
+            console.log("[checkVerificationBtn] 이메일 인증 완료, 사용자 ID:", currentUser.uid);
+            currentUserId = currentUser.uid;
+            localStorage.setItem('lozee_userId', currentUserId);
 
-                    // userType이 단일 문자열인 레거시 데이터를 배열로 변환
-                    if (typeof userProfile.userType === 'string') {
-                        userProfile.userType = [userProfile.userType];
-                        if (userProfile.userType[0] === 'caregiver' && 
-                            userProfile.caregiverInfo?.caregiverNeurodiversity?.length > 0 &&
-                            !userProfile.caregiverInfo.caregiverNeurodiversity.includes('unsure_or_none')) {
-                                userProfile.userType.push('directUser');
-                        }
-                    }
-
-                    if (Array.isArray(userProfile.userType) && userProfile.userType.includes('caregiver') && userProfile.caregiverInfo) { 
-                        ageForTalk = userProfile.caregiverInfo.childAge;
-                        childDataForRedirect = userProfile.caregiverInfo;
-                        isCaregiverNeurodiverse = userProfile.caregiverInfo.caregiverNeurodiversity?.length > 0 &&
-                            !userProfile.caregiverInfo.caregiverNeurodiversity.includes('unsure_or_none');
-                    }
-                    setLocalStorageAndRedirect(userProfile, ageForTalk, childDataForRedirect, isCaregiverNeurodiverse);
-                } else {
-                    // 프로필이 없으면 회원가입 절차 진행
-                    console.log("[listenAuthState] 사용자 프로필 없음, userType으로 이동");
-                    showStep('userType');
+            // 초기 프로필 저장
+            const userDoc = await getDoc(doc(db, 'users', currentUserId));
+            if (!userDoc.exists()) {
+                console.log("[checkVerificationBtn] 사용자 프로필 없음, 초기 프로필 생성");
+                const initialProfile = {
+                    uid: currentUserId,
+                    email: currentUser.email,
+                    createdAt: serverTimestamp(),
+                    lastUpdate: serverTimestamp()
+                };
+                const saveSuccess = await saveUserProfile(currentUserId, initialProfile);
+                if (!saveSuccess) {
+                    console.error("[checkVerificationBtn] 초기 프로필 저장 실패");
+                    showToast("계정 설정에 실패했습니다. 다시 시도해주세요.");
+                    showStep('login');
+                    return;
                 }
-            } else {
-                console.log("[listenAuthState] 이메일 미인증, emailVerification으로 이동");
-                if (verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = currentUser ? currentUser.email : "이메일 정보 없음";
-                showStep('emailVerification');
-                localStorage.setItem('lozee_tempEmailForVerification', currentUser ? currentUser.email : ''); 
             }
-        };
+
+            // 루프 방지 플래그 설정
+            localStorage.setItem('lozee_profile_check', 'true');
+            showStep('userType');
+        } else {
+            console.log("[checkVerificationBtn] 이메일 인증 미완료");
+            if (verificationErrorEl) verificationErrorEl.textContent = "아직 이메일 인증이 완료되지 않았습니다. 메일함의 인증 링크를 클릭해주세요.";
+        }
+    };
 
         // 이벤트 핸들러: 인증 메일 재발송
         if (resendVerificationBtn) resendVerificationBtn.onclick = async () => {
@@ -1026,75 +1016,92 @@
             }
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("[DOMContentLoaded] Index.html 로드 완료");
-            // jQuery <path> 오류 방어 코드
-            console.log("[DOMContentLoaded] jQuery 확인:", typeof window.jQuery !== 'undefined' ? "jQuery 로드됨" : "jQuery 로드되지 않음");
-            const paths = document.querySelectorAll('path');
-            paths.forEach(path => {
-                try {
-                    const dValue = path.getAttribute('d');
-                    if (dValue && !dValue.match(/^[MLHVCSQTAmlhvcsqta][0-9,. -]*$/)) {
-                        console.warn("[SVG Debug] 유효하지 않은 path d 속성:", dValue);
-                        path.setAttribute('d', 'M0,0 L10,10');
-                    }
-                } catch (e) {
-                    console.error("[SVG Debug] path 처리 오류:", e);
+        // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("[DOMContentLoaded] Index.html 로드 완료");
+        // Firebase 인증 상태 감지
+        listenAuthState(
+            async (user, userProfile) => {
+                console.log("[listenAuthState] 로그인 상태 감지. UID:", user.uid);
+                currentUserId = user.uid;
+
+                // 이메일 미인증 시 인증 페이지로 이동
+                if (!user.emailVerified) {
+                    console.log("[listenAuthState] 이메일 미인증, emailVerification으로 이동");
+                    if (verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = user.email;
+                    localStorage.setItem('lozee_tempEmailForVerification', user.email);
+                    showToast('이메일 인증이 필요합니다. 인증 이메일을 확인해주세요.');
+                    showStep('emailVerification');
+                    return;
                 }
-            });
 
-            // Firebase 인증 상태 감지 시작
-              listenAuthState(
-        async (user, userProfile) => {
-            // 사용자 로그인 상태 처리
-            console.log("User logged in:", user.uid);
-            console.log("Email verified:", user.emailVerified); // ✅ 이메일 인증 상태 로그 추가
+                // 프로필이 존재하고 userType이 있는 경우 로그인 처리
+                if (userProfile && userProfile.userType) {
+                    console.log("[listenAuthState] 사용자 프로필 존재:", userProfile);
+                    const userProfileForRedirect = { ...userProfile };
 
-            // 이메일 인증 확인
-            if (!user.emailVerified) {
-                // 이메일이 인증되지 않았다면 인증 페이지를 보여주거나, 인증 메일 발송 안내
-                showStep('emailVerificationPending'); // ✅ 새로운 단계 추가 (아래에서 정의)
-                document.getElementById('verificationEmailDisplay').textContent = user.email;
-                console.log("Email not verified. Showing verification pending step.");
-                return; // 여기서 함수 종료
-            }
+                    // userType이 단일 문자열인 레거시 데이터 처리
+                    if (typeof userProfileForRedirect.userType === 'string') {
+                        userProfileForRedirect.userType = [userProfileForRedirect.userType];
+                        if (userProfileForRedirect.userType[0] === 'caregiver' &&
+                            userProfileForRedirect.caregiverInfo?.caregiverNeurodiversity?.length > 0 &&
+                            !userProfileForRedirect.caregiverInfo.caregiverNeurodiversity.includes('unsure_or_none')) {
+                            userProfileForRedirect.userType.push('directUser');
+                        }
+                    }
 
-            // 이메일이 인증되었다면 프로필 설정 또는 메인 앱으로 이동
-            if (userProfile && userProfile.role) { // 프로필이 있고 역할이 설정되어 있다면
-                showStep('mainApp');
-                // 사용자 정보 표시 업데이트 등 메인 앱 로직
-                document.getElementById('loggedInUserEmail').textContent = user.email;
-                document.getElementById('loggedInUserRole').textContent = userProfile.role; // 역할 표시
-                console.log("User email verified and profile exists. Showing main app.");
-            } else {
-                // 이메일은 인증되었지만 프로필이 없거나 역할이 설정되지 않았다면 프로필 설정 페이지로
-                showStep('profileSetup');
-                console.log("User email verified but profile not complete. Showing profile setup.");
-            }
-        },
-        () => {
-            // 사용자 로그아웃 상태 처리
-            console.log("User logged out. Showing auth choice step.");
-            // clearInputFields()는 listenAuthState 내부에서 호출되므로 여기서는 필요 없을 수 있습니다.
-            showStep('authChoice');
-        },
-        clearInputFields, // listenAuthState에 전달
-        showStep // listenAuthState에 전달
-    );
-// ... (기존 함수들: showStep, clearInputFields, setupEventListeners 등) ...
+                    let ageForTalk = userProfileForRedirect.age;
+                    let childDataForRedirect = null;
+                    let isCaregiverNeurodiverse = false;
 
-    // ✅ 새로운 단계 'emailVerificationPending'을 위한 HTML 요소 추가 (index.html의 적절한 위치에 추가)
-    // 예를 들어, <div id="authChoice">와 <div id="profileSetup"> 사이에 추가할 수 있습니다.
-    /*
-    <div id="emailVerificationPending" class="step-container" style="display: none;">
-        <h2>이메일 인증 필요</h2>
-        <p><span id="verificationEmailDisplay"></span> 로 인증 메일을 보냈습니다. 받은 편지함을 확인해주세요.</p>
-        <p>메일을 받지 못하셨다면 스팸함을 확인하거나 재전송을 요청해주세요.</p>
-        <button id="resendVerificationEmailBtn" class="btn btn-primary">인증 메일 재전송</button>
-        <button id="checkVerificationStatusBtn" class="btn btn-secondary">인증 완료 확인</button>
-        <button id="logoutBtnFromVerification" class="btn btn-danger">로그아웃</button>
-    </div>
-    */
+                    if (userProfileForRedirect.caregiverInfo) {
+                        isCaregiverNeurodiverse = userProfileForRedirect.caregiverInfo.caregiverNeurodiversity?.length > 0 &&
+                            !userProfileForRedirect.caregiverInfo.caregiverNeurodiversity.includes('unsure_or_none');
+                    }
+
+                    if (Array.isArray(userProfileForRedirect.userType) && 
+                        userProfileForRedirect.userType.includes('caregiver') && 
+                        userProfileForRedirect.caregiverInfo) {
+                        ageForTalk = userProfileForRedirect.caregiverInfo.childAge;
+                        childDataForRedirect = userProfileForRedirect.caregiverInfo;
+                    }
+
+                    setLocalStorageAndRedirect(userProfileForRedirect, ageForTalk, childDataForRedirect, isCaregiverNeurodiverse);
+                } else {
+                    // 프로필이 없으면 userType으로 이동, 루프 방지 확인
+                    if (localStorage.getItem('lozee_profile_check') === 'true') {
+                        console.log("[listenAuthState] 프로필 체크 완료, userType 유지");
+                        showStep('userType');
+                    } else {
+                        console.log("[listenAuthState] 사용자 프로필 없음, 초기 프로필 생성");
+                        const initialProfile = {
+                            uid: currentUserId,
+                            email: user.email,
+                            createdAt: serverTimestamp(),
+                            lastUpdate: serverTimestamp()
+                        };
+                        const saveSuccess = await saveUserProfile(currentUserId, initialProfile);
+                        if (saveSuccess) {
+                            localStorage.setItem('lozee_profile_check', 'true');
+                            showStep('userType');
+                        } else {
+                            console.error("[listenAuthState] 초기 프로필 저장 실패");
+                            showToast("계정 설정에 실패했습니다. 다시 시도해주세요.");
+                            showStep('login');
+                        }
+                    }
+                }
+            },
+            () => {
+                console.log("[listenAuthState] 로그아웃 상태 감지.");
+                currentUserId = null;
+                clearInputFields();
+                showStep('authChoice');
+                showToast('로그아웃 상태입니다.');
+            },
+            clearInputFields,
+            showStep
+        );
 
     // ✅ 새로운 이벤트 리스너 추가 (setupEventListeners 함수 내 또는 별도로)
     document.addEventListener('DOMContentLoaded', () => {
