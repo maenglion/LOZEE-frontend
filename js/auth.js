@@ -1,6 +1,6 @@
 import {
     createUserWithEmailAndPassword,
-    sendEmailVerification as firebaseSendEmailVerification, // ✅ 이름 충돌을 피하기 위해 별칭(alias) 사용
+    sendEmailVerification as firebaseSendEmailVerification, // ✅ 별칭 사용 (sendEmailVerification -> firebaseSendEmailVerification)
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
     onAuthStateChanged,
@@ -11,13 +11,12 @@ import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'https://www.gst
 
 /**
  * 현재 로그인 상태를 감지하고, 상태에 따라 적절한 콜백 함수를 실행합니다.
- * @param {function} onUserLoggedIn - 사용자가 로그인되어 있을 때 호출될 콜백
- * @param {function} onUserLoggedOut - 사용자가 로그아웃 상태일 때 호출될 콜백
- * @param {function} clearInputFieldsFn - 입력 필드를 초기화하는 함수
- * @param {function} showStepFn - 특정 단계를 보여주는 함수
+ * @param {function} onUserLoggedIn - 사용자가 로그인되어 있을 때 호출될 콜백 (user 객체와 Firestore 프로필 전달)
+ * @param {function} onUserLoggedOut - 사용자가 로그아웃 상태일 때 호출될 콜백 (선택 사항)
+ * @param {function} [clearInputFieldsFn] - 입력 필드를 초기화하는 함수 (index.html에서 전달)
+ * @param {function} [showStepFn] - 특정 단계를 보여주는 함수 (index.html에서 전달)
  */
-
-export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputFieldsFn, showStepFn) {
+export function listenAuthState(onUserLoggedIn, onUserLoggedOut = () => {}, clearInputFieldsFn, showStepFn) { 
     return onAuthStateChanged(firebaseAuth, async (user) => {
         if (user) {
             localStorage.setItem('lozee_userId', user.uid);
@@ -25,7 +24,7 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputField
             const userSnap = await getDoc(userRef);
             const userProfile = userSnap.exists() ? userSnap.data() : null;
 
-            if (userProfile) {
+            if (userProfile) { 
                 try {
                     await updateDoc(userRef, { lastLogin: serverTimestamp() });
                 } catch (e) {
@@ -34,14 +33,16 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputField
             }
             onUserLoggedIn(user, userProfile);
         } else {
+            // 로그아웃 시 localStorage 정리
             Object.keys(localStorage).forEach(key => {
                 if (key.startsWith('lozee_')) {
                     localStorage.removeItem(key);
                 }
             });
+            // ✅ 로그아웃 콜백 실행 시 clearInputFieldsFn과 showStepFn을 사용합니다.
             if (typeof clearInputFieldsFn === 'function') clearInputFieldsFn();
-            if (typeof showStepFn === 'function') showStepFn('authChoice');
-            onUserLoggedOut();
+            if (typeof showStepFn === 'function') showStepFn('authChoice'); 
+            onUserLoggedOut(); 
         }
     });
 }
@@ -50,13 +51,12 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputField
 export async function signUpWithEmail(email, password) {
     try {
         const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-        await sendVerificationEmail(userCredential.user); // ✅ 여기서는 직접 정의한 함수를 호출
+        await sendVerificationEmail(userCredential.user); 
         return { user: userCredential.user, error: null };
     } catch (error) {
         return { user: null, error: error };
     }
 }
-
 
 /** 이메일/비밀번호로 로그인 */
 export async function signInWithEmail(email, password) {
