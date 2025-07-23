@@ -1,6 +1,6 @@
 import {
     createUserWithEmailAndPassword,
-    sendVerificationEmail,
+    sendEmailVerification as firebaseSendEmailVerification, // ✅ 이름 충돌을 피하기 위해 별칭(alias) 사용
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
     onAuthStateChanged,
@@ -50,12 +50,13 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputField
 export async function signUpWithEmail(email, password) {
     try {
         const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-        await sendVerificationEmail(userCredential.user);
+        await sendVerificationEmail(userCredential.user); // ✅ 여기서는 직접 정의한 함수를 호출
         return { user: userCredential.user, error: null };
     } catch (error) {
         return { user: null, error: error };
     }
 }
+
 
 /** 이메일/비밀번호로 로그인 */
 export async function signInWithEmail(email, password) {
@@ -105,13 +106,13 @@ export async function saveUserProfile(uid, profileData) {
 }
 
 /** 이메일 인증 재전송 */
-export async function sendVerificationEmail(user) {
+export async function sendVerificationEmail(user) { // ✅ 이 함수 이름은 유지
     try {
-        await sendVerificationEmail(user);
+        await firebaseSendEmailVerification(user); // ✅ 별칭으로 가져온 Firebase SDK 함수 호출
         console.log('Verification email sent!');
         return true;
     } catch (error) {
         console.error('Error sending verification email:', error);
-        return false;
+        throw error; // 오류 전파
     }
 }
