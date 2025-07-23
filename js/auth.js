@@ -1,6 +1,6 @@
 import {
     createUserWithEmailAndPassword,
-    sendEmailVerification as firebaseSendEmailVerification, // ✅ 별칭 사용 (sendEmailVerification -> firebaseSendEmailVerification)
+    sendEmailVerification as firebaseSendEmailVerification, // ✅ Firebase SDK의 sendEmailVerification을 'firebaseSendEmailVerification'이라는 별칭으로 가져옵니다.
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
     onAuthStateChanged,
@@ -49,9 +49,9 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut = () => {}, clea
 
 /** 이메일/비밀번호로 새 사용자 생성 */
 export async function signUpWithEmail(email, password) {
-    try {
+try {
         const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-        await sendVerificationEmail(userCredential.user); 
+        await sendVerificationEmail(userCredential.user); // ✅ 여기서 우리가 직접 정의할 'sendVerificationEmail' 함수를 호출
         return { user: userCredential.user, error: null };
     } catch (error) {
         return { user: null, error: error };
@@ -106,13 +106,14 @@ export async function saveUserProfile(uid, profileData) {
 }
 
 /** 이메일 인증 재전송 */
-export async function sendVerificationEmail(user) { // ✅ 이 함수 이름은 유지
+// ✅ 이 함수는 이제 Firebase SDK의 함수를 호출할 때 별칭을 사용합니다.
+export async function sendVerificationEmail(user) { 
     try {
-        await firebaseSendEmailVerification(user); // ✅ 별칭으로 가져온 Firebase SDK 함수 호출
+        await firebaseSendEmailVerification(user); // ✅ 여기에서 Firebase SDK에서 가져온 'firebaseSendEmailVerification' 별칭을 호출합니다.
         console.log('Verification email sent!');
         return true;
     } catch (error) {
         console.error('Error sending verification email:', error);
-        throw error; // 오류 전파
+        throw error; // 오류를 상위로 전파
     }
 }
