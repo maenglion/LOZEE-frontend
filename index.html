@@ -77,6 +77,7 @@
 
         <section id="stepAuthChoice" class="step step-background-main">
             <h2>LOZEE에 오신 것을 환영합니다!</h2>
+            <div class="error-message" id="authChoiceError"></div>
             <button id="goToLoginBtn">로그인</button>
             <button id="goToSignUpBtn">회원가입</button>
         </section>
@@ -189,7 +190,7 @@
 
         <section id="stepSpecialistDiagnosisCaregiver" class="step step-background-main">
             <h2>전문의 진단 여부</h2>
-            <p class="info-text">선택하신 **아이(또는 가족)의** 특성은 전문의에게 진단받은 정보인가요?</p>
+            <p class="info-text">선택하신 특성은 전문의에게 진단받은 정보인가요?</p>
             <div class="radio-option-group">
                 <label><input type="radio" name="specialistDiagnosisCaregiver" value="true"> 예</label>
                 <label><input type="radio" name="specialistDiagnosisCaregiver" value="false"> 아니요</label>
@@ -202,12 +203,13 @@
             <h2>특성 이해하기</h2>
             <p class="info-text">해당하는 항목을 모두 선택해주세요. (중복 선택 가능)</p>
             <div class="diagnosis-options">
-                <button class="diagnosis-btn" data-diagnosis="ASD">자폐 스펙트럼 (ASD)</button>
-                <button class="diagnosis-btn" data-diagnosis="ADHD">주의력 결핍 과잉행동 장애 (ADHD)</button>
-                <button class="diagnosis-btn" data-diagnosis="Asperger">아스퍼거 증후군</button>
-                <button class="diagnosis-btn" data-diagnosis="Tic">틱 장애</button>
-                <button class="diagnosis-btn" data-diagnosis="LD">학습 장애</button>
-                <button class="diagnosis-btn" data-diagnosis="Else">기타 어려움/궁미증</button>
+                <button class="diagnosis-btn" data-diagnosis="ASD">1. ASD (자폐 스펙트럼, 아스퍼거증후군, 비언어성학습장애 포함)</button>
+                <button class="diagnosis-btn" data-diagnosis="LanguageCommunication">2. 언어 의사소통 (사회적 의사소통장애, 언어지연)</button>
+                <button class="diagnosis-btn" data-diagnosis="ADHD">3. ADHD</button>
+                <button class="diagnosis-btn" data-diagnosis="Tic">4. 뚜렛, 틱</button>
+                <button class="diagnosis-btn" data-diagnosis="LearningDisability">5. 학습장애 (난독증, 난산증, 난서증)</button>
+                <button class="diagnosis-btn" data-diagnosis="SensoryProcessing">6. 감각장애</button>
+                <button class="diagnosis-btn" data-diagnosis="Other">7. 기타</button>
                 <button class="diagnosis-btn" data-diagnosis="Unsure">아직 잘 모르겠어요</button>
                 <button class="diagnosis-btn" data-diagnosis="NotApplicable">특별히 해당 없음</button>
             </div>
@@ -276,34 +278,34 @@
             signInWithEmail,
             resetPassword,
             saveUserProfile,
-            sendVerificationEmail // ✅ auth.js에서 export 되는 이름과 일치
+            sendVerificationEmail // auth.js에서 export 되는 이름과 일치
         } from './js/auth.js';
         import { collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
         // DOM 요소 가져오기 (HTML ID와 정확히 일치하도록 수정)
         const steps = {
-            stepAuthChoice: document.getElementById('stepAuthChoice'), // ✅ ID를 'stepAuthChoice'로 수정
-            stepLogin: document.getElementById('stepLogin'),
-            stepPasswordReset: document.getElementById('stepPasswordReset'),
-            stepUserType: document.getElementById('stepUserType'),
-            stepTermsAgreement: document.getElementById('stepTermsAgreement'),
-            stepSignUpEmailPassword: document.getElementById('stepSignUpEmailPassword'),
-            stepEmailVerification: document.getElementById('stepEmailVerification'),
-            stepCaregiverNeurodiversity: document.getElementById('stepCaregiverNeurodiversity'),
-            stepDiagnosisType: document.getElementById('stepDiagnosisType'),
-            stepNameBirthSelf: document.getElementById('stepNameBirthSelf'),
-            stepNameBirthChild: document.getElementById('stepNameBirthChild'),
-            stepFinalStart: document.getElementById('stepFinalStart'),
-            stepSpecialistDiagnosisDirectUser: document.getElementById('stepSpecialistDiagnosisDirectUser'),
-            stepSpecialistDiagnosisCaregiver: document.getElementById('stepSpecialistDiagnosisCaregiver')
+            authChoice: document.getElementById('stepAuthChoice'),
+            login: document.getElementById('stepLogin'),
+            passwordReset: document.getElementById('stepPasswordReset'),
+            userType: document.getElementById('stepUserType'),
+            termsAgreement: document.getElementById('stepTermsAgreement'),
+            signUpEmailPassword: document.getElementById('stepSignUpEmailPassword'),
+            emailVerification: document.getElementById('stepEmailVerification'),
+            caregiverNd: document.getElementById('stepCaregiverNeurodiversity'),
+            diagnosisType: document.getElementById('stepDiagnosisType'),
+            nameBirthSelf: document.getElementById('stepNameBirthSelf'),
+            nameBirthChild: document.getElementById('stepNameBirthChild'),
+            finalStart: document.getElementById('stepFinalStart'),
+            specialistDiagnosisDirectUser: document.getElementById('stepSpecialistDiagnosisDirectUser'),
+            specialistDiagnosisCaregiver: document.getElementById('stepSpecialistDiagnosisCaregiver')
         };
 
         const goToLoginBtn = document.getElementById('goToLoginBtn');
         const goToSignUpBtn = document.getElementById('goToSignUpBtn');
-        const loginEmailInput = document.getElementById('loginEmail'); // HTML ID에 맞춤
-        const loginPasswordInput = document.getElementById('loginPassword'); // HTML ID에 맞춤
+        const loginEmailInput = document.getElementById('loginEmail'); 
+        const loginPasswordInput = document.getElementById('loginPassword'); 
         const loginErrorEl = document.getElementById('loginError');
-        const loginPasswordError = document.getElementById('loginPasswordError'); // HTML ID에 맞춤
+        const loginPasswordError = document.getElementById('loginPasswordError'); 
         const loginBtn = document.getElementById('loginBtn');
         const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
         const linkToSignUpFromLogin = document.getElementById('linkToSignUpFromLogin');
@@ -331,13 +333,13 @@
         const verificationErrorEl = document.getElementById('verificationError');
         const checkVerificationBtn = document.getElementById('checkVerificationBtn');
         const resendVerificationBtn = document.getElementById('resendVerificationBtn');
-        const caregiverNdOptionBtns = document.querySelectorAll('.caregiver-nd-btn'); // HTML 클래스/데이터셋에 맞춤
+        const caregiverNdOptionBtns = document.querySelectorAll('.caregiver-nd-btn'); 
         const caregiverNdError = document.getElementById('caregiverNdError');
         const submitCaregiverNdBtn = document.getElementById('submitCaregiverNdBtn');
         const specialistDiagnosisCaregiverRadios = document.querySelectorAll('input[name="specialistDiagnosisCaregiver"]');
         const specialistDiagnosisCaregiverError = document.getElementById('specialistDiagnosisCaregiverError');
         const submitSpecialistDiagnosisCaregiverBtn = document.getElementById('submitSpecialistDiagnosisCaregiverBtn');
-        const diagnosisOptionBtns = document.querySelectorAll('.diagnosis-btn'); // HTML 클래스/데이터셋에 맞춤
+        const diagnosisOptionBtns = document.querySelectorAll('.diagnosis-btn'); 
         const diagnosisError = document.getElementById('diagnosisError');
         const submitDiagnosisBtn = document.getElementById('submitDiagnosisBtn');
         const specialistDiagnosisDirectUserRadios = document.querySelectorAll('input[name="specialistDiagnosisDirectUser"]');
@@ -354,7 +356,7 @@
         const nameChildError = document.getElementById('nameChildError');
         const birthYearChild = document.getElementById('birthYearChild');
         const birthMonthChild = document.getElementById('birthMonthChild');
-        const birthDayChild = document.getElementById('birthDayChild'); // ✅ HTML ID에 맞춤
+        const birthDayChild = document.getElementById('birthDayChild'); 
         const birthChildError = document.getElementById('birthChildError');
         const submitNameBirthChildBtn = document.getElementById('submitNameBirthChildBtn');
         const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
@@ -382,48 +384,48 @@
 
 
         // 헬퍼 함수: 단계 전환 및 진행 바 업데이트
-        function showStep(stepId) { 
-            console.log(`[showStep] 단계 전환 시도: ${stepId}`);
+        function showStep(stepName) { // ✅ stepName으로 논리적 이름 받음
+            console.log(`[showStep] 단계 전환 시도: ${stepName}`);
             document.querySelectorAll('.step').forEach(step => {
                 step.classList.remove('active');
-                step.style.display = 'none'; 
+                step.style.display = 'none'; // 모든 단계를 숨김
             });
-            const targetStep = document.getElementById(stepId); 
+            
+            const targetStepId = `step${stepName.charAt(0).toUpperCase() + stepName.slice(1)}`; // ✅ HTML ID 생성 (예: 'authChoice' -> 'stepAuthChoice')
+            const targetStep = document.getElementById(targetStepId); 
+            
             if (targetStep) { 
                 targetStep.classList.add('active');
                 targetStep.style.display = 'flex'; 
-                updateProgressBar(stepId); 
+                updateProgressBar(stepName); // ✅ stepName으로 업데이트
             } else { 
-                console.error(`showStep: '${stepId}' 단계를 찾을 수 없습니다. 기본 화면(stepAuthChoice)으로 이동.`); 
+                console.error(`showStep: '${stepName}' 단계를 찾을 수 없습니다. 기본 화면(stepAuthChoice)으로 이동.`); 
                 const authChoiceStep = document.getElementById('stepAuthChoice'); 
                 if(authChoiceStep) { 
                     authChoiceStep.classList.add('active');
                     authChoiceStep.style.display = 'flex';
                 }
-                updateProgressBar('stepAuthChoice'); 
+                updateProgressBar('authChoice'); // ✅ 'authChoice'로 업데이트 (Fallback 시)
             } 
         }
 
         // 헬퍼 함수: 진행 바 업데이트
-        function updateProgressBar(currentStepId) {
+        function updateProgressBar(currentStepName) { // ✅ stepName으로 받음
             let stepsOrder;
-            // userType이 아직 선택되지 않았다면 (초기 로드 시) 기본 흐름 사용
-            // userType이 'caregiver'이면 보호자 흐름, 아니면 당사자 흐름
             if (selectedUserType === 'caregiver') { // 보호자 흐름
                 stepsOrder = [
-                    'stepAuthChoice', 'stepUserType', 'stepTermsAgreement', 'stepSignUpEmailPassword', 'stepEmailVerification',
-                    'stepCaregiverNeurodiversity', 'stepSpecialistDiagnosisCaregiver', 'stepNameBirthChild', 'stepFinalStart'
+                    'authChoice', 'userType', 'termsAgreement', 'signUpEmailPassword', 'emailVerification',
+                    'caregiverNeurodiversity', 'specialistDiagnosisCaregiver', 'nameBirthChild', 'finalStart'
                 ];
             } else { // directUser 흐름 (selectedUserType이 'directUser'이거나 아직 null인 경우)
                 stepsOrder = [
-                    'stepAuthChoice', 'stepUserType', 'stepTermsAgreement', 'stepSignUpEmailPassword', 'stepEmailVerification',
-                    'stepDiagnosisType', 'stepSpecialistDiagnosisDirectUser', 'stepNameBirthSelf', 'stepFinalStart'
+                    'authChoice', 'userType', 'termsAgreement', 'signUpEmailPassword', 'emailVerification',
+                    'diagnosisType', 'specialistDiagnosisDirectUser', 'nameBirthSelf', 'finalStart'
                 ];
             }
             
-            const currentStepIndex = stepsOrder.indexOf(currentStepId);
-            // 진행률이 필요 없는 단계 (인증 관련)는 -1로 처리하여 진행바를 비웁니다.
-            if (currentStepIndex === -1 || currentStepId === 'stepAuthChoice' || currentStepId === 'stepLogin' || currentStepId === 'stepPasswordReset' || currentStepId === 'stepEmailVerification') {
+            const currentStepIndex = stepsOrder.indexOf(currentStepName);
+            if (currentStepIndex === -1 || currentStepName === 'authChoice' || currentStepName === 'login' || currentStepName === 'passwordReset' || currentStepName === 'emailVerification') {
                 if (progressBar) progressBar.style.width = '0%';
                 if (progressText) progressText.textContent = '';
                 return;
@@ -433,7 +435,7 @@
             const progressPercent = ((currentStepIndex + 1) / totalSteps) * 100;
             if (progressBar) progressBar.style.width = `${progressPercent}%`;
             if (progressText) progressText.textContent = `${currentStepIndex + 1}/${totalSteps}단계`;
-            console.log(`[updateProgressBar] 현재 단계: ${currentStepId}, 진행률: ${progressPercent.toFixed(1)}%`);
+            console.log(`[updateProgressBar] 현재 단계: ${currentStepName}, 진행률: ${progressPercent.toFixed(1)}%`);
         }
 
 
@@ -461,7 +463,7 @@
                 }
             });
             document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
-            document.querySelectorAll('.error-message').forEach(el => el.textContent = ''); // class 'error-message'
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = ''); 
             document.querySelectorAll('.success-message').forEach(el => el.textContent = '');
 
             document.querySelectorAll('.diagnosis-btn.selected').forEach(btn => btn.classList.remove('selected'));
@@ -490,7 +492,7 @@
         // 헬퍼 함수: 생년월일 선택지 생성
         function populateBirthDateOptions(yearEl, monthEl, dayEl, maxAge = 90, minAge = 0) { 
             console.log("[populateBirthDateOptions] 생년월일 선택지 생성 시작");
-            if (!yearEl || !monthEl || !dayEl) return; // 요소가 유효한지 확인
+            if (!yearEl || !monthEl || !dayEl) return; 
 
             const currentYear = new Date().getFullYear(); 
             yearEl.innerHTML = '<option value="">년</option>'; 
@@ -572,13 +574,13 @@
 
         // --- 이벤트 핸들러 바인딩 ---
         // 초기 화면 이동 버튼
-        if (goToLoginBtn) goToLoginBtn.onclick = () => { clearInputFields(); showStep('stepLogin'); };
-        if (goToSignUpBtn) goToSignUpBtn.onclick = () => { clearInputFields(); showStep('stepUserType'); };
-        if (linkToSignUpFromLogin) linkToSignUpFromLogin.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepUserType'); };
-        if (linkToLoginFromSignUp) linkToLoginFromSignUp.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepLogin'); }; 
-        if (forgotPasswordBtn) forgotPasswordBtn.onclick = () => { clearInputFields(); showStep('stepPasswordReset'); };
-        if (backToLoginBtn) backToLoginBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepLogin'); };
-        if (backToRoleChoiceBtn) backToRoleChoiceBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepUserType'); };
+        if (goToLoginBtn) goToLoginBtn.onclick = () => { clearInputFields(); showStep('login'); }; 
+        if (goToSignUpBtn) goToSignUpBtn.onclick = () => { clearInputFields(); showStep('userType'); }; 
+        if (linkToSignUpFromLogin) linkToSignUpFromLogin.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('userType'); }; 
+        if (linkToLoginFromSignUp) linkToLoginFromSignUp.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('login'); }; 
+        if (forgotPasswordBtn) forgotPasswordBtn.onclick = () => { clearInputFields(); showStep('passwordReset'); }; 
+        if (backToLoginBtn) backToLoginBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('login'); }; 
+        if (backToUserTypeBtn) backToUserTypeBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('userType'); }; 
 
 
         // 로그인 버튼
@@ -602,7 +604,7 @@
                 console.error("[loginBtn] 로그인 실패:", error);
                 if (error.code === 'auth/invalid-email') loginEmailError.textContent = "유효하지 않은 이메일 형식입니다.";
                 else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') loginPasswordError.textContent = "이메일 또는 비밀번호가 올바르지 않습니다.";
-                else loginEmailError.textContent = "로그인에 실패했습니다. 다시 시도해주세요."; // 일반 오류는 이메일 에러에 표시
+                else loginEmailError.textContent = "로그인에 실패했습니다. 다시 시도해주세요."; 
             } else if (user) { 
                 if (user.emailVerified) { 
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -622,12 +624,12 @@
                         setLocalStorageAndRedirect(userProfile, ageForTalk, childDataForRedirect, isCaregiverNeurodiverse);
                     } else { 
                         console.log("[loginBtn] 사용자 프로필 없음 또는 userType 누락, 프로필 설정 단계로 이동");
-                        showStep('stepUserType'); 
+                        showStep('userType'); 
                     }
                 } else { 
                     console.log("[loginBtn] 이메일 미인증, emailVerification으로 이동");
                     if (verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = user.email;
-                    showStep('stepEmailVerification'); 
+                    showStep('emailVerification'); 
                     localStorage.setItem('lozee_tempEmailForVerification', user.email); 
                     showToast('이메일 인증이 필요합니다. 인증 메일을 확인해주세요.');
                 }
@@ -646,7 +648,6 @@
                 await resetPassword(email); 
                 resetSuccessEl.textContent = "비밀번호 재설정 이메일을 보냈습니다. 메일함을 확인해주세요. (등록된 계정이 없는 경우 메일이 발송되지 않을 수 있습니다.)";
                 showToast("비밀번호 재설정 이메일을 보냈습니다.");
-                // showStep('stepLogin'); // 이메일 발송 후 로그인 화면으로 바로 이동 (선택 사항)
             } catch (error) {
                 console.error("[sendResetEmailBtn] 비밀번호 재설정 이메일 전송 실패:", error);
                 if (error.code === 'auth/invalid-email') resetErrorEl.textContent = "유효하지 않은 이메일 형식입니다.";
@@ -662,14 +663,14 @@
         userTypeButtons.forEach(button => { 
             button.onclick = () => { 
                 selectedUserType = button.dataset.usertype; 
-                showStep('stepTermsAgreement'); 
+                showStep('termsAgreement'); 
             }; 
         });
         
         // 약관 동의 제출
         if (submitTermsBtn) submitTermsBtn.onclick = () => {
             console.log("[submitTermsBtn] 약관 동의 확인");
-            termsErrorEl.textContent = ''; // HTML ID에 맞춤
+            termsErrorEl.textContent = ''; 
             if (!agreeTermsCheckbox.checked || !agreePrivacyCheckbox.checked) { 
                 termsErrorEl.textContent = "필수 약관에 모두 동의해주세요."; 
                 return; 
@@ -677,7 +678,7 @@
             tempAgreedTerms = agreeTermsCheckbox.checked; 
             tempAgreedPrivacy = agreePrivacyCheckbox.checked; 
             tempAgreedMarketing = agreeMarketingCheckbox.checked;
-            showStep('stepSignUpEmailPassword'); 
+            showStep('signUpEmailPassword'); 
         };
         
         // 계정 생성 및 인증 메일 발송
@@ -701,12 +702,25 @@
             createAccountBtn.disabled = false; createAccountBtn.textContent = "계정 생성 및 인증 메일 발송";
             if (error) {
                 console.error("[createAccountBtn] 계정 생성 실패:", error);
-                if (error.code === 'auth/email-already-in-use') signUpEmailError.innerHTML = `이미 사용 중인 이메일입니다. <a href="#" id="goToLoginLinkAuthError" style="color: #fff; text-decoration: underline;">로그인 페이지로 이동</a>`;
-                else if (error.code === 'auth/invalid-email') signUpEmailError.textContent = "유효하지 않은 이메일 형식입니다.";
-                else if (error.code === 'auth/weak-password') signUpPasswordError.textContent = "비밀번호가 너무 약합니다. 6자리 이상으로 설정해주세요.";
-                else signUpErrorEl.textContent = "계정 생성에 실패했습니다. 다시 시도해주세요.";
-                const goToLoginLinkAuthError = document.getElementById('goToLoginLinkAuthError');
-                if (goToLoginLinkAuthError) goToLoginLinkAuthError.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepLogin'); }; 
+                let errorMessage = "계정 생성 실패: ";
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        signUpEmailError.innerHTML = `이미 사용 중인 이메일입니다. <a href="#" id="goToLoginLinkAuthError" style="color: #fff; text-decoration: underline;">로그인 페이지로 이동</a>`;
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = "유효하지 않은 이메일 형식입니다.";
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = "비밀번호가 너무 약합니다. 6자리 이상으로 설정해주세요.";
+                        break;
+                    default:
+                        errorMessage = error.message;
+                    }
+                if (signUpErrorEl) {
+                    signUpErrorEl.innerHTML = errorMessage;
+                    const goToLoginLinkAuthError = document.getElementById('goToLoginLinkAuthError');
+                    if (goToLoginLinkAuthError) goToLoginLinkAuthError.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepLogin'); }; 
+                }
             } else if (user) {
                 showToast("회원가입 성공! 인증 메일을 보냈습니다.");
                 if (verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = email;
@@ -751,16 +765,15 @@
                     showToast("로그인 성공!");
                     setLocalStorageAndRedirect(userProfile, ageForTalk, childDataForRedirect, isCaregiverNeurodiverse);
                 } else {
-                    console.log("[listenAuthState] 사용자 프로필 없음, userType에 따라 프로필 설정 시작");
-                    // selectedUserType은 이미 'userType' 단계에서 설정되었을 것입니다.
-                    if (selectedUserType) {
+                    console.log("[listenAuthState] 사용자 프로필 없음, 프로필 설정 시작"); // 'userType' 대신 '프로필 설정 시작'으로 메시지 변경
+                    if (selectedUserType) { // 이전에 selectedUserType이 설정되어 있다면 해당 단계로 이동
                         if (selectedUserType === 'caregiver') {
-                            showStep('stepCaregiverNeurodiversity'); 
+                            showStep('caregiverNeurodiversity'); 
                         } else { // directUser
-                            showStep('stepDiagnosisType'); 
+                            showStep('diagnosisType'); 
                         }
-                    } else {
-                        showStep('stepUserType'); 
+                    } else { // selectedUserType이 설정되지 않았다면 (예: 이메일 인증 후 처음 방문)
+                        showStep('userType'); // userType 선택 단계로 이동
                     }
                 }
             } else {
@@ -795,13 +808,13 @@
                 const ndType = button.dataset.nd; 
                 console.log("[caregiverNdOptionBtns] 신경다양성 선택:", ndType);
                 if (ndType === 'unsure_or_none') {
-                    caregiverNdOptionBtns.forEach(btn => btn.classList.remove('selected'));
-                    button.classList.add('selected');
+                    caregiverNdOptionBtns.forEach(btn => btn.classList.remove('active')); // ✅ active 클래스 사용
+                    button.classList.add('active'); // ✅ active 클래스 사용
                     tempSelectedCaregiverNd = [ndType];
                 } else {
-                    document.querySelector('.caregiver-nd-btn[data-nd="unsure_or_none"]')?.classList.remove('selected'); 
+                    document.querySelector('.caregiver-nd-btn[data-nd="unsure_or_none"]')?.classList.remove('active'); // ✅ active 클래스 사용
                     tempSelectedCaregiverNd = tempSelectedCaregiverNd.filter(d => d !== 'unsure_or_none');
-                    button.classList.toggle('selected');
+                    button.classList.toggle('active'); // ✅ active 클래스 사용
                     if (!tempSelectedCaregiverNd.includes(ndType)) { 
                         tempSelectedCaregiverNd.push(ndType);
                     } else { 
@@ -816,11 +829,11 @@
         if (submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => {
             console.log("[submitCaregiverNdBtn] 보호자 신경다양성 제출:", tempSelectedCaregiverNd);
             if (caregiverNdError) caregiverNdError.textContent = '';
-            tempSelectedCaregiverNd = Array.from(document.querySelectorAll('.caregiver-nd-btn.selected')).map(btn => btn.dataset.nd); 
+            tempSelectedCaregiverNd = Array.from(document.querySelectorAll('.caregiver-nd-btn.active')).map(btn => btn.dataset.nd); // ✅ active 클래스 사용
             if (tempSelectedCaregiverNd.length === 0) {
                 tempSelectedCaregiverNd = ['unsure_or_none'];
             }
-            showStep('stepSpecialistDiagnosisCaregiver'); 
+            showStep('specialistDiagnosisCaregiver'); 
         };
 
         // 보호자 및 자녀 전문의 진단 여부
@@ -837,7 +850,7 @@
             console.log("[submitSpecialistDiagnosisCaregiverBtn] 보호자 전문의 진단 여부:", tempIsSpecialistDiagnosedCaregiver);
             console.log("[submitSpecialistDiagnosisCaregiverBtn] 자녀 전문의 진단 여부:", tempIsSpecialistDiagnosedChild);
             populateBirthDateOptions(birthYearChild, birthMonthChild, birthDayChild, 18, 0); 
-            showStep('stepNameBirthChild'); 
+            showStep('nameBirthChild'); 
         };
 
         // 본인 신경다양성 선택
@@ -847,14 +860,14 @@
                 console.log("[diagnosisOptionBtns] 신경다양성 선택:", diagnosis);
                 const isExclusive = (diagnosis === 'NotApplicable' || diagnosis === 'Unsure');
                 if (isExclusive) {
-                    diagnosisOptionBtns.forEach(btn => btn.classList.remove('selected'));
-                    button.classList.add('selected');
+                    diagnosisOptionBtns.forEach(btn => btn.classList.remove('active')); // ✅ active 클래스 사용
+                    button.classList.add('active'); // ✅ active 클래스 사용
                     tempSelectedDiagnoses = [diagnosis];
                 } else {
-                    document.querySelector('.diagnosis-btn[data-diagnosis="NotApplicable"]')?.classList.remove('selected'); 
-                    document.querySelector('.diagnosis-btn[data-diagnosis="Unsure"]')?.classList.remove('selected'); 
+                    document.querySelector('.diagnosis-btn[data-diagnosis="NotApplicable"]')?.classList.remove('active'); // ✅ active 클래스 사용
+                    document.querySelector('.diagnosis-btn[data-diagnosis="Unsure"]')?.classList.remove('active'); // ✅ active 클래스 사용
                     tempSelectedDiagnoses = tempSelectedDiagnoses.filter(d => d !== 'NotApplicable' && d !== 'Unsure');
-                    button.classList.toggle('selected');
+                    button.classList.toggle('active'); // ✅ active 클래스 사용
                     if (!tempSelectedDiagnoses.includes(diagnosis)) {
                         tempSelectedDiagnoses.push(diagnosis);
                     } else {
@@ -873,8 +886,8 @@
                 return;
             }
             if (diagnosisError) diagnosisError.textContent = '';
-            tempSelectedDiagnoses = Array.from(document.querySelectorAll('.diagnosis-btn.selected')).map(btn => btn.dataset.diagnosis); 
-            showStep('stepSpecialistDiagnosisDirectUser'); 
+            tempSelectedDiagnoses = Array.from(document.querySelectorAll('.diagnosis-btn.active')).map(btn => btn.dataset.diagnosis); // ✅ active 클래스 사용
+            showStep('specialistDiagnosisDirectUser'); 
         };
 
         // 본인 전문의 진단 여부
@@ -889,7 +902,7 @@
             tempIsSpecialistDiagnosedDirectUser = (selectedValue === 'true');
 
             populateBirthDateOptions(birthYearSelf, birthMonthSelf, birthDaySelf, 90, 3); 
-            showStep('stepNameBirthSelf'); 
+            showStep('nameBirthSelf'); 
         };
 
         // 본인 이름 및 생년월일
@@ -906,7 +919,7 @@
             tempUserName = name; 
             tempUserBirthDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`; 
             tempUserAge = calculateAge(year, month, day); 
-            showStep('stepFinalStart'); 
+            showStep('finalStart'); 
         };
 
         // 자녀 이름 및 생년월일
@@ -923,7 +936,7 @@
             tempChildName = name; 
             tempChildBirthDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`; 
             tempChildAge = calculateAge(year, month, day); 
-            showStep('stepFinalStart'); 
+            showStep('finalStart'); 
         };
 
         // 대화 시작 (프로필 최종 저장)
@@ -1013,12 +1026,26 @@
                 }
             }
 
+            // jQuery <path> 오류 방어 코드 (기존 그대로 유지)
+            console.log("[DOMContentLoaded] jQuery 확인:", typeof window.jQuery !== 'undefined' ? "jQuery 로드됨" : "jQuery 로드되지 않음");
+            const paths = document.querySelectorAll('path');
+            paths.forEach(path => {
+                try {
+                    const dValue = path.getAttribute('d');
+                    if (dValue && !dValue.match(/^[MLHVCSQTAmlhvcsqta][0-9,. -]*$/)) {
+                        console.warn("[SVG Debug] 유효하지 않은 path d 속성:", dValue);
+                        path.setAttribute('d', 'M0,0 L10,10');
+                    }
+                } catch (e) {
+                    console.error("[SVG Debug] path 처리 오류:", e);
+                }
+            });
+
+
             // Firebase 인증 상태 감지
-            // 루프 방지를 위해 isInitialized 플래그를 사용.
-            // 이미 초기화된 상태라면 로직을 다시 실행하지 않도록 합니다.
             const isInitialized = localStorage.getItem('lozee_initialized');
-            if (!isInitialized) {
-                localStorage.setItem('lozee_initialized', 'true');
+            if (!isInitialized) { // 앱이 처음 로드될 때만 listenAuthState를 호출하여 루프 방지
+                localStorage.setItem('lozee_initialized', 'true'); // 초기화 플래그 설정
                 listenAuthState(
                     async (user, userProfile) => {
                         console.log("[listenAuthState] 로그인 상태 감지. UID:", user.uid);
@@ -1029,7 +1056,7 @@
                             showToast('이메일 인증이 필요합니다. 인증 이메일을 확인해주세요.');
                             if (verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = user.email;
                             localStorage.setItem('lozee_tempEmailForVerification', user.email);
-                            showStep('stepEmailVerification'); 
+                            showStep('emailVerification'); 
                             return;
                         }
 
@@ -1062,14 +1089,14 @@
                             setLocalStorageAndRedirect(userProfileForRedirect, ageForTalk, childDataForRedirect, isCaregiverNeurodiverse);
                         } else {
                             console.log("[listenAuthState] 사용자 프로필 없음 또는 불완전, userType으로 이동");
-                            showStep('stepUserType'); 
+                            showStep('userType'); 
                         }
                     },
                     () => {
                         console.log("[listenAuthState] 로그아웃 상태 감지.");
                         currentUserId = null;
                         clearInputFields();
-                        showStep('stepAuthChoice'); 
+                        showStep('authChoice'); 
                         showToast('로그아웃 상태입니다.');
                     },
                     clearInputFields,
@@ -1077,12 +1104,12 @@
                 );
             } else {
                 // 이미 초기화된 경우, 현재 화면이 로그인/회원가입 관련이라면 해당 화면으로 이동
-                // (이 경우 사용자가 수동으로 URL을 입력했을 수 있음)
-                const currentHash = window.location.hash.substring(1);
-                if (currentHash && steps[`step${currentHash.charAt(0).toUpperCase() + currentHash.slice(1)}`]) {
-                    showStep(`step${currentHash.charAt(0).toUpperCase() + currentHash.slice(1)}`);
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentStepParam = urlParams.get('step'); // URL 파라미터에서 step을 가져옴
+                if (currentStepParam && steps[`step${currentStepParam.charAt(0).toUpperCase() + currentStepParam.slice(1)}`]) {
+                    showStep(currentStepParam); // 파라미터로 받은 step으로 이동
                 } else {
-                    showStep('stepAuthChoice'); // 기본 로그인/회원가입 선택 화면
+                    showStep('authChoice'); // 기본 로그인/회원가입 선택 화면
                 }
             }
         });
