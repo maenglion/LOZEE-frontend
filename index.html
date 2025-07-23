@@ -115,7 +115,7 @@
             <p class="info-text">어떤 역할로 로지를 이용하시겠어요?</p>
             <div class="user-type-options">
                 <button class="user-type-btn" data-usertype="directUser">제가 직접 이야기 나눌 거예요<br><span class="btn-subtitle">(신경다양인 당사자)</span></button>
-                <button class="user-type-btn" data-usertype="caregiver">제가 보호자예요<br><span class="btn-subtitle">(양육자, 배우자 등)</span></button>
+                <button class="user-type-btn" data-usertype="caregiver">가까운 사람이예요<br><span class="btn-subtitle">(양육자, 배우자 등)</span></button>
             </div>
             <div id="userTypeError" class="error-message"></div>
             <button id="linkToLoginFromSignUp" class="secondary-btn">이미 계정이 있으신가요? 로그인</button>
@@ -192,13 +192,17 @@
 
         <section id="stepCaregiverNeurodiversity" class="step step-background-main">
             <h2 id="caregiverNdTitle">보호자님에 대해서도 알려주시겠어요? <span class="optional-text">(선택 사항)</span></h2>
-            <p class="info-text">본인 또는 관계인(예: 배우자)께서 신경다양성 특성을 가지고 계시다면, 해당하는 항목을 모두 선택해주세요.</p>
+            <p class="info-text">본인에 해당하는 항목을 모두 선택해주세요.</p>
             <div class="diagnosis-options">
-                <button class="caregiver-nd-btn" data-nd="self_asd">저(보호자)에게 자폐 스펙트럼(ASD) 성향이 있어요.</button>
-                <button class="caregiver-nd-btn" data-nd="self_adhd">저(보호자)에게 ADHD 성향이 있어요.</button>
-                <button class="caregiver-nd-btn" data-nd="spouse_asd">배우자에게 자폐 스펙트럼(ASD) 성향이 있어요.</button>
-                <button class="caregiver-nd-btn" data-nd="spouse_adhd">배우자에게 ADHD 성향이 있어요.</button>
-                <button class="caregiver-nd-btn" data-nd="unsure_or_none">잘 모르거나 해당 사항 없어요.</button>
+                <button class="diagnosis-btn" data-diagnosis="NotApplicable"> 1. 해당사항 없음</button>
+                <button class="diagnosis-btn" data-diagnosis="ASD">2. ASD (자폐 스펙트럼, 아스퍼거증후군, 비언어성학습장애 포함)</button>
+                <button class="diagnosis-btn" data-diagnosis="LanguageCommunication">3. 언어 의사소통 (사회적 의사소통장애, 언어지연)</button>
+                <button class="diagnosis-btn" data-diagnosis="ADHD">4. ADHD</button>
+                <button class="diagnosis-btn" data-diagnosis="Tic">5. 뚜렛, 틱</button>
+                <button class="diagnosis-btn" data-diagnosis="LearningDisability">6. 학습장애 (난독증, 난산증, 난서증)</button>
+                <button class="diagnosis-btn" data-diagnosis="SensoryProcessing">7. 감각장애</button>
+                <button class="diagnosis-btn" data-diagnosis="Other">8. 기타</button>
+ 
             </div>
             <div id="caregiverNdError" class="error-message"></div>
             <button id="submitCaregiverNdBtn">다음 (또는 건너뛰기)</button>
@@ -225,8 +229,6 @@
                 <button class="diagnosis-btn" data-diagnosis="Tic">4. 뚜렛, 틱</button>
                 <button class="diagnosis-btn" data-diagnosis="LearningDisability">5. 학습장애 (난독증, 난산증, 난서증)</button>
                 <button class="diagnosis-btn" data-diagnosis="SensoryProcessing">6. 감각장애</button>
-                <button class="diagnosis-btn" data-diagnosis="Other">7. 기타</button>
-                <button class="diagnosis-btn" data-diagnosis="Unsure">8. 아직 잘 모르겠어요</button>
                 <button class="diagnosis-btn" data-diagnosis="NotApplicable">특별히 해당 없음</button>
             </div>
             <div id="diagnosisError" class="error-message"></div>
