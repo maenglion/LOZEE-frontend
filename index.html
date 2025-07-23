@@ -1044,55 +1044,125 @@
             });
 
             // Firebase 인증 상태 감지 시작
-            listenAuthState(
-                async (user, userProfile) => {
-                    console.log("[listenAuthState] 로그인 상태 감지. UID:", user.uid);
-                    currentUserId = user.uid;
-                    if (!user.emailVerified) {
-                        showToast('이메일 인증이 필요합니다. 인증 이메일을 확인해주세요.');
-                        showStep('emailVerification');
-                        return;
+              listenAuthState(
+        async (user, userProfile) => {
+            // 사용자 로그인 상태 처리
+            console.log("User logged in:", user.uid);
+            console.log("Email verified:", user.emailVerified); // ✅ 이메일 인증 상태 로그 추가
+
+            // 이메일 인증 확인
+            if (!user.emailVerified) {
+                // 이메일이 인증되지 않았다면 인증 페이지를 보여주거나, 인증 메일 발송 안내
+                showStep('emailVerificationPending'); // ✅ 새로운 단계 추가 (아래에서 정의)
+                document.getElementById('verificationEmailDisplay').textContent = user.email;
+                console.log("Email not verified. Showing verification pending step.");
+                return; // 여기서 함수 종료
+            }
+
+            // 이메일이 인증되었다면 프로필 설정 또는 메인 앱으로 이동
+            if (userProfile && userProfile.role) { // 프로필이 있고 역할이 설정되어 있다면
+                showStep('mainApp');
+                // 사용자 정보 표시 업데이트 등 메인 앱 로직
+                document.getElementById('loggedInUserEmail').textContent = user.email;
+                document.getElementById('loggedInUserRole').textContent = userProfile.role; // 역할 표시
+                console.log("User email verified and profile exists. Showing main app.");
+            } else {
+                // 이메일은 인증되었지만 프로필이 없거나 역할이 설정되지 않았다면 프로필 설정 페이지로
+                showStep('profileSetup');
+                console.log("User email verified but profile not complete. Showing profile setup.");
+            }
+        },
+        () => {
+            // 사용자 로그아웃 상태 처리
+            console.log("User logged out. Showing auth choice step.");
+            // clearInputFields()는 listenAuthState 내부에서 호출되므로 여기서는 필요 없을 수 있습니다.
+            showStep('authChoice');
+        },
+        clearInputFields, // listenAuthState에 전달
+        showStep // listenAuthState에 전달
+    );
+// ... (기존 함수들: showStep, clearInputFields, setupEventListeners 등) ...
+
+    // ✅ 새로운 단계 'emailVerificationPending'을 위한 HTML 요소 추가 (index.html의 적절한 위치에 추가)
+    // 예를 들어, <div id="authChoice">와 <div id="profileSetup"> 사이에 추가할 수 있습니다.
+    /*
+    <div id="emailVerificationPending" class="step-container" style="display: none;">
+        <h2>이메일 인증 필요</h2>
+        <p><span id="verificationEmailDisplay"></span> 로 인증 메일을 보냈습니다. 받은 편지함을 확인해주세요.</p>
+        <p>메일을 받지 못하셨다면 스팸함을 확인하거나 재전송을 요청해주세요.</p>
+        <button id="resendVerificationEmailBtn" class="btn btn-primary">인증 메일 재전송</button>
+        <button id="checkVerificationStatusBtn" class="btn btn-secondary">인증 완료 확인</button>
+        <button id="logoutBtnFromVerification" class="btn btn-danger">로그아웃</button>
+    </div>
+    */
+
+    // ✅ 새로운 이벤트 리스너 추가 (setupEventListeners 함수 내 또는 별도로)
+    document.addEventListener('DOMContentLoaded', () => {
+        // ... 기존 이벤트 리스너들 ...
+
+        const resendVerificationEmailBtn = document.getElementById('resendVerificationEmailBtn');
+        if (resendVerificationEmailBtn) {
+            resendVerificationEmailBtn.addEventListener('click', async () => {
+                const user = firebaseAuth.currentUser; // firebaseAuth는 firebase-config.js에서 가져온 auth 인스턴스
+                if (user) {
+                    try {
+                        await sendVerificationEmail(user); // auth.js에서 가져온 함수 사용
+                        alert('인증 메일을 다시 보냈습니다. 스팸함도 확인해주세요.');
+                    } catch (error) {
+                        console.error('인증 메일 재전송 실패:', error);
+                        alert('인증 메일 재전송에 실패했습니다: ' + error.message);
                     }
-                    if (userProfile && userProfile.userType) { // userProfile의 userType 필드 존재 여부 확인
-                        const userProfileForRedirect = { ...userProfile }; 
-                        if (typeof userProfileForRedirect.userType === 'string') {
-                            userProfileForRedirect.userType = [userProfileForRedirect.userType];
-                            if (userProfileForRedirect.userType[0] === 'caregiver' && 
-                                userProfileForRedirect.caregiverInfo?.caregiverNeurodiversity?.length > 0 &&
-                                !userProfileForRedirect.caregiverInfo.caregiverNeurodiversity.includes('unsure_or_none')) {
-                                    userProfileForRedirect.userType.push('directUser');
-                            }
-                        }
+                }
+            });
+        }
 
-                        let ageForTalk = userProfileForRedirect.age;
-                        let childDataForRedirect = null;
-                        let isCaregiverNeurodiverse = false;
-
-                        if (userProfileForRedirect.caregiverInfo) {
-                            isCaregiverNeurodiverse = userProfileForRedirect.caregiverInfo.caregiverNeurodiversity?.length > 0 &&
-                                !userProfileForRedirect.caregiverInfo.caregiverNeurodiversity.includes('unsure_or_none');
-                        }
-
-                        if (Array.isArray(userProfileForRedirect.userType) && userProfileForRedirect.userType.includes('caregiver') && userProfileForRedirect.caregiverInfo) { 
-                            ageForTalk = userProfileForRedirect.caregiverInfo.childAge;
-                            childDataForRedirect = userProfileForRedirect.caregiverInfo;
-                        } 
-                        setLocalStorageAndRedirect(userProfileForRedirect, ageForTalk, childDataForRedirect, isCaregiverNeurodiverse);
+        const checkVerificationStatusBtn = document.getElementById('checkVerificationStatusBtn');
+        if (checkVerificationStatusBtn) {
+            checkVerificationStatusBtn.addEventListener('click', async () => {
+                const user = firebaseAuth.currentUser;
+                if (user) {
+                    await user.reload(); // 사용자 최신 상태를 Firebase에서 다시 로드
+                    if (user.emailVerified) {
+                        alert('이메일 인증이 확인되었습니다!');
+                        // 인증이 완료되었으니 다시 listenAuthState를 트리거하여 다음 단계로 이동
+                        listenAuthState(
+                            async (user, userProfile) => {
+                                if (userProfile && userProfile.role) {
+                                    showStep('mainApp');
+                                    document.getElementById('loggedInUserEmail').textContent = user.email;
+                                    document.getElementById('loggedInUserRole').textContent = userProfile.role;
+                                } else {
+                                    showStep('profileSetup');
+                                }
+                            },
+                            () => showStep('authChoice'),
+                            clearInputFields,
+                            showStep
+                        );
                     } else {
-                        console.log("[listenAuthState] 사용자 프로필 없음, userType으로 이동");
-                        showStep('userType');
+                        alert('아직 이메일 인증이 완료되지 않았습니다. 메일을 확인해주세요.');
                     }
-                },
-                () => {
-                    console.log("[listenAuthState] 로그아웃 상태입니다.");
-                    currentUserId = null;
-                    clearInputFields();
+                } else {
+                    alert('로그인된 사용자가 없습니다.');
                     showStep('authChoice');
-                    showToast('로그아웃 상태입니다.');
-                },
-                clearInputFields,
-                showStep
-            ); 
+                }
+            });
+        }
+
+        const logoutBtnFromVerification = document.getElementById('logoutBtnFromVerification');
+        if (logoutBtnFromVerification) {
+            logoutBtnFromVerification.addEventListener('click', async () => {
+                try {
+                    await signOut(firebaseAuth); // firebase-auth.js에서 가져온 signOut 함수 사용
+                    alert('로그아웃되었습니다.');
+                    showStep('authChoice');
+                } catch (error) {
+                    console.error('로그아웃 실패:', error);
+                    alert('로그아웃에 실패했습니다.');
+                }
+            });
+        }
+    });
 
             // 이벤트 핸들러: 회원가입
             if (signUpButton) {
