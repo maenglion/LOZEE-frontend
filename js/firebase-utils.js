@@ -76,24 +76,34 @@ export function waitForIdToken(timeout = 5000) {
   });
 }
 
-export async function saveJournalToFirestore(sessionId, journalData) {
-  if (!sessionId || !journalData) {
-    console.error("세션 ID 또는 저널 데이터가 없어 저장할 수 없습니다.");
-    return;
-  }
+export async function saveUserProfile(uid, profileData, additionalInfo = {}) {
   try {
-    const journalRef = doc(db, 'journals', sessionId);
-    await setDoc(journalRef, {
-      ...journalData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-    console.log(`저널이 성공적으로 저장되었습니다 (ID: ${sessionId})`);
+    const userRef = doc(db, 'users', uid);
+
+    // 기본적으로 DirectUser로 설정
+    const userTypeArray = ['DirectUser'];
+
+    // caregiverInfo가 있는 경우 Caregiver도 추가
+    if (
+      additionalInfo?.caregiverInfo?.caregiverNeurodiversity?.length > 0 ||
+      additionalInfo?.caregiverInfo?.childDiagnoses?.length > 0
+    ) {
+      userTypeArray.push('Caregiver');
+    }
+
+    await setDoc(userRef, {
+      ...profileData,
+      ...additionalInfo,
+      userType: userTypeArray,
+      createdAt: new Date().toISOString()
+    });
+
+    console.log('✅ 사용자 프로필 저장 완료');
   } catch (error) {
-    console.error("Firestore에 저널 저장 중 오류:", error);
-    throw error;
+    console.error('❌ 사용자 프로필 저장 실패:', error);
   }
 }
+
 
 export async function saveJournalEntry(ownerUid, topic, journalDetails, options = {}) {
     if (!ownerUid || !topic || !journalDetails || !journalDetails.summary) {
