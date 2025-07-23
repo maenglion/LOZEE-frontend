@@ -1,6 +1,6 @@
 import {
     createUserWithEmailAndPassword,
-    sendEmailVerification,
+    sendVerificationEmail,
     signInWithEmailAndPassword,
     sendPasswordResetEmail,
     onAuthStateChanged,
@@ -16,6 +16,7 @@ import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'https://www.gst
  * @param {function} clearInputFieldsFn - 입력 필드를 초기화하는 함수
  * @param {function} showStepFn - 특정 단계를 보여주는 함수
  */
+
 export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputFieldsFn, showStepFn) {
     return onAuthStateChanged(firebaseAuth, async (user) => {
         if (user) {
@@ -49,7 +50,7 @@ export function listenAuthState(onUserLoggedIn, onUserLoggedOut, clearInputField
 export async function signUpWithEmail(email, password) {
     try {
         const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-        await sendEmailVerification(userCredential.user);
+        await sendVerificationEmail(userCredential.user);
         return { user: userCredential.user, error: null };
     } catch (error) {
         return { user: null, error: error };
@@ -106,7 +107,7 @@ export async function saveUserProfile(uid, profileData) {
 /** 이메일 인증 재전송 */
 export async function sendVerificationEmail(user) {
     try {
-        await sendEmailVerification(user);
+        await sendVerificationEmail(user);
         console.log('Verification email sent!');
         return true;
     } catch (error) {
