@@ -809,20 +809,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateBirthDateOptions(birthYearSelf, birthMonthSelf, birthDaySelf, 90, 3); // 본인 생년월일 (최대 90세, 최소 3세)
     populateBirthDateOptions(birthYearFamily, birthMonthFamily, birthDayFamily, 18, 0); // 자녀/가족 생년월일 (최대 18세, 최소 0세)
 
-    // 애니메이션 비활성화 설정
-    const disableAnimationsCheckbox = document.getElementById('disableAnimations');
-    if (disableAnimationsCheckbox) {
-        disableAnimationsCheckbox.checked = localStorage.getItem('lozee_disable_animations') === 'true';
-        disableAnimationsCheckbox.addEventListener('change', (e) => {
-            localStorage.setItem('lozee_disable_animations', e.target.checked);
-            document.querySelectorAll('.step, button, .progress').forEach(el => {
-                el.style.transition = e.target.checked ? 'none' : '';
-            });
-        });
-        if (disableAnimationsCheckbox.checked) {
-            document.querySelectorAll('.step, button, .progress').forEach(el => el.style.transition = 'none');
-        }
-    }
+    // '애니메이션 비활성화' 관련 이벤트 리스너를 삭제했습니다.
 
     // jQuery <path> 오류 방어 코드 (기존 그대로 유지)
     console.log("[DOMContentLoaded] jQuery 확인:", typeof window.jQuery !== 'undefined' ? "jQuery 로드됨" : "jQuery 로드되지 않음");

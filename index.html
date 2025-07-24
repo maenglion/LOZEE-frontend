@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        /* 기존 스타일 유지 */
+        /* CSS 스타일은 이전과 동일하게 유지됩니다. */
         body, html { margin: 0; padding: 0; font-family: 'KoPub World Dotum', sans-serif; color: #ffffff; height: 100%; overflow: hidden; }
         .step { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; text-align: center; height: 100vh; width: 100vw; position: absolute; top: 0; left: 0; }
         .step.active { display: flex; }
@@ -52,9 +52,7 @@
         .progress-bar { width: 85%; max-width: 350px; height: 10px; background: rgba(255, 255, 255, 0.3); border-radius: 8px; margin: 20px auto; }
         .progress { height: 100%; background: #6e8efb; border-radius: 8px; transition: width 0.2s ease; }
         .progress-text { font-size: 1.1em; color: #f0f0f0; font-family: 'KoPub World Dotum', sans-serif; text-align: center; margin-bottom: 15px; }
-        .animation-toggle { margin-bottom: 15px; }
-        .animation-toggle label { font-size: 0.95em; color: #f0f0f0; display: flex; align-items: center; justify-content: center; }
-        .animation-toggle input[type="checkbox"] { width: auto; margin-right: 10px; transform: scale(1.2); }
+        /* 애니메이션 비활성화 관련 클래스는 제거되었습니다. */
         @media (max-width: 600px) {
             h2 { font-size: 1.6em; }
             p, .info-text, .progress-text { font-size: 0.95em; }
@@ -71,10 +69,7 @@
             <div id="progress" class="progress" style="width: 0%;"></div>
         </div>
         <div class="progress-text" id="progressText"></div>
-        <div class="animation-toggle">
-            <label><input type="checkbox" id="disableAnimations"> 애니메이션 비활성화</label>
-        </div>
-
+        
         <section id="stepAuthChoice" class="step step-background-main">
             <h2>LOZEE에 오신 것을 환영합니다!</h2>
             <button id="goToLoginBtn">로그인</button>
