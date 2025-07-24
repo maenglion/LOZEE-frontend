@@ -115,7 +115,7 @@
             <p class="info-text">어떤 역할로 로지를 이용하시겠어요?</p>
             <div class="user-type-options">
                 <button class="user-type-btn" data-usertype="directUser">제가 직접 이야기 나눌 거예요<br><span class="btn-subtitle">(신경다양인 당사자)</span></button>
-                <button class="user-type-btn" data-usertype="caregiver">가까운 사람이예요<br><span class="btn-subtitle">(양육자, 배우자 등)</span></button>
+                <button class="user-type-btn" data-usertype="caregiver">제가 보호자예요<br><span class="btn-subtitle">(양육자, 배우자 등)</span></button>
             </div>
             <div id="userTypeError" class="error-message"></div>
             <button id="linkToLoginFromSignUp" class="secondary-btn">이미 계정이 있으신가요? 로그인</button>
@@ -192,17 +192,13 @@
 
         <section id="stepCaregiverNeurodiversity" class="step step-background-main">
             <h2 id="caregiverNdTitle">보호자님에 대해서도 알려주시겠어요? <span class="optional-text">(선택 사항)</span></h2>
-            <p class="info-text">본인에 해당하는 항목을 모두 선택해주세요.</p>
+            <p class="info-text">본인 또는 관계인(예: 배우자)께서 신경다양성 특성을 가지고 계시다면, 해당하는 항목을 모두 선택해주세요.</p>
             <div class="diagnosis-options">
-                <button class="diagnosis-btn" data-diagnosis="NotApplicable"> 1. 해당사항 없음</button>
-                <button class="diagnosis-btn" data-diagnosis="ASD">2. ASD (자폐 스펙트럼, 아스퍼거증후군, 비언어성학습장애 포함)</button>
-                <button class="diagnosis-btn" data-diagnosis="LanguageCommunication">3. 언어 의사소통 (사회적 의사소통장애, 언어지연)</button>
-                <button class="diagnosis-btn" data-diagnosis="ADHD">4. ADHD</button>
-                <button class="diagnosis-btn" data-diagnosis="Tic">5. 뚜렛, 틱</button>
-                <button class="diagnosis-btn" data-diagnosis="LearningDisability">6. 학습장애 (난독증, 난산증, 난서증)</button>
-                <button class="diagnosis-btn" data-diagnosis="SensoryProcessing">7. 감각장애</button>
-                <button class="diagnosis-btn" data-diagnosis="Other">8. 기타</button>
- 
+                <button class="caregiver-nd-btn" data-nd="self_asd">저(보호자)에게 자폐 스펙트럼(ASD) 성향이 있어요.</button>
+                <button class="caregiver-nd-btn" data-nd="self_adhd">저(보호자)에게 ADHD 성향이 있어요.</button>
+                <button class="caregiver-nd-btn" data-nd="spouse_asd">배우자에게 자폐 스펙트럼(ASD) 성향이 있어요.</button>
+                <button class="caregiver-nd-btn" data-nd="spouse_adhd">배우자에게 ADHD 성향이 있어요.</button>
+                <button class="caregiver-nd-btn" data-nd="unsure_or_none">잘 모르거나 해당 사항 없어요.</button>
             </div>
             <div id="caregiverNdError" class="error-message"></div>
             <button id="submitCaregiverNdBtn">다음 (또는 건너뛰기)</button>
@@ -229,6 +225,8 @@
                 <button class="diagnosis-btn" data-diagnosis="Tic">4. 뚜렛, 틱</button>
                 <button class="diagnosis-btn" data-diagnosis="LearningDisability">5. 학습장애 (난독증, 난산증, 난서증)</button>
                 <button class="diagnosis-btn" data-diagnosis="SensoryProcessing">6. 감각장애</button>
+                <button class="diagnosis-btn" data-diagnosis="Other">7. 기타</button>
+                <button class="diagnosis-btn" data-diagnosis="Unsure">8. 아직 잘 모르겠어요</button>
                 <button class="diagnosis-btn" data-diagnosis="NotApplicable">특별히 해당 없음</button>
             </div>
             <div id="diagnosisError" class="error-message"></div>
@@ -404,7 +402,7 @@
                 step.style.display = 'none'; 
             });
             
-            const targetStep = document.getElementById(stepId); // HTML ID와 일치
+            const targetStep = document.getElementById(stepId); 
             if (targetStep) { 
                 targetStep.classList.add('active');
                 targetStep.style.display = 'flex'; 
@@ -612,13 +610,13 @@
 
         // --- 이벤트 핸들러 바인딩 ---
         // 초기 화면 이동 버튼
-        if (goToLoginBtn) goToLoginBtn.onclick = () => { clearInputFields(); showStep('login'); }; 
-        if (goToSignUpBtn) goToSignUpBtn.onclick = () => { clearInputFields(); showStep('userType'); }; 
-        if (linkToSignUpFromLogin) linkToSignUpFromLogin.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('userType'); }; 
-        if (linkToLoginFromSignUp) linkToLoginFromSignUp.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('login'); }; 
-        if (forgotPasswordBtn) forgotPasswordBtn.onclick = () => { clearInputFields(); showStep('passwordReset'); }; 
-        if (backToLoginBtn) backToLoginBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('login'); }; 
-        if (backToRoleChoiceBtn) backToRoleChoiceBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('userType'); }; 
+        if (goToLoginBtn) goToLoginBtn.onclick = () => { clearInputFields(); showStep('stepLogin'); }; 
+        if (goToSignUpBtn) goToSignUpBtn.onclick = () => { clearInputFields(); showStep('stepUserType'); }; 
+        if (linkToSignUpFromLogin) linkToSignUpFromLogin.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepUserType'); }; 
+        if (linkToLoginFromSignUp) linkToLoginFromSignUp.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepLogin'); }; 
+        if (forgotPasswordBtn) forgotPasswordBtn.onclick = () => { clearInputFields(); showStep('stepPasswordReset'); }; 
+        if (backToLoginBtn) backToLoginBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepLogin'); }; 
+        if (backToRoleChoiceBtn) backToRoleChoiceBtn.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('stepUserType'); }; 
 
 
         // 로그인 버튼
@@ -656,7 +654,7 @@
                 if (loginErrorEl) {
                     loginErrorEl.innerHTML = errorMessage;
                     const goToLoginLinkAuthError = document.getElementById('goToLoginLinkAuthError');
-                    if (goToLoginLinkAuthError) { // 이 링크는 회원가입 오류 메시지 내부에 있으므로, 없을 수 있음
+                    if (goToLoginLinkAuthError) { 
                         goToLoginLinkAuthError.onclick = (e) => { e.preventDefault(); clearInputFields(); showStep('login'); }; 
                     }
                 }
@@ -686,7 +684,7 @@
                     if (verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = user.email;
                     showStep('emailVerification'); 
                     localStorage.setItem('lozee_tempEmailForVerification', user.email); 
-                    showToast('이메일 인증이 필요합니다. 인증 메일을 확인해주세요.');
+                    showToast('이메일 인증이 필요합니다. 인증 이메일을 확인해주세요.');
                 }
             }
         };
@@ -915,8 +913,8 @@
                 if (specialistDiagnosisCaregiverError) specialistDiagnosisCaregiverError.textContent = "선택해주세요.";
                 return;
             }
-            tempIsSpecialistDiagnosedCaregiver = (selectedValue === 'true'); // 보호자 본인의 전문의 진단 여부 (현재 이렇게 매핑됨)
-            tempIsSpecialistDiagnosedChild = (selectedValue === 'true'); // 자녀의 전문의 진단 여부 (같은 라디오 버튼이므로 같은 값으로 매핑)
+            tempIsSpecialistDiagnosedCaregiver = (selectedValue === 'true'); 
+            tempIsSpecialistDiagnosedChild = (selectedValue === 'true'); 
             console.log("[submitSpecialistDiagnosisCaregiverBtn] 보호자 전문의 진단 여부:", tempIsSpecialistDiagnosedCaregiver);
             console.log("[submitSpecialistDiagnosisCaregiverBtn] 자녀 전문의 진단 여부:", tempIsSpecialistDiagnosedChild);
             
@@ -958,7 +956,7 @@
             if (diagnosisError) diagnosisError.textContent = '';
             tempSelectedDiagnoses = Array.from(document.querySelectorAll('.diagnosis-btn.active')).map(btn => btn.dataset.diagnosis); 
             
-            // selectedUserType에 따라 다음 단계 결정
+            // selectedUserType에 따라 다음 단계 결정 (전문의 진단 여부 또는 이름/생년월일)
             if (selectedUserType === 'caregiver') {
                 // 보호자일 경우, 자녀의 진단명을 선택했으니 이제 자녀의 이름/생년월일로 이동
                 populateBirthDateOptions(birthYearFamily, birthMonthFamily, birthDayFamily, 18, 0); 
@@ -989,7 +987,7 @@
             const name = nameFamilyInput.value.trim(); 
             const year = birthYearFamily.value; 
             const month = birthMonthFamily.value; 
-            const day = birthDayFamily.value; 
+            const day = birthDayFamily.value; // ✅ HTML ID와 일치
             nameFamilyError.textContent = ''; birthFamilyError.textContent = ''; 
 
             if (!name) { nameFamilyError.textContent = '아이(또는 가족)의 이름을 입력해주세요.'; return; } 
