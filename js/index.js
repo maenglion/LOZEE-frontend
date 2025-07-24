@@ -86,10 +86,14 @@ const birthYearFamily = document.getElementById('birthYearFamily');
 const birthMonthFamily = document.getElementById('birthMonthFamily');
 const birthDayFamily = document.getElementById('birthDayFamily');
 const birthFamilyError = document.getElementById('birthFamilyError');
-const submitNameBirthFamilyBtn = document.getElementById('submitNameFamilyBtn');
+const submitNameBirthFamilyBtn = document.getElementById('submitNameBirthFamilyBtn');
 const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
 const familyRelationshipSelect = document.getElementById('familyRelationship');
 const familyRelationshipError = document.getElementById('familyRelationshipError');
+const stepSpecialistDiagnosisCaregiverSelf = document.getElementById('stepSpecialistDiagnosisCaregiverSelf');
+const specialistDiagnosisCaregiverSelfRadios = document.querySelectorAll('input[name="specialistDiagnosisCaregiverSelf"]');
+const specialistDiagnosisCaregiverSelfError = document.getElementById('specialistDiagnosisCaregiverSelfError');
+const submitSpecialistDiagnosisCaregiverSelfBtn = document.getElementById('submitSpecialistDiagnosisCaregiverSelfBtn');
 
 
 // 상태 변수
@@ -102,6 +106,7 @@ let tempChildName = null;
 let tempChildBirthDate = null;
 let tempChildAge = null;
 let tempFamilyRelationship = null;
+let tempIsSpecialistDiagnosedCaregiverSelf = null;
 let tempSelectedCaregiverNd = [];
 let tempSelectedDiagnoses = []; // directUser 본인 또는 caregiver의 자녀/가족 진단명
 let tempAgreedTerms = false, tempAgreedPrivacy = false, tempAgreedMarketing = false;
@@ -174,32 +179,38 @@ function showStep(stepId) {
 // 헬퍼 함수: 진행 바 업데이트
 function updateProgressBar(currentStepId) {
     let stepsOrder;
-    // userType이 아직 선택되지 않았다면 (초기 로드 시) 기본 흐름 사용
+    
+    // 보호자가 본인 특성을 선택했는지 여부에 따라 전체 단계 수가 달라짐
+    const isCaregiverSelfND = tempSelectedCaregiverNd && tempSelectedCaregiverNd.length > 0 && tempSelectedCaregiverNd[0] !== 'unsure_or_none';
+
     if (selectedUserType === 'caregiver') { // 보호자 흐름
         stepsOrder = [
             'stepUserType', 'stepTermsAgreement', 'stepSignUpEmailPassword', 'stepEmailVerification',
             'stepNameBirthSelf',
-            'stepCaregiverNeurodiversity',
-            'stepNameBirthFamily',
-            'stepDiagnosisType', // 자녀용
-            'stepSpecialistDiagnosisCaregiver', // 자녀용
-            'stepFinalStart'
+            'stepCaregiverNeurodiversity'
         ];
-    } else { // directUser 흐름
+        if (isCaregiverSelfND) {
+            stepsOrder.push('stepSpecialistDiagnosisCaregiverSelf'); // 조건부 단계 추가
+        }
+        stepsOrder.push(
+            'stepNameBirthFamily',
+            'stepDiagnosisType',
+            'stepSpecialistDiagnosisCaregiver',
+            'stepFinalStart'
+        );
+    } else { // directUser 흐름 (기존과 동일)
         stepsOrder = [
             'stepUserType', 'stepTermsAgreement', 'stepSignUpEmailPassword', 'stepEmailVerification',
             'stepNameBirthSelf',
-            'stepDiagnosisType', // 본인용
-            'stepSpecialistDiagnosisDirectUser', // 본인용
+            'stepDiagnosisType',
+            'stepSpecialistDiagnosisDirectUser',
             'stepFinalStart'
         ];
     }
 
     const currentStepIndex = stepsOrder.indexOf(currentStepId);
-    // 회원가입 흐름 단계에만 진행률 표시
-    // stepAuthChoice, stepLogin, stepPasswordReset에서는 진행바를 표시하지 않음
-    // stepEmailVerification에서는 진행바를 표시하도록 수정
-    if (currentStepIndex === -1 || currentStepId === 'stepAuthChoice' || currentStepId === 'stepLogin' || currentStepId === 'stepPasswordReset') {
+
+    if (currentStepIndex === -1 || ['stepAuthChoice', 'stepLogin', 'stepPasswordReset'].includes(currentStepId)) {
         if (progressBar) progressBar.style.width = '0%';
         if (progressText) progressText.textContent = '';
         return;
@@ -207,6 +218,7 @@ function updateProgressBar(currentStepId) {
 
     const totalSteps = stepsOrder.length;
     const progressPercent = ((currentStepIndex + 1) / totalSteps) * 100;
+    
     if (progressBar) progressBar.style.width = `${progressPercent}%`;
     if (progressText) progressText.textContent = `${currentStepIndex + 1}/${totalSteps}단계`;
     console.log(`[updateProgressBar] 현재 단계: ${currentStepId}, 진행률: ${progressPercent.toFixed(1)}%`);
@@ -641,17 +653,42 @@ caregiverNdOptionBtns.forEach(button => {
     };
 });
 
+// 보호자 본인의 전문의 진단 여부 제출
+if (submitSpecialistDiagnosisCaregiverSelfBtn) submitSpecialistDiagnosisCaregiverSelfBtn.onclick = () => {
+    if (specialistDiagnosisCaregiverSelfError) specialistDiagnosisCaregiverSelfError.textContent = '';
+    const selectedValue = document.querySelector('input[name="specialistDiagnosisCaregiverSelf"]:checked')?.value;
+    
+    if (selectedValue === undefined) {
+        if (specialistDiagnosisCaregiverSelfError) specialistDiagnosisCaregiverSelfError.textContent = "예 또는 아니요를 선택해주세요.";
+        return;
+    }
+    
+    tempIsSpecialistDiagnosedCaregiverSelf = (selectedValue === 'true');
+    
+    // '가족 정보 입력' 단계로 이동
+    populateBirthDateOptions(birthYearFamily, birthMonthFamily, birthDayFamily, 18, 0);
+    showStep('stepNameBirthFamily');
+};
+
 // 보호자 신경다양성 제출
 if (submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => {
-    console.log("[submitCaregiverNdBtn] 보호자 신경다양성 제출:", tempSelectedCaregiverNd);
     if (caregiverNdError) caregiverNdError.textContent = '';
+    
+    // 선택된 특성들을 가져옵니다.
     tempSelectedCaregiverNd = Array.from(document.querySelectorAll('.caregiver-nd-btn.active')).map(btn => btn.dataset.nd);
-    if (tempSelectedCaregiverNd.length === 0) {
-        tempSelectedCaregiverNd = ['unsure_or_none']; // 아무것도 선택되지 않은 경우 기본값
+
+    // 사용자가 '아니요'(unsure_or_none)를 선택했거나 아무것도 선택하지 않았는지 확인합니다.
+    const isNotNeurodiverse = tempSelectedCaregiverNd.length === 0 || (tempSelectedCaregiverNd.length === 1 && tempSelectedCaregiverNd[0] === 'unsure_or_none');
+
+    if (isNotNeurodiverse) {
+        // '아니요'를 선택했거나 아무것도 선택하지 않으면 '가족 정보 입력'으로 바로 이동
+        tempSelectedCaregiverNd = ['unsure_or_none']; // 데이터 일관성을 위해 기본값 설정
+        populateBirthDateOptions(birthYearFamily, birthMonthFamily, birthDayFamily, 18, 0);
+        showStep('stepNameBirthFamily');
+    } else {
+        // 다른 특성을 하나라도 선택했다면 '보호자 본인 진단 여부' 질문으로 이동
+        showStep('stepSpecialistDiagnosisCaregiverSelf');
     }
-    // 보호자 본인의 신경다양성 선택 후, 자녀의 이름/생년월일로 이동
-    populateBirthDateOptions(birthYearFamily, birthMonthFamily, birthDayFamily, 18, 0); // 자녀의 생년월일 (최대 18세, 최소 0세)
-    showStep('stepNameBirthFamily');
 };
 
 // 자녀 또는 가족 이름 및 생년월일, 관계 제출
@@ -785,16 +822,17 @@ if (startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
     let childDataForRedirect = null;
 
     // startLozeeConversationBtn.onclick 함수 내부
-        if (selectedUserType === 'caregiver') {
-            profileData.caregiverInfo = {
-                caregiverNeurodiversity: tempSelectedCaregiverNd,
-                childName: tempChildName,
-                childBirthDate: tempChildBirthDate,
-                childAge: tempChildAge,
-                relationship: tempFamilyRelationship, // <<< 여기에 관계 정보 추가
-                childDiagnoses: tempSelectedDiagnoses,
-                isChildDiagnosedBySpecialist: tempIsSpecialistDiagnosedChild
-            };
+      if (selectedUserType === 'caregiver') {
+    profileData.caregiverInfo = {
+        caregiverNeurodiversity: tempSelectedCaregiverNd,
+        isCaregiverDiagnosedBySpecialist: tempIsSpecialistDiagnosedCaregiverSelf, // <<< 여기에 보호자 본인 진단 여부 추가
+        childName: tempChildName,
+        childBirthDate: tempChildBirthDate,
+        childAge: tempChildAge,
+        relationship: tempFamilyRelationship, 
+        childDiagnoses: tempSelectedDiagnoses,
+        isChildDiagnosedBySpecialist: tempIsSpecialistDiagnosedChild
+    };
             // ... (이하 생략)
         profileData.diagnoses = []; // 보호자의 메인 프로필에서 직접 진단명 제거
         ageForTalkContext = tempChildAge;

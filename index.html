@@ -202,6 +202,17 @@
             <button id="submitCaregiverNdBtn">다음 (또는 건너뛰기)</button>
         </section>
 
+        <section id="stepSpecialistDiagnosisCaregiver" class="step step-background-main">
+            <h2>전문의 진단 여부</h2>
+            <p class="info-text">선택하신 특성은 전문의에게 진단받은 정보인가요?</p>
+            <div class="radio-option-group">
+                <label><input type="radio" name="specialistDiagnosisCaregiver" value="true"> 예</label>
+                <label><input type="radio" name="specialistDiagnosisCaregiver" value="false"> 아니요</label>
+            </div>
+            <div id="specialistDiagnosisCaregiverError" class="error-message"></div>
+            <button id="submitSpecialistDiagnosisCaregiverBtn">다음</button>
+        </section>
+
                 <section id="stepNameBirthFamily" class="step step-background-main">
             <h2 id="nameBirthFamilyTitle">가족의 정보를 알려주세요.</h2>
             <div class="input-group">
@@ -245,17 +256,6 @@
             </div>
             <div id="diagnosisError" class="error-message"></div>
             <button id="submitDiagnosisBtn">다음</button>
-        </section>
-
-        <section id="stepSpecialistDiagnosisCaregiver" class="step step-background-main">
-            <h2>전문의 진단 여부</h2>
-            <p class="info-text">선택하신 특성은 전문의에게 진단받은 정보인가요?</p>
-            <div class="radio-option-group">
-                <label><input type="radio" name="specialistDiagnosisCaregiver" value="true"> 예</label>
-                <label><input type="radio" name="specialistDiagnosisCaregiver" value="false"> 아니요</label>
-            </div>
-            <div id="specialistDiagnosisCaregiverError" class="error-message"></div>
-            <button id="submitSpecialistDiagnosisCaregiverBtn">다음</button>
         </section>
 
         <section id="stepSpecialistDiagnosisDirectUser" class="step step-background-main">
