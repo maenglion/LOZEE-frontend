@@ -1,5 +1,5 @@
 // Firebase 설정 및 Auth 함수 모듈 가져오기
-import { db, auth as firebaseAuth, initializeFirebaseAuth } from './firebase-config.js';
+import { db, auth as firebaseAuth } from './firebase-config.js';
 import {
     listenAuthState,
     signUpWithEmail,
@@ -826,8 +826,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Firebase Auth 먼저 초기화
-    await initializeFirebaseAuth();
 
     // Firebase 인증 상태 감지
     listenAuthState(
