@@ -290,12 +290,12 @@
             termsAgreement: document.getElementById('stepTermsAgreement'),
             signUpEmailPassword: document.getElementById('stepSignUpEmailPassword'),
             emailVerification: document.getElementById('stepEmailVerification'),
-            nameBirthSelf: document.getElementById('stepNameBirthSelf'), // ✅ 본인 이름/생년월일 입력 단계
+            nameBirthSelf: document.getElementById('stepNameBirthSelf'), 
             caregiverNd: document.getElementById('stepCaregiverNeurodiversity'), 
             specialistDiagnosisCaregiver: document.getElementById('stepSpecialistDiagnosisCaregiver'),
-            diagnosisType: document.getElementById('stepDiagnosisType'), // 본인 또는 자녀/가족 특성 단계
+            diagnosisType: document.getElementById('stepDiagnosisType'), 
             specialistDiagnosisDirectUser: document.getElementById('stepSpecialistDiagnosisDirectUser'),
-            nameBirthFamily: document.getElementById('stepNameBirthFamily'), // ✅ 가족 이름/생년월일 입력 단계
+            nameBirthFamily: document.getElementById('stepNameBirthFamily'), 
             finalStart: document.getElementById('stepFinalStart')
         };
 
@@ -402,7 +402,7 @@
                 step.style.display = 'none'; 
             });
             
-            const targetStep = document.getElementById(stepId); 
+            const targetStep = document.getElementById(stepId); // HTML ID와 일치
             if (targetStep) { 
                 targetStep.classList.add('active');
                 targetStep.style.display = 'flex'; 
@@ -913,8 +913,8 @@
                 if (specialistDiagnosisCaregiverError) specialistDiagnosisCaregiverError.textContent = "선택해주세요.";
                 return;
             }
-            tempIsSpecialistDiagnosedCaregiver = (selectedValue === 'true'); 
-            tempIsSpecialistDiagnosedChild = (selectedValue === 'true'); 
+            tempIsSpecialistDiagnosedCaregiver = (selectedValue === 'true'); // 보호자 본인의 전문의 진단 여부 (현재 이렇게 매핑됨)
+            tempIsSpecialistDiagnosedChild = (selectedValue === 'true'); // 자녀의 전문의 진단 여부 (같은 라디오 버튼이므로 같은 값으로 매핑)
             console.log("[submitSpecialistDiagnosisCaregiverBtn] 보호자 전문의 진단 여부:", tempIsSpecialistDiagnosedCaregiver);
             console.log("[submitSpecialistDiagnosisCaregiverBtn] 자녀 전문의 진단 여부:", tempIsSpecialistDiagnosedChild);
             
@@ -987,7 +987,7 @@
             const name = nameFamilyInput.value.trim(); 
             const year = birthYearFamily.value; 
             const month = birthMonthFamily.value; 
-            const day = birthDayFamily.value; // ✅ HTML ID와 일치
+            const day = birthDayFamily.value; 
             nameFamilyError.textContent = ''; birthFamilyError.textContent = ''; 
 
             if (!name) { nameFamilyError.textContent = '아이(또는 가족)의 이름을 입력해주세요.'; return; } 
@@ -1116,7 +1116,7 @@
                             showToast('이메일 인증이 필요합니다. 인증 이메일을 확인해주세요.');
                             if (verificationEmailDisplayEl) verificationEmailDisplayEl.textContent = user.email;
                             localStorage.setItem('lozee_tempEmailForVerification', user.email);
-                            showStep('emailVerification'); 
+                            showStep('stepEmailVerification'); 
                             return;
                         }
 
