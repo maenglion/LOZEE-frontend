@@ -140,19 +140,21 @@ function showStep(stepId) {
         updateProgressBar(stepId);
 
         // ✅ 단계 전환 시 제목 업데이트 로직 추가
-        if (stepId === 'stepCaregiverNeurodiversity' && caregiverNdTitleEl) {
-            const vocative = tempUserName ? (getKoreanVocativeParticle(tempUserName) || '') : '';
-            caregiverNdTitleEl.innerHTML = `${tempUserName || '보호자님'}${vocative}에 대해서도 알려주시겠어요? <span class="optional-text">(선택 사항)</span>`;
+          if (stepId === 'stepCaregiverNeurodiversity' && caregiverNdTitleEl) {
+            // '아/야' 대신 '님'을 붙이고, 이름이 없을 경우 '보호자님'으로 표시되도록 수정합니다.
+            const titleName = tempUserName ? `${tempUserName}님` : '보호자님';
+            caregiverNdTitleEl.innerHTML = `${titleName}에 대해서 알려주시겠어요? <span class="optional-text">(선택 사항)</span>`;
+        
         } else if (stepId === 'stepDiagnosisType' && diagnosisTitleEl) {
             if (selectedUserType === 'caregiver') {
-                diagnosisTitleEl.textContent = `아이(또는 가족)의 특성 이해하기`;
+                diagnosisTitleEl.textContent = `가족 특성`;
             } else { // directUser
-                diagnosisTitleEl.textContent = `당신의 특성 이해하기`;
+                diagnosisTitleEl.textContent = `당신의 특성`;
             }
         } else if (stepId === 'stepNameBirthSelf' && nameSelfTitleEl) {
             // nameSelfTitleEl은 "정보 입력" 고정 제목이므로 변경 없음.
         } else if (stepId === 'stepNameBirthFamily' && nameFamilyTitleEl) {
-            nameFamilyTitleEl.textContent = `아이(또는 가족)의 정보를 알려주세요.`;
+            nameFamilyTitleEl.textContent = `가족의 정보를 알려주세요.`;
         }
 
     } else {
