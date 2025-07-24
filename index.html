@@ -202,14 +202,26 @@
             <button id="submitCaregiverNdBtn">다음 (또는 건너뛰기)</button>
         </section>
 
-        <section id="stepNameBirthFamily" class="step step-background-main">
-            <h2 id="nameBirthFamilyTitle">아이(또는 가족)의 정보를 알려주세요.</h2>
+                <section id="stepNameBirthFamily" class="step step-background-main">
+            <h2 id="nameBirthFamilyTitle">가족의 정보를 알려주세요.</h2>
             <div class="input-group">
-                <label for="nameFamilyInput">로지가 아이(또는 가족)를 어떻게 부르면 좋을까요?</label>
+                <label for="nameFamilyInput">로지가 가족을 어떻게 부르면 좋을까요?</label>
                 <input type="text" id="nameFamilyInput" placeholder="이름">
                 <div id="nameFamilyError" class="error-message"></div>
             </div>
-            <p class="info-text">아이(또는 가족)의 생년월일을 선택해주세요.<br>아이에게 더 적절한 대화 경험을 제공합니다.</p>
+            
+            <div class="input-group">
+                <label for="familyRelationship">가족과의 관계를 선택해주세요.</label>
+                <select id="familyRelationship">
+                    <option value="">관계 선택</option>
+                    <option value="child">자녀</option>
+                    <option value="spouse">배우자</option>
+                    <option value="sibling">형제자매</option>
+                    <option value="other">기타</option>
+                </select>
+                <div id="familyRelationshipError" class="error-message"></div>
+            </div>
+            <p class="info-text">가족의 생년월일을 선택해주세요.<br>보호자 님에게 더 적절한 대화 경험을 제공합니다.</p>
             <div class="select-row">
                 <select id="birthYearFamily"></select>
                 <select id="birthMonthFamily"></select>
@@ -237,7 +249,7 @@
 
         <section id="stepSpecialistDiagnosisCaregiver" class="step step-background-main">
             <h2>전문의 진단 여부</h2>
-            <p class="info-text">선택하신 **아이(또는 가족)의** 특성은 전문의에게 진단받은 정보인가요?</p>
+            <p class="info-text">선택하신 특성은 전문의에게 진단받은 정보인가요?</p>
             <div class="radio-option-group">
                 <label><input type="radio" name="specialistDiagnosisCaregiver" value="true"> 예</label>
                 <label><input type="radio" name="specialistDiagnosisCaregiver" value="false"> 아니요</label>

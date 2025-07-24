@@ -88,6 +88,8 @@ const birthDayFamily = document.getElementById('birthDayFamily');
 const birthFamilyError = document.getElementById('birthFamilyError');
 const submitNameBirthFamilyBtn = document.getElementById('submitNameFamilyBtn');
 const startLozeeConversationBtn = document.getElementById('startLozeeConversationBtn');
+const familyRelationshipSelect = document.getElementById('familyRelationship');
+const familyRelationshipError = document.getElementById('familyRelationshipError');
 
 
 // 상태 변수
@@ -99,6 +101,7 @@ let tempUserAge = null;
 let tempChildName = null;
 let tempChildBirthDate = null;
 let tempChildAge = null;
+let tempFamilyRelationship = null;
 let tempSelectedCaregiverNd = [];
 let tempSelectedDiagnoses = []; // directUser 본인 또는 caregiver의 자녀/가족 진단명
 let tempAgreedTerms = false, tempAgreedPrivacy = false, tempAgreedMarketing = false;
@@ -234,6 +237,7 @@ function clearInputFields() {
         }
     });
     document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+     if (familyRelationshipSelect) familyRelationshipSelect.selectedIndex = 0;
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
     document.querySelectorAll('.success-message').forEach(el => el.textContent = '');
 
@@ -650,18 +654,24 @@ if (submitCaregiverNdBtn) submitCaregiverNdBtn.onclick = () => {
     showStep('stepNameBirthFamily');
 };
 
-// 자녀 또는 가족 이름 및 생년월일
+// 자녀 또는 가족 이름 및 생년월일, 관계 제출
 if (submitNameBirthFamilyBtn) submitNameBirthFamilyBtn.onclick = () => {
     const name = nameFamilyInput.value.trim();
     const year = birthYearFamily.value;
     const month = birthMonthFamily.value;
     const day = birthDayFamily.value;
-    nameFamilyError.textContent = ''; birthFamilyError.textContent = '';
+    const relationship = familyRelationshipSelect.value; // 관계 값 가져오기
+
+    nameFamilyError.textContent = ''; 
+    birthFamilyError.textContent = '';
+    familyRelationshipError.textContent = ''; // 에러 메시지 초기화
 
     if (!name) { nameFamilyError.textContent = '아이(또는 가족)의 이름을 입력해주세요.'; return; }
+    if (!relationship) { familyRelationshipError.textContent = '가족과의 관계를 선택해주세요.'; return; } // 관계 선택 유효성 검사
     if (!year || !month || !day) { birthFamilyError.textContent = '아이(또는 가족)의 생년월일을 모두 선택해주세요.'; return; }
 
     tempChildName = name;
+    tempFamilyRelationship = relationship; // 관계 정보 저장
     tempChildBirthDate = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     tempChildAge = calculateAge(year, month, day);
     showStep('stepDiagnosisType'); // 다음으로 자녀의 진단명 선택
@@ -774,16 +784,18 @@ if (startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
     let ageForTalkContext = profileData.age;
     let childDataForRedirect = null;
 
-    if (selectedUserType === 'caregiver') {
-        profileData.caregiverInfo = {
-            caregiverNeurodiversity: tempSelectedCaregiverNd,
-            // isCaregiverDiagnosedBySpecialist: tempIsSpecialistDiagnosedCaregiver, // 이 단계는 자녀 진단용이므로 제거됨
-            childName: tempChildName,
-            childBirthDate: tempChildBirthDate,
-            childAge: tempChildAge,
-            childDiagnoses: tempSelectedDiagnoses,
-            isChildDiagnosedBySpecialist: tempIsSpecialistDiagnosedChild
-        };
+    // startLozeeConversationBtn.onclick 함수 내부
+        if (selectedUserType === 'caregiver') {
+            profileData.caregiverInfo = {
+                caregiverNeurodiversity: tempSelectedCaregiverNd,
+                childName: tempChildName,
+                childBirthDate: tempChildBirthDate,
+                childAge: tempChildAge,
+                relationship: tempFamilyRelationship, // <<< 여기에 관계 정보 추가
+                childDiagnoses: tempSelectedDiagnoses,
+                isChildDiagnosedBySpecialist: tempIsSpecialistDiagnosedChild
+            };
+            // ... (이하 생략)
         profileData.diagnoses = []; // 보호자의 메인 프로필에서 직접 진단명 제거
         ageForTalkContext = tempChildAge;
         childDataForRedirect = profileData.caregiverInfo;
