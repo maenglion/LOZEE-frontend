@@ -1,5 +1,5 @@
 // Firebase 설정 및 Auth 함수 모듈 가져오기
-import { db, auth as firebaseAuth, initializeFirebaseAuth } from './js/firebase-config.js';
+import { db, auth as firebaseAuth, initializeFirebaseAuth } from './firebase-config.js';
 import {
     listenAuthState,
     signUpWithEmail,
@@ -7,7 +7,7 @@ import {
     resetPassword,
     saveUserProfile,
     sendVerificationEmail
-} from './js/auth.js';
+} from './auth.js';
 import { doc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 
 // DOM 요소 가져오기 (HTML ID와 정확히 일치하도록 수정)
