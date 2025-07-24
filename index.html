@@ -202,21 +202,21 @@
             <button id="submitCaregiverNdBtn">다음 (또는 건너뛰기)</button>
         </section>
 
-        <section id="stepSpecialistDiagnosisCaregiver" class="step step-background-main">
-            <h2>전문의 진단 여부</h2>
-            <p class="info-text">선택하신 특성은 전문의에게 진단받은 정보인가요?</p>
-            <div class="radio-option-group">
-                <label><input type="radio" name="specialistDiagnosisCaregiver" value="true"> 예</label>
-                <label><input type="radio" name="specialistDiagnosisCaregiver" value="false"> 아니요</label>
-            </div>
-            <div id="specialistDiagnosisCaregiverError" class="error-message"></div>
-            <button id="submitSpecialistDiagnosisCaregiverBtn">다음</button>
-        </section>
+    <section id="stepSpecialistDiagnosisCaregiverSelf" class="step step-background-main">
+    <h2>전문의 진단 여부</h2>
+    <p class="info-text">선택하신 **보호자님의** 특성은 전문의에게 진단받은 정보인가요?</p>
+    <div class="radio-option-group">
+        <label><input type="radio" name="specialistDiagnosisCaregiverSelf" value="true"> 예</label>
+        <label><input type="radio" name="specialistDiagnosisCaregiverSelf" value="false"> 아니요</label>
+    </div>
+    <div id="specialistDiagnosisCaregiverSelfError" class="error-message"></div>
+    <button id="submitSpecialistDiagnosisCaregiverSelfBtn">다음</button>
+</section>
 
                 <section id="stepNameBirthFamily" class="step step-background-main">
             <h2 id="nameBirthFamilyTitle">가족의 정보를 알려주세요.</h2>
             <div class="input-group">
-                <label for="nameFamilyInput">로지가 가족을 어떻게 부르면 좋을까요?</label>
+                <label for="nameFamilyInput">로지가 가족을 부를 닉네임을 알려주세요.</label>
                 <input type="text" id="nameFamilyInput" placeholder="이름">
                 <div id="nameFamilyError" class="error-message"></div>
             </div>
