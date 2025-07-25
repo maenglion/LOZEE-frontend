@@ -66,7 +66,7 @@ const voc = getKoreanVocativeParticle(userNameToDisplay);
  */
 async function getTopicsForCurrentUser() {
     if (!targetAge && targetAge !== 0) {
-        console.warn('targetAge가 설정되지 않았습니다. 기본값(30) 사용.');
+        console.warn('targetAgeが設定されていません。デフォルト値(30)を使用します。');
         targetAge = 30;
     }
 
@@ -160,7 +160,6 @@ function renderUnifiedTopics() {
         appendMessage('주제를 불러오는 중 문제가 발생했어요.', 'assistant_feedback');
     });
 }
-
 /**
  * 서브 주제 표시
  */
