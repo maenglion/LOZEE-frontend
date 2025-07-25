@@ -323,8 +323,66 @@ const counselingTopicsByAge = {
                 ]
             }
         ]
-    }
-};
+    },
+    '16-29세': [
+            {
+                name: '일상 속 도전',
+                subTopics: [
+                    {
+                        icon: '💼',
+                        displayText: '직장에서의 어려움',
+                        systemPrompt: '사용자가 직장에서의 어려움(ASD/ADHD 특성 관련)을 이야기하고 싶어합니다. 구체적인 상황을 물어보고, 직장 내 대처 전략을 제안하세요.',
+                        tags: ['ASD-사회적상호작용', 'ADHD-집중력', '직장'],
+                        type: 'work'
+                    },
+                    {
+                        icon: '🎧',
+                        displayText: '감각 과부하가 심해요 (ASD)',
+                        systemPrompt: '사용자가 감각 과부하(ASD)에 대해 이야기하고 싶어합니다. 공감하며, 감각 관리 방법(예: 조용한 공간 찾기)을 제안하세요.',
+                        tags: ['ASD-감각과부하', '스트레스'],
+                        type: 'sensory'
+                    }
+                ]
+            }
+        ],
+        '30-55세': [
+            {
+                name: '나의 삶',
+                subTopics: [
+                    {
+                        icon: '🧠',
+                        displayText: '집중력 관리하기 (ADHD)',
+                        systemPrompt: '사용자가 집중력 문제(ADHD)에 대해 이야기하고 싶어합니다. 공감하며, 일상에서 집중력을 높이는 방법을 제안하세요.',
+                        tags: ['ADHD-집중력', '일상'],
+                        type: 'attention'
+                    },
+                    {
+                        icon: '🤝',
+                        displayText: '사회적 관계 어려움 (ASD)',
+                        systemPrompt: '사용자가 사회적 상호작용(ASD)에서 어려움을 이야기하고 싶어합니다. 공감하며, 관계 개선 방법을 제안하세요.',
+                        tags: ['ASD-사회적상호작용', '관계'],
+                        type: 'social'
+                    }
+                ]
+            }
+        ],
+        '55세이상': [
+            {
+                name: '나의 일상',
+                subTopics: [
+                    {
+                        icon: '😔',
+                        displayText: '늦게 알게 된 신경다양성 (ASD/ADHD)',
+                        systemPrompt: '사용자가 늦게 진단받은 ASD/ADHD에 대해 이야기하고 싶어합니다. 공감하며, 자기 이해와 수용을 돕는 대화를 유도하세요.',
+                        tags: ['ASD-자기이해', 'ADHD-자기이해', '진단'],
+                        type: 'self'
+                    }
+                ]
+            }
+        ]
+    };
+
+
 
 // 태그 정규화 매핑 테이블
 const tagNormalizationMap = {
