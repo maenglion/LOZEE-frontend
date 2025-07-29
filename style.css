@@ -259,25 +259,6 @@ body {
     background-size: 40px 40px; /* 48x48 버튼 안에 40x40으로 표시 */
 }
 
-/* 개별 아이콘 이미지 경로 */
-#mic-button {
-  background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button.png?alt=media&token=5ecee5c0-e062-4599-8b08-938e046a57a9');
-}
-#mic-button.text-mode {
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button-text-mode.png?alt=media&token=6143b866-c19f-41ec-b62e-74a1e4efee6c'); /* 'T' 대체 이미지 아이콘 URL */
-}
-#mic-button.active {
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/mic-button-active.png?alt=media&token=e2a56c75-e63e-4f08-82d4-b33f947de3ca'); 
-}
-
-#send-button {
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/send-button.png?alt=media&token=f10a6169-3e02-4721-94b5-35dd9ead6b52');
-}
-#plus-button {
-    background-image: url('https://firebasestorage.googleapis.com/v0/b/lozee-af4d3.firebasestorage.app/o/plus-button.png?alt=media&token=8ab76317-2425-4b8f-b355-04723acc7f3c');
-}
-
-
 #mic-button.disabled {
   opacity: 0.5;
   cursor: default;
