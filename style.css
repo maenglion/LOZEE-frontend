@@ -169,17 +169,36 @@ body {
     box-shadow: 0 0 0 2px var(--primary-color);
 }
 
-.send-button {
-    padding: 0.5rem 1rem;
-    color: white;
-    background-color: #2563eb; /* bg-blue-600 */
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
+.btn-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1rem;        /* 10px 16px */
+  background-color: #2563EB;     /* blue-600 */
+  color: #FFFFFF;                /* white */
+  font-size: 0.875rem;           /* text-sm */
+  font-weight: 500;
+  border: none;
+  border-radius: 0.5rem;         /* rounded-lg */
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+
 }
-.send-button:hover {
+.btn-send:hover {
     background-color: #1d4ed8; /* hover:bg-blue-700 */
+}
+
+.btn-send:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* ring-2 ring-blue-500 */
+}
+
+/* 작은 아이콘과 텍스트 정렬 */
+.btn-send .icon {
+  width: 1.25rem;                 /* w-5 */
+  height: 1.25rem;                /* h-5 */
+  margin-right: 0.25rem;          /* mr-1 */
+  fill: currentColor;
 }
 
 /* 스피너 및 아이콘 상태 관리 */

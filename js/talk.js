@@ -12,7 +12,7 @@ import {
     logSessionEnd,
     saveReservation
 } from './firebase-utils.js';
-import { counselingTopicsByAge, normalizeTags } from './counseling_topics.js';
+import { counselingTopicsByAge, normalizeTags } from './counseling_topics.js'; // 변수명 일관성 확인
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
 // --- 2. 상태 변수 선언 ---
@@ -21,10 +21,11 @@ let currentTopic = null;
 let currentSessionId = null;
 let conversationHistory = [];
 let isProcessing = false;
+let isListening = false; // STT 상태
+let isSpeaking = false;  // TTS 상태
 let conversationStartTime = null;
 let isDataSaved = false;
 let isTtsMode = true;
-let isRec = false;
 let sessionTimeoutId = null;
 let lastAiAnalysisData = null;
 let userCharCountInSession = 0;
@@ -43,15 +44,18 @@ let recog;
 
 // --- 3. UI 요소 가져오기 ---
 const chatMessages = document.getElementById('chat-messages');
-const messageInput = document.getElementById('message-input');
-const sendButton = document.getElementById('send-button');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const sttBtn = document.getElementById('stt-btn');
+const sttIcon = document.getElementById('stt-icon');
+const sttSpinner = document.getElementById('stt-spinner');
+const ttsBtn = document.getElementById('tts-btn');
+const ttsIcon = document.getElementById('tts-icon');
+const ttsSpinner = document.getElementById('tts-spinner');
 const topicSelectorContainer = document.getElementById('topic-selection-container');
 const endSessionButton = document.getElementById('end-session-btn');
-const recordButton = document.getElementById('mic-button'); // ID 변경
 const radioBarContainer = document.getElementById('meter-container');
-const radioBar = document.getElementById('volume-level'); // ID 변경
-const plusButton = document.getElementById('plus-button');
-const imageUpload = document.getElementById('image-upload');
+const radioBar = document.getElementById('volume-level');
 const startCover = document.getElementById('start-cover');
 const startButton = document.getElementById('start-button');
 const sessionHeaderTextEl = document.getElementById('session-header-text');
@@ -60,16 +64,19 @@ const chatWindow = document.getElementById('chat-window');
 // --- 4. 헬퍼 및 핵심 기능 함수 ---
 
 /**
- * 사용자 역할, 나이, 진단명에 맞는 주제 목록을 비동기적으로 반환합니다.
+ * 사용자 역할, 나이, 진단명에 맞는 주제 목록을 반환
  * @param {object} profile - 사용자 프로필 데이터
- * @returns {Promise<Array<object>>} 필터링 및 병합된 주제 목록
+ * @returns {Promise<Array<object>>} 필터링된 주제 목록
  */
 async function getApplicableTopics(profile) {
-    if (!profile || !counselingTopicsByAge) return [];
+    if (!profile || !counselingTopicsByAge) {
+        console.error('Profile or counselingTopicsByAge is undefined');
+        return [];
+    }
 
     const finalTopics = new Map();
     const userType = profile.userType || [];
-    
+
     const addSubTopics = (subTopics, diagnoses = []) => {
         if (!Array.isArray(subTopics)) return;
         subTopics.forEach(subTopic => {
@@ -97,7 +104,6 @@ async function getApplicableTopics(profile) {
         const childDiagnoses = profile.caregiverInfo?.childDiagnoses || [];
         const childAge = profile.caregiverInfo?.childAge || 0;
         const ageGroupKey = childAge < 11 ? '10세미만' : childAge <= 15 ? '11-15세' : 'common';
-        
         (counselingTopicsByAge.caregiver?.common || []).forEach(topic => addSubTopics(topic.subTopics, childDiagnoses));
         (counselingTopicsByAge.caregiver?.[ageGroupKey] || []).forEach(topic => addSubTopics(topic.subTopics, childDiagnoses));
     }
@@ -106,7 +112,7 @@ async function getApplicableTopics(profile) {
 }
 
 /**
- * 필터링된 주제로 주제 선택 UI를 생성합니다.
+ * 주제 선택 UI 생성
  * @param {object} profile - 사용자 프로필 데이터
  */
 async function initializeTopicSelector(profile) {
@@ -129,6 +135,7 @@ async function initializeTopicSelector(profile) {
             button.className = 'topic-btn chat-option-btn';
             button.innerHTML = `${topic.icon || '💬'} ${topic.title}`;
             button.dataset.topicId = topic.id;
+            button.setAttribute('aria-label', `${topic.title} 주제 선택`);
             button.onclick = () => {
                 optionsContainer.querySelectorAll('.topic-btn').forEach(btn => btn.disabled = true);
                 button.classList.add('selected');
@@ -140,17 +147,17 @@ async function initializeTopicSelector(profile) {
     } catch (error) {
         console.error('주제 렌더링 오류:', error);
         appendMessage('system', '주제를 불러오는 중 문제가 발생했습니다.');
+        showToast('주제 로딩 실패', 3000);
     }
 }
 
 /**
- * 주제를 선택하고 세션을 시작합니다.
+ * 주제 선택 및 세션 시작
  * @param {object} topic - 선택된 주제 객체
  */
 function selectTopic(topic) {
     if (currentTopic && conversationHistory.length > 0) {
         if (!confirm("대화 주제를 변경하시겠습니까? 이전 대화 일부가 저장되지 않을 수 있습니다.")) {
-            // 선택 취소 시 버튼 활성화 복원
             topicSelectorContainer.querySelectorAll('.topic-btn').forEach(btn => {
                 btn.disabled = false;
                 btn.classList.remove('selected');
@@ -164,7 +171,7 @@ function selectTopic(topic) {
 }
 
 /**
- * 초기 인사 메시지를 표시합니다.
+ * 초기 인사 메시지 표시
  */
 function displayInitialGreeting() {
     const username = userProfile.name || '사용자';
@@ -176,7 +183,7 @@ function displayInitialGreeting() {
 }
 
 /**
- * 새로운 대화 세션을 시작합니다.
+ * 새로운 대화 세션 시작
  * @param {object} topic - 시작할 주제 객체
  */
 async function startSession(topic) {
@@ -185,9 +192,10 @@ async function startSession(topic) {
     conversationStartTime = Date.now();
     previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
     currentSessionId = await logSessionStart(userProfile.uid, topic.id);
-    
+
     if (!currentSessionId) {
         appendMessage('system', "오류: 세션을 시작하지 못했습니다.");
+        showToast('세션 시작 실패', 3000);
         return;
     }
 
@@ -199,7 +207,7 @@ async function startSession(topic) {
     appendMessage('assistant', starter);
     conversationHistory.push({ role: 'assistant', content: starter });
     playTTSWithControl(starter);
-    
+
     if (endSessionButton) endSessionButton.style.display = 'block';
     if (topicSelectorContainer) topicSelectorContainer.style.display = 'none';
     updateSessionHeader();
@@ -207,31 +215,35 @@ async function startSession(topic) {
 }
 
 /**
- * 사용자의 메시지를 처리하고 AI 응답을 요청합니다.
+ * 사용자 메시지 처리 및 AI 응답 요청
  * @param {string} text - 사용자 입력 텍스트
  * @param {string} inputMethod - 입력 방식 ('text' 또는 'stt')
  */
 async function handleSendMessage(text, inputMethod = 'text') {
-    const messageText = (typeof text === 'string' ? text : messageInput.value).trim();
+    const messageText = (typeof text === 'string' ? text : chatInput.value).trim();
     if (!messageText || isProcessing) return;
 
     isProcessing = true;
-    if (recordButton) recordButton.disabled = true;
-    if (sendButton) sendButton.disabled = true;
+    sendBtn.disabled = true;
+    sttBtn.disabled = true;
+    ttsBtn.disabled = true;
 
     appendMessage('user', messageText);
-    if (inputMethod === 'text') messageInput.value = '';
+    if (inputMethod === 'text') chatInput.value = '';
+    chatInput.style.height = 'auto';
 
     if (!currentTopic) {
         appendMessage('assistant', "이야기를 시작해주셔서 감사해요. 어떤 주제에 대해 더 깊게 이야기해볼까요?");
         if (topicSelectorContainer) topicSelectorContainer.style.display = 'flex';
         isProcessing = false;
-        if (recordButton) recordButton.disabled = false;
-        if (sendButton) sendButton.disabled = false;
+        sendBtn.disabled = false;
+        sttBtn.disabled = false;
+        ttsBtn.disabled = false;
         return;
     }
-    
+
     conversationHistory.push({ role: 'user', content: messageText });
+    userCharCountInSession += messageText.length;
     resetSessionTimeout();
 
     try {
@@ -256,26 +268,36 @@ async function handleSendMessage(text, inputMethod = 'text') {
             throw new Error('GPT로부터 유효한 응답을 받지 못했습니다.');
         }
 
-        const rawResponseText = gptResponse.text;
-        let cleanText = rawResponseText;
-
+        const cleanText = gptResponse.text;
         appendMessage('assistant', cleanText);
         conversationHistory.push({ role: 'assistant', content: cleanText });
         await playTTSWithControl(cleanText);
 
+        if (conversationHistory.length >= 4 && !journalReadyNotificationShown) {
+            showToast('대화 기록이 저장되었습니다. 이야기 모음집에서 확인하세요.', 3000);
+            journalReadyNotificationShown = true;
+            await saveJournalEntry(userProfile.uid, currentSessionId, conversationHistory, currentTopic);
+        }
+        if (conversationHistory.length >= 8 && !analysisNotificationShown) {
+            showToast('대화 분석이 준비되었습니다. 분석 탭에서 확인하세요.', 3000);
+            analysisNotificationShown = true;
+            await LOZEE_ANALYSIS.analyzeSession(userProfile.uid, currentSessionId, conversationHistory);
+        }
     } catch (error) {
         console.error("GPT 응답 처리 중 오류:", error);
         chatMessages.querySelector('.thinking')?.remove();
         appendMessage('system', "응답을 생성하는 중 오류가 발생했습니다.");
+        showToast('응답 생성 실패', 3000);
     } finally {
         isProcessing = false;
-        if (recordButton) recordButton.disabled = false;
-        if (sendButton) sendButton.disabled = false;
+        sendBtn.disabled = false;
+        sttBtn.disabled = false;
+        ttsBtn.disabled = false;
     }
 }
 
 /**
- * 세션을 종료하고 대화 내용을 저장합니다.
+ * 세션 종료 및 대화 내용 저장
  */
 async function handleEndSession() {
     if (isDataSaved) return;
@@ -287,15 +309,19 @@ async function handleEndSession() {
         resetSessionState();
         return;
     }
-    
+
     appendMessage('system', "대화를 안전하게 마무리하고 있어요...");
+    showToast('대화 종료 중...', 2000);
     await logSessionEnd(currentSessionId);
+    await updateTopicStats(userProfile.uid, currentTopic.id, conversationHistory);
+    await updateUserOverallStats(userProfile.uid, userCharCountInSession);
     appendMessage('assistant', `오늘 ${currentTopic.title}에 대한 대화가 종료되었습니다.`);
+    showToast('대화가 종료되었습니다.', 3000);
     resetSessionState();
 }
 
 /**
- * 이전 글자 수를 조회합니다.
+ * 이전 글자 수 조회
  */
 async function fetchPreviousUserCharCount() {
     try {
@@ -309,13 +335,18 @@ async function fetchPreviousUserCharCount() {
 }
 
 /**
- * 세션 상태를 초기화합니다.
+ * 세션 상태 초기화
  */
 function resetSessionState() {
     currentTopic = null;
     currentSessionId = null;
     conversationHistory = [];
     isDataSaved = false;
+    isListening = false;
+    isSpeaking = false;
+    journalReadyNotificationShown = false;
+    analysisNotificationShown = false;
+    userCharCountInSession = 0;
     if (endSessionButton) endSessionButton.style.display = 'none';
     if (topicSelectorContainer) topicSelectorContainer.style.display = 'flex';
     appendMessage('system', '대화가 종료되었습니다. 새로운 주제로 이야기를 시작할 수 있습니다.');
@@ -323,7 +354,7 @@ function resetSessionState() {
 }
 
 /**
- * 세션 타임아웃을 리셋합니다.
+ * 세션 타임아웃 리셋
  */
 function resetSessionTimeout() {
     clearTimeout(sessionTimeoutId);
@@ -331,7 +362,7 @@ function resetSessionTimeout() {
 }
 
 /**
- * 세션 헤더를 업데이트합니다.
+ * 세션 헤더 업데이트
  */
 function updateSessionHeader() {
     if (!sessionHeaderTextEl) return;
@@ -340,25 +371,31 @@ function updateSessionHeader() {
     sessionHeaderTextEl.textContent = `${main} > ${summaryTitle}`;
 }
 
-
-// --- STT/TTS & Audio Visualization ---
+/**
+ * STT 초기화
+ */
 function initializeSTT() {
-    if (!SpeechRecognitionAPI) return;
+    if (!SpeechRecognitionAPI) {
+        showToast('음성 인식을 지원하지 않는 브라우저입니다.', 3000);
+        return;
+    }
     recog = new SpeechRecognitionAPI();
     recog.continuous = true;
     recog.interimResults = true;
     recog.lang = 'ko-KR';
 
     recog.onstart = () => {
-        isRec = true;
+        isListening = true;
         sttIcon.classList.add('hidden');
         sttSpinner.classList.remove('hidden');
+        showToast('녹음 시작', 2000);
     };
     recog.onend = () => {
-        isRec = false;
+        isListening = false;
         sttIcon.classList.remove('hidden');
         sttSpinner.classList.add('hidden');
         stopAudioVisualization();
+        showToast('녹음 종료', 2000);
     };
     recog.onresult = event => {
         let final_transcript = '';
@@ -368,23 +405,32 @@ function initializeSTT() {
             }
         }
         if (final_transcript) {
-            messageInput.value = final_transcript; // 입력창에 텍스트 채우기
-            messageInput.style.height = 'auto';
-            messageInput.style.height = messageInput.scrollHeight + 'px';
+            chatInput.value = final_transcript;
+            chatInput.style.height = 'auto';
+            chatInput.style.height = chatInput.scrollHeight + 'px';
+            handleSendMessage(final_transcript, 'stt');
         }
     };
     recog.onerror = event => {
         console.error('STT Error:', event.error);
-        if (isRec) recog.stop();
+        showToast(`음성 인식 오류: ${event.error}`, 3000);
+        if (isListening) recog.stop();
     };
 }
 
+/**
+ * STT 버튼 클릭 핸들러
+ */
 function handleMicButtonClick() {
-    if (isRec) {
+    if (isProcessing) {
+        showToast('처리 중입니다. 잠시 기다려주세요.', 2000);
+        return;
+    }
+    if (isListening) {
         recog.stop();
     } else {
         stopCurrentTTS();
-        navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+        navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 audioStream = stream;
                 setupAudioVisualization(stream);
@@ -392,21 +438,63 @@ function handleMicButtonClick() {
             })
             .catch(err => {
                 console.error("마이크 접근 오류:", err);
-                appendMessage('system', '마이크 사용 권한이 필요합니다.');
+                showToast('마이크 사용 권한이 필요합니다.', 3000);
             });
     }
 }
 
-async function playTTSWithControl(text) {
-    if (!isTtsMode) return;
-    try {
-        const voiceId = localStorage.getItem('lozee_voice') || 'Leda';
-        await playTTSFromText(text, voiceId);
-    } catch (error) {
-        console.error('TTS 재생 오류:', error);
+/**
+ * TTS 버튼 클릭 핸들러
+ */
+function handleTtsButtonClick() {
+    if (isProcessing) {
+        showToast('처리 중입니다. 잠시 기다려주세요.', 2000);
+        return;
+    }
+    isSpeaking = !isSpeaking;
+    ttsIcon.classList.toggle('hidden', isSpeaking);
+    ttsSpinner.classList.toggle('hidden', !isSpeaking);
+
+    if (isSpeaking) {
+        const lastMessage = conversationHistory.filter(msg => msg.role === 'assistant').pop()?.content;
+        if (lastMessage) {
+            showToast('음성 재생 시작', 2000);
+            playTTSWithControl(lastMessage);
+        } else {
+            showToast('재생할 메시지가 없습니다.', 2000);
+            isSpeaking = false;
+            ttsIcon.classList.remove('hidden');
+            ttsSpinner.classList.add('hidden');
+        }
+    } else {
+        showToast('음성 재생 중지', 2000);
+        stopCurrentTTS();
     }
 }
 
+/**
+ * TTS 재생 제어
+ */
+async function playTTSWithControl(text) {
+    if (!isTtsMode || !text) return;
+    try {
+        const voiceId = localStorage.getItem('lozee_voice') || 'Leda';
+        await playTTSFromText(text, voiceId);
+        isSpeaking = false;
+        ttsIcon.classList.remove('hidden');
+        ttsSpinner.classList.add('hidden');
+    } catch (error) {
+        console.error('TTS 재생 오류:', error);
+        showToast('음성 재생 오류', 3000);
+        isSpeaking = false;
+        ttsIcon.classList.remove('hidden');
+        ttsSpinner.classList.add('hidden');
+    }
+}
+
+/**
+ * 오디오 시각화 설정
+ */
 function setupAudioVisualization(stream) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioContext.createAnalyser();
@@ -417,7 +505,7 @@ function setupAudioVisualization(stream) {
     analyser.connect(javascriptNode);
     javascriptNode.connect(audioContext.destination);
     javascriptNode.onaudioprocess = () => {
-        if (!isRec) return;
+        if (!isListening) return;
         const array = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(array);
         drawWaveform(array);
@@ -425,39 +513,39 @@ function setupAudioVisualization(stream) {
     if (radioBarContainer) radioBarContainer.classList.add('active');
 }
 
+/**
+ * 오디오 파형 그리기
+ */
 function drawWaveform(dataArray) {
-    const volumeLevel = document.getElementById('volume-level');
-    if (!volumeLevel) return;
+    if (!radioBar) return;
     const avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
     const norm = Math.min(100, Math.max(0, (avg / 255) * 100));
-    volumeLevel.style.width = `${norm}%`;
-    console.log('Waveform average:', avg, 'Normalized:', norm); // 디버깅 로그
+    radioBar.style.width = `${norm}%`;
     if (sessionHeaderTextEl) {
         sessionHeaderTextEl.style.backgroundColor = `hsl(228,50%,${90 - (norm / 5)}%)`;
     }
 }
 
-function clearWaveform() {
-    const volumeLevel = document.getElementById('volume-level');
-    if (volumeLevel) {
-        volumeLevel.style.width = '0%';
-    }
-    if (sessionHeaderTextEl) {
-        sessionHeaderTextEl.style.transition = 'background-color 0.3s';
-        sessionHeaderTextEl.style.backgroundColor = '';
-    }
-}
-
+/**
+ * 오디오 시각화 종료
+ */
 function stopAudioVisualization() {
     if (audioStream) audioStream.getTracks().forEach(track => track.stop());
     if (javascriptNode) javascriptNode.disconnect();
     if (microphone) microphone.disconnect();
     if (analyser) analyser.disconnect();
     if (audioContext && audioContext.state !== 'closed') audioContext.close().catch(e => console.error(e));
-    clearWaveform();
+    if (radioBar) radioBar.style.width = '0%';
+    if (sessionHeaderTextEl) {
+        sessionHeaderTextEl.style.transition = 'background-color 0.3s';
+        sessionHeaderTextEl.style.backgroundColor = '';
+    }
     if (radioBarContainer) radioBarContainer.classList.remove('active');
 }
 
+/**
+ * 토스트 메시지 표시
+ */
 function showToast(message, duration = 3000) {
     const toast = document.createElement('div');
     toast.textContent = message;
@@ -477,11 +565,57 @@ function showToast(message, duration = 3000) {
     setTimeout(() => toast.remove(), duration);
 }
 
-// --- 기타 헬퍼 함수 ---
+/**
+ * 메시지 추가
+ */
 function appendMessage(sender, text) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('bubble', sender);
     messageElement.innerText = text;
+    messageElement.setAttribute('aria-label', `${sender === 'user' ? '사용자' : '어시스턴트'} 메시지: ${text}`);
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
+/**
+ * 초기화 함수
+ */
+function initialize() {
+    initializeSTT();
+
+    // 이벤트 리스너
+    sendBtn.addEventListener('click', () => handleSendMessage());
+    chatInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    });
+    sttBtn.addEventListener('click', handleMicButtonClick);
+    ttsBtn.addEventListener('click', handleTtsButtonClick);
+    startButton?.addEventListener('click', () => {
+        startCover.style.display = 'none';
+        initializeTopicSelector(userProfile);
+    });
+    endSessionButton?.addEventListener('click', handleEndSession);
+
+    // 사용자 프로필 로드
+    firebaseAuth.onAuthStateChanged(async user => {
+        if (user) {
+            userProfile = await loadUserProfile(user.uid); // loadUserProfile 정의 필요
+            displayInitialGreeting();
+            initializeTopicSelector(userProfile);
+        } else {
+            showToast('로그인이 필요합니다.', 3000);
+        }
+    });
+
+    // Textarea 자동 높이 조절
+    chatInput.addEventListener('input', () => {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = chatInput.scrollHeight + 'px';
+    });
+}
+
+// 초기화 호출
+initialize();
