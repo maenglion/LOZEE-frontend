@@ -58,6 +58,16 @@ const sessionHeaderTextEl = document.getElementById('session-header-text');
  * @returns {Promise<Array<object>>} 필터링된 주제 목록
  */
 async function getApplicableTopics(profile) {
+    
+    console.log('userProfile:', profile); // 로그 추가
+    console.log('counselingTopicsByAge:', counselingTopicsByAge); // 로그 추가
+    if (!profile || !counselingTopicsByAge) {
+        console.error('Profile or counselingTopicsByAge is undefined');
+        showToast('주제를 불러올 수 없습니다.', 3000);
+        return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해볼까?' }];
+    }
+    
+       
     if (!profile || !counselingTopicsByAge) {
         console.error('Profile or counselingTopicsByAge is undefined');
         showToast('주제를 불러올 수 없습니다.', 3000);
