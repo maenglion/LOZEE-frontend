@@ -186,10 +186,10 @@ min-height: 300px; /* 최소 높이 보장 */
     justify-content: center;
     padding: 0.625rem 1rem;
     background-color: var(--primary-color); /* #6078ea 유지 */
-    color: #000000; /* 검은색 글씨로 변경 */
+    color: #000000 !important; /* 강제 검은색 */
     font-size: 0.875rem;
     font-weight: 500;
-    border: 1px solid #000000; /* 원형 라인 색상 검은색으로 */
+    border: 1px solid #000000 !important; /* 원형 라인 검은색 */
     border-radius: 0.5rem;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
