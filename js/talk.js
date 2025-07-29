@@ -59,7 +59,6 @@ const radioBar = document.getElementById('volume-level');
 const startCover = document.getElementById('start-cover');
 const startButton = document.getElementById('start-button');
 const sessionHeaderTextEl = document.getElementById('session-header-text');
-const chatWindow = document.getElementById('chat-window');
 
 // --- 4. 헬퍼 및 핵심 기능 함수 ---
 
@@ -242,16 +241,26 @@ async function handleSendMessage(text, inputMethod = 'text') {
         return;
     }
 
+    if (Date.now() - lastTokenRefreshTime > TOKEN_REFRESH_INTERVAL) {
+        idToken = await currentUser.getIdToken(true); // 토큰 갱신
+        lastTokenRefreshTime = Date.now(); // 업데이트
+    }
+
     conversationHistory.push({ role: 'user', content: messageText });
     userCharCountInSession += messageText.length;
     resetSessionTimeout();
 
-    try {
+   try {
         appendMessage('assistant thinking', '...');
         const currentUser = firebaseAuth.currentUser;
         let idToken = null;
         if (currentUser) {
-            idToken = await currentUser.getIdToken(true);
+            if (Date.now() - lastTokenRefreshTime > TOKEN_REFRESH_INTERVAL) {
+                idToken = await currentUser.getIdToken(true);
+                lastTokenRefreshTime = Date.now();
+            } else {
+                idToken = await currentUser.getIdToken();
+            }
         }
 
         const context = {
@@ -575,6 +584,7 @@ function appendMessage(sender, text) {
     messageElement.setAttribute('aria-label', `${sender === 'user' ? '사용자' : '어시스턴트'} 메시지: ${text}`);
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
 /**
