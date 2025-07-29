@@ -50,8 +50,6 @@ const sttBtn = document.getElementById('stt-btn');
 const sttIcon = document.getElementById('stt-icon');
 const sttSpinner = document.getElementById('stt-spinner');
 const ttsBtn = document.getElementById('tts-btn');
-const ttsIcon = document.getElementById('tts-icon');
-const ttsSpinner = document.getElementById('tts-spinner');
 const topicSelectorContainer = document.getElementById('topic-selection-container');
 const endSessionButton = document.getElementById('end-session-btn');
 const radioBarContainer = document.getElementById('meter-container');
@@ -448,34 +446,6 @@ function handleMicButtonClick() {
     }
 }
 
-/**
- * TTS 버튼 클릭 핸들러
- */
-function handleTtsButtonClick() {
-    if (isProcessing) {
-        showToast('처리 중입니다. 잠시 기다려주세요.', 2000);
-        return;
-    }
-    isSpeaking = !isSpeaking;
-    ttsIcon.classList.toggle('hidden', isSpeaking);
-    ttsSpinner.classList.toggle('hidden', !isSpeaking);
-
-    if (isSpeaking) {
-        const lastMessage = conversationHistory.filter(msg => msg.role === 'assistant').pop()?.content;
-        if (lastMessage) {
-            showToast('음성 재생 시작', 2000);
-            playTTSWithControl(lastMessage);
-        } else {
-            showToast('재생할 메시지가 없습니다.', 2000);
-            isSpeaking = false;
-            ttsIcon.classList.remove('hidden');
-            ttsSpinner.classList.add('hidden');
-        }
-    } else {
-        showToast('음성 재생 중지', 2000);
-        stopCurrentTTS();
-    }
-}
 
 /**
  * TTS 재생 제어
@@ -484,16 +454,10 @@ async function playTTSWithControl(text) {
     if (!isTtsMode || !text) return;
     try {
         const voiceId = localStorage.getItem('lozee_voice') || 'Leda';
-        await playTTSFromText(text, voiceId);
-        isSpeaking = false;
-        ttsIcon.classList.remove('hidden');
-        ttsSpinner.classList.add('hidden');
+        await playTTSFromText(text, voiceId); // tts.js에서 구현 가정
     } catch (error) {
         console.error('TTS 재생 오류:', error);
         showToast('음성 재생 오류', 3000);
-        isSpeaking = false;
-        ttsIcon.classList.remove('hidden');
-        ttsSpinner.classList.add('hidden');
     }
 }
 
@@ -526,9 +490,6 @@ function drawWaveform(dataArray) {
     const avg = dataArray.reduce((a, v) => a + v, 0) / dataArray.length;
     const norm = Math.min(100, Math.max(0, (avg / 255) * 100));
     radioBar.style.width = `${norm}%`;
-    if (sessionHeaderTextEl) {
-        sessionHeaderTextEl.style.backgroundColor = `hsl(228,50%,${90 - (norm / 5)}%)`;
-    }
 }
 
 /**
@@ -598,7 +559,6 @@ function initialize() {
         }
     });
     sttBtn.addEventListener('click', handleMicButtonClick);
-    ttsBtn.addEventListener('click', handleTtsButtonClick);
     startButton?.addEventListener('click', () => {
         startCover.style.display = 'none';
         initializeTopicSelector(userProfile);

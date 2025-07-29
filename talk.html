@@ -16,13 +16,14 @@
     <script type="module" src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module" src="counseling_topics.js"></script>
-    <script type="module" src="gpt-dialog.js"></script>
-    <script type="module" src="tts.js"></script>
-    <script type="module" src="firebase-utils.js"></script>
-    <script type="module" src="lozee-analysis.js"></script>
-    <script type="module" src="talk.js"></script>
+    <script type="module" src="/js/firebase-config.js"></script>
+<script type="module" src="/js/counseling_topics.js"></script>
+<script type="module" src="/js/gpt-dialog.js"></script>
+<script type="module" src="/js/tts.js"></script>
+<script type="module" src="/js/stt.js"></script>
+<script type="module" src="/js/firebase-utils.js"></script>
+<script type="module" src="/js/lozee-analysis.js"></script>
+<script type="module" src="/js/talk.js"></script>
     <!-- Chart.js for lozee-analysis.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
@@ -76,33 +77,18 @@
             <div id="chat-messages"></div>
         </main>
         <div id="chat-input-container">
-            <button id="stt-btn" class="chat-icon-button" aria-label="음성 인식 시작">
-                <svg id="stt-icon" class="mic-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-                <svg id="stt-spinner" class="hidden animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </button>
-            <textarea id="chat-input" class="chat-textarea" placeholder="메시지를 입력하세요..." rows="1"></textarea>
-            <button id="tts-btn" class="chat-icon-button" aria-label="음성 재생">
-                <svg id="tts-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707a1 1 0 011.414 0l4.707 4.707H20a1 1 0 011 1v4a1 1 0 01-1 1h-1.586l-4.707 4.707a1 1 0 01-1.414 0L5.586 15z" />
-                </svg>
-                <svg id="tts-spinner" class="hidden animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </button>
-            <button id="send-btn" class="btn-send" aria-label="메시지 전송">
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-                전송
-            </button>
-        </div>
+    <button id="stt-btn" class="chat-icon-button" aria-label="음성 인식 시작">
+        <svg id="stt-icon" class="mic-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+        <svg id="stt-spinner" class="hidden animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </button>
+    <textarea id="chat-input" class="chat-textarea" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+    <button id="send-btn" class="btn-send" aria-label="메시지 전송">SEND</button>
+</div>
         <button id="end-session-btn" class="hidden">대화 종료</button>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>

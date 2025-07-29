@@ -142,10 +142,70 @@ body {
     background-color: #f3f4f6; /* hover:bg-gray-100 */
 }
 
-.chat-icon-button:active, .btn-send:active {
+.chat-icon-button:active {
     transform: scale(0.95); /* 클릭 시 축소 */
     background-color: #1d4ed8; /* 클릭 시 색상 변화 */
     transition: transform 0.1s, background-color 0.1s;
+    color: #ffffff;
+    border-color: var(--primary-color);
+    animation: pulse 1.5s infinite; /* 녹음 중 깜빡임 */
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+
+.animate-spin {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.btn-send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-send:hover {
+    background-color: #4b5fd9;
+}
+
+.btn-send:active {
+    transform: scale(0.95);
+    background-color: #3b4cca;
+}
+
+.btn-send:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(96, 120, 234, 0.5);
+}
+
+.btn-send:disabled {
+    background-color: #95a5a5;
+    cursor: not-allowed;
+}
+
+#topic-selection-container {
+    display: flex;
+    background-color: var(--background-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
 .chat-icon-button:focus {
