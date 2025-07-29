@@ -220,45 +220,6 @@ async function startSession(topic) {
  * @param {string} inputMethod - 입력 방식 ('text' 또는 'stt')
  */
 
-
-async function handleMicButtonClick() {
-    if (isProcessing) {
-        showToast('처리 중입니다. 잠시 기다려주세요.', 2000);
-        return;
-    }
-    if (isListening) {
-        try {
-            const transcript = await stopSTT();
-            if (transcript) {
-                chatInput.value = transcript;
-                chatInput.style.height = 'auto';
-                chatInput.style.height = chatInput.scrollHeight + 'px';
-                handleSendMessage(transcript, 'stt');
-            }
-        } catch (error) {
-            console.error('STT stop error:', error);
-            showToast('음성 인식 오류', 3000);
-        }
-        isListening = false;
-        sttIcon.classList.remove('hidden');
-        sttSpinner.classList.add('hidden');
-        sttBtn.classList.remove('active');
-    } else {
-        stopCurrentTTS();
-        try {
-            await startSTT();
-            isListening = true;
-            sttIcon.classList.add('hidden');
-            sttSpinner.classList.remove('hidden');
-            sttBtn.classList.add('active');
-            showToast('녹음 중입니다...', 2000);
-        } catch (error) {
-            console.error('STT start error:', error);
-            showToast('마이크 사용 권한이 필요합니다.', 3000);
-        }
-    }
-}
-
 async function handleSendMessage(text, inputMethod = 'text') {
     const messageText = (typeof text === 'string' ? text : chatInput.value).trim();
     if (!messageText || isProcessing) return;
@@ -591,8 +552,6 @@ function appendMessage(sender, text) {
  */
 // talk.js의 initialize 함수 내 프로필 로드 부분
 function initialize() {
-    initializeSTT();
-
     sendBtn.addEventListener('click', () => handleSendMessage());
     chatInput.addEventListener('keypress', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -601,10 +560,6 @@ function initialize() {
         }
     });
     sttBtn.addEventListener('click', handleMicButtonClick);
-    startButton?.addEventListener('click', () => {
-        startCover.style.display = 'none';
-        initializeTopicSelector(userProfile);
-    });
     endSessionButton?.addEventListener('click', handleEndSession);
 
     firebaseAuth.onAuthStateChanged(async user => {
@@ -628,6 +583,8 @@ function initialize() {
         chatInput.style.height = chatInput.scrollHeight + 'px';
     });
 }
+
+initialize();
 
 async function validateProfileConsistency(uid) {
     const localProfile = JSON.parse(localStorage.getItem('lozee_profile') || '{}');
