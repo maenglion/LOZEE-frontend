@@ -41,7 +41,12 @@
             </div>
         </nav>
 
-         <!-- 음성 파형 컨테이너 -->
+<!-- 세션 헤더 -->
+        <div id="session-header">
+            <span id="session-header-text">주제 선택 중...</span>
+        </div>
+
+        <!-- 음성 파형 컨테이너 -->
         <div id="meter-container" class="volume-meter-wrapper">
             <div id="volume-meter">
                 <div id="volume-level"></div>
@@ -60,8 +65,8 @@
         <div id="chat-input-container">
             <input type="text" id="chat-input" placeholder="메시지를 입력하세요...">
             <button id="mic-button" title="음성 입력"></button>
+            <button id="plus-button" title="이미지 업로드"></button>
             <button id="send-button" title="메시지 전송"></button>
-            <button id="plus-button" title="추가 옵션"></button>
             <input type="file" id="image-upload" style="display: none;" accept="image/*">
         </div>
 
