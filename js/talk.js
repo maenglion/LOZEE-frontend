@@ -29,10 +29,10 @@ let isTtsMode = true;
 let sessionTimeoutId = null;
 let lastAiAnalysisData = null;
 let userCharCountInSession = 0;
-let previousTotalUserCharCountOverall = 0;
+let previousTotalUserCharCountOverall = 0; // lozee-analysis.js와 연계
+let lastTokenRefreshTime = 0; // 토큰 갱신 관리
 let journalReadyNotificationShown = false;
 let analysisNotificationShown = false;
-let lastTokenRefreshTime = 0;
 const SESSION_TIMEOUT_DURATION = 10 * 60 * 1000; // 10분
 const TOKEN_REFRESH_INTERVAL = 55 * 60 * 1000; // 55분
 const FFT_SIZE = 256;
@@ -70,11 +70,12 @@ const sessionHeaderTextEl = document.getElementById('session-header-text');
 async function getApplicableTopics(profile) {
     if (!profile || !counselingTopicsByAge) {
         console.error('Profile or counselingTopicsByAge is undefined');
-        return [];
+        showToast('주제를 불러올 수 없습니다.', 3000);
+        return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해볼까?' }];
     }
 
     const finalTopics = new Map();
-    const userType = profile.userType || [];
+    const userType = Array.isArray(profile.userType) ? profile.userType : [profile.userType];
 
     const addSubTopics = (subTopics, diagnoses = []) => {
         if (!Array.isArray(subTopics)) return;
@@ -189,7 +190,7 @@ async function startSession(topic) {
     conversationHistory = [];
     isDataSaved = false;
     conversationStartTime = Date.now();
-    previousTotalUserCharCountOverall = await fetchPreviousUserCharCount();
+    previousTotalUserCharCountOverall = await fetchPreviousUserCharCount(); // lozee-analysis.js 연계
     currentSessionId = await logSessionStart(userProfile.uid, topic.id);
 
     if (!currentSessionId) {
@@ -241,16 +242,11 @@ async function handleSendMessage(text, inputMethod = 'text') {
         return;
     }
 
-    if (Date.now() - lastTokenRefreshTime > TOKEN_REFRESH_INTERVAL) {
-        idToken = await currentUser.getIdToken(true); // 토큰 갱신
-        lastTokenRefreshTime = Date.now(); // 업데이트
-    }
-
     conversationHistory.push({ role: 'user', content: messageText });
     userCharCountInSession += messageText.length;
     resetSessionTimeout();
 
-   try {
+    try {
         appendMessage('assistant thinking', '...');
         const currentUser = firebaseAuth.currentUser;
         let idToken = null;
@@ -323,7 +319,7 @@ async function handleEndSession() {
     showToast('대화 종료 중...', 2000);
     await logSessionEnd(currentSessionId);
     await updateTopicStats(userProfile.uid, currentTopic.id, conversationHistory);
-    await updateUserOverallStats(userProfile.uid, userCharCountInSession);
+    await updateUserOverallStats(userProfile.uid, userCharCountInSession + previousTotalUserCharCountOverall); // lozee-analysis.js 연계
     appendMessage('assistant', `오늘 ${currentTopic.title}에 대한 대화가 종료되었습니다.`);
     showToast('대화가 종료되었습니다.', 3000);
     resetSessionState();
@@ -594,7 +590,6 @@ function appendMessage(sender, text) {
 function initialize() {
     initializeSTT();
 
-    // 이벤트 리스너
     sendBtn.addEventListener('click', () => handleSendMessage());
     chatInput.addEventListener('keypress', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -610,7 +605,6 @@ function initialize() {
     });
     endSessionButton?.addEventListener('click', handleEndSession);
 
-    // 사용자 프로필 로드
     firebaseAuth.onAuthStateChanged(async user => {
         if (user) {
             userProfile = await validateProfileConsistency(user.uid);
@@ -627,7 +621,6 @@ function initialize() {
         }
     });
 
-    // Textarea 자동 높이 조절
     chatInput.addEventListener('input', () => {
         chatInput.style.height = 'auto';
         chatInput.style.height = chatInput.scrollHeight + 'px';
