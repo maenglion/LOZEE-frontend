@@ -23,12 +23,7 @@
     margin: 0 auto;
   }
 </style>
-
-
 </head>
-
-  
-
 
 <body>
     <div class="app-container">
@@ -46,28 +41,37 @@
             </div>
         </nav>
 
-        <div id="session-header">
-            <span id="session-header-text">주제 선택 중...</span>
-        </div>
-
+         <!-- 음성 파형 컨테이너 -->
         <div id="meter-container" class="volume-meter-wrapper">
             <div id="volume-meter">
                 <div id="volume-level"></div>
             </div>
         </div>
-<div id="topics-container" class="topic-section"></div>
 
+        <!-- 채팅 윈도우 -->
         <main id="chat-window">
+            <!-- 주제 선택 컨테이너 -->
             <div id="topic-selection-container"></div>
+            <!-- 채팅 메시지 -->
+            <div id="chat-messages"></div>
         </main>
 
+        <!-- 채팅 입력 영역 -->
         <div id="chat-input-container">
-            <button id="mic-button"></button>
-            <input id="chat-input" type="text" placeholder="메시지를 입력하세요..." autocomplete="off" />
-            <button id="plus-button"></button>
-            <input type="file" id="image-upload" accept="image/*" style="display: none;" />
-            <button id="send-button"></button>
+            <input type="text" id="chat-input" placeholder="메시지를 입력하세요...">
+            <button id="mic-button" title="음성 입력"></button>
+            <button id="send-button" title="메시지 전송"></button>
+            <button id="plus-button" title="추가 옵션"></button>
+            <input type="file" id="image-upload" style="display: none;" accept="image/*">
         </div>
+
+        <!-- 세션 종료 버튼 -->
+        <button id="end-session-btn" style="display: none;">대화 종료</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
 
     <script src="./js/gnb.js" defer></script>
     <script type="module" src="./js/talk.js"></script>
