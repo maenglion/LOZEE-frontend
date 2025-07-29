@@ -119,38 +119,87 @@ body {
     margin-right: auto;
 }
 
-.chat-options-container {
+/* ▼▼▼ Flowbite 기반 채팅 입력 영역 스타일 ▼▼▼ */
+#chat-input-container {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 15px auto;
-    align-self: center;
-    width: 100%;
-    max-width: 300px;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f9fafb; /* bg-gray-50 */
+    border-top: 1px solid #e5e7eb; /* border-gray-200 */
+    flex-shrink: 0;
 }
 
-.chat-option-btn {
-    background-color: #ffffff; /* ⭐ 옵션 버튼 배경은 흰색 유지 */
-    color: #333;
-    border: 1px solid #dcdcdc; /* ⭐ 옵션 버튼 테두리 유지 (원래 스타일) */
-    border-radius: 12px;
-    padding: 15px 20px;
-    text-align: left;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1.1em;
+.chat-icon-button {
+    position: relative;
+    padding: 0.5rem;
+    background-color: white;
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.5rem; /* rounded-lg */
     transition: background-color 0.2s;
 }
-
-.chat-option-btn:hover {
-    background-color: #e0e0e0;
+.chat-icon-button:hover {
+    background-color: #f3f4f6; /* hover:bg-gray-100 */
+}
+.chat-icon-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-color); /* focus:ring-2 focus:ring-blue-500 */
 }
 
-.chat-option-btn.selected {
-    background-color: var(--primary-color);
-    color: white;
+.chat-icon-button svg {
+    width: 1.5rem; /* w-6 */
+    height: 1.5rem; /* h-6 */
+    color: #4b5563; /* text-gray-600 */
+}
+
+.chat-textarea {
+    flex: 1;
+    resize: none;
+    padding: 0.5rem;
+    margin: 0 0.5rem;
+    font-size: 0.875rem; /* text-sm */
+    color: #111827; /* text-gray-900 */
+    background-color: white;
+    border-radius: 0.5rem; /* rounded-lg */
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    overflow-y: hidden; /* 스크롤바 숨김 (자동 높이 조절) */
+}
+.chat-textarea:focus {
+    outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
 }
+
+.send-button {
+    padding: 0.5rem 1rem;
+    color: white;
+    background-color: #2563eb; /* bg-blue-600 */
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.send-button:hover {
+    background-color: #1d4ed8; /* hover:bg-blue-700 */
+}
+
+/* 스피너 및 아이콘 상태 관리 */
+.hidden {
+    display: none;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+#stt-spinner {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    margin: auto;
+    color: #2563eb; /* text-blue-600 */
+}
+/* ▲▲▲ 채팅 입력 영역 스타일 완료 ▲▲▲ */
+
 
 /* ⭐⭐ 음향 바 전체 래퍼 스타일 (volume-meter-wrapper) ⭐⭐ */
 #meter-container.volume-meter-wrapper {
