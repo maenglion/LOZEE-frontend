@@ -43,13 +43,13 @@ let recog;
 
 // --- 3. UI 요소 가져오기 ---
 const chatMessages = document.getElementById('chat-messages');
-const messageInput = document.getElementById('chat-input');
+const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 const topicSelectorContainer = document.getElementById('topic-selection-container');
 const endSessionButton = document.getElementById('end-session-btn');
-const recordButton = document.getElementById('mic-button');
+const recordButton = document.getElementById('mic-button'); // ID 변경
 const radioBarContainer = document.getElementById('meter-container');
-const radioBar = document.getElementById('volume-meter');
+const radioBar = document.getElementById('volume-level'); // ID 변경
 const plusButton = document.getElementById('plus-button');
 const imageUpload = document.getElementById('image-upload');
 const startCover = document.getElementById('start-cover');
@@ -57,108 +57,94 @@ const startButton = document.getElementById('start-button');
 const sessionHeaderTextEl = document.getElementById('session-header-text');
 const chatWindow = document.getElementById('chat-window');
 
-// --- 4. 헬퍼 함수 ---
+// --- 4. 헬퍼 및 핵심 기능 함수 ---
 
-// 메시지 추가
-function appendMessage(sender, text, options = {}) {
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('bubble', `${sender}`);
-    if (options.isImageAnalysisResult) {
-        messageElement.classList.add('image-analysis-result');
-    }
-    messageElement.innerText = text;
-    chatMessages.appendChild(messageElement);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
+/**
+ * 사용자 역할, 나이, 진단명에 맞는 주제 목록을 반환합니다.
+ * @param {object} profile - 사용자 프로필 데이터
+ * @returns {Array<object>} 필터링된 주제 목록
+ */
+function getApplicableTopics(profile) {
+    if (!profile || !counselingTopicsByAge) return [];
 
-// 사용자 역할과 나이에 맞는 주제 가져오기
-async function getApplicableTopics(profile) {
-    if (!profile || !COUNSELING_TOPICS) {
-        console.error('COUNSELING_TOPICS is undefined or profile is missing');
-        return [];
-    }
-
+    const finalTopics = new Map();
     const userType = profile.userType || [];
-    const allTopics = new Set();
-
-    // 공통 주제 추가
-    if (COUNSELING_TOPICS.common && Array.isArray(COUNSELING_TOPICS.common)) {
-        COUNSELING_TOPICS.common.forEach(topic => allTopics.add(topic));
-    }
-
-    // directUser 주제 추가
-    if (userType.includes('directUser') && COUNSELING_TOPICS.directUser) {
-        const userDiagnoses = profile.diagnoses || [];
-        const directUserTopics = counselingTopicsByAge.directUser?.[userAgeGroupKey] || COUNSELING_TOPICS.directUser;
-        directUserTopics.forEach(topic => {
-            if (!topic.tags || topic.tags.length === 0 || topic.tags.some(tag => userDiagnoses.includes(tag))) {
-                allTopics.add(topic);
+    
+    const addSubTopics = (subTopics, diagnoses = []) => {
+        if (!Array.isArray(subTopics)) return;
+        subTopics.forEach(subTopic => {
+            // 태그가 없거나, 사용자의 진단명과 일치하는 태그가 하나라도 있으면 추가
+            const hasMatchingTag = !subTopic.tags || subTopic.tags.length === 0 || subTopic.tags.some(tag => diagnoses.includes(tag));
+            if (hasMatchingTag && !finalTopics.has(subTopic.displayText)) {
+                // subTopic을 바로 사용하기 위해 id, title, starter 등을 명시적으로 만듦
+                finalTopics.set(subTopic.displayText, {
+                    id: subTopic.type || subTopic.displayText,
+                    title: subTopic.displayText,
+                    starter: `그래, ${subTopic.displayText}에 대해 이야기해볼까?`,
+                    ...subTopic
+                });
             }
         });
+    };
+
+    // DirectUser(당사자) 주제 추가
+    if (userType.includes('directUser')) {
+        const userAge = profile.age || 30;
+        const userDiagnoses = profile.diagnoses || [];
+        const ageGroupKey = userAge < 11 ? '10세미만' : userAge <= 15 ? '11-15세' : userAge <= 29 ? '16-29세' : userAge <= 55 ? '30-55세' : '55세이상';
+        const mainTopics = counselingTopicsByAge.directUser?.[ageGroupKey] || [];
+        mainTopics.forEach(topic => addSubTopics(topic.subTopics, userDiagnoses));
     }
 
-    // caregiver 주제 추가
-    if (userType.includes('caregiver') && COUNSELING_TOPICS.caregiver) {
+    // Caregiver(보호자) 주제 추가
+    if (userType.includes('caregiver')) {
         const childDiagnoses = profile.caregiverInfo?.childDiagnoses || [];
         const childAge = profile.caregiverInfo?.childAge || 0;
-        const childAgeGroupKey = (() => {
-            if (childAge < 11) return '10세미만';
-            if (childAge <= 15) return '11-15세';
-            return 'common';
-        })();
-        const caregiverTopics = [
-            ...(counselingTopicsByAge.caregiver?.[childAgeGroupKey] || []),
-            ...(counselingTopicsByAge.caregiver?.common || []),
-            ...(COUNSELING_TOPICS.caregiver || [])
-        ];
-        caregiverTopics.forEach(topic => {
-            if (!topic.tags || topic.tags.length === 0 || topic.tags.some(tag => childDiagnoses.includes(tag))) {
-                allTopics.add(topic);
-            }
-        });
+        const ageGroupKey = childAge < 11 ? '10세미만' : childAge <= 15 ? '11-15세' : 'common';
+        
+        const commonTopics = counselingTopicsByAge.caregiver?.common || [];
+        const ageSpecificTopics = counselingTopicsByAge.caregiver?.[ageGroupKey] || [];
+
+        commonTopics.forEach(topic => addSubTopics(topic.subTopics, childDiagnoses));
+        ageSpecificTopics.forEach(topic => addSubTopics(topic.subTopics, childDiagnoses));
     }
 
-    return Array.from(allTopics);
+    return Array.from(finalTopics.values());
 }
 
-// 주제 선택기 초기화
-async function initializeTopicSelector(profile) {
-    if (!topicSelectorContainer) {
-        console.error('topicSelectorContainer is not found');
-        appendMessage('system', '주제 선택 UI를 로드할 수 없습니다.');
+/**
+ * 필터링된 주제로 주제 선택 UI를 생성합니다.
+ * @param {object} profile - 사용자 프로필 데이터
+ */
+function initializeTopicSelector(profile) {
+    if (!topicSelectorContainer) return;
+    topicSelectorContainer.innerHTML = '';
+
+    const topics = getApplicableTopics(profile);
+    
+    if (topics.length === 0) {
+        topicSelectorContainer.innerHTML = `<p class="system-message">선택 가능한 주제가 없습니다.</p>`;
         return;
     }
-    topicSelectorContainer.innerHTML = '';
-    try {
-        const topics = await getApplicableTopics(profile);
-        console.log('Available topics:', topics); // 디버깅 로그
-        if (topics.length === 0) {
-            topicSelectorContainer.innerHTML = `<p style="color: gray; text-align: center; margin-top: 2rem;">현재 선택 가능한 주제가 없습니다.<br>마이페이지에서 역할과 나이를 확인해 주세요.</p>`;
-            startSession({ id: 'free_form', title: '자유롭게 이야기하기', tags: ['자유주제'], starter: '자유롭게 이야기해볼까요?' });
-            return;
-        }
 
-        const optionsContainer = document.createElement('div');
-        optionsContainer.className = 'chat-options-container';
-        topics.forEach(topic => {
-            const button = document.createElement('button');
-            button.className = 'topic-btn chat-option-btn';
-            button.textContent = topic.title;
-            button.dataset.topicId = topic.id;
-            button.onclick = () => {
-                optionsContainer.querySelectorAll('.topic-btn').forEach(btn => btn.disabled = true);
-                button.classList.add('selected');
-                selectTopic(topic);
-            };
-            optionsContainer.appendChild(button);
-        });
-        topicSelectorContainer.appendChild(optionsContainer);
-        topicSelectorContainer.style.display = 'flex'; // 명시적 표시
-    } catch (error) {
-        console.error('주제 렌더링 오류:', error);
-        appendMessage('system', '주제를 불러오는 중 문제가 발생했어요.');
-    }
+    const optionsContainer = document.createElement('div');
+    optionsContainer.className = 'chat-options-container';
+
+    topics.forEach(topic => {
+        const button = document.createElement('button');
+        button.className = 'topic-btn chat-option-btn';
+        button.innerHTML = `${topic.icon || ''} ${topic.title}`;
+        button.dataset.topicId = topic.id;
+        button.onclick = () => {
+            optionsContainer.querySelectorAll('.topic-btn').forEach(btn => btn.disabled = true);
+            button.classList.add('selected');
+            selectTopic(topic);
+        };
+        optionsContainer.appendChild(button);
+    });
+    topicSelectorContainer.appendChild(optionsContainer);
 }
+
 
 // 주제 선택
 function selectTopic(topic) {
@@ -488,53 +474,17 @@ function showToast(message, duration = 3000) {
 
 // --- 5. 페이지 로드 및 초기화 ---
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOMContentLoaded triggered');
+    // UI 초기화
     const appContainer = document.querySelector('.app-container');
-    const style = document.createElement('style');
-    style.textContent = `
-        body.talk-page-body { overflow: hidden; }
-        .app-container.talk-page { width: 100%; height: 100vh; margin: 0; padding: 10px; box-sizing: border-box; }
-        @media (min-width: 641px) {
-            .app-container.talk-page { max-width: 640px; height: 90vh; margin: auto; }
-        }
-        #start-cover {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            z-index: 1000;
-        }
-        #start-button {
-            padding: 15px 30px;
-            font-size: 1.2em;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-        }
-        #start-button:hover {
-            background-color: var(--secondary-color);
-        }
-    `;
-    document.head.appendChild(style);
-    document.body.classList.add('talk-page-body');
     if (appContainer) appContainer.classList.add('talk-page');
+    if (topicSelectorContainer) topicSelectorContainer.style.display = 'none';
+    if (radioBarContainer) radioBarContainer.style.display = 'flex';
+    if (endSessionButton) endSessionButton.style.display = 'none';
 
-    if (!startButton) {
-        console.error('startButton을 찾을 수 없습니다.');
-        appendMessage('system', '페이지를 초기화할 수 없습니다.');
-        return;
-    }
-
+    // 사용자 정보 로드
     const currentUserId = localStorage.getItem('lozee_userId');
     if (!currentUserId) {
-        console.error("사용자 ID를 찾을 수 없습니다. 로그인 페이지로 리디렉션합니다.");
+        console.error("사용자 ID 없음. 로그인 페이지로 이동합니다.");
         window.location.href = 'index.html';
         return;
     }
@@ -545,99 +495,54 @@ document.addEventListener('DOMContentLoaded', async () => {
             userProfile = userDoc.data();
             userProfile.uid = currentUserId;
         } else {
-            console.error("사용자 프로필을 찾을 수 없습니다.");
-            window.location.href = 'index.html';
-            return;
+            throw new Error("사용자 프로필을 찾을 수 없습니다.");
         }
     } catch (error) {
-        console.error("프로필 로드 중 오류 발생:", error);
-        appendMessage('system', '프로필을 불러오는 중 문제가 발생했습니다.');
+        console.error("프로필 로드 중 오류:", error);
+        alert("사용자 정보를 불러오는 데 실패했습니다. 다시 로그인해주세요.");
         window.location.href = 'index.html';
         return;
     }
 
-    startButton.onclick = async () => {
-        console.log('Start button clicked');
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
+    // 시작 버튼 이벤트
+    if (startButton) {
+        startButton.onclick = async () => {
+            if (startCover) startCover.style.display = 'none';
+            
+            // 오디오 컨텍스트 활성화
+            if (!audioContext || audioContext.state === 'suspended') {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                await audioContext.resume().catch(e => console.error("AudioContext resume failed:", e));
+            }
 
-        if (startCover) startCover.style.display = 'none';
-
-        try {
-            console.log('Initializing topic selector...');
-            await initializeTopicSelector(userProfile);
+            initializeTopicSelector(userProfile);
             displayInitialGreeting();
             initializeSTT();
 
-            // 이벤트 리스너 설정
-            if (sendButton) {
-                sendButton.addEventListener('click', () => {
-                    console.log('Send button clicked');
+            // 주요 이벤트 리스너 바인딩
+            sendButton.addEventListener('click', () => handleSendMessage());
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
                     handleSendMessage();
-                });
-            } else {
-                console.error('sendButton not found');
-            }
+                }
+            });
+            endSessionButton.addEventListener('click', handleEndSession);
+            recordButton.addEventListener('click', handleMicButtonClick);
 
-            if (messageInput) {
-                messageInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        console.log('Enter key pressed');
-                        handleSendMessage();
-                    }
-                });
-            } else {
-                console.error('messageInput not found');
-            }
-
-            if (endSessionButton) {
-                endSessionButton.addEventListener('click', () => {
-                    console.log('End session button clicked');
-                    handleEndSession();
-                });
-            } else {
-                console.error('endSessionButton not found');
-            }
-
-            if (recordButton) {
-                recordButton.addEventListener('click', handleMicButtonClick);
-            } else {
-                console.error('recordButton not found');
-            }
-
+            // 기타 버튼 이벤트
             if (plusButton) {
-                plusButton.replaceWith(plusButton.cloneNode(true));
-                const newPlus = document.getElementById('plus-button');
-                newPlus.addEventListener('click', e => {
-                    e.preventDefault();
-                    console.log('Plus button clicked');
-                    showToast('🚧 해당 기능은 곧 제공될 예정입니다!');
-                });
-            } else {
-                console.error('plusButton not found');
+                plusButton.addEventListener('click', () => showToast('🚧 파일 첨부 기능은 준비 중입니다.'));
             }
-
             if (imageUpload) {
-                imageUpload.replaceWith(imageUpload.cloneNode(true));
-                const newUpload = document.getElementById('image-upload');
-                newUpload.addEventListener('change', e => {
-                    e.preventDefault();
-                    console.log('Image upload triggered');
-                    showToast('🚧 이미지 분석 기능은 곧 추가됩니다.');
-                });
-            } else {
-                console.error('imageUpload not found');
+                imageUpload.addEventListener('change', () => showToast('🚧 이미지 분석 기능은 준비 중입니다.'));
             }
 
             window.addEventListener('beforeunload', () => {
                 if (conversationHistory.length > 2 && !isDataSaved) handleEndSession();
             });
-        } catch (error) {
-            console.error('페이지 초기화 중 심각한 오류가 발생했습니다:', error);
-            appendMessage('system', '페이지를 불러오는 중 문제가 발생했어요.');
-        }
-    };
+        };
+    } else {
+        console.error("시작 버튼을 찾을 수 없습니다.");
+    }
 });

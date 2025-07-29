@@ -352,11 +352,42 @@ body {
         padding: 18px 25px; /* 버튼 패딩 더 늘림 */
         font-size: 1.2em; /* 텍스트 크기 늘림 */
     }
-    #chat-input-container {
-        height: 80px; /* 입력창 컨테이너 높이 늘림 */
-        padding: 1rem 1.2rem;
-        gap: 12px;
+
+#chat-input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* 버튼과 입력창 사이 간격 */
+
     }
+
+    #message-input { /* 기존 chat-input 에서 id 변경 */
+    flex-grow: 1;
+    /* 다른 스타일은 유지 */
+}
+
+/* SVG 버튼 공통 스타일 */
+#chat-input-container button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+#chat-input-container button svg {
+    width: 24px;
+    height: 24px;
+    fill: #555; /* 기본 아이콘 색상 */
+    transition: fill 0.2s;
+}
+
     #chat-input {
         padding: 1rem;
         font-size: 1.15rem;
@@ -366,6 +397,20 @@ body {
         height: 56px;
         background-size: 48px 48px; /* 아이콘 이미지 크기 키움 */
     }
+
+
+/* 마이크 버튼 활성화 스타일 */
+#mic-button.active svg .mic-icon {
+    display: none; /* 활성화 시 마이크 아이콘 숨기기 */
+}
+#mic-button.active svg .stop-icon {
+    display: block !important; /* 활성화 시 중지 아이콘 보이기 */
+}
+#mic-button.active svg {
+    fill: var(--primary-color); /* 활성화 시 아이콘 색상 변경 */
+}
+
+
     /* ⭐⭐ 말풍선 (bubble) PC 스타일 조정 (사용자님 분석 기반) ⭐⭐ */
     .bubble {
         max-width: 100%; /* ⭐ 버블 컨테이너는 100% 폭 사용 */
