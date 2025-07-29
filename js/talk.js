@@ -428,17 +428,6 @@ function drawWaveform(dataArray) {
     }
 }
 
-function clearWaveform() {
-    if (!radioBar) return;
-    radioBar.innerHTML = '';
-    for (let i = 0; i < 16; i++) {
-        const bar = document.createElement('div');
-        bar.className = 'radio-bar-item';
-        bar.style.height = '1%';
-        radioBar.appendChild(bar);
-    }
-}
-
 // 파형 초기화
 function clearWaveform() {
     if (!radioBar) return;
