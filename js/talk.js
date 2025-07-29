@@ -580,6 +580,7 @@ function appendMessage(sender, text) {
 /**
  * 초기화 함수
  */
+// talk.js의 initialize 함수 내 프로필 로드 부분
 function initialize() {
     initializeSTT();
 
@@ -602,11 +603,17 @@ function initialize() {
     // 사용자 프로필 로드
     firebaseAuth.onAuthStateChanged(async user => {
         if (user) {
-            userProfile = await loadUserProfile(user.uid); // loadUserProfile 정의 필요
-            displayInitialGreeting();
-            initializeTopicSelector(userProfile);
+            userProfile = await validateProfileConsistency(user.uid);
+            if (userProfile) {
+                displayInitialGreeting();
+                initializeTopicSelector(userProfile);
+            } else {
+                showToast('프로필을 로드할 수 없습니다. 다시 로그인해주세요.', 3000);
+                window.location.href = 'index.html';
+            }
         } else {
             showToast('로그인이 필요합니다.', 3000);
+            window.location.href = 'index.html';
         }
     });
 
@@ -617,5 +624,29 @@ function initialize() {
     });
 }
 
-// 초기화 호출
-initialize();
+async function validateProfileConsistency(uid) {
+    const localProfile = JSON.parse(localStorage.getItem('lozee_profile') || '{}');
+    const firestoreProfile = await loadUserProfile(uid);
+    if (firestoreProfile && JSON.stringify(localProfile) !== JSON.stringify(firestoreProfile)) {
+        console.warn('localStorage와 Firestore 프로필 불일치');
+        localStorage.setItem('lozee_profile', JSON.stringify(firestoreProfile));
+    }
+    return firestoreProfile;
+}
+
+async function loadUserProfile(uid) {
+    try {
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (userDoc.exists()) {
+            return { ...userDoc.data(), uid };
+        } else {
+            console.error('사용자 프로필이 존재하지 않습니다.');
+            showToast('프로필을 찾을 수 없습니다. 다시 로그인해주세요.', 3000);
+            return null;
+        }
+    } catch (error) {
+        console.error('프로필 로드 오류:', error);
+        showToast('프로필 로드 실패', 3000);
+        return null;
+    }
+}
