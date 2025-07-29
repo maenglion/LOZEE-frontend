@@ -1,18 +1,11 @@
 // --- 1. 모듈 Import ---
 import { db, auth as firebaseAuth } from './firebase-config.js';
-import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-import { getAuth } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
 import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './gpt-dialog.js';
 import { playTTSFromText, stopCurrentTTS } from './tts.js';
-import {
-    saveJournalEntry,
-    updateTopicStats,
-    updateUserOverallStats,
-    logSessionStart,
-    logSessionEnd,
-    saveReservation
-} from './firebase-utils.js';
-import { counselingTopicsByAge, normalizeTags } from './counseling_topics.js'; // 변수명 일관성 확인
+import { saveJournalEntry, updateTopicStats, updateUserOverallStats, logSessionStart, logSessionEnd } from './firebase-utils.js';
+import { counselingTopicsByAge } from './counseling_topics.js';
+import { startSTT, stopSTT, getSTTFromAudio } from './stt.js';
 import * as LOZEE_ANALYSIS from './lozee-analysis.js';
 
 // --- 2. 상태 변수 선언 ---
@@ -22,7 +15,6 @@ let currentSessionId = null;
 let conversationHistory = [];
 let isProcessing = false;
 let isListening = false; // STT 상태
-let isSpeaking = false;  // TTS 상태
 let conversationStartTime = null;
 let isDataSaved = false;
 let isTtsMode = true;
@@ -217,6 +209,46 @@ async function startSession(topic) {
  * @param {string} text - 사용자 입력 텍스트
  * @param {string} inputMethod - 입력 방식 ('text' 또는 'stt')
  */
+
+
+async function handleMicButtonClick() {
+    if (isProcessing) {
+        showToast('처리 중입니다. 잠시 기다려주세요.', 2000);
+        return;
+    }
+    if (isListening) {
+        try {
+            const transcript = await stopSTT();
+            if (transcript) {
+                chatInput.value = transcript;
+                chatInput.style.height = 'auto';
+                chatInput.style.height = chatInput.scrollHeight + 'px';
+                handleSendMessage(transcript, 'stt');
+            }
+        } catch (error) {
+            console.error('STT stop error:', error);
+            showToast('음성 인식 오류', 3000);
+        }
+        isListening = false;
+        sttIcon.classList.remove('hidden');
+        sttSpinner.classList.add('hidden');
+        sttBtn.classList.remove('active');
+    } else {
+        stopCurrentTTS();
+        try {
+            await startSTT();
+            isListening = true;
+            sttIcon.classList.add('hidden');
+            sttSpinner.classList.remove('hidden');
+            sttBtn.classList.add('active');
+            showToast('녹음 중입니다...', 2000);
+        } catch (error) {
+            console.error('STT start error:', error);
+            showToast('마이크 사용 권한이 필요합니다.', 3000);
+        }
+    }
+}
+
 async function handleSendMessage(text, inputMethod = 'text') {
     const messageText = (typeof text === 'string' ? text : chatInput.value).trim();
     if (!messageText || isProcessing) return;
