@@ -121,14 +121,20 @@ function addSubTopics(subTopics, diagnoses, finalTopics) {
  * @param {object} profile - 사용자 프로필 데이터
  */
 async function initializeTopicSelector(profile) {
-    if (!topicSelectorContainer) return;
+    // 동적으로 topic-selection-container 생성
+    let topicSelectorContainer = document.getElementById('topic-selection-container');
+    if (!topicSelectorContainer) {
+        topicSelectorContainer = document.createElement('div');
+        topicSelectorContainer.id = 'topic-selection-container';
+        document.getElementById('chat-window').prepend(topicSelectorContainer);
+    }
     topicSelectorContainer.innerHTML = '';
 
     try {
         const topics = await getApplicableTopics(profile);
         if (topics.length === 0) {
             appendMessage('system', '현재 추천드릴 수 있는 주제가 없네요. 자유롭게 이야기를 시작해주세요.');
-            selectTopic({ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해볼까?' });
+            selectTopic({ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해보볼까?' });
             return;
         }
 
@@ -137,18 +143,22 @@ async function initializeTopicSelector(profile) {
 
         topics.forEach(topic => {
             const button = document.createElement('button');
-            button.className = 'topic-btn chat-option-btn';
+            button.className = 'chat-option-btn';
             button.innerHTML = `${topic.icon || '💬'} ${topic.title}`;
             button.dataset.topicId = topic.id;
             button.setAttribute('aria-label', `${topic.title} 주제 선택`);
             button.onclick = () => {
-                optionsContainer.querySelectorAll('.topic-btn').forEach(btn => btn.disabled = true);
+                optionsContainer.querySelectorAll('.chat-option-btn').forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.remove('selected');
+                });
                 button.classList.add('selected');
                 selectTopic(topic);
             };
             optionsContainer.appendChild(button);
         });
         topicSelectorContainer.appendChild(optionsContainer);
+        topicSelectorContainer.style.display = 'flex';
     } catch (error) {
         console.error('주제 렌더링 오류:', error);
         appendMessage('system', '주제를 불러오는 중 문제가 발생했습니다.');
@@ -187,6 +197,7 @@ async function displayInitialGreeting() {
     }, { once: true });
     showToast('환영합니다! 클릭해서 대화를 시작하세요.', 3000);
 }
+
 /**
  * 새로운 대화 세션 시작
  * @param {object} topic - 시작할 주제 객체
