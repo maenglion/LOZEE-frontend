@@ -65,7 +65,12 @@
                 <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
             </div>
         </nav>
- <div id="topic-selection-container"></div>
+<div id="meter-container" class="volume-meter-wrapper progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div id="volume-meter">
+                    <div id="volume-level" class="progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
         <main id="chat-window">
             <div id="chat-messages"></div>
         </main>
@@ -83,7 +88,6 @@
             <button id="send-btn" class="btn-send" aria-label="메시지 전송">SEND</button>
         </div>
         <button id="end-session-btn" class="hidden">대화 종료</button>
-    </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
     <script src="./js/gnb.js" defer></script>

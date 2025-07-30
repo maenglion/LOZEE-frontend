@@ -406,11 +406,11 @@ function updateSessionHeader() {
  * STT 초기화
  */
 function initializeSTT() {
-    if (!SpeechRecognitionAPI) {
+    if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
         showToast('음성 인식을 지원하지 않는 브라우저입니다.', 3000);
         return;
     }
-    recog = new SpeechRecognitionAPI();
+    recog = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recog.continuous = true;
     recog.interimResults = true;
     recog.lang = 'ko-KR';
@@ -451,7 +451,6 @@ function initializeSTT() {
     };
 }
 
-
 /**
  * STT 버튼 클릭 핸들러
  */
@@ -478,8 +477,8 @@ async function handleMicButtonClick() {
         sttSpinner.classList.add('hidden');
         sttBtn.classList.remove('active');
         stopAudioVisualization();
+        radioBarContainer.classList.remove('active');
         showToast('녹음이 완료되었습니다.', 2000);
-        radioBarContainer.classList.remove('active'); // 종료 시 숨김
     } else {
         stopCurrentTTS();
         try {
@@ -488,6 +487,7 @@ async function handleMicButtonClick() {
             sttIcon.classList.add('hidden');
             sttSpinner.classList.remove('hidden');
             sttBtn.classList.add('active');
+            radioBarContainer.classList.add('active');
             showToast('녹음 중입니다...', 2000);
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             audioStream = stream;
@@ -495,7 +495,6 @@ async function handleMicButtonClick() {
         } catch (error) {
             console.error('STT start error:', error);
             showToast('마이크 사용 권한이 필요합니다.', 3000);
-            radioBarContainer.classList.add('active'); // 시작 시 표시
         }
     }
 }
@@ -585,14 +584,17 @@ function showToast(message, duration = 3000) {
  * 메시지 추가
  */
 function appendMessage(sender, text) {
+    const messageWrapper = document.createElement('div');
+    messageWrapper.classList.add('message-wrapper', sender);
     const messageElement = document.createElement('div');
     messageElement.classList.add('bubble', sender);
-    messageElement.innerHTML = `
-        <p>${text}</p>
-        <span class="timestamp">${new Date().toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-    `;
-    messageElement.setAttribute('aria-label', `${sender === 'user' ? '사용자' : '어시스턴트'} 메시지: ${text}`);
-    chatMessages.appendChild(messageElement);
+    messageElement.innerText = text;
+    const timestamp = document.createElement('span');
+    timestamp.classList.add('timestamp');
+    timestamp.innerText = new Date().toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    messageWrapper.appendChild(messageElement);
+    messageWrapper.appendChild(timestamp);
+    chatMessages.appendChild(messageWrapper);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 /**
@@ -600,7 +602,7 @@ function appendMessage(sender, text) {
  */
 // talk.js의 initialize 함수 내 프로필 로드 부분
 function initialize() {
-    initializeSTT(); // 추가 제안
+    initializeSTT();
     sendBtn.addEventListener('click', () => handleSendMessage());
     chatInput.addEventListener('keypress', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
