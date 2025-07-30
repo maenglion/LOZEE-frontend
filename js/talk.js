@@ -54,57 +54,67 @@ const radioBar = document.getElementById('volume-level');
  * @returns {Promise<Array<object>>} 필터링된 주제 목록
  */
 async function getApplicableTopics(profile) {
-    
-    console.log('userProfile:', profile); // 로그 추가
-    console.log('counselingTopicsByAge:', counselingTopicsByAge); // 로그 추가
-    if (!profile || !counselingTopicsByAge) {
-        console.error('Profile or counselingTopicsByAge is undefined');
+    if (!profile) {
+        console.error('Profile is undefined');
         showToast('주제를 불러올 수 없습니다.', 3000);
-        return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해볼까?' }];
-    }
-    
-       
-    if (!profile || !counselingTopicsByAge) {
-        console.error('Profile or counselingTopicsByAge is undefined');
-        showToast('주제를 불러올 수 없습니다.', 3000);
-        return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해볼까?' }];
+        return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해보볼까?' }];
     }
 
     const finalTopics = new Map();
     const userType = Array.isArray(profile.userType) ? profile.userType : [profile.userType];
 
-    const addSubTopics = (subTopics, diagnoses = []) => {
-        if (!Array.isArray(subTopics)) return;
-        subTopics.forEach(subTopic => {
-            const hasMatchingTag = !subTopic.tags || subTopic.tags.length === 0 || subTopic.tags.some(tag => diagnoses.includes(tag));
-            if (hasMatchingTag && !finalTopics.has(subTopic.displayText)) {
-                finalTopics.set(subTopic.displayText, {
-                    id: subTopic.type || subTopic.displayText.replace(/\s/g, '_'),
-                    title: subTopic.displayText,
-                    starter: `그래, ${subTopic.displayText}에 대해 이야기해볼까?`,
-                    ...subTopic
-                });
-            }
-        });
-    };
+    try {
+        const ageGroupKey = getAgeGroupKey(profile.age || 30, profile.caregiverInfo?.childAge || 0);
+        const topicsDoc = await getDoc(doc(db, 'topics', ageGroupKey));
+        if (!topicsDoc.exists()) {
+            console.error('Topics document not found for age group:', ageGroupKey);
+            return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해보볼까?' }];
+        }
 
-    if (userType.includes('directUser')) {
-        const userAge = profile.age || 30;
-        const userDiagnoses = profile.diagnoses || [];
-        const ageGroupKey = userAge < 11 ? '10세미만' : userAge <= 15 ? '11-15세' : userAge <= 29 ? '16-29세' : userAge <= 55 ? '30-55세' : '55세이상';
-        const mainTopics = counselingTopicsByAge.directUser?.[ageGroupKey] || [];
-        mainTopics.forEach(topic => addSubTopics(topic.subTopics, userDiagnoses));
-    }
+        const topicsData = topicsDoc.data();
+        const directUserTopics = topicsData.directUser || [];
+        const caregiverTopics = topicsData.caregiver || [];
 
-    if (userType.includes('caregiver')) {
-        const childDiagnoses = profile.caregiverInfo?.childDiagnoses || [];
-        const childAge = profile.caregiverInfo?.childAge || 0;
-        const ageGroupKey = childAge < 11 ? '10세미만' : childAge <= 15 ? '11-15세' : 'common';
-        (counselingTopicsByAge.caregiver?.common || []).forEach(topic => addSubTopics(topic.subTopics, childDiagnoses));
-        (counselingTopicsByAge.caregiver?.[ageGroupKey] || []).forEach(topic => addSubTopics(topic.subTopics, childDiagnoses));
+        if (userType.includes('directUser')) {
+            const userDiagnoses = profile.diagnoses || [];
+            directUserTopics.forEach(topic => addSubTopics(topic.subTopics, userDiagnoses, finalTopics));
+        }
+
+        if (userType.includes('caregiver')) {
+            const childDiagnoses = profile.caregiverInfo?.childDiagnoses || [];
+            caregiverTopics.forEach(topic => addSubTopics(topic.subTopics, childDiagnoses, finalTopics));
+        }
+
+    } catch (error) {
+        console.error('Firestore topics load error:', error);
+        showToast('주제 로드 실패', 3000);
     }
 
     return Array.from(finalTopics.values());
+}
+
+function getAgeGroupKey(userAge, childAge = 0) {
+    const age = childAge || userAge;
+    if (age < 11) return '10세미만';
+    if (age <= 15) return '11-15세';
+    if (age <= 29) return '16-29세';
+    if (age <= 55) return '30-55세';
+    return '55세이상';
+}
+
+function addSubTopics(subTopics, diagnoses, finalTopics) {
+    if (!Array.isArray(subTopics)) return;
+    subTopics.forEach(subTopic => {
+        const hasMatchingTag = !subTopic.tags || subTopic.tags.length === 0 || subTopic.tags.some(tag => diagnoses.includes(tag));
+        if (hasMatchingTag && !finalTopics.has(subTopic.displayText)) {
+            finalTopics.set(subTopic.displayText, {
+                id: subTopic.type || subTopic.displayText.replace(/\s/g, '_'),
+                title: subTopic.displayText,
+                starter: `그래, ${subTopic.displayText}에 대해 이야기해보볼까?`,
+                ...subTopic
+            });
+        }
+    });
 }
 
 /**
@@ -390,14 +400,16 @@ function initializeSTT() {
         isListening = true;
         sttIcon.classList.add('hidden');
         sttSpinner.classList.remove('hidden');
-        showToast('녹음 시작', 2000);
+        sttBtn.classList.add('active');
+        showToast('녹음 중입니다...', 2000);
     };
     recog.onend = () => {
         isListening = false;
         sttIcon.classList.remove('hidden');
         sttSpinner.classList.add('hidden');
+        sttBtn.classList.remove('active');
         stopAudioVisualization();
-        showToast('녹음 종료', 2000);
+        showToast('녹음이 완료되었습니다.', 2000);
     };
     recog.onresult = event => {
         let final_transcript = '';
@@ -419,6 +431,7 @@ function initializeSTT() {
         if (isListening) recog.stop();
     };
 }
+
 
 /**
  * STT 버튼 클릭 핸들러
@@ -447,6 +460,7 @@ async function handleMicButtonClick() {
         sttBtn.classList.remove('active');
         stopAudioVisualization();
         showToast('녹음이 완료되었습니다.', 2000);
+        radioBarContainer.classList.remove('active'); // 종료 시 숨김
     } else {
         stopCurrentTTS();
         try {
@@ -462,6 +476,7 @@ async function handleMicButtonClick() {
         } catch (error) {
             console.error('STT start error:', error);
             showToast('마이크 사용 권한이 필요합니다.', 3000);
+            radioBarContainer.classList.add('active'); // 시작 시 표시
         }
     }
 }
@@ -553,18 +568,20 @@ function showToast(message, duration = 3000) {
 function appendMessage(sender, text) {
     const messageElement = document.createElement('div');
     messageElement.classList.add('bubble', sender);
-    messageElement.innerText = text;
+    messageElement.innerHTML = `
+        <p>${text}</p>
+        <span class="timestamp">${new Date().toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+    `;
     messageElement.setAttribute('aria-label', `${sender === 'user' ? '사용자' : '어시스턴트'} 메시지: ${text}`);
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
-    chatWindow.scrollTop = chatWindow.scrollHeight;
 }
-
 /**
  * 초기화 함수
  */
 // talk.js의 initialize 함수 내 프로필 로드 부분
 function initialize() {
+    initializeSTT(); // 추가 제안
     sendBtn.addEventListener('click', () => handleSendMessage());
     chatInput.addEventListener('keypress', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
