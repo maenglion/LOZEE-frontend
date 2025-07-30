@@ -409,6 +409,10 @@ font-family: 'KoPub World Dotum', sans-serif;
     color: #ffffff !important;
     align-self: flex-end;
     border-bottom-right-radius: 0.4rem;
+    max-width: 80%;
+    padding: 0.9rem 1.2rem;
+    line-height: 1.65;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .bubble.bot {
@@ -416,6 +420,10 @@ font-family: 'KoPub World Dotum', sans-serif;
     color: #333333 !important;
     align-self: flex-start;
     border-bottom-left-radius: 0.4rem;
+    max-width: 80%;
+    padding: 0.9rem 1.2rem;
+    line-height: 1.65;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .bubble p {

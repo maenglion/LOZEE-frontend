@@ -9,9 +9,9 @@ let currentAudioSource = null; // 현재 재생 중인 오디오 객체
 export function stopCurrentTTS() {
     if (currentAudioSource) {
         try {
-            currentAudioSource.pause(); // 재생 중지
-            currentAudioSource.currentTime = 0; // 재생 위치 초기화
-            currentAudioSource = null; // 참조 제거
+            currentAudioSource.pause();
+            currentAudioSource.currentTime = 0;
+            currentAudioSource = null;
             console.log("TTS 재생 중지됨.");
         } catch (e) {
             console.warn("TTS 정지 중 오류:", e);
@@ -25,7 +25,7 @@ export function stopCurrentTTS() {
  * @param {string} requestedVoice - 사용자 선택 음성 ID (예: 'Leda')
  */
 export async function playTTSFromText(text, requestedVoice = 'Leda') {
-    stopCurrentTTS(); // 기존 재생 중지
+    stopCurrentTTS();
 
     const currentUser = auth.currentUser;
     if (!currentUser) {
@@ -73,8 +73,18 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
     const audioData = await response.arrayBuffer();
     const audioBlob = new Blob([audioData], { type: 'audio/wav' });
     const audio = new Audio(URL.createObjectURL(audioBlob));
-    currentAudioSource = audio; // 새 오디오 객체 저장
-    audio.play().catch(e => console.error('Audio play failed:', e)); // 에러 처리 추가
+    currentAudioSource = audio;
 
-    console.log("✅ TTS payload:", JSON.stringify(payload)); 
+    // 사용자 상호작용 확인 후 재생
+    if (document.hasFocus() && document.activeElement === document.body) {
+        audio.play().catch(e => console.error('Audio play failed:', e));
+    } else {
+        console.warn('TTS 중지: 사용자 상호작용 필요');
+        showToast('음성 재생을 위해 페이지를 클릭하세요.', 3000);
+        document.body.addEventListener('click', () => {
+            audio.play().catch(e => console.error('Audio play failed after click:', e));
+        }, { once: true });
+    }
+
+    console.log("✅ TTS payload:", JSON.stringify(payload));
 }
