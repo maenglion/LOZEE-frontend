@@ -1,10 +1,37 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LOZEE와 대화하기</title>
+    <link href="https://fonts.googleapis.com/css2?family=KoPub+World+Dotum:wght@400;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="gnb.css">
+    <link href="path/to/style.css" rel="stylesheet" />
+    <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOZEE - 대화</title>
-    <link href="/css/style.css" rel="stylesheet" />
+    <title>LOZEE</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase 및 모듈 스크립트 -->
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOZEE</title>
+    <link rel="stylesheet" href="./gnb.css"> <!-- GNB 스타일 먼저 로드 -->
+
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js"></script>
+    <script type="module" src="/js/firebase-config.js"></script>
+    <script type="module" src="/js/counseling_topics.js"></script>
+    <script type="module" src="/js/gpt-dialog.js"></script>
+    <script type="module" src="/js/tts.js"></script>
+    <script type="module" src="/js/stt.js"></script>
+    <script type="module" src="/js/firebase-utils.js"></script>
+    <script type="module" src="/js/lozee-analysis.js"></script>
+    <script type="module" src="/js/talk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
     <style>
         /* 채팅 윈도우 */
         #chat-window {
@@ -21,12 +48,6 @@
             max-width: 100%;
             margin: 0;
             margin-top: var(--gnb-height);
-        }
-        #chat-messages {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            flex-grow: 1;
         }
         #chat-window::-webkit-scrollbar {
             width: 8px;
@@ -65,7 +86,7 @@
         .message-wrapper.user {
             align-items: flex-end;
         }
-        .message-wrapper.assistant {
+        .message-wrapper.bot {
             align-items: flex-start;
         }
         .bubble {
@@ -84,7 +105,7 @@
             color: #ffffff !important;
             border-bottom-right-radius: 0.4rem !important;
         }
-        .bubble.assistant {
+        .bubble.bot {
             background: #F4EBBC !important;
             color: #333333 !important;
             border-bottom-left-radius: 0.4rem !important;
@@ -95,7 +116,7 @@
             font-style: italic;
             border-bottom-right-radius: 0.4rem !important;
         }
-        .bubble.assistant-thinking {
+        .bubble.assistant_feedback {
             align-self: center;
             background-color: #f8f9fa !important;
             color: #495057 !important;
@@ -116,13 +137,13 @@
                 line-height: 1.8;
                 border-radius: 1.5rem;
             }
-            #chat-messages .bubble.user {
+            #chat-window .bubble.user {
                 justify-content: flex-end;
             }
-            #chat-messages .bubble.assistant {
+            #chat-window .bubble.bot {
                 justify-content: flex-start;
             }
-            .bubble.user, .bubble.assistant {
+            .bubble.user, .bubble.bot {
                 max-width: 80%;
             }
         }
@@ -236,115 +257,52 @@
             margin-right: 0.25rem;
             fill: currentColor;
         }
-        #mic-button, #send-button, #plus-button {
-            width: 48px;
-            height: 48px;
-            border: none;
-            border-radius: 50%;
-            background-color: transparent;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: transparent;
-            font-size: 0;
-            cursor: pointer;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-size: 40px 40px;
-        }
-        #mic-button.disabled {
-            opacity: 0.5;
-            cursor: default;
-        }
-        #mic-button.active svg .mic-icon {
-            display: none;
-        }
-        #mic-button.active svg .stop-icon {
-            display: block !important;
-        }
-        #mic-button.active svg {
-            fill: var(--primary-color);
-        }
-        #send-button:hover, #plus-button:hover {
-            background-color: #2980b9;
-        }
-        #send-button:disabled, #plus-button:disabled {
-            background-color: #95a5a5;
-            cursor: not-allowed;
-        }
-        @media (min-width: 640px) {
-            #chat-input {
-                padding: 1rem;
-                font-size: 1.15rem;
-            }
-            #mic-button, #send-button, #plus-button {
-                width: 56px;
-                height: 56px;
-                background-size: 48px 48px;
-            }
-        }
+        
+    
 
         /* 음량 미터 */
-        #volume-meter-wrapper {
-            background-color: #ffffff;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 320px;
-            margin-left: auto;
-            margin-right: auto;
-            visibility: hidden;
-        }
-        #volume-meter-wrapper.active {
-            visibility: visible;
-        }
         #meter-container {
-            height: 10px;
-            background-color: #e5e7eb;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            flex-shrink: 0;
-            width: 80%;
-            max-width: 280px;
-        }
-        #volume-meter {
-            width: 100%;
-            height: 10px;
-            border: none;
-            border-radius: 6px;
-            overflow: hidden;
-            background-color: #d1d5db;
-        }
-        #volume-level {
-            height: 100%;
-            background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
-            width: 0%;
-            transition: width 0.08s ease-out;
-            border-radius: 4px;
-        }
-        @media (min-width: 640px) {
-            #volume-meter-wrapper {
-                padding: 10px;
-                max-width: 400px;
-            }
-            #meter-container {
-                height: 12px;
-            }
-            #volume-meter {
-                height: 12px;
-            }
-        }
-
+    height: 5px;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: none;
+}
+#meter-container.active {
+    visibility: visible;
+}
+#volume-meter {
+    width: 70%;
+    max-width: 280px;
+    height: 5px;
+    border: none;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: transparent;
+}
+#volume-level {
+    height: 100%;
+    background: linear-gradient(to right, #FF0000, #FF7F00, #FFFF00, #00FF00, #0000FF, #4B0082, #9400D3);
+    width: 0%;
+    transition: width 0.08s ease-out;
+    border-radius: 4px;
+}
+@media (min-width: 640px) {
+    #meter-container.volume-meter-wrapper {
+        height: 8px;
+    }
+    #volume-meter {
+        height: 5px;
+    }
+}
         /* 주제 선택 컨테이너 */
         #topic-selection-container {
             background-color: #d1d1d1;
@@ -442,36 +400,49 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
-        <div id="session-header-text"></div>
+        <nav id="gnb">
+            <button id="menu-toggle"></button>
+            <div id="gnb-title">LOZEE</div>
+            <div class="gnb-right-buttons">
+            </div>
+            <div id="dropdown-menu">
+                <a href="mypage.html">🎨 내 정보 보기</a>
+                <a href="index.html">✨ 새로운 이야기 시작!</a>
+                <a id="gnb-analysis-link" href="analysis.html">📊 우리 이야기 분석</a>
+                <a href="journal-list.html">📖 이야기 모음집</a>
+                <a href="https://www.notion.so/maenglionworld/lOZEE-1ebbcdc037cd80fa9c0ddef234121e84?pvs=4" target="_blank">❓ 로지 사용 설명서</a>
+            </div>
+        </nav>
+<div id="volume-meter-wrapper">
+    <div id="meter-container">
+        <div id="volume-meter">
+            <div id="volume-level"></div>
+        </div>
+    </div>
+</div>
+
+        </header>
         <main id="chat-window">
             <div id="chat-messages"></div>
         </main>
-        <div id="volume-meter-wrapper">
-            <div id="meter-container">
-                <div id="volume-meter">
-                    <div id="volume-level"></div>
-                </div>
-            </div>
-        </div>
         <div id="chat-input-container">
-            <button id="mic-button" class="chat-icon-button">
-                <svg id="stt-icon" class="mic-icon" viewBox="0 0 24 24">
-                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            <button id="stt-btn" class="chat-icon-button" aria-label="음성 인식 시작">
+                <svg id="stt-icon" class="mic-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
-                <svg id="stt-spinner" class="stop-icon hidden" viewBox="0 0 24 24">
-                    <path d="M6 6h12v12H6z"/>
-                </svg>
-            </button>
-            <textarea id="chat-input" class="chat-textarea" placeholder="메시지를 입력하세요..."></textarea>
-            <button id="send-button" class="btn-send">
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                <svg id="stt-spinner" class="hidden animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
             </button>
+            <textarea id="chat-input" class="chat-textarea" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+            <button id="send-btn" class="btn-send" aria-label="메시지 전송">SEND</button>
         </div>
+        <button id="end-session-btn" class="hidden">대화 종료</button>
     </div>
+    <script src="./js/gnb.js" defer></script>
 </body>
 </html>
