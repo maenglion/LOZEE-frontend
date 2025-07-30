@@ -1,12 +1,12 @@
 // --- 1. 모듈 Import ---
-import { db, auth as firebaseAuth } from './firebase-config.js';
+import { db, auth as firebaseAuth } from '/js/firebase-config.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js';
-import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from './gpt-dialog.js';
-import { playTTSFromText, stopCurrentTTS } from './tts.js';
-import { saveJournalEntry, updateTopicStats, updateUserOverallStats, logSessionStart, logSessionEnd } from './firebase-utils.js';
-import { counselingTopicsByAge } from './counseling_topics.js';
-import { startSTT, stopSTT, getSTTFromAudio } from './stt.js';
-import * as LOZEE_ANALYSIS from './lozee-analysis.js';
+import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from '/js/gpt-dialog.js';
+import { playTTSFromText, stopCurrentTTS } from '/js/tts.js';
+import { startSTT, stopSTT, getSTTFromAudio } from '/js/stt.js';
+import { saveJournalEntry, updateTopicStats, updateUserOverallStats, logSessionStart, logSessionEnd } from '/js/firebase-utils.js';
+import { counselingTopicsByAge } from '/js/counseling_topics.js';
+import * as LOZEE_ANALYSIS from '/js/lozee-analysis.js';
 
 // --- 2. 상태 변수 선언 ---
 let userProfile = null;
@@ -14,19 +14,19 @@ let currentTopic = null;
 let currentSessionId = null;
 let conversationHistory = [];
 let isProcessing = false;
-let isListening = false; // STT 상태
+let isListening = false;
 let conversationStartTime = null;
 let isDataSaved = false;
 let isTtsMode = true;
 let sessionTimeoutId = null;
 let lastAiAnalysisData = null;
 let userCharCountInSession = 0;
-let previousTotalUserCharCountOverall = 0; // lozee-analysis.js와 연계
-let lastTokenRefreshTime = 0; // 토큰 갱신 관리
+let previousTotalUserCharCountOverall = 0;
+let lastTokenRefreshTime = 0;
 let journalReadyNotificationShown = false;
 let analysisNotificationShown = false;
-const SESSION_TIMEOUT_DURATION = 10 * 60 * 1000; // 10분
-const TOKEN_REFRESH_INTERVAL = 55 * 60 * 1000; // 55분
+const SESSION_TIMEOUT_DURATION = 10 * 60 * 1000;
+const TOKEN_REFRESH_INTERVAL = 55 * 60 * 1000;
 const FFT_SIZE = 256;
 
 // STT 및 오디오 관련 변수
@@ -41,14 +41,10 @@ const sendBtn = document.getElementById('send-btn');
 const sttBtn = document.getElementById('stt-btn');
 const sttIcon = document.getElementById('stt-icon');
 const sttSpinner = document.getElementById('stt-spinner');
-const ttsBtn = document.getElementById('tts-btn');
 const topicSelectorContainer = document.getElementById('topic-selection-container');
 const endSessionButton = document.getElementById('end-session-btn');
 const radioBarContainer = document.getElementById('meter-container');
 const radioBar = document.getElementById('volume-level');
-const startCover = document.getElementById('start-cover');
-const startButton = document.getElementById('start-button');
-const sessionHeaderTextEl = document.getElementById('session-header-text');
 
 // --- 4. 헬퍼 및 핵심 기능 함수 ---
 
@@ -427,25 +423,46 @@ function initializeSTT() {
 /**
  * STT 버튼 클릭 핸들러
  */
-function handleMicButtonClick() {
+async function handleMicButtonClick() {
     if (isProcessing) {
         showToast('처리 중입니다. 잠시 기다려주세요.', 2000);
         return;
     }
     if (isListening) {
-        recog.stop();
+        try {
+            const transcript = await stopSTT();
+            if (transcript) {
+                chatInput.value = transcript;
+                chatInput.style.height = 'auto';
+                chatInput.style.height = chatInput.scrollHeight + 'px';
+                handleSendMessage(transcript, 'stt');
+            }
+        } catch (error) {
+            console.error('STT stop error:', error);
+            showToast('음성 인식 오류', 3000);
+        }
+        isListening = false;
+        sttIcon.classList.remove('hidden');
+        sttSpinner.classList.add('hidden');
+        sttBtn.classList.remove('active');
+        stopAudioVisualization();
+        showToast('녹음이 완료되었습니다.', 2000);
     } else {
         stopCurrentTTS();
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                audioStream = stream;
-                setupAudioVisualization(stream);
-                recog.start();
-            })
-            .catch(err => {
-                console.error("마이크 접근 오류:", err);
-                showToast('마이크 사용 권한이 필요합니다.', 3000);
-            });
+        try {
+            await startSTT();
+            isListening = true;
+            sttIcon.classList.add('hidden');
+            sttSpinner.classList.remove('hidden');
+            sttBtn.classList.add('active');
+            showToast('녹음 중입니다...', 2000);
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioStream = stream;
+            setupAudioVisualization(stream);
+        } catch (error) {
+            console.error('STT start error:', error);
+            showToast('마이크 사용 권한이 필요합니다.', 3000);
+        }
     }
 }
 
@@ -505,10 +522,6 @@ function stopAudioVisualization() {
     if (analyser) analyser.disconnect();
     if (audioContext && audioContext.state !== 'closed') audioContext.close().catch(e => console.error(e));
     if (radioBar) radioBar.style.width = '0%';
-    if (sessionHeaderTextEl) {
-        sessionHeaderTextEl.style.transition = 'background-color 0.3s';
-        sessionHeaderTextEl.style.backgroundColor = '';
-    }
     if (radioBarContainer) radioBarContainer.classList.remove('active');
 }
 
