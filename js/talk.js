@@ -499,21 +499,6 @@ async function handleMicButtonClick() {
     }
 }
 
-
-/**
- * TTS 재생 제어
- */
-async function playTTSWithControl(text) {
-    if (!isTtsMode || !text) return;
-    try {
-        const voiceId = localStorage.getItem('lozee_voice') || 'Leda';
-        await playTTSFromText(text, voiceId); // tts.js에서 구현 가정
-    } catch (error) {
-        console.error('TTS 재생 오류:', error);
-        showToast('음성 재생 오류', 3000);
-    }
-}
-
 /**
  * 오디오 시각화 설정
  */
