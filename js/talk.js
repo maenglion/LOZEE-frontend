@@ -54,42 +54,56 @@ const radioBar = document.getElementById('volume-level');
  */
 async function getApplicableTopics(profile) {
     if (!profile) {
-        console.error('Profile is undefined');
-        showToast('주제를 불러올 수 없습니다.', 3000);
-        return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해보볼까?' }];
+        console.error("프로필 데이터 없음");
+        return [];  // fallback
     }
 
-    const finalTopics = new Map();
     const userType = Array.isArray(profile.userType) ? profile.userType : [profile.userType];
+    let topics = [];
 
-    try {
-        const ageGroupKey = getAgeGroupKey(profile.age || 30, profile.caregiverInfo?.childAge || 0);
-        const topicsDoc = await getDoc(doc(db, 'topics', ageGroupKey));
-        if (!topicsDoc.exists()) {
-            console.error('Topics document not found for age group:', ageGroupKey);
-            return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해보볼까?' }];
+    // caregiver 우선 처리 (childAge 무시, 'common' 고정)
+    if (userType.includes('caregiver')) {
+        const caregiverDoc = await getDoc(doc(db, 'topics', 'common'));  // Firestore 'topics/common'
+        if (caregiverDoc.exists()) {
+            topics = topics.concat(caregiverDoc.data().subTopics || []);  // subTopics 배열 가정
+        } else {
+            console.error("Caregiver common topics not found");
         }
-
-        const topicsData = topicsDoc.data();
-        const directUserTopics = topicsData.directUser || [];
-        const caregiverTopics = topicsData.caregiver || [];
-
-        if (userType.includes('directUser')) {
-            const userDiagnoses = profile.diagnoses || [];
-            directUserTopics.forEach(topic => addSubTopics(topic.subTopics, userDiagnoses, finalTopics));
-        }
-
-        if (userType.includes('caregiver')) {
-            const childDiagnoses = profile.caregiverInfo?.childDiagnoses || [];
-            caregiverTopics.forEach(topic => addSubTopics(topic.subTopics, childDiagnoses, finalTopics));
-        }
-
-    } catch (error) {
-        console.error('Firestore topics load error:', error);
-        showToast('주제 로드 실패', 3000);
     }
 
-    return Array.from(finalTopics.values());
+    // directUser 역할 병합 (사용자 age 기반)
+    if (userType.includes('directUser')) {
+        const ageGroup = getAgeGroup(profile.age);  // e.g., 42세 → '30-55세'
+        const directDoc = await getDoc(doc(db, 'topics', ageGroup));
+        if (directDoc.exists()) {
+            topics = mergeTopics(topics, directDoc.data().subTopics || []);
+        } else {
+            console.error(`DirectUser topics not found for age group: ${ageGroup}`);
+        }
+    }
+
+    // topics가 빈 경우 fallback (자유주제)
+    if (topics.length === 0) {
+        console.error("No applicable topics found");
+        return [{ id: 'free_talk', title: '자유 대화', starter: '자유롭게 이야기해볼까?', type: 'free_form' }];
+    }
+
+    return topics;
+}
+
+// 헬퍼 함수 (새로 추가)
+function getAgeGroup(age) {
+    if (age < 10) return '10세미만';
+    if (age >= 11 && age <= 15) return '11-15세';
+    if (age >= 30 && age <= 55) return '30-55세';
+    return 'default';  // 기타 나이 fallback
+}
+
+function mergeTopics(existing, newTopics) {
+    // 중복 제거 (id 기반)
+    const uniqueMap = new Map(existing.map(t => [t.id, t]));
+    newTopics.forEach(t => uniqueMap.set(t.id, t));
+    return Array.from(uniqueMap.values());
 }
 
 function getAgeGroupKey(userAge, childAge = 0) {
@@ -144,8 +158,8 @@ async function initializeTopicSelector(profile) {
         topics.forEach(topic => {
             const button = document.createElement('button');
             button.className = 'chat-option-btn';
-            button.innerHTML = `${topic.icon || '💬'} ${topic.title}`;
-            button.dataset.topicId = topic.id;
+          button.innerHTML = `${topic.icon || '💬'} ${topic.displayText || topic.title}`;
+button.dataset.topicId = topic.id;
             button.setAttribute('aria-label', `${topic.title} 주제 선택`);
             button.onclick = () => {
                 optionsContainer.querySelectorAll('.chat-option-btn').forEach(btn => {
