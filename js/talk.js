@@ -175,18 +175,18 @@ function selectTopic(topic) {
     startSession(topic);
 }
 
+
 /**
  * 초기 인사 메시지 표시
  */
-function displayInitialGreeting() {
-    const username = userProfile.name || '사용자';
-    const voc = getKoreanVocativeParticle(username);
-    const greeting = getInitialGreeting(username + voc, false);
-    appendMessage('assistant', greeting);
-    conversationHistory.push({ role: 'assistant', content: greeting });
-    playTTSWithControl(greeting);
+// displayInitialGreeting 함수 수정
+async function displayInitialGreeting() {
+    addMessageToChat("라이언아, 안녕! 나는 너의 마음친구 로지야. 오늘 어떤 이야기를 나누고 싶니?", false);
+    document.body.addEventListener('click', async () => {
+        await playTTSFromText("라이언아, 안녕! 나는 너의 마음친구 로지야. 오늘 어떤 이야기를 나누고 싶니?");
+    }, { once: true });
+    showToast('환영합니다! 클릭해서 대화를 시작하세요.', 3000);
 }
-
 /**
  * 새로운 대화 세션 시작
  * @param {object} topic - 시작할 주제 객체
@@ -218,6 +218,7 @@ async function startSession(topic) {
     updateSessionHeader();
     resetSessionTimeout();
 }
+
 
 /**
  * 사용자 메시지 처리 및 AI 응답 요청

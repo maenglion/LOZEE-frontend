@@ -70,21 +70,22 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
         throw new Error(`TTS API failed with status: ${response.status}. Body: ${errorText}`);
     }
 
-    const audioData = await response.arrayBuffer();
-    const audioBlob = new Blob([audioData], { type: 'audio/wav' });
-    const audio = new Audio(URL.createObjectURL(audioBlob));
-    currentAudioSource = audio;
+const audioData = await response.arrayBuffer();
+const audioBlob = new Blob([audioData], { type: 'audio/wav' });
+const audio = new Audio(URL.createObjectURL(audioBlob));
+currentAudioSource = audio; // 재생 전에 설정
+audio.muted = true; // 초기 muted로 autoplay 정책 우회
+audio.play().then(() => {
+    audio.muted = false; // 재생 성공 시 unmute
+    console.log('TTS 오디오 재생 성공');
+}).catch(e => {
+    console.error('Audio play failed:', e);
+    showToast('음성 재생을 위해 페이지를 클릭하세요.', 3000);
+    document.body.addEventListener('click', () => {
+        audio.muted = false;
+        audio.play().catch(err => console.error('Audio play failed after click:', err));
+    }, { once: true });
+});
 
-    // 사용자 상호작용 확인 후 재생
-    if (document.hasFocus() && document.activeElement === document.body) {
-        audio.play().catch(e => console.error('Audio play failed:', e));
-    } else {
-        console.warn('TTS 중지: 사용자 상호작용 필요');
-        showToast('음성 재생을 위해 페이지를 클릭하세요.', 3000);
-        document.body.addEventListener('click', () => {
-            audio.play().catch(e => console.error('Audio play failed after click:', e));
-        }, { once: true });
-    }
-
-    console.log("✅ TTS payload:", JSON.stringify(payload));
+console.log("✅ TTS payload:", JSON.stringify(payload));
 }

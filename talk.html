@@ -17,7 +17,6 @@
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOZEE</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="./gnb.css"> <!-- GNB 스타일 먼저 로드 -->
     <link rel="stylesheet" href="./style.css"> <!-- 일반 스타일 뒤에 로드 -->
     <script type="module" src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
@@ -49,16 +48,44 @@
     margin: 0 auto;
   }
 
-      #chat-window .bubble.user {
-        background: #6878E9 !important;
-        color: #ffffff !important;
-        border-bottom-right-radius: 0.4rem !important;
-    }
-    #chat-window .bubble.bot {
-        background: #F4EBBC !important;
-        color: #333333 !important;
-        border-bottom-left-radius: 0.4rem !important;
-    }
+ .message-wrapper {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+.message-wrapper.user {
+    align-items: flex-end; /* 사용자 오른쪽 정렬 */
+}
+.message-wrapper.bot {
+    align-items: flex-start; /* 봇 왼쪽 정렬 */
+}
+.bubble {
+    padding: 0.9rem 1.2rem;
+    border-radius: 1.3rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    word-break: keep-all;
+    width: fit-content;
+    max-width: 80%;
+    margin: 0;
+}
+.bubble.user {
+    background: #6878E9;
+    color: #ffffff;
+    border-bottom-right-radius: 0.4rem;
+}
+.bubble.bot {
+    background: #F4EBBC;
+    color: #333333;
+    border-bottom-left-radius: 0.4rem;
+}
+.timestamp {
+    font-size: 0.7rem;
+    color: #666666;
+    margin-top: 5px;
+    text-align: inherit;
+}
 
 </style>
 </head>
@@ -102,7 +129,6 @@
         </div>
         <button id="end-session-btn" class="hidden">대화 종료</button>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
     <script src="./js/gnb.js" defer></script>
 </body>
 </html>
