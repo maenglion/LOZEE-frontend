@@ -5,7 +5,6 @@ import { getInitialGreeting, getGptResponse, getKoreanVocativeParticle } from '/
 import { playTTSFromText, stopCurrentTTS } from '/js/tts.js';
 import { startSTT, stopSTT, getSTTFromAudio } from '/js/stt.js';
 import { saveJournalEntry, updateTopicStats, updateUserOverallStats, logSessionStart, logSessionEnd } from '/js/firebase-utils.js';
-import { counselingTopicsByAge } from '/js/counseling_topics.js';
 import * as LOZEE_ANALYSIS from '/js/lozee-analysis.js';
 
 // --- 2. 상태 변수 선언 ---
@@ -233,7 +232,7 @@ async function handleSendMessage(text, inputMethod = 'text') {
     isProcessing = true;
     sendBtn.disabled = true;
     sttBtn.disabled = true;
-    ttsBtn.disabled = true;
+
 
     appendMessage('user', messageText);
     if (inputMethod === 'text') chatInput.value = '';
@@ -245,7 +244,7 @@ async function handleSendMessage(text, inputMethod = 'text') {
         isProcessing = false;
         sendBtn.disabled = false;
         sttBtn.disabled = false;
-        ttsBtn.disabled = false;
+
         return;
     }
 
@@ -304,7 +303,6 @@ async function handleSendMessage(text, inputMethod = 'text') {
         isProcessing = false;
         sendBtn.disabled = false;
         sttBtn.disabled = false;
-        ttsBtn.disabled = false;
     }
 }
 
