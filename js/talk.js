@@ -309,6 +309,25 @@ async function handleSendMessage(text, inputMethod = 'text') {
 }
 
 /**
+ * 사용자 상호작용 후 호출되도록 
+ */
+async function playTTSWithControl(text) {
+    if (!isTtsMode || !text) return;
+    try {
+        const voiceId = localStorage.getItem('lozee_voice') || 'Leda';
+        await playTTSFromText(text, voiceId);
+    } catch (error) {
+        console.error('TTS 재생 오류:', error);
+        if (error.message.includes('not allowed to play')) {
+            showToast('음성 재생을 위해 페이지를 다시 로드하거나 상호작용 후 시도하세요.', 3000);
+        } else {
+            showToast('음성 재생 오류', 3000);
+        }
+    }
+}
+
+
+/**
  * 세션 종료 및 대화 내용 저장
  */
 async function handleEndSession() {

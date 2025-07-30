@@ -6,17 +6,6 @@ const TTS_BACKEND_URL = 'https://lozee-backend-838397276113.asia-northeast3.run.
 let audioContext = null;
 let currentAudioSource = null;
 
-// 오디오 컨텍스트 가져오기
-function getAudioContext() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(e => console.error('Error resuming AudioContext:', e));
-    }
-    return audioContext;
-}
-
 // 현재 TTS 정지
 export function stopCurrentTTS() {
     if (currentAudioSource) {
@@ -87,7 +76,7 @@ export async function playTTSFromText(text, requestedVoice = 'Leda') {
     const audioData = await response.arrayBuffer();
     const audioBlob = new Blob([audioData], { type: 'audio/wav' });
     const audio = new Audio(URL.createObjectURL(audioBlob));
-    await audio.play();
+    audio.play().catch(e => console.error('Audio play failed:', e)); // 에러 처리 추가
 
     console.log("✅ TTS payload:", JSON.stringify(payload)); 
-  }
+}
