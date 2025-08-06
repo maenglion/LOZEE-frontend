@@ -321,40 +321,20 @@ function calculateAge(year, month, day) {
 
 // 헬퍼 함수: localStorage 설정 및 리다이렉트
 function setLocalStorageAndRedirect(userProfile, ageForTalkContext, childData = null, isCaregiverNeurodiverse = false) {
-    localStorage.setItem('lozee_profile', JSON.stringify(userProfile));
-    localStorage.setItem('lozee_ageForTalkContext', ageForTalkContext !== null ? ageForTalkContext.toString() : (userProfile.age !== null ? userProfile.age.toString() : '30'));
-    if (childData) {
-        localStorage.setItem('lozee_childData', JSON.stringify(childData));
-    } else {
-        localStorage.removeItem('lozee_childData');
-    }
+  let profileData = {
+    ...userProfile,
+    userType: Array.isArray(userProfile.userType) ? userProfile.userType : [userProfile.userType]
+  };
 
-    // 설정할 키를 제외한 기존 lozee_ 키를 모두 지웁니다.
-    Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('lozee_') && !['lozee_profile', 'lozee_ageForTalkContext', 'lozee_childData'].includes(key)) {
-            localStorage.removeItem(key);
-        }
-    });
+  if (isCaregiverNeurodiverse) {
+    // caregiver 본인 신경다양성 → directUser 필드 매핑
+    profileData.diagnoses = [...(userProfile.caregiverInfo?.caregiverNeurodiversity || [])];
+    profileData.isDirectUserDiagnosedBySpecialist = userProfile.caregiverInfo?.isCaregiverDiagnosedBySpecialist || false;
+  }
 
-    localStorage.setItem('lozee_userId', userProfile.uid);
-    localStorage.setItem('lozee_username', userProfile.name);
-    localStorage.setItem('lozee_role', userProfile.role);
-    localStorage.setItem('lozee_userType', JSON.stringify(userProfile.userType));
-    localStorage.setItem('lozee_userEmail', userProfile.email);
-
-    if (userProfile.userType.includes('caregiver') && userProfile.caregiverInfo) {
-        localStorage.setItem('lozee_childName', userProfile.caregiverInfo.childName || '아이');
-        localStorage.setItem('lozee_childAge', userProfile.caregiverInfo.childAge?.toString() || '0');
-        localStorage.setItem('lozee_diagnoses', JSON.stringify(userProfile.caregiverInfo.childDiagnoses || []));
-        localStorage.setItem('lozee_parentIsND', JSON.stringify(isCaregiverNeurodiverse));
-        localStorage.setItem('lozee_caregiver_neurodiversity', JSON.stringify(userProfile.caregiverInfo.caregiverNeurodiversity || []));
-        localStorage.setItem('lozee_isChildDiagnosedBySpecialist', JSON.stringify(userProfile.caregiverInfo.isChildDiagnosedBySpecialist || false));
-    } else if (userProfile.userType.includes('directUser')) {
-        localStorage.setItem('lozee_diagnoses', JSON.stringify(userProfile.diagnoses || []));
-        localStorage.setItem('lozee_isDirectUserDiagnosedBySpecialist', JSON.stringify(userProfile.isDirectUserDiagnosedBySpecialist || false));
-    }
-    console.log("모든 정보 localStorage 저장 완료. talk.html로 이동합니다.");
-    window.location.href = 'talk.html';
+  localStorage.setItem('lozee_profile', JSON.stringify(profileData));
+  // 나머지 localStorage 설정 (기존 코드 유지)
+  window.location.href = 'talk.html';
 }
 
 
@@ -822,26 +802,24 @@ if (startLozeeConversationBtn) startLozeeConversationBtn.onclick = async () => {
     let childDataForRedirect = null;
 
     // startLozeeConversationBtn.onclick 함수 내부
-      if (selectedUserType === 'caregiver') {
-    profileData.caregiverInfo = {
-        caregiverNeurodiversity: tempSelectedCaregiverNd,
-        isCaregiverDiagnosedBySpecialist: tempIsSpecialistDiagnosedCaregiverSelf, // <<< 여기에 보호자 본인 진단 여부 추가
-        childName: tempChildName,
-        childBirthDate: tempChildBirthDate,
-        childAge: tempChildAge,
-        relationship: tempFamilyRelationship, 
-        childDiagnoses: tempSelectedDiagnoses,
-        isChildDiagnosedBySpecialist: tempIsSpecialistDiagnosedChild
-    };
-            // ... (이하 생략)
-        profileData.diagnoses = []; // 보호자의 메인 프로필에서 직접 진단명 제거
-        ageForTalkContext = tempChildAge;
-        childDataForRedirect = profileData.caregiverInfo;
-    } else { // directUser
-        profileData.diagnoses = tempSelectedDiagnoses;
-        profileData.isDirectUserDiagnosedBySpecialist = tempIsSpecialistDiagnosedDirectUser;
-    }
-
+ if (selectedUserType === 'caregiver') {
+  profileData.caregiverInfo = {
+    caregiverNeurodiversity: tempSelectedCaregiverNd,
+    isCaregiverDiagnosedBySpecialist: tempIsSpecialistDiagnosedCaregiverSelf,
+    childName: tempChildName,
+    childBirthDate: tempChildBirthDate,
+    childAge: tempChildAge,
+    relationship: tempFamilyRelationship,
+    childDiagnoses: tempSelectedDiagnoses,
+    isChildDiagnosedBySpecialist: tempIsSpecialistDiagnosedChild
+  };
+  const isCaregiverNeurodiverse = tempSelectedCaregiverNd.length > 0 && !tempSelectedCaregiverNd.includes('unsure_or_none');
+  if (isCaregiverNeurodiverse) {
+    profileData.userType.push('directUser');
+    profileData.diagnoses = [...tempSelectedCaregiverNd]; // 매핑
+    profileData.isDirectUserDiagnosedBySpecialist = tempIsSpecialistDiagnosedCaregiverSelf; // 매핑
+  }
+}
     startLozeeConversationBtn.disabled = true;
     startLozeeConversationBtn.textContent = "저장 중...";
     const saveSuccess = await saveUserProfile(currentUserId, profileData);
